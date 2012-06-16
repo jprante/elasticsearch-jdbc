@@ -30,13 +30,15 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 
 /**
  * Write bulk data to Elasticsearch
- * 
+ *
  * @author <a href="mailto:joergprante@gmail.com">J&ouml;rg Prante</a>
  */
-public class BulkWrite {
+public class BulkWrite implements MergeListener {
 
     private String index;
     private String type;
+    private String id;
+    private Client client;
     private ESLogger logger;
     private int bulkSize = 100;
     private int maxActiveRequests = 30;
@@ -47,29 +49,39 @@ public class BulkWrite {
     private static final AtomicInteger counter = new AtomicInteger(0);
     private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
 
-    public BulkWrite(ESLogger logger, String index, String type) {
+    public BulkWrite(Client client, ESLogger logger, String index, String type) {
+        this.client = client;
         this.logger = logger;
         this.index = index;
         this.type = type;
+        this.id = null;
         this.totalTimeouts = 0;
     }
-    
+
     public BulkWrite setBulkSize(int bulkSize) {
         this.bulkSize = bulkSize;
-        return this; 
+        return this;
     }
-    
+
     public BulkWrite setMaxActiveRequests(int maxActiveRequests) {
         this.maxActiveRequests = maxActiveRequests;
         return this;
     }
-    
+
     public BulkWrite setMillisBeforeContinue(long millis) {
         this.millisBeforeContinue = millis;
-        return this;        
+        return this;
     }
-    
-    public void write(Client client, String id, XContentBuilder builder) throws IOException {
+
+    @Override
+    public void merged(String index, String type, String id, XContentBuilder builder) {
+        if (index != null) {
+            this.index = index;
+        }
+        if (type != null) {
+            this.type = type;
+        }
+        this.id = id;
         if (id == null) {
             return;
         }
@@ -78,11 +90,11 @@ public class BulkWrite {
         }
         currentBulk.get().add(Requests.indexRequest(index).type(type).id(id).create(false).source(builder));
         if (currentBulk.get().numberOfActions() >= bulkSize) {
-            processBulk(client);
+            processBulk();
         }
     }
     
-    public void flush(Client client)  throws IOException {
+    public void flush() throws IOException {
         if (currentBulk.get() == null) {
             return;
         }
@@ -91,7 +103,7 @@ public class BulkWrite {
             throw new IOException("total flush() timeouts exceeded limit of + " + MAX_TOTAL_TIMEOUTS + ", aborting");
         }
         if (currentBulk.get().numberOfActions() > 0) {
-            processBulk(client);
+            processBulk();
         }
         // wait for all outstanding bulk requests
         while (onGoingBulks.intValue() > 0) {
@@ -107,7 +119,7 @@ public class BulkWrite {
         }
     }
 
-    private void processBulk(Client client) {
+    private void processBulk() {
         while (onGoingBulks.intValue() >= maxActiveRequests) {
             logger.info("waiting for {} active bulk requests", onGoingBulks);
             synchronized (onGoingBulks) {
@@ -150,4 +162,5 @@ public class BulkWrite {
             currentBulk.set(client.prepareBulk());
         }
     }
+
 }

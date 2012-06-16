@@ -1,0 +1,240 @@
+/*
+ * Licensed to ElasticSearch and Shay Banon under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. ElasticSearch licenses this
+ * file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.elasticsearch.river.jdbc;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
+/**
+ * The Merger class consumes SQL rows and produces Elasticsearch JSON sources.
+ */
+public class Merger implements RowListener {
+
+    private final static String INDEX_COLUMN = "_index";
+    private final static String TYPE_COLUMN = "_type";
+    private final static String ID_COLUMN = "_id";    
+    private char delimiter;
+    private XContentBuilder builder;
+    private MergeListener listener;
+    private Map<String, Object> map;
+    private String previndex;
+    private String prevtype;
+    private String previd;
+    private String index;
+    private String type;
+    private String id;
+
+    /**
+     * Constructor for a new merger
+     *
+     * @param listener the listener
+     * @throws IOException
+     */
+    public Merger(MergeListener listener) throws IOException {
+        this('.', listener);
+    }
+
+    /**
+     * Constructor for a new merger
+     *
+     * @param delimiter
+     * @param listener
+     * @throws IOException
+     */
+    public Merger(char delimiter, MergeListener listener) throws IOException {
+        this.delimiter = delimiter;
+        this.builder = jsonBuilder();
+        this.listener = listener;
+        this.map = new HashMap();
+    }
+
+    /**
+     * Merge a row given by string arrays
+     *
+     * @param columns the column names for the row elements
+     * @param row the row elements
+     * @throws IOException
+     */
+    public void row(String[] columns, Object[] row) throws IOException {
+        boolean changed = false;
+        for (int i = 0; i < columns.length; i++) {
+            if (INDEX_COLUMN.equals(columns[i])) {
+                if (index != null && !index.equals(row[i])) {
+                    changed = true;
+                }
+                previndex = index;
+                index = (String) row[i];
+            } else if (TYPE_COLUMN.equals(columns[i])) {
+                if (type != null && !type.equals(row[i])) {
+                    changed = true;
+                }
+                prevtype = type;
+                type = (String) row[i];
+            } else if (ID_COLUMN.equals(columns[i])) {
+                if (id != null && !id.equals(row[i])) {
+                    changed = true;
+                }
+                previd = id;
+                id = (String) row[i];
+            }
+        }
+        if (changed) {
+            flush(previndex, prevtype, previd);
+        }
+        for (int i = 0; i < columns.length; i++) {
+            if (!INDEX_COLUMN.equals(columns[i]) && !TYPE_COLUMN.equals(columns[i]) && !ID_COLUMN.equals(columns[i])) {
+                merge(map, columns[i], row[i]);
+            }
+        }
+    }
+    
+    /**
+     * Implement RowListener interface
+     * @param index
+     * @param type
+     * @param id
+     * @param keys
+     * @param values
+     * @throws IOException 
+     */
+    @Override
+    public void row(String index, String type, String id, List<String> keys, List<Object> values) throws IOException {
+        boolean changed = false;
+        if (this.index != null && !this.index.equals(index)) {
+            changed = true;
+        }
+        this.previndex = this.index;
+        this.index = index;
+        if (this.type != null && !this.type.equals(type)) {
+            changed = true;
+        }
+        this.prevtype = this.type;
+        this.type = type;
+        if (this.id != null && !this.id.equals(id)) {
+            changed = true;
+        }
+        this.previd = this.id;
+        this.id = id;
+        if (changed) {
+            flush(previndex, prevtype, previd);
+        }
+        for (int i = 0; i < keys.size(); i++) {
+           merge(map, keys.get(i), values.get(i));
+        }
+    }
+    
+    public XContentBuilder getBuilder() {
+        return builder;
+    }
+    
+    
+    /**
+     * Flush the merger
+     *
+     * @param index the index for the current merged
+     * @param type the type for the current merged
+     * @param id the id for the current merged
+     * @throws IOException
+     */
+    public void flush(String index, String type, String id) throws IOException {
+        if (!map.isEmpty()) {
+            build(map);
+            if (listener != null) {
+                listener.merged(index, type, id, builder);
+            }
+            builder.close();
+            builder = jsonBuilder();
+            map = new HashMap();
+        }
+    }
+
+    /**
+     * Close the merger
+     *
+     * @throws IOException
+     */
+    public void close() throws IOException {
+        flush(index, type, id);
+    }
+
+    /**
+     * Merge key/value pair to a map holding a JSON object. The key consists of
+     * a path pointing to the value position in the JSON object. The key,
+     * representing a path, is divided into head/tail. The recursion terminates
+     * if there is only a head and no tail. In this case, the value is added as
+     * a tuple to the map. If the head key exists, the merge process is
+     * continued by following the path represented by the key. If the path does
+     * not exist, a new map is created. A conflict arises if there is no map at
+     * a head key position. Then, the prefix given in the path is considered
+     * illegal.
+     *
+     * @param map the map for the JSON object
+     * @param key the key
+     * @param value the value
+     */
+    protected void merge(Map<String, Object> map, String key, Object value) {
+        int i = key.indexOf(delimiter);
+        if (i <= 0) {
+            map.put(key, new ValueSet(map.get(key), value));
+        } else {
+            String p = key.substring(0, i);
+            String q = key.substring(i + 1);
+            if (map.containsKey(p)) {
+                Object o = map.get(p);
+                if (o instanceof Map) {
+                    merge((Map<String, Object>) o, q, value);
+                } else {
+                    throw new IllegalArgumentException("illegal prefix: " + p);
+                }
+            } else {
+                Map<String, Object> m = new HashMap();
+                map.put(p, m);
+                merge(m, q, value);
+            }
+        }
+    }
+
+    /**
+     * Build JSON with the help of XContentBuilder.
+     *
+     * @param map the map holding the JSON object
+     * @throws IOException
+     */
+    public void build(Map<String, Object> map) throws IOException {
+        builder.startObject();
+        for (String k : map.keySet()) {
+            builder.field(k);
+            Object o = map.get(k);
+            if (o instanceof ValueSet) {
+                ((ValueSet) o).build(builder);
+            } else if (o instanceof Map) {
+                build((Map<String, Object>) o);
+            } else {
+                throw new IllegalArgumentException("?");
+            }
+        }
+        builder.endObject();
+    }
+
+
+}

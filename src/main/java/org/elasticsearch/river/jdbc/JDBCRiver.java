@@ -18,10 +18,10 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Map;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.client.Client;
@@ -29,8 +29,6 @@ import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.river.AbstractRiverComponent;
@@ -51,10 +49,12 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final TimeValue bulkTimeout;
     private final TimeValue poll;
     private final String url;
-    private final String driverClassName;
+    private final String driver;
     private final String username;
     private final String password;
     private final String sql;
+    private final int fetchsize;
+    private final List<Object> params;
     private volatile Thread thread;
     private volatile boolean closed;
 
@@ -68,17 +68,21 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             Map<String, Object> jdbcSettings = (Map<String, Object>) settings.settings().get("jdbc");
             poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), TimeValue.timeValueMinutes(60));
             url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), null);
-            driverClassName = XContentMapValues.nodeStringValue(jdbcSettings.get("driver"), null);
+            driver = XContentMapValues.nodeStringValue(jdbcSettings.get("driver"), null);
             username = XContentMapValues.nodeStringValue(jdbcSettings.get("username"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
+            fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
+            params = XContentMapValues.extractRawValues("params", jdbcSettings);
         } else {
             poll = TimeValue.timeValueMinutes(60);
             url = null;
-            driverClassName = null;
+            driver = null;
             username= null;
             password = null;
             sql = null;
+            fetchsize = 0;
+            params = null;
         }
         if (settings.settings().containsKey("index")) {
             Map<String, Object> indexSettings = (Map<String, Object>) settings.settings().get("index");
@@ -98,13 +102,13 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             maxBulkRequests = 30;
             bulkTimeout = TimeValue.timeValueMillis(60000);
         }
-        operation = new BulkWrite(logger, indexName, typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis());
+        operation = new BulkWrite(client, logger, indexName, typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis());
     }
 
     @Override
     public void start() {
         logger.info("starting JDBC connector: URL [{}], driver [{}], sql [{}], indexing to [{}]/[{}], poll [{}]",
-                url, driverClassName, sql, indexName, typeName, poll);
+                url, driver, sql, indexName, typeName, poll);
         try {
             client.admin().indices().prepareCreate(indexName).execute().actionGet();
         } catch (Exception e) {
@@ -134,22 +138,22 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
     private class JDBCConnector implements Runnable {
 
-
         @Override
         public void run() {
             SQLService service = new SQLService();
             while (true) {
                 try {
-                    Connection connection = service.getConnection(driverClassName, url, username, password);
+                    Connection connection = service.getConnection(driver, url, username, password);
                     PreparedStatement statement = service.prepareStatement(connection, sql);
-                    ResultSet results = service.execute(statement);
-                    SQLResultListener listener = new SQLResultListener();
-                    listener.setBuilder(jsonBuilder());
-                    while (service.nextRow(results, listener)) {
-                        operation.write(client, listener.getID(), listener.getBuilder());
-                        listener.setBuilder(jsonBuilder());
-                        listener.id(null); // reset ID
+                    service.bind(statement, params);
+                    ResultSet results = service.execute(statement, fetchsize); 
+                    Merger merger = new Merger(operation);
+                    long rows = 0L;
+                    while (service.nextRow(results, merger)) {
+                        rows++;
                     }
+                    logger.info("got " + rows +" rows");
+                    merger.close();
                     service.close(results);
                     service.close(statement);
                     service.close(connection);
@@ -168,67 +172,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private void delay(String reason) {
         if (poll.millis() > 0L) {
             logger.info("{}, waiting {}, URL [{}] driver [{}] sql [{}]",
-                    reason, poll, url, driverClassName, sql);
+                    reason, poll, url, driver, sql);
             try {
                 Thread.sleep(poll.millis());
             } catch (InterruptedException e1) {
             }
-        }
-    }
-    
-    private class SQLResultListener implements ResultListener {
-
-        private XContentBuilder builder;
-        private String id;
-        
-        SQLResultListener() {
-        }
-        
-        public void setBuilder(XContentBuilder builder) {
-            this.builder = builder;
-        }
-        
-        public XContentBuilder getBuilder() {
-            return builder;
-        }
-        
-        @Override
-        public void id(String value) throws IOException {
-            this.id = value;
-        }
-        
-        public String getID() {
-            return id;
-        }
-        
-        @Override
-        public void field(String name, String value) throws IOException {
-            builder.field(name, value);
-        }
-
-        @Override
-        public void field(String name, int value) throws IOException{
-            builder.field(name, value);
-        }
-
-        @Override
-        public void field(String name, long value) throws IOException{
-            builder.field(name, value);
-        }
-
-        @Override
-        public void field(String name, float value) throws IOException{
-            builder.field(name, value);
-        }
-
-        @Override
-        public void field(String name, double value) throws IOException{
-            builder.field(name, value);
-        }
-
-        @Override
-        public void field(String name, boolean value) throws IOException{
-            builder.field(name, value);
         }
     }
     

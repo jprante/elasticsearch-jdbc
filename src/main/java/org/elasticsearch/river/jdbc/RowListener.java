@@ -19,20 +19,20 @@
 package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
+import java.util.List;
 
-public interface ResultListener {
+public interface RowListener {
 
-    void id(String value) throws IOException;
-        
-    void field(String name, String value) throws IOException;
-
-    void field(String name, int value) throws IOException;
-
-    void field(String name, long value) throws IOException;
-
-    void field(String name, float value) throws IOException;
-
-    void field(String name, double value) throws IOException;
-
-    void field(String name, boolean value) throws IOException;
+    /**
+     * Submit a row to the listener.
+     * 
+     * @param index the index for the row
+     * @param type the type for the row
+     * @param id the id for the row
+     * @param keys the keys of the row (column labels)
+     * @param values the values of the row
+     * @throws IOException 
+     */
+    void row(String index, String type, String id, List<String> keys, List<Object> values) throws IOException;
+    
 }
