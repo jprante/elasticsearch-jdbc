@@ -152,8 +152,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     while (service.nextRow(results, merger)) {
                         rows++;
                     }
-                    logger.info("got " + rows +" rows");
                     merger.close();
+                    logger.info("got " + rows +" rows");
+                    operation.flush();
                     service.close(results);
                     service.close(statement);
                     service.close(connection);

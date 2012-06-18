@@ -57,7 +57,19 @@ public class BulkWrite implements MergeListener {
         this.id = null;
         this.totalTimeouts = 0;
     }
+    
+    public String getIndex() {
+        return index;
+    }
+    
+    public String getType() {
+        return type;
+    }
 
+    public String getId() {
+        return id;
+    }
+    
     public BulkWrite setBulkSize(int bulkSize) {
         this.bulkSize = bulkSize;
         return this;
@@ -81,14 +93,16 @@ public class BulkWrite implements MergeListener {
         if (type != null) {
             this.type = type;
         }
-        this.id = id;
+        if (id != null) {
+            this.id = id;
+        }
         if (id == null) {
-            return;
+            return; // skip
         }
         if (currentBulk.get() == null) {
             currentBulk.set(client.prepareBulk());
         }
-        currentBulk.get().add(Requests.indexRequest(index).type(type).id(id).create(false).source(builder));
+        currentBulk.get().add(Requests.indexRequest(getIndex()).type(getType()).id(getId()).create(false).source(builder));
         if (currentBulk.get().numberOfActions() >= bulkSize) {
             processBulk();
         }
