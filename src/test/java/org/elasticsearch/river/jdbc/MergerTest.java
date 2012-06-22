@@ -34,12 +34,12 @@ public class MergerTest {
         MergeListener listener =  new MergeListener() {
 
             @Override
-            public void merged(String index, String type, String id, XContentBuilder builder) throws IOException {
+            public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                System.err.println("index="+index + " type="+type + " id="+id+ " builder="+builder.string());
             }
             
         };
-        Merger merger = new Merger(listener);
+        Merger merger = new Merger(listener, 1L);
         merger.row(columns, row1);
         merger.row(columns, row2);
         merger.close();

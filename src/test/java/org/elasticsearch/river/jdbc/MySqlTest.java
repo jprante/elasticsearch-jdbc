@@ -42,7 +42,7 @@ public class MySqlTest {
             MergeListener listener = new MergeListener() {
 
                 @Override
-                public void merged(String index, String type, String id, XContentBuilder builder) throws IOException {
+                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
@@ -51,7 +51,7 @@ public class MySqlTest {
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener);
+            Merger merger = new Merger(listener, 1L);
             long rows = 0L;
             while (service.nextRow(results, merger)) {
                 rows++;
@@ -79,7 +79,7 @@ public class MySqlTest {
             MergeListener listener = new MergeListener() {
 
                 @Override
-                public void merged(String index, String type, String id, XContentBuilder builder) throws IOException {
+                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
@@ -88,7 +88,7 @@ public class MySqlTest {
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener);
+            Merger merger = new Merger(listener, 1L);
             long rows = 0L;
             while (service.nextRow(results, merger)) {
                 rows++;
@@ -116,7 +116,7 @@ public class MySqlTest {
             MergeListener listener = new MergeListener() {
 
                 @Override
-                public void merged(String index, String type, String id, XContentBuilder builder) throws IOException {
+                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
@@ -125,7 +125,7 @@ public class MySqlTest {
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener);
+            Merger merger = new Merger(listener, 1L);
             long rows = 0L;
             while (service.nextRow(results, merger)) {
                 rows++;
@@ -145,7 +145,7 @@ public class MySqlTest {
         try {
             String driverClassName = "com.mysql.jdbc.Driver";
             String url = "jdbc:mysql://localhost:3306/test";
-            String username = "";
+            String user = "";
             String password = "";
             String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.quantity * products.price > ?";
             List<Object> params = new ArrayList();
@@ -154,16 +154,16 @@ public class MySqlTest {
             MergeListener listener = new MergeListener() {
 
                 @Override
-                public void merged(String index, String type, String id, XContentBuilder builder) throws IOException {
+                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password);
+            Connection connection = service.getConnection(driverClassName, url, user, password);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener);
+            Merger merger = new Merger(listener, 1L);
             long rows = 0L;
             while (service.nextRow(results, merger)) {
                 rows++;
@@ -193,7 +193,7 @@ public class MySqlTest {
             MergeListener listener = new MergeListener() {
 
                 @Override
-                public void merged(String index, String type, String id, XContentBuilder builder) throws IOException {
+                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
@@ -202,7 +202,7 @@ public class MySqlTest {
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener);
+            Merger merger = new Merger(listener, 1L);
             long rows = 0L;
             while (service.nextRow(results, merger)) {
                 rows++;

@@ -18,24 +18,34 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import static org.elasticsearch.client.Requests.indexRequest;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.River;
 import org.elasticsearch.river.RiverIndexName;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
+import org.elasticsearch.search.SearchHit;
 
 public class JDBCRiver extends AbstractRiverComponent implements River {
 
@@ -43,20 +53,21 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String riverIndexName;
     private final String indexName;
     private final String typeName;
-    private final BulkWrite operation;
+    private final BulkOperation operation;
     private final int bulkSize;
     private final int maxBulkRequests;
     private final TimeValue bulkTimeout;
     private final TimeValue poll;
     private final String url;
     private final String driver;
-    private final String username;
+    private final String user;
     private final String password;
     private final String sql;
     private final int fetchsize;
     private final List<Object> params;
     private volatile Thread thread;
     private volatile boolean closed;
+    private Date creationDate;
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
@@ -69,7 +80,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), TimeValue.timeValueMinutes(60));
             url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), null);
             driver = XContentMapValues.nodeStringValue(jdbcSettings.get("driver"), null);
-            username = XContentMapValues.nodeStringValue(jdbcSettings.get("username"), null);
+            user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
@@ -78,7 +89,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             poll = TimeValue.timeValueMinutes(60);
             url = null;
             driver = null;
-            username= null;
+            user = null;
             password = null;
             sql = null;
             fetchsize = 0;
@@ -102,7 +113,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             maxBulkRequests = 30;
             bulkTimeout = TimeValue.timeValueMillis(60000);
         }
-        operation = new BulkWrite(client, logger, indexName, typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis());
+        operation = new BulkOperation(client, logger, indexName, typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis());
     }
 
     @Override
@@ -111,8 +122,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 url, driver, sql, indexName, typeName, poll);
         try {
             client.admin().indices().prepareCreate(indexName).execute().actionGet();
+            creationDate = new Date();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
+                creationDate = null;
                 // that's fine
             } else if (ExceptionsHelper.unwrapCause(e) instanceof ClusterBlockException) {
                 // ok, not recovered yet..., lets start indexing and hope we recover by the first bulk
@@ -143,24 +156,59 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             SQLService service = new SQLService();
             while (true) {
                 try {
-                    Connection connection = service.getConnection(driver, url, username, password);
+                    Number version;
+                    String digest;
+                    // read state from _custom
+                    client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
+                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
+                    if (creationDate != null || !get.exists()) {
+                        version = 1L;
+                        digest = null;
+                    } else {
+                        Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
+                        if (jdbcState != null) {
+                            version = (Number) jdbcState.get("version");
+                            version = version.longValue() + 1; // increase to next version
+                            digest = (String) jdbcState.get("digest");
+                        } else {
+                            throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName().name());
+                        }
+                    }
+                    Connection connection = service.getConnection(driver, url, user, password);
                     PreparedStatement statement = service.prepareStatement(connection, sql);
                     service.bind(statement, params);
-                    ResultSet results = service.execute(statement, fetchsize); 
-                    Merger merger = new Merger(operation);
+                    ResultSet results = service.execute(statement, fetchsize);
+                    Merger merger = new Merger(operation, version.longValue());
                     long rows = 0L;
                     while (service.nextRow(results, merger)) {
                         rows++;
                     }
                     merger.close();
-                    logger.info("got " + rows +" rows");
-                    operation.flush();
                     service.close(results);
                     service.close(statement);
                     service.close(connection);
+                    logger.info("got " + rows + " rows for version " + version.longValue() + ", digest = " + merger.getDigest());
+                    // this flush is required before house keeping starts
+                    operation.flush();
+                    // save state to _custom
+                    XContentBuilder builder = jsonBuilder();
+                    builder.startObject().startObject("jdbc");
+                    if (creationDate != null) {
+                        builder.field("created", creationDate);
+                    }
+                    builder.field("version", version.longValue());
+                    builder.field("digest", merger.getDigest());
+                    builder.endObject().endObject();
+                    client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
+                    // house keeping if data has changed
+                    if (digest != null && !merger.getDigest().equals(digest)) {
+                        housekeeper(version.longValue());
+                        // perform outstanding housekeeper bulk requests
+                        operation.flush();
+                    }
                     delay("next run");
                 } catch (Exception e) {
-                    logger.error(e.getMessage(), e, (Object)null);
+                    logger.error(e.getMessage(), e, (Object) null);
                     closed = true;
                 }
                 if (closed) {
@@ -168,6 +216,59 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 }
             }
         }
+    }
+
+    private void housekeeper(long version) throws IOException {
+        logger.info("housekeeping for version " + version);
+        client.admin().indices().prepareRefresh(indexName).execute().actionGet();
+        SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN)
+                .setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
+        if (response.timedOut()) {
+            logger.error("housekeeper scan query timeout");
+            return;
+        }
+        if (response.failedShards() > 0) {
+            logger.error("housekeeper failed shards in scan response: {0}", response.failedShards());
+            return;
+        }
+        String scrollId = response.getScrollId();
+        if (scrollId == null) {
+            logger.error("housekeeper failed, no scroll ID");
+            return;
+        }
+        boolean done = false;
+        // scroll
+        long deleted = 0L;
+        long t0 = System.currentTimeMillis();
+        do {
+            response = client.prepareSearchScroll(response.getScrollId()).setScroll(TimeValue.timeValueMinutes(10)).execute().actionGet();
+            if (response.timedOut()) {
+                logger.error("housekeeper scroll query timeout");
+                done = true;
+            } else if (response.failedShards() > 0) {
+                logger.error("housekeeper failed shards in scroll response: {}", response.failedShards());
+                done = true;
+            } else {
+                // terminate scrolling?
+                if (response.hits() == null) {
+                    done = true;
+                } else {
+                    for (SearchHit hit : response.getHits().getHits()) {
+                        // delete all documents with lower version
+                        if (hit.getVersion() < version) {                            
+                            operation.delete(hit.getIndex(), hit.getType(), hit.getId(), hit.getVersion());
+                            deleted++;
+                        }
+                    }
+                    scrollId = response.getScrollId();
+               }
+            }
+            if (scrollId != null) {
+                done = true;
+            }
+        } while (!done);
+        long t1 = System.currentTimeMillis();
+        logger.info("housekeeper ready, {} documents deleted, took {} ms", deleted, t1 - t0);
     }
 
     private void delay(String reason) {

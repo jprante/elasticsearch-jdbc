@@ -309,6 +309,58 @@ A bulk timeout defines the time period after which bulk feeds continue.
 	    }
 	}'
 
+Updates
+-------
+
+Updates are implemented with the help of the versioning feature of Elasticsearch. All indexed documents are versioned starting with version 1 and the version is incremented by 1 between river runs. 
+
+If a new document ID appears provided by the SQL DB, Elasticsearch will just index the new document.
+
+If an existing document ID appears again, but with changed data, Elasticsearch will index the new data under the same document ID. Previous data will be overwritten.
+
+If a document ID is no longer provided by the SQL DB between river runs, Elasticsearch will not index. As a result, the version of the document in the index gets lower than the actual version managed by the river run, and a housekeeping procedure is required to remove such obsolete documents.
+
+How are changes in the document ID set between river runs detected? While rows are selected from the SQL DB at each river run, they are consumed by a merge process. The merge process has a SHA-256 message digester for the sequence of the values of index / type / id of the generated JSON documents. If the checksum changes between river runs, the SQL DB must have changed object-relevant parts of the source data. The change of the checksum will trigger a housekeeping procedure at the end of a river run. 
+
+Be warned that housekeeping is expensive because there is no method in Elasticsearch to purge all documents with lower versions from an index in a single operation. So, housekeeping means that the JDBC index is queried by a scan type query, the results are scrolled at the size of a bulk request, and each document is being examined for the version. The scroll ID lives for a maximum of 10 minutes. If the version is lower than the one of the current river run, the document gets deleted. The housekeeper uses bulk deletion.
+
+Note: the more frequent SQL DB deletions in occur, the more expensive operations in the Elasticsearch cluster will become because of the segment data deletion management of Lucene. This may harm the overall performance of Elasticsearch. It is recommended to queue up SQL DB deletes, and perform them at once in large intervals (e.g. once at night time).
+
+Deletions
+---------
+
+Deletions are updates where document IDs are no longer provided by the SQL DB.
+
+**Example**
+
+	[2012-06-22 14:19:31,555][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] starting JDBC connector: URL [jdbc:mysql://localhost:3306/test], driver [com.mysql.jdbc.Driver], sql [select * from orders], indexing to [jdbc]/[jdbc], poll [1h]
+	[2012-06-22 14:19:32,611][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] got 5 rows for version 32, digest = xWX+A8qbYkLgHf3e/pu6PZiycOGc0C/YXOr3XislvxI=
+	[2012-06-22 14:19:32,611][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] submitting new bulk request (5 docs, 1 requests currently active)
+	[2012-06-22 14:19:32,617][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] waiting for 1 active bulk requests
+	[2012-06-22 14:19:32,646][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] bulk request success (34 millis, 5 docs, total of 5 docs)
+	[2012-06-22 14:19:32,656][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] housekeeping for version 32
+	[2012-06-22 14:19:32,777][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] housekeeper ready, 0 documents deleted, took 15 ms
+	[2012-06-22 14:19:32,777][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] next run, waiting 1h, URL [jdbc:mysql://localhost:3306/test] driver [com.mysql.jdbc.Driver] sql [select * from orders]
+	[2012-06-22 14:20:12,736][INFO ][node                     ] [van Horne, Katrina Luisa] {0.19.2}[64621]: stopping ...
+	[2012-06-22 14:20:12,739][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] closing JDBC river
+	[2012-06-22 14:20:12,845][INFO ][node                     ] [van Horne, Katrina Luisa] {0.19.2}[64621]: stopped
+	[2012-06-22 14:20:12,846][INFO ][node                     ] [van Horne, Katrina Luisa] {0.19.2}[64621]: closing ...
+	[2012-06-22 14:20:12,855][INFO ][node                     ] [van Horne, Katrina Luisa] {0.19.2}[64621]: closed
+
+	mysql> delete from orders where customer = 'Bad';
+	Query OK, 1 row affected (0.00 sec)
+
+	[2012-06-22 14:20:22,500][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river2] starting JDBC connector: URL [jdbc:mysql://localhost:3306/test], driver [com.mysql.jdbc.Driver], sql [select * from orders], indexing to [jdbc]/[jdbc], poll [1h]
+	[2012-06-22 14:20:22,963][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] got 4 rows for version 33, digest = 	G+LkUrRteg2WVrux92joJI66G3W67WX12Z6vqUiJmmo=
+	[2012-06-22 14:20:22,964][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] submitting new bulk request (4 docs, 1 requests currently active)
+	[2012-06-22 14:20:22,971][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] waiting for 1 active bulk requests
+	[2012-06-22 14:20:22,973][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] bulk request success (8 millis, 4 docs, total of 4 docs)
+	[2012-06-22 14:20:22,979][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] housekeeping for version 33
+	[2012-06-22 14:20:23,125][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] housekeeper ready, 1 documents deleted, took 18 ms
+	[2012-06-22 14:20:23,126][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] submitting new bulk request (1 docs, 1 requests currently active)
+	[2012-06-22 14:20:23,126][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] waiting for 1 active bulk requests
+	[2012-06-22 14:20:23,128][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] bulk request success (2 millis, 1 docs, total of 5 docs)
+	[2012-06-22 14:20:23,129][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] next run, waiting 1h, URL [jdbc:mysql://localhost:3306/test] driver [com.mysql.jdbc.Driver] sql [select * from orders]
 
 Stopping/deleting the river
 ---------------------------

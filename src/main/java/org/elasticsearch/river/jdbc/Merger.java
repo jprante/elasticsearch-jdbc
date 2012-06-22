@@ -19,9 +19,12 @@
 package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.elasticsearch.common.Base64;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -32,7 +35,7 @@ public class Merger implements RowListener {
 
     private final static String INDEX_COLUMN = "_index";
     private final static String TYPE_COLUMN = "_type";
-    private final static String ID_COLUMN = "_id";    
+    private final static String ID_COLUMN = "_id";
     private char delimiter;
     private XContentBuilder builder;
     private MergeListener listener;
@@ -43,29 +46,36 @@ public class Merger implements RowListener {
     private String index;
     private String type;
     private String id;
+    private final long version;
+    private final MessageDigest digest;
+    private String digestString;
+    private boolean closed;
 
     /**
-     * Constructor for a new merger
+     * Constructor for a new Merger object
      *
      * @param listener the listener
      * @throws IOException
      */
-    public Merger(MergeListener listener) throws IOException {
-        this('.', listener);
+    public Merger(MergeListener listener, long version) throws IOException, NoSuchAlgorithmException {
+        this('.', listener, version);
     }
 
     /**
-     * Constructor for a new merger
+     * Constructor for a new Merger object
      *
      * @param delimiter
      * @param listener
      * @throws IOException
      */
-    public Merger(char delimiter, MergeListener listener) throws IOException {
+    public Merger(char delimiter, MergeListener listener, long version) throws IOException, NoSuchAlgorithmException {
         this.delimiter = delimiter;
         this.builder = jsonBuilder();
         this.listener = listener;
         this.map = new HashMap();
+        this.version = version;
+        this.digest = MessageDigest.getInstance("SHA-256");
+        this.closed = false;
     }
 
     /**
@@ -107,15 +117,16 @@ public class Merger implements RowListener {
             }
         }
     }
-    
+
     /**
      * Implement RowListener interface
+     *
      * @param index
      * @param type
      * @param id
      * @param keys
      * @param values
-     * @throws IOException 
+     * @throws IOException
      */
     @Override
     public void row(String index, String type, String id, List<String> keys, List<Object> values) throws IOException {
@@ -139,15 +150,14 @@ public class Merger implements RowListener {
             flush(previndex, prevtype, previd);
         }
         for (int i = 0; i < keys.size(); i++) {
-           merge(map, keys.get(i), values.get(i));
+            merge(map, keys.get(i), values.get(i));
         }
     }
-    
+
     public XContentBuilder getBuilder() {
         return builder;
     }
-    
-    
+
     /**
      * Flush the merger
      *
@@ -160,7 +170,16 @@ public class Merger implements RowListener {
         if (!map.isEmpty()) {
             build(map);
             if (listener != null) {
-                listener.merged(index, type, id, builder);
+                listener.merged(index, type, id, version, builder);
+            }
+            if (index != null) {
+                digest.update(index.getBytes("UTF-8"));
+            }
+            if (type != null) {
+                digest.update(type.getBytes("UTF-8"));
+            }
+            if (id != null) {
+                digest.update(id.getBytes("UTF-8"));
             }
             builder.close();
             builder = jsonBuilder();
@@ -169,12 +188,25 @@ public class Merger implements RowListener {
     }
 
     /**
+     * Return a message digest (in base64-encoded form)
+     *
+     * @return
+     */
+    public String getDigest() {
+        return digestString;
+    }
+
+    /**
      * Close the merger
      *
      * @throws IOException
      */
     public void close() throws IOException {
-        flush(index, type, id);
+        if (!closed) {
+            flush(index, type, id);
+            this.digestString = Base64.encodeBytes(digest.digest());
+            closed = true;
+        }
     }
 
     /**
@@ -235,6 +267,4 @@ public class Merger implements RowListener {
         }
         builder.endObject();
     }
-
-
 }

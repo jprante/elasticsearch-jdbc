@@ -27,13 +27,14 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.index.VersionType;
 
 /**
- * Write bulk data to Elasticsearch
+ * Send bulk data to Elasticsearch
  *
  * @author <a href="mailto:joergprante@gmail.com">J&ouml;rg Prante</a>
  */
-public class BulkWrite implements MergeListener {
+public class BulkOperation implements MergeListener {
 
     private String index;
     private String type;
@@ -49,7 +50,7 @@ public class BulkWrite implements MergeListener {
     private static final AtomicInteger counter = new AtomicInteger(0);
     private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
 
-    public BulkWrite(Client client, ESLogger logger, String index, String type) {
+    public BulkOperation(Client client, ESLogger logger, String index, String type) {
         this.client = client;
         this.logger = logger;
         this.index = index;
@@ -70,23 +71,45 @@ public class BulkWrite implements MergeListener {
         return id;
     }
     
-    public BulkWrite setBulkSize(int bulkSize) {
+    public BulkOperation setBulkSize(int bulkSize) {
         this.bulkSize = bulkSize;
         return this;
     }
 
-    public BulkWrite setMaxActiveRequests(int maxActiveRequests) {
+    public BulkOperation setMaxActiveRequests(int maxActiveRequests) {
         this.maxActiveRequests = maxActiveRequests;
         return this;
     }
 
-    public BulkWrite setMillisBeforeContinue(long millis) {
+    public BulkOperation setMillisBeforeContinue(long millis) {
         this.millisBeforeContinue = millis;
         return this;
     }
 
     @Override
-    public void merged(String index, String type, String id, XContentBuilder builder) {
+    public void merged(String index, String type, String id, long version, XContentBuilder builder) {
+        if (index != null) {
+            this.index = index;
+        }
+        if (type != null) {
+            this.type = type;
+        }
+        if (id != null) {
+            this.id = id;
+        }
+        if (id == null) {
+            return; // skip if ID is null
+        }
+        if (currentBulk.get() == null) {
+            currentBulk.set(client.prepareBulk());
+        }
+        currentBulk.get().add(Requests.indexRequest(getIndex()).type(getType()).id(getId()).versionType(VersionType.EXTERNAL).version(version).source(builder));
+        if (currentBulk.get().numberOfActions() >= bulkSize) {
+            processBulk();
+        }
+    }
+    
+    public void delete(String index, String type, String id, long version) {
         if (index != null) {
             this.index = index;
         }
@@ -102,10 +125,10 @@ public class BulkWrite implements MergeListener {
         if (currentBulk.get() == null) {
             currentBulk.set(client.prepareBulk());
         }
-        currentBulk.get().add(Requests.indexRequest(getIndex()).type(getType()).id(getId()).create(false).source(builder));
+        currentBulk.get().add(Requests.deleteRequest(getIndex()).type(getType()).id(getId()));
         if (currentBulk.get().numberOfActions() >= bulkSize) {
             processBulk();
-        }
+        }        
     }
     
     public void flush() throws IOException {
@@ -147,17 +170,17 @@ public class BulkWrite implements MergeListener {
         }
         int currentOnGoingBulks = onGoingBulks.incrementAndGet();
         final int numberOfActions = currentBulk.get().numberOfActions();
-        logger.info("submitting new bulk index request ({} docs, {} requests currently active)", new Object[]{numberOfActions, currentOnGoingBulks});
+        logger.info("submitting new bulk request ({} docs, {} requests currently active)", new Object[]{numberOfActions, currentOnGoingBulks});
         try {
             currentBulk.get().execute(new ActionListener<BulkResponse>() {
 
                 @Override
                 public void onResponse(BulkResponse bulkResponse) {
                     if (bulkResponse.hasFailures()) {
-                        logger.error("bulk index has failures: {}", bulkResponse.buildFailureMessage());
+                        logger.error("bulk request has failures: {}", bulkResponse.buildFailureMessage());
                     } else {
                         final int totalActions = counter.addAndGet(numberOfActions);
-                        logger.info("bulk index success ({} millis, {} docs, total of {} docs)", new Object[]{bulkResponse.tookInMillis(), numberOfActions, totalActions});
+                        logger.info("bulk request success ({} millis, {} docs, total of {} docs)", new Object[]{bulkResponse.tookInMillis(), numberOfActions, totalActions});
                     }
                     onGoingBulks.decrementAndGet();
                     synchronized (onGoingBulks) {

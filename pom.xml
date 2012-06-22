@@ -6,7 +6,7 @@
     <groupId>org.elasticsearch</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
     <name>elasticsearch-river-jdbc</name>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
     <description>JDBC River for ElasticSearch</description>
     <inceptionYear>2012</inceptionYear>
@@ -34,13 +34,6 @@
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
             <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.6</version>
-            <type>jar</type>
         </dependency>
 
         <dependency>

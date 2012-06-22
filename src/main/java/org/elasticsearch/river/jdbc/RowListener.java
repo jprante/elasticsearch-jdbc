@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.List;
 
 public interface RowListener {
-
+    
     /**
-     * Submit a row to the listener.
+     * Submit a row to the listener with a generic ID string.
      * 
      * @param index the index for the row
      * @param type the type for the row

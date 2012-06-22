@@ -40,6 +40,12 @@ public class DateUtil {
     public static String formatNow() {
         return formatDateISO(new Date());
     }
+
+    public static String formatDateISO(long millis) {
+        Date d = new Date();
+        d.setTime(millis);
+        return formatDateISO(d);
+    }
     
     public synchronized static String formatDateISO(Date date) {
         if (date == null) {

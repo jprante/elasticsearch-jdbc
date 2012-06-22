@@ -43,17 +43,17 @@ public class SQLService {
      * Get JDBC connection
      * @param driverClassName
      * @param jdbcURL
-     * @param username
+     * @param user
      * @param password
      * @return the connection
      * @throws ClassNotFoundException
      * @throws SQLException 
      */
     public Connection getConnection(final String driverClassName,
-            final String jdbcURL, final String username, final String password)
+            final String jdbcURL, final String user, final String password)
             throws ClassNotFoundException, SQLException {
         Class.forName(driverClassName);
-        Connection connection = DriverManager.getConnection(jdbcURL, username, password);
+        Connection connection = DriverManager.getConnection(jdbcURL, user, password);
         connection.setReadOnly(true);
         connection.setAutoCommit(false);
         return connection;
@@ -153,10 +153,10 @@ public class SQLService {
                 } else if (metadata.getColumnType(i) == Types.SMALLINT) {
                     values.add(result.getInt(i));
                 } else if (metadata.getColumnType(i) == Types.DATE) {
-                    values.add(result.getDate(i).getTime());
+                    values.add(DateUtil.formatDateISO(result.getDate(i).getTime()));
                 } else if (metadata.getColumnType(i) == Types.TIMESTAMP) {
                     try {
-                        values.add(result.getTimestamp(i).getTime());
+                        values.add(DateUtil.formatDateISO(result.getTimestamp(i).getTime()));
                     } catch (SQLException e) {
                         // java.sql.SQLException: Cannot convert value '0000-00-00 00:00:00' from column ... to TIMESTAMP.
                         values.add(null);
