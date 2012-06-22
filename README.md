@@ -324,7 +324,7 @@ How are changes in the document ID set between river runs detected? While rows a
 
 Be warned that housekeeping is expensive because there is no method in Elasticsearch to purge all documents with lower versions from an index in a single operation. So, housekeeping means that the JDBC index is queried by a scan type query, the results are scrolled at the size of a bulk request, and each document is being examined for the version. The scroll ID lives for a maximum of 10 minutes. If the version is lower than the one of the current river run, the document gets deleted. The housekeeper uses bulk deletion.
 
-Note: the more frequent SQL DB deletions in occur, the more expensive operations in the Elasticsearch cluster will become because of the segment data deletion management of Lucene. This may harm the overall performance of Elasticsearch. It is recommended to queue up SQL DB deletes, and perform them at once in large intervals (e.g. once at night time).
+Note: the more frequent SQL DB deletions occur, the more expensive operations in the Elasticsearch cluster will become because of the segment data deletion management of Lucene. This may harm the overall performance of Elasticsearch. It is recommended to queue up SQL DB deletes, and perform them at once in large intervals (e.g. once at night time).
 
 Deletions
 ---------
