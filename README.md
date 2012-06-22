@@ -275,7 +275,7 @@ Each river can index into a specified index. Example:
 	        "url" : "jdbc:mysql://localhost:3306/test",
 	        "user" : "",
 	        "password" : "",
-	        "sql" : "select * from orders",
+	        "sql" : "select * from orders"
 	    },
 	    "index" : {
 	        "index" : "jdbc",
@@ -300,7 +300,7 @@ A bulk timeout defines the time period after which bulk feeds continue.
 	        "url" : "jdbc:mysql://localhost:3306/test",
 	        "user" : "",
 	        "password" : "",
-	        "sql" : "select * from orders",
+	        "sql" : "select * from orders"
 	    },
 	    "index" : {
 	        "index" : "jdbc",
@@ -310,6 +310,34 @@ A bulk timeout defines the time period after which bulk feeds continue.
 	        "bulk_timeout" : "60s"
 	    }
 	}'
+
+Polling
+-------
+
+JDBC river runs are repeated at a given interval. This method is also known as "polling". You can specify the polling intervall with the ``poll`` parameter, which takes an Elasticsearch time value. The default value is **1h** (one hour).
+
+Example
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "type" : "jdbc",
+	    "jdbc" : {
+	        "driver" : "com.mysql.jdbc.Driver",
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+	        "sql" : "select * from orders",
+	        "poll" : "1h" 
+	    },
+	    "index" : {
+	        "index" : "jdbc",
+	        "type" : "jdbc",
+	        "bulk_size" : 100,
+	        "max_bulk_requests" : 30,
+	        "bulk_timeout" : "60s"
+	    }
+	}'
+
+
 
 Updates
 -------
