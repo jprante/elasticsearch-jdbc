@@ -314,7 +314,7 @@ A bulk timeout defines the time period after which bulk feeds continue.
 Polling
 -------
 
-JDBC river runs are repeated at a given interval. This method is also known as "polling". You can specify the polling intervall with the ``poll`` parameter, which takes an Elasticsearch time value. The default value is **1h** (one hour).
+JDBC river runs are repeated at a given interval. This method is also known as "polling". You can specify the polling interval with the ``poll`` parameter, which takes an Elasticsearch time value. The default value is **1h** (one hour).
 
 Example
 
