@@ -53,11 +53,13 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String riverIndexName;
     private final String indexName;
     private final String typeName;
+    private final SQLService service;
     private final BulkOperation operation;
     private final int bulkSize;
     private final int maxBulkRequests;
     private final TimeValue bulkTimeout;
     private final TimeValue poll;
+    private final TimeValue interval;
     private final String url;
     private final String driver;
     private final String user;
@@ -65,6 +67,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String sql;
     private final int fetchsize;
     private final List<Object> params;
+    private final boolean rivertable;
     private volatile Thread thread;
     private volatile boolean closed;
     private Date creationDate;
@@ -85,6 +88,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
+            rivertable = XContentMapValues.nodeBooleanValue("rivertable", false);
+            interval = XContentMapValues.nodeTimeValue(jdbcSettings.get("interval"), TimeValue.timeValueMinutes(60));
         } else {
             poll = TimeValue.timeValueMinutes(60);
             url = null;
@@ -94,6 +99,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             sql = null;
             fetchsize = 0;
             params = null;
+            rivertable = false;
+            interval = TimeValue.timeValueMinutes(60);
         }
         if (settings.settings().containsKey("index")) {
             Map<String, Object> indexSettings = (Map<String, Object>) settings.settings().get("index");
@@ -113,13 +120,14 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             maxBulkRequests = 30;
             bulkTimeout = TimeValue.timeValueMillis(60000);
         }
-        operation = new BulkOperation(client, logger, indexName, typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis());
+        service = new SQLService(logger);
+        operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), service);
     }
 
     @Override
     public void start() {
-        logger.info("starting JDBC connector: URL [{}], driver [{}], sql [{}], indexing to [{}]/[{}], poll [{}]",
-                url, driver, sql, indexName, typeName, poll);
+        logger.info("starting JDBC connector: URL [{}], driver [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
+                url, driver, sql, rivertable, indexName, typeName, poll);
         try {
             client.admin().indices().prepareCreate(indexName).execute().actionGet();
             creationDate = new Date();
@@ -129,13 +137,12 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 // that's fine
             } else if (ExceptionsHelper.unwrapCause(e) instanceof ClusterBlockException) {
                 // ok, not recovered yet..., lets start indexing and hope we recover by the first bulk
-                // TODO: a smarter logic can be to register for cluster event listener here, and only start sampling when the block is removed...
             } else {
                 logger.warn("failed to create index [{}], disabling river...", e, indexName);
                 return;
             }
         }
-        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(new JDBCConnector());
+        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(rivertable ? new JDBCRiverTableConnector() : new JDBCConnector());
         thread.start();
     }
 
@@ -153,7 +160,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
         @Override
         public void run() {
-            SQLService service = new SQLService();
             while (true) {
                 try {
                     Number version;
@@ -174,7 +180,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                             throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName().name());
                         }
                     }
-                    Connection connection = service.getConnection(driver, url, user, password);
+                    Connection connection = service.getConnection(driver, url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, sql);
                     service.bind(statement, params);
                     ResultSet results = service.execute(statement, fetchsize);
@@ -218,11 +224,47 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         }
     }
 
+    private class JDBCRiverTableConnector implements Runnable {
+
+        private String[] optypes = new String[]{"create", "index", "delete"};
+
+        @Override
+        public void run() {
+            while (true) {                
+                for (String optype : optypes) {
+                    try {
+                        Connection connection = service.getConnection(driver, url, user, password, false);
+                        PreparedStatement statement = service.prepareRiverTableStatement(connection, riverName.getName(), optype, interval.millis());
+                        ResultSet results = service.execute(statement, fetchsize);
+                        Merger merger = new Merger(operation);
+                        long rows = 0L;
+                        while (service.nextRiverTableRow(results, merger)) {
+                            rows++;
+                        }
+                        merger.close();
+                        service.close(results);
+                        service.close(statement);
+                        logger.info(optype + ": got " + rows + " rows");
+                        // this flush is required before next run
+                        operation.flush();
+                        service.close(connection);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage(), e, (Object) null);
+                        closed = true;
+                    }
+                    if (closed) {
+                        return;
+                    }
+                }
+                delay("next run");
+            }
+        }
+    }
+
     private void housekeeper(long version) throws IOException {
         logger.info("housekeeping for version " + version);
         client.admin().indices().prepareRefresh(indexName).execute().actionGet();
-        SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN)
-                .setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
+        SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN).setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
         if (response.timedOut()) {
             logger.error("housekeeper scan query timeout");
             return;
@@ -255,13 +297,13 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 } else {
                     for (SearchHit hit : response.getHits().getHits()) {
                         // delete all documents with lower version
-                        if (hit.getVersion() < version) {                            
-                            operation.delete(hit.getIndex(), hit.getType(), hit.getId(), hit.getVersion());
+                        if (hit.getVersion() < version) {
+                            operation.delete(hit.getIndex(), hit.getType(), hit.getId());
                             deleted++;
                         }
                     }
                     scrollId = response.getScrollId();
-               }
+                }
             }
             if (scrollId != null) {
                 done = true;
@@ -273,13 +315,12 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
     private void delay(String reason) {
         if (poll.millis() > 0L) {
-            logger.info("{}, waiting {}, URL [{}] driver [{}] sql [{}]",
-                    reason, poll, url, driver, sql);
+            logger.info("{}, waiting {}, URL [{}] driver [{}] sql [{}] river table [{}]",
+                    reason, poll, url, driver, sql, rivertable);
             try {
                 Thread.sleep(poll.millis());
             } catch (InterruptedException e1) {
             }
         }
     }
-    
 }

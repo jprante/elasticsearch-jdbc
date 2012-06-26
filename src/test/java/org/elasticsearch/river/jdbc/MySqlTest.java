@@ -39,15 +39,15 @@ public class MySqlTest {
             String sql = "select * from orders";
             List<Object> params = new ArrayList();
             int fetchsize = 0;
-            MergeListener listener = new MergeListener() {
+            Action listener = new DefaultAction() {
 
                 @Override
-                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password);
+            Connection connection = service.getConnection(driverClassName, url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -76,15 +76,15 @@ public class MySqlTest {
             String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product ";
             List<Object> params = new ArrayList();
             int fetchsize = 0;
-            MergeListener listener = new MergeListener() {
+            Action listener = new DefaultAction() {
 
                 @Override
-                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password);
+            Connection connection = service.getConnection(driverClassName, url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -113,15 +113,15 @@ public class MySqlTest {
             String sql = "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department";
             List<Object> params = new ArrayList();
             int fetchsize = 0;
-            MergeListener listener = new MergeListener() {
+            Action listener = new DefaultAction() {
 
                 @Override
-                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password);
+            Connection connection = service.getConnection(driverClassName, url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -151,15 +151,15 @@ public class MySqlTest {
             List<Object> params = new ArrayList();
             params.add(5.0);
             int fetchsize = 0;
-            MergeListener listener = new MergeListener() {
+            Action listener = new DefaultAction() {
 
                 @Override
-                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, user, password);
+            Connection connection = service.getConnection(driverClassName, url, user, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);
@@ -190,15 +190,15 @@ public class MySqlTest {
             params.add("2012-06-01");
             params.add("$now");
             int fetchsize = 0;
-            MergeListener listener = new MergeListener() {
+            Action listener = new DefaultAction() {
 
                 @Override
-                public void merged(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
                     System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
                 }
             };
             SQLService service = new SQLService();
-            Connection connection = service.getConnection(driverClassName, url, username, password);
+            Connection connection = service.getConnection(driverClassName, url, username, password, true);
             PreparedStatement statement = service.prepareStatement(connection, sql);
             service.bind(statement, params);
             ResultSet results = service.execute(statement, fetchsize);

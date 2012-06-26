@@ -33,16 +33,19 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  */
 public class Merger implements RowListener {
 
+    private final static String OPTYPE_COLUMN = "_optype";
     private final static String INDEX_COLUMN = "_index";
     private final static String TYPE_COLUMN = "_type";
     private final static String ID_COLUMN = "_id";
     private char delimiter;
     private XContentBuilder builder;
-    private MergeListener listener;
+    private Action listener;
     private Map<String, Object> map;
+    private String prevoptype;
     private String previndex;
     private String prevtype;
     private String previd;
+    private String optype;
     private String index;
     private String type;
     private String id;
@@ -51,27 +54,31 @@ public class Merger implements RowListener {
     private String digestString;
     private boolean closed;
 
+    public Merger(Action action) throws IOException, NoSuchAlgorithmException {
+        this('.', action, -1L);
+    }
+    
     /**
      * Constructor for a new Merger object
      *
-     * @param listener the listener
+     * @param optype the optype listener
      * @throws IOException
      */
-    public Merger(MergeListener listener, long version) throws IOException, NoSuchAlgorithmException {
-        this('.', listener, version);
+    public Merger(Action action, long version) throws IOException, NoSuchAlgorithmException {
+        this('.', action, version);
     }
 
     /**
      * Constructor for a new Merger object
      *
      * @param delimiter
-     * @param listener
+     * @param optype
      * @throws IOException
      */
-    public Merger(char delimiter, MergeListener listener, long version) throws IOException, NoSuchAlgorithmException {
+    public Merger(char delimiter, Action action, long version) throws IOException, NoSuchAlgorithmException {
         this.delimiter = delimiter;
         this.builder = jsonBuilder();
-        this.listener = listener;
+        this.listener = action;
         this.map = new HashMap();
         this.version = version;
         this.digest = MessageDigest.getInstance("SHA-256");
@@ -88,7 +95,13 @@ public class Merger implements RowListener {
     public void row(String[] columns, Object[] row) throws IOException {
         boolean changed = false;
         for (int i = 0; i < columns.length; i++) {
-            if (INDEX_COLUMN.equals(columns[i])) {
+            if (OPTYPE_COLUMN.equals(columns[i])) {
+                if (optype != null && !optype.equals(row[i])) {
+                    changed = true;
+                }
+                prevoptype = optype;
+                optype = (String) row[i];
+            } else if (INDEX_COLUMN.equals(columns[i])) {
                 if (index != null && !index.equals(row[i])) {
                     changed = true;
                 }
@@ -109,10 +122,13 @@ public class Merger implements RowListener {
             }
         }
         if (changed) {
-            flush(previndex, prevtype, previd);
+            flush(prevoptype, previndex, prevtype, previd);
         }
         for (int i = 0; i < columns.length; i++) {
-            if (!INDEX_COLUMN.equals(columns[i]) && !TYPE_COLUMN.equals(columns[i]) && !ID_COLUMN.equals(columns[i])) {
+            if (!OPTYPE_COLUMN.equals(columns[i]) &&
+                !INDEX_COLUMN.equals(columns[i]) && 
+                    !TYPE_COLUMN.equals(columns[i]) && 
+                    !ID_COLUMN.equals(columns[i])) {
                 merge(map, columns[i], row[i]);
             }
         }
@@ -129,8 +145,13 @@ public class Merger implements RowListener {
      * @throws IOException
      */
     @Override
-    public void row(String index, String type, String id, List<String> keys, List<Object> values) throws IOException {
+    public void row(String optype, String index, String type, String id, List<String> keys, List<Object> values) throws IOException {
         boolean changed = false;
+        if (this.optype != null && !this.optype.equals(optype)) {
+            changed = true;
+        }
+        this.prevoptype = this.optype;
+        this.optype = optype;
         if (this.index != null && !this.index.equals(index)) {
             changed = true;
         }
@@ -147,7 +168,7 @@ public class Merger implements RowListener {
         this.previd = this.id;
         this.id = id;
         if (changed) {
-            flush(previndex, prevtype, previd);
+            flush(prevoptype, previndex, prevtype, previd);
         }
         for (int i = 0; i < keys.size(); i++) {
             merge(map, keys.get(i), values.get(i));
@@ -159,18 +180,25 @@ public class Merger implements RowListener {
     }
 
     /**
-     * Flush the merger
+     * Flush and invoke appropriate optype
      *
-     * @param index the index for the current merged
-     * @param type the type for the current merged
-     * @param id the id for the current merged
+     * @param optype the optype
+     * @param index the index 
+     * @param type the type
+     * @param id the id
      * @throws IOException
      */
-    public void flush(String index, String type, String id) throws IOException {
+    public void flush(String optype, String index, String type, String id) throws IOException {
         if (!map.isEmpty()) {
             build(map);
             if (listener != null) {
-                listener.merged(index, type, id, version, builder);
+                if ("create".equals(optype)) {
+                    listener.create(index, type, id, version, builder);
+                } else if ("index".equals(optype)) {
+                    listener.index(index, type, id, version, builder);
+                } else if ("delete".equals(optype)) {
+                    listener.delete(index, type, id);
+                }
             }
             if (index != null) {
                 digest.update(index.getBytes("UTF-8"));
@@ -203,7 +231,7 @@ public class Merger implements RowListener {
      */
     public void close() throws IOException {
         if (!closed) {
-            flush(index, type, id);
+            flush(optype, index, type, id);
             this.digestString = Base64.encodeBytes(digest.digest());
             closed = true;
         }

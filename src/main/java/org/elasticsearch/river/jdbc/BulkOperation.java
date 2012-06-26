@@ -34,7 +34,7 @@ import org.elasticsearch.index.VersionType;
  *
  * @author <a href="mailto:joergprante@gmail.com">J&ouml;rg Prante</a>
  */
-public class BulkOperation implements MergeListener {
+public class BulkOperation implements Action {
 
     private String index;
     private String type;
@@ -49,24 +49,39 @@ public class BulkOperation implements MergeListener {
     private static final AtomicInteger onGoingBulks = new AtomicInteger(0);
     private static final AtomicInteger counter = new AtomicInteger(0);
     private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
+    private String riverName;
+    private BulkAcknowledge ack;
 
-    public BulkOperation(Client client, ESLogger logger, String index, String type) {
+    public BulkOperation(Client client, ESLogger logger) {
         this.client = client;
         this.logger = logger;
-        this.index = index;
-        this.type = type;
         this.id = null;
         this.totalTimeouts = 0;
+    }
+    
+    public BulkOperation setIndex(String index) {
+        this.index = index;
+        return this;
     }
     
     public String getIndex() {
         return index;
     }
     
+    public BulkOperation setType(String type) {
+        this.type = type;
+        return this;
+    }
+    
     public String getType() {
         return type;
     }
 
+    public BulkOperation setId(String id) {
+        this.id = id;
+        return this;
+    }
+    
     public String getId() {
         return id;
     }
@@ -86,16 +101,46 @@ public class BulkOperation implements MergeListener {
         return this;
     }
 
+    public BulkOperation setAcknowledge(String riverName, BulkAcknowledge ack) {
+        this.riverName = riverName;
+        this.ack = ack;
+        return this;
+    }
+
+    
     @Override
-    public void merged(String index, String type, String id, long version, XContentBuilder builder) {
-        if (index != null) {
-            this.index = index;
+    public void create(String index, String type, String id, long version, XContentBuilder builder) {
+        if (!isNullOrEmpty(index)) {
+            setIndex(index);
         }
-        if (type != null) {
-            this.type = type;
+        if (!isNullOrEmpty(type)) {
+            setType(type);
         }
-        if (id != null) {
-            this.id = id;
+        if (!isNullOrEmpty(id)) {
+           setId(id);
+        }
+        if (id == null) {
+            return; // skip if ID is null
+        }
+        if (currentBulk.get() == null) {
+            currentBulk.set(client.prepareBulk());
+        }
+        currentBulk.get().add(Requests.indexRequest(getIndex()).type(getType()).id(getId()).create(true).versionType(VersionType.EXTERNAL).version(version).source(builder));
+        if (currentBulk.get().numberOfActions() >= bulkSize) {
+            processBulk();
+        }
+    }    
+    
+    @Override
+    public void index(String index, String type, String id, long version, XContentBuilder builder) {
+        if (!isNullOrEmpty(index)) {
+            setIndex(index);
+        }
+        if (!isNullOrEmpty(type)) {
+            setType(type);
+        }
+        if (!isNullOrEmpty(id)) {
+           setId(id);
         }
         if (id == null) {
             return; // skip if ID is null
@@ -109,15 +154,16 @@ public class BulkOperation implements MergeListener {
         }
     }
     
-    public void delete(String index, String type, String id, long version) {
-        if (index != null) {
-            this.index = index;
+    @Override
+    public void delete(String index, String type, String id) {
+        if (!isNullOrEmpty(index)) {
+            setIndex(index);
         }
-        if (type != null) {
-            this.type = type;
+        if (!isNullOrEmpty(type)) {
+            setType(type);
         }
-        if (id != null) {
-            this.id = id;
+        if (!isNullOrEmpty(id)) {
+           setId(id);
         }
         if (id == null) {
             return; // skip
@@ -176,6 +222,11 @@ public class BulkOperation implements MergeListener {
 
                 @Override
                 public void onResponse(BulkResponse bulkResponse) {
+                    if (ack != null) try {
+                        ack.acknowledge(riverName, bulkResponse.items());
+                    } catch (IOException ex) {
+                        logger.error("bulk acknowledge failed", ex);
+                    }
                     if (bulkResponse.hasFailures()) {
                         logger.error("bulk request has failures: {}", bulkResponse.buildFailureMessage());
                     } else {
@@ -200,4 +251,8 @@ public class BulkOperation implements MergeListener {
         }
     }
 
+    private boolean isNullOrEmpty(String s) {
+        return s == null || s.length() == 0;
+    }
+    
 }

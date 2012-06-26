@@ -337,12 +337,94 @@ Example
 	    }
 	}'
 
-
-
 Updates
--------
+=======
 
-Updates are implemented with the help of the versioning feature of Elasticsearch. All indexed documents are versioned starting with version 1 and the version is incremented by 1 between river runs. 
+There are two alternatives how to manage updates: with a river table on the SQL DB side, or with versioning on the Elasticsearch side.
+
+Managing updates with the river table
+-------------------------------------
+
+The river table is an SQL table with the following definition. The syntax used here is MySQL, but other databases are supported as well:
+
+	create table my_jdbc_river (
+	    `_index` varchar(64),
+	    `_type` varchar(64),
+	    `_id` varchar(64),
+	    `source_timestamp` timestamp not null default current_timestamp,
+	    `source_operation` varchar(8),
+	    `source_sql` varchar(255),
+	    `target_timestamp` timestamp,
+	    `target_operation` varchar(8) default 'n/a',
+	    `target_failed` boolean,
+	    `target_message` varchar(255),
+	    primary key (`index`, `type`, `id`, `source_timestamp`, `source_operation`)
+	);
+
+The name of the table is equal to the river name. You need to create the table manually before creating a JDBC river with river table management, otherwise river table based updating will not work.
+
+Note: the columns `_index`, `_type`, and `_id` have an underscore prefix so they are not confused with SQL keywords.
+
+With the help of the river table, the SQL DB takes over the job of managing objects for Elasticsearch. The SQL DB side declares `_index`, `_type`, and `_id` in the corresponding columns, and the Elasticsearch operation type in `source_operation`. This determines the indexing for Elasticsearch. The relational data for the object being indexed will be fetched by the SQL statement in `source_sql`.
+
+There are three operation types in Elasticsearch: *create* (object is only created if it did not exist before), *index* (object is being indexed), and *delete* (the object is being deleted).
+
+When a bulk response arrives, the JDBC river will acknowledge this in the river table by changing `target_operation` from `n/a` to the operation type and `target_timestamp` to the current time. If a failure has been occured, the columns `target_failed` will turn into `true` (or '1') and `target_message` will contain the failure message from the Elasticsearch bulk response.
+
+To set up a JDBC river with river table management after creating the river table manually, just enable the parameter `rivertable`. For example:
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	        "type" : "jdbc",
+	        "jdbc" : {
+	            "driver" : "com.mysql.jdbc.Driver",
+	            "url" : "jdbc:mysql://localhost:3306/test",
+	            "user" : "",
+	            "password" : "",
+	            "poll" : "300s",
+	            "rivertable" : true,
+	            "interval" : "305s"
+	        },
+	        "index" : {
+	            "index" : "jdbc",
+	            "type" : "jdbc",
+	            "bulk_size" : 100,
+	            "max_bulk_requests" : 30,
+	            "bulk_timeout" : "60s"
+	        }
+	    }
+	
+While `poll` is the time between selecting data from the river table, `interval` defines the time span covered for the period being requested by using the column `source_timestamp`. Usually, an additional short time is required to overlap with the `poll` period, here 5 seconds, assuming a river run takes 5 seconds at maximum. If there is no overlap, the risk is that river table entries are being skipped accidentally.
+
+At each run, the river table is asked for the three operation modes in the sequence *create*, *index*, *delete*. In the Elasticsearch log file you will see entries how many rows are being fetched, and the bulk activity. Example:
+
+	[2012-06-26 18:20:34,152][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] starting JDBC connector: URL [jdbc:mysql://localhost:3306/test], driver [com.mysql.jdbc.Driver], sql [null], river table [true], indexing to [jdbc]/[jdbc], poll [5m]
+	[2012-06-26 18:20:34,535][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] create: got 0 rows
+	[2012-06-26 18:20:34,566][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] embedded sql gave 1 rows
+	[2012-06-26 18:20:34,568][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] index: got 1 rows
+	[2012-06-26 18:20:34,568][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] submitting new bulk request (1 docs, 1 requests currently active)
+	[2012-06-26 18:20:34,572][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] waiting for 1 active bulk requests
+	[2012-06-26 18:20:34,582][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] bulk request success (9 millis, 1 docs, total of 1 docs)
+	[2012-06-26 18:20:34,601][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] delete: got 0 rows
+	[2012-06-26 18:20:34,602][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] next run, waiting 5m, URL [jdbc:mysql://localhost:3306/test] driver [com.mysql.jdbc.Driver] sql [null] river table [true]
+	[2012-06-26 18:25:34,620][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] create: got 0 rows
+	[2012-06-26 18:25:34,629][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] index: got 0 rows
+	[2012-06-26 18:25:34,642][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] delete: got 0 rows
+	[2012-06-26 18:25:34,643][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] next run, waiting 5m, URL [jdbc:mysql://localhost:3306/test] driver [com.mysql.jdbc.Driver] sql [null] river table [true]
+	[2012-06-26 18:30:34,660][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] create: got 0 rows
+	[2012-06-26 18:30:34,668][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] index: got 0 rows
+	[2012-06-26 18:30:34,676][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] delete: got 0 rows
+	[2012-06-26 18:30:34,676][INFO ][river.jdbc               ] [Hideko Takata] [jdbc][my_jdbc_river] next run, waiting 5m, URL [jdbc:mysql://localhost:3306/test] driver [com.mysql.jdbc.Driver] sql [null] river table [true]
+
+It is recommended to use an index on the river table for the columns `_index`, `_type`, `_id`, `source_timestamp`, and `source_operation`. It is up to the SQL DB to clean up the river table from time to time by deleting obsolete entries.
+
+Note: acknowledging the updates to the river table adds an overhead to the Elasticsearch bulk indexing and slows down the indexing performance.
+
+Managing updates with Elasticsearch versioning
+----------------------------------------------
+
+The alternative method for update management is with the help of the versioning feature of Elasticsearch. All indexed documents are versioned starting with version 1 and the version is incremented by 1 between river runs. This update management method is preferable when it is not possible to let the SQL DB manage the Elasticsearch object IDs.
+
+Because there is no river table, updates are recognized between the previous and the current river run, and an internal river index is used to maintain state information.
 
 If a new document ID appears provided by the SQL DB, Elasticsearch will just index the new document.
 
@@ -356,12 +438,8 @@ Be warned that housekeeping is expensive because there is no method in Elasticse
 
 Note: the more frequent SQL DB deletions occur, the more expensive operations in the Elasticsearch cluster will become because of the segment data deletion management of Lucene. This may harm the overall performance of Elasticsearch. It is recommended to queue up SQL DB deletes, and perform them at once in large intervals (e.g. once at night time).
 
-Deletions
----------
+Here is an example of a deletion. Deletions are updates where document IDs are no longer provided by the SQL DB.
 
-Deletions are updates where document IDs are no longer provided by the SQL DB.
-
-**Example**
 
 	[2012-06-22 14:19:31,555][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] starting JDBC connector: URL [jdbc:mysql://localhost:3306/test], driver [com.mysql.jdbc.Driver], sql [select * from orders], indexing to [jdbc]/[jdbc], poll [1h]
 	[2012-06-22 14:19:32,611][INFO ][river.jdbc               ] [van Horne, Katrina Luisa] [jdbc][my_jdbc_river] got 5 rows for version 32, digest = xWX+A8qbYkLgHf3e/pu6PZiycOGc0C/YXOr3XislvxI=

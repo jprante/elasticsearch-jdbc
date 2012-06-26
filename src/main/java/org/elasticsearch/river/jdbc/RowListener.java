@@ -26,6 +26,7 @@ public interface RowListener {
     /**
      * Submit a row to the listener with a generic ID string.
      * 
+     * @param operation the operation for the row
      * @param index the index for the row
      * @param type the type for the row
      * @param id the id for the row
@@ -33,6 +34,6 @@ public interface RowListener {
      * @param values the values of the row
      * @throws IOException 
      */
-    void row(String index, String type, String id, List<String> keys, List<Object> values) throws IOException;
+    void row(String operation, String index, String type, String id, List<String> keys, List<Object> values) throws IOException;
     
 }

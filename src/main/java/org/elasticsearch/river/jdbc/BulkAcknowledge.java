@@ -19,21 +19,10 @@
 package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 
-public interface MergeListener {
+public interface BulkAcknowledge {
 
-    /**
-     * Indicating that an object has been built and is ready to be indexed.
-     * The source of the document is held by the XContentBuilder.
-     * @param index the index for the object
-     * @param type the type for the object
-     * @param id the id for the object
-     * @param version the version
-     * @param builder the XContentBuilder
-     * @throws IOException 
-     */
-    void merged(String index, String type, String id, long version, XContentBuilder builder) 
-            throws IOException;
+    void acknowledge(String riverName, BulkItemResponse[] response) throws IOException;
+
 }
