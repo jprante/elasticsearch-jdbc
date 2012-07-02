@@ -44,16 +44,16 @@ the data.
 Installation
 ------------
 
-The current version of the plugin is **1.1.0**
+The current version of the plugin is **1.2.1**
 
-In order to install the plugin, simply run: `bin/plugin -install jprante/elasticsearch-river-jdbc/1.1.0`.
+In order to install the plugin, simply run: `bin/plugin -install jprante/elasticsearch-river-jdbc/1.2.1`.
 
     -------------------------------------
     | JDBC Plugin    | ElasticSearch    |
     -------------------------------------
-    | master         | 0.19.3 -> master |
+    | master         | 0.19.x -> master |
     -------------------------------------
-    | 1.1.0          | 0.19.3           |
+    | 1.2.1          | 0.19.x           |
     -------------------------------------
 
 Documentation
