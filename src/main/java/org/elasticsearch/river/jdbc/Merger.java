@@ -37,6 +37,13 @@ public class Merger implements RowListener {
     private final static String INDEX_COLUMN = "_index";
     private final static String TYPE_COLUMN = "_type";
     private final static String ID_COLUMN = "_id";
+    private final static String OP_CREATE = "create";
+    private final static String OP_INDEX = "index";
+    private final static String OP_DELETE = "delete";
+    
+    private final static String DIGEST_ALGORITHM = "SHA-256";
+    private final static String DIGEST_ENCODING = "UTF-8";
+    
     private char delimiter;
     private XContentBuilder builder;
     private Action listener;
@@ -81,7 +88,7 @@ public class Merger implements RowListener {
         this.listener = action;
         this.map = new HashMap();
         this.version = version;
-        this.digest = MessageDigest.getInstance("SHA-256");
+        this.digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         this.closed = false;
     }
 
@@ -135,17 +142,18 @@ public class Merger implements RowListener {
     }
 
     /**
-     * Implement RowListener interface
+     * Implement RowListener interface. A row is coming in and needs to be merged.
      *
-     * @param index
-     * @param type
-     * @param id
-     * @param keys
-     * @param values
+     * @param index the index 
+     * @param type the type
+     * @param id the id
+     * @param keys the keys (column labels) of the row
+     * @param values the values of the row
      * @throws IOException
      */
     @Override
-    public void row(String optype, String index, String type, String id, List<String> keys, List<Object> values) throws IOException {
+    public void row(String optype, String index, String type, String id, List<String> keys, List<Object> values) 
+            throws IOException {
         boolean changed = false;
         if (this.optype != null && !this.optype.equals(optype)) {
             changed = true;
@@ -180,9 +188,9 @@ public class Merger implements RowListener {
     }
 
     /**
-     * Flush and invoke appropriate optype
+     * Flush and invoke appropriate operation type
      *
-     * @param optype the optype
+     * @param optype the operation type
      * @param index the index 
      * @param type the type
      * @param id the id
@@ -190,24 +198,24 @@ public class Merger implements RowListener {
      */
     public void flush(String optype, String index, String type, String id) throws IOException {
         if (!map.isEmpty()) {
-            build(map);
-            if (listener != null) {
-                if ("create".equals(optype)) {
-                    listener.create(index, type, id, version, builder);
-                } else if ("index".equals(optype)) {
-                    listener.index(index, type, id, version, builder);
-                } else if ("delete".equals(optype)) {
-                    listener.delete(index, type, id);
-                }
-            }
             if (index != null) {
-                digest.update(index.getBytes("UTF-8"));
+                digest.update(index.getBytes(DIGEST_ENCODING));
             }
             if (type != null) {
-                digest.update(type.getBytes("UTF-8"));
+                digest.update(type.getBytes(DIGEST_ENCODING));
             }
             if (id != null) {
-                digest.update(id.getBytes("UTF-8"));
+                digest.update(id.getBytes(DIGEST_ENCODING));
+            }
+            build(map);
+            if (listener != null) {
+                if (OP_CREATE.equals(optype)) {
+                    listener.create(index, type, id, version, builder);
+                } else if (OP_INDEX.equals(optype)) {
+                    listener.index(index, type, id, version, builder);
+                } else if (OP_DELETE.equals(optype)) {
+                    listener.delete(index, type, id);
+                }
             }
             builder.close();
             builder = jsonBuilder();
@@ -280,17 +288,16 @@ public class Merger implements RowListener {
      * @param map the map holding the JSON object
      * @throws IOException
      */
-    public void build(Map<String, Object> map) throws IOException {
+    private void build(Map<String, Object> map) throws IOException {
         builder.startObject();
         for (String k : map.keySet()) {
             builder.field(k);
+            digest.update(k.getBytes(DIGEST_ENCODING));
             Object o = map.get(k);
             if (o instanceof ValueSet) {
-                ((ValueSet) o).build(builder);
+                ((ValueSet) o).build(builder, digest, DIGEST_ENCODING);
             } else if (o instanceof Map) {
                 build((Map<String, Object>) o);
-            } else {
-                throw new IllegalArgumentException("?");
             }
         }
         builder.endObject();

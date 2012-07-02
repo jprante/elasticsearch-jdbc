@@ -19,6 +19,7 @@
 package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 /**
@@ -78,12 +79,15 @@ public class ValueSet {
      * @param builder the XContentBuilder
      * @throws IOException
      */
-    public void build(XContentBuilder builder) throws IOException {
+    public void build(XContentBuilder builder, MessageDigest digest, String encoding) throws IOException {
         if (value.length > 1) {
             builder.startArray();
         }
         for (int i = 0; i < value.length; i++) {
             builder.value(value[i]);
+            if (value[i] != null) {
+                digest.update(value[i].toString().getBytes(encoding));
+            }
         }
         if (value.length > 1) {
             builder.endArray();
