@@ -88,7 +88,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
-            rivertable = XContentMapValues.nodeBooleanValue("rivertable", false);
+            rivertable = XContentMapValues.nodeBooleanValue(jdbcSettings.get("rivertable"), false);
             interval = XContentMapValues.nodeTimeValue(jdbcSettings.get("interval"), TimeValue.timeValueMinutes(60));
         } else {
             poll = TimeValue.timeValueMinutes(60);
