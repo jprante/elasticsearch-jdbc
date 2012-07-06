@@ -22,16 +22,16 @@ ElasticSearch:
 	        "url" : "jdbc:mysql://localhost:3306/test",
 	        "user" : "",
 	        "password" : "",
-	        "sql" : "select * from orders",
+	        "sql" : "select * from orders"
 	    }
 	}'
 
 This HTTP PUT statement will create a river named `my_jdbc_river` 
 that fetches all the rows from the `orders` table in the MySQL database 
-`test` at `localhost`.
+`test` at `localhost` and put the documents into 'jdbc/jdbc' index.
 
 You have to install the JDBC driver jar of your favorite database manually into 
-the `plugins` directory where the jar file of the JDBC river plugin resides.
+the `plugins/river-jdbc` directory where the jar file of the JDBC river plugin resides.
 
 By default, the JDBC river re-executes the SQL statement on a regular basis (60 minutes).
 
@@ -187,13 +187,13 @@ For example, these rows from SQL
 	| _index    | _id   | contact.customer | contact.employee |
 	+-----------+-------+------------------+------------------+
 	| relations | Big   | Big              | Smith            |
-	| relations | Large | Large            | M웞ler           |
+	| relations | Large | Large            | M타ller           |
 	| relations | Large | Large            | Meier            |
 	| relations | Large | Large            | Schulze          |
-	| relations | Huge  | Huge             | M웞ler           |
+	| relations | Huge  | Huge             | M타ller           |
 	| relations | Huge  | Huge             | Meier            |
 	| relations | Huge  | Huge             | Schulze          |
-	| relations | Good  | Good             | M웞ler           |
+	| relations | Good  | Good             | M타ller           |
 	| relations | Good  | Good             | Meier            |
 	| relations | Good  | Good             | Schulze          |
 	| relations | Bad   | Bad              | Jones            |
@@ -203,13 +203,14 @@ For example, these rows from SQL
 will generate fewer JSON objects for the index `relations`.
 
 	index=relations id=Big {"contact":{"employee":"Smith","customer":"Big"}}
-	index=relations id=Large {"contact":{"employee":["M웞ler","Meier","Schulze"],"customer":"Large"}}
-	index=relations id=Huge {"contact":{"employee":["M웞ler","Meier","Schulze"],"customer":"Huge"}}
-	index=relations id=Good {"contact":{"employee":["M웞ler","Meier","Schulze"],"customer":"Good"}}
+	index=relations id=Large {"contact":{"employee":["M타ller","Meier","Schulze"],"customer":"Large"}}
+	index=relations id=Huge {"contact":{"employee":["M타ller","Meier","Schulze"],"customer":"Huge"}}
+	index=relations id=Good {"contact":{"employee":["M타ller","Meier","Schulze"],"customer":"Good"}}
 	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
 
 Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
 controls how values are folded into arrays for making use of the ElasticSearch JSON data model.
+
 
 Bind parameter
 --------------
@@ -358,7 +359,7 @@ The river table is an SQL table with the following definition. The syntax used h
 	    `target_operation` varchar(8) default 'n/a',
 	    `target_failed` boolean,
 	    `target_message` varchar(255),
-	    primary key (`index`, `type`, `id`, `source_timestamp`, `source_operation`)
+	    primary key (`_index`, `_type`, `_id`, `source_timestamp`, `source_operation`)
 	);
 
 The name of the table is equal to the river name. You need to create the table manually before creating a JDBC river with river table management, otherwise river table based updating will not work.
@@ -473,5 +474,5 @@ Here is an example of a deletion. Deletions are updates where document IDs are n
 Stopping/deleting the river
 ---------------------------
 
-	curl -XDELETE 'localhost:9200/_river/my_jdbc_river/'
+	curl -XDELETE 'localhost:9200/_river/my_jdbc_river'
 
