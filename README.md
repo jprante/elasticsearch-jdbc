@@ -1,6 +1,8 @@
 JDBC River Plugin for ElasticSearch
 ===================================
 
+// TODO comment fetchsize
+
 Introduction
 ------------
 
@@ -28,7 +30,7 @@ ElasticSearch:
 
 This HTTP PUT statement will create a river named `my_jdbc_river` 
 that fetches all the rows from the `orders` table in the MySQL database 
-`test` at `localhost` and put the documents into 'jdbc/jdbc' index.
+`test` at `localhost` and put the documents into `jdbc/jdbc` index.
 
 You have to install the JDBC driver jar of your favorite database manually into 
 the `plugins/river-jdbc` directory where the jar file of the JDBC river plugin resides.
@@ -208,7 +210,7 @@ will generate fewer JSON objects for the index `relations`.
 	index=relations id=Good {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Good"}}
 	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
 
-Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
+Note how the `employee` column is collapsed into a JSON array. The repeated occurrence of the `_id` column
 controls how values are folded into arrays for making use of the ElasticSearch JSON data model.
 
 
@@ -229,7 +231,7 @@ ElasticSearch.
 	        "user" : "",
 	        "password" : "",
 	        "sql" : "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.quantity * products.price > ?",
-	        "params: [ 5.0 ]
+	        "params": [ 5.0 ]
 	    }
 	}'
 
@@ -286,7 +288,7 @@ In this example, all rows beginning with a certain date up to now are selected.
 	        "user" : "",
 	        "password" : "",
 	        "sql" : "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product and orders.created between ? - 14 and ?",
-	        "params: [ 2012-06-01", "$now" ]
+	        "params": [ "2012-06-01", "$now" ]
 	    }
 	}'
 
@@ -423,7 +425,7 @@ To set up a JDBC river with river table management after creating the river tabl
 	            "max_bulk_requests" : 30,
 	            "bulk_timeout" : "60s"
 	        }
-	    }
+	    }'
 	
 While `poll` is the time between selecting data from the river table, `interval` defines the time span covered for the period being requested by using the column `source_timestamp`. Usually, an additional short time is required to overlap with the `poll` period, here 5 seconds, assuming a river run takes 5 seconds at maximum. If there is no overlap, the risk is that river table entries are being skipped accidentally.
 
