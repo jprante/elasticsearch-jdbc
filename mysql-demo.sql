@@ -6,7 +6,7 @@ drop table if exists employees;
 create table employees (
    name varchar(32),
    department varchar(32),
-   salary varchar(32)
+   salary decimal(5,2)
 );
 
 drop table if exists departments;
@@ -28,7 +28,7 @@ drop table if exists products;
 create table products (
    name varchar(32),
    amount int(11),
-   price varchar(32)
+   price decimal(32,4)
 );
 
 drop table if exists orders;
@@ -38,7 +38,7 @@ create table orders (
    department varchar(32),
    product varchar(32),
    quantity int(11),
-   created datetime NOT NULL DEFAULT '0000-00-00 00:00:00'
+   created datetime NOT NULL DEFAULT '0000-00-00 00:00:00'   
 );
 
 insert into employees (name, department, salary) values('Smith', 'American Fruits', '10,000 $');
@@ -57,9 +57,9 @@ insert into customers (name, country) values('Huge', 'en');
 insert into customers (name, country) values('Good', 'de');
 insert into customers (name, country) values('Bad', 'de');
 
-insert into products (name, amount, price) values('Apples', 2, '1,00$');
-insert into products (name, amount, price) values('Bananas', 3, '2,00$');
-insert into products (name, amount, price) values('Oranges', 5, '3,00$');
+insert into products (name, amount, price) values('Apples', 2, '1.50');
+insert into products (name, amount, price) values('Bananas', 3, '2.7446785');
+insert into products (name, amount, price) values('Oranges', 5, '3.00');
 
 insert into orders (customer, department, product, quantity) values('Big', 'American Fruits', 'Apples', 1);
 insert into orders (customer, department, product, quantity) values('Large', 'German Fruits', 'Bananas', 1);
