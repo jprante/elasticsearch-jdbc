@@ -77,7 +77,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
-            @RiverIndexName String riverIndexName, Client client) {
+                     @RiverIndexName String riverIndexName, Client client) {
         super(riverName, settings);
         this.riverIndexName = riverIndexName;
         this.client = client;
@@ -233,6 +233,58 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 }
             }
         }
+
+        private void housekeeper(long version) throws IOException {
+            logger.info("housekeeping for version " + version);
+            client.admin().indices().prepareRefresh(indexName).execute().actionGet();
+            SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN).setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
+            if (response.timedOut()) {
+                logger.error("housekeeper scan query timeout");
+                return;
+            }
+            if (response.failedShards() > 0) {
+                logger.error("housekeeper failed shards in scan response: {0}", response.failedShards());
+                return;
+            }
+            String scrollId = response.getScrollId();
+            if (scrollId == null) {
+                logger.error("housekeeper failed, no scroll ID");
+                return;
+            }
+            boolean done = false;
+            // scroll
+            long deleted = 0L;
+            long t0 = System.currentTimeMillis();
+            do {
+                response = client.prepareSearchScroll(response.getScrollId()).setScroll(TimeValue.timeValueMinutes(10)).execute().actionGet();
+                if (response.timedOut()) {
+                    logger.error("housekeeper scroll query timeout");
+                    done = true;
+                } else if (response.failedShards() > 0) {
+                    logger.error("housekeeper failed shards in scroll response: {}", response.failedShards());
+                    done = true;
+                } else {
+                    // terminate scrolling?
+                    if (response.hits() == null) {
+                        done = true;
+                    } else {
+                        for (SearchHit hit : response.getHits().getHits()) {
+                            // delete all documents with lower version
+                            if (hit.getVersion() < version) {
+                                operation.delete(hit.getIndex(), hit.getType(), hit.getId());
+                                deleted++;
+                            }
+                        }
+                        scrollId = response.getScrollId();
+                    }
+                }
+                if (scrollId != null) {
+                    done = true;
+                }
+            } while (!done);
+            long t1 = System.currentTimeMillis();
+            logger.info("housekeeper ready, {} documents deleted, took {} ms", deleted, t1 - t0);
+        }
     }
 
     private class JDBCRiverTableConnector implements Runnable {
@@ -241,7 +293,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
         @Override
         public void run() {
-            while (true) {                
+            while (true) {
                 for (String optype : optypes) {
                     try {
                         Connection connection = service.getConnection(driver, url, user, password, false);
@@ -272,57 +324,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         }
     }
 
-    private void housekeeper(long version) throws IOException {
-        logger.info("housekeeping for version " + version);
-        client.admin().indices().prepareRefresh(indexName).execute().actionGet();
-        SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN).setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
-        if (response.timedOut()) {
-            logger.error("housekeeper scan query timeout");
-            return;
-        }
-        if (response.failedShards() > 0) {
-            logger.error("housekeeper failed shards in scan response: {0}", response.failedShards());
-            return;
-        }
-        String scrollId = response.getScrollId();
-        if (scrollId == null) {
-            logger.error("housekeeper failed, no scroll ID");
-            return;
-        }
-        boolean done = false;
-        // scroll
-        long deleted = 0L;
-        long t0 = System.currentTimeMillis();
-        do {
-            response = client.prepareSearchScroll(response.getScrollId()).setScroll(TimeValue.timeValueMinutes(10)).execute().actionGet();
-            if (response.timedOut()) {
-                logger.error("housekeeper scroll query timeout");
-                done = true;
-            } else if (response.failedShards() > 0) {
-                logger.error("housekeeper failed shards in scroll response: {}", response.failedShards());
-                done = true;
-            } else {
-                // terminate scrolling?
-                if (response.hits() == null) {
-                    done = true;
-                } else {
-                    for (SearchHit hit : response.getHits().getHits()) {
-                        // delete all documents with lower version
-                        if (hit.getVersion() < version) {
-                            operation.delete(hit.getIndex(), hit.getType(), hit.getId());
-                            deleted++;
-                        }
-                    }
-                    scrollId = response.getScrollId();
-                }
-            }
-            if (scrollId != null) {
-                done = true;
-            }
-        } while (!done);
-        long t1 = System.currentTimeMillis();
-        logger.info("housekeeper ready, {} documents deleted, took {} ms", deleted, t1 - t0);
-    }
 
     private void delay(String reason) {
         if (poll.millis() > 0L) {
