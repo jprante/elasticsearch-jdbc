@@ -68,6 +68,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final int fetchsize;
     private final List<Object> params;
     private final boolean rivertable;
+    private final boolean versioning;
+    private final String rounding;
+    private final int scale;
     private volatile Thread thread;
     private volatile boolean closed;
     private Date creationDate;
@@ -90,6 +93,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
             rivertable = XContentMapValues.nodeBooleanValue(jdbcSettings.get("rivertable"), false);
             interval = XContentMapValues.nodeTimeValue(jdbcSettings.get("interval"), TimeValue.timeValueMinutes(60));
+            versioning = XContentMapValues.nodeBooleanValue(jdbcSettings.get("versioning"), true);
+            rounding = XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), null);
+            scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), 0);
         } else {
             poll = TimeValue.timeValueMinutes(60);
             url = null;
@@ -101,6 +107,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             params = null;
             rivertable = false;
             interval = TimeValue.timeValueMinutes(60);
+            versioning = true;
+            rounding = null;
+            scale = 0;
         }
         if (settings.settings().containsKey("index")) {
             Map<String, Object> indexSettings = (Map<String, Object>) settings.settings().get("index");
@@ -121,7 +130,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             bulkTimeout = TimeValue.timeValueMillis(60000);
         }
         service = new SQLService(logger);
-        operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests).setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), service);
+        operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setVersioning(versioning)
+                .setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests)
+                .setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), service);
     }
 
     @Override

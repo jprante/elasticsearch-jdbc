@@ -61,6 +61,13 @@ public class Merger implements RowListener {
     private String digestString;
     private boolean closed;
 
+    /**
+     * Constructor for a new Merger object
+     * 
+     * @param action
+     * @throws IOException
+     * @throws NoSuchAlgorithmException 
+     */
     public Merger(Action action) throws IOException, NoSuchAlgorithmException {
         this('.', action, -1L);
     }
@@ -68,7 +75,8 @@ public class Merger implements RowListener {
     /**
      * Constructor for a new Merger object
      *
-     * @param optype the optype listener
+     * @param action the action
+     * @param version the version
      * @throws IOException
      */
     public Merger(Action action, long version) throws IOException, NoSuchAlgorithmException {
@@ -78,8 +86,9 @@ public class Merger implements RowListener {
     /**
      * Constructor for a new Merger object
      *
-     * @param delimiter
-     * @param optype
+     * @param delimiter the delimiter
+     * @param action the action
+     * @param version the version
      * @throws IOException
      */
     public Merger(char delimiter, Action action, long version) throws IOException, NoSuchAlgorithmException {
@@ -226,7 +235,7 @@ public class Merger implements RowListener {
     /**
      * Return a message digest (in base64-encoded form)
      *
-     * @return
+     * @return the message digest
      */
     public String getDigest() {
         return digestString;

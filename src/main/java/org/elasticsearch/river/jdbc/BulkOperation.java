@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
@@ -51,6 +52,7 @@ public class BulkOperation implements Action {
     private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
     private String riverName;
     private BulkAcknowledge ack;
+    private boolean versioning;
 
     public BulkOperation(Client client, ESLogger logger) {
         this.client = client;
@@ -84,6 +86,11 @@ public class BulkOperation implements Action {
     
     public String getId() {
         return id;
+    }
+    
+    public BulkOperation setVersioning(boolean versioning) {
+        this.versioning = versioning;
+        return this;
     }
     
     public BulkOperation setBulkSize(int bulkSize) {
@@ -125,7 +132,11 @@ public class BulkOperation implements Action {
         if (currentBulk.get() == null) {
             currentBulk.set(client.prepareBulk());
         }
-        currentBulk.get().add(Requests.indexRequest(getIndex()).type(getType()).id(getId()).create(true).versionType(VersionType.EXTERNAL).version(version).source(builder));
+        IndexRequest request = Requests.indexRequest(getIndex()).type(getType()).id(getId()).create(true).source(builder);
+        if (versioning) {
+            request.versionType(VersionType.EXTERNAL).version(version);
+        }
+        currentBulk.get().add(request);
         if (currentBulk.get().numberOfActions() >= bulkSize) {
             processBulk();
         }
@@ -148,7 +159,11 @@ public class BulkOperation implements Action {
         if (currentBulk.get() == null) {
             currentBulk.set(client.prepareBulk());
         }
-        currentBulk.get().add(Requests.indexRequest(getIndex()).type(getType()).id(getId()).versionType(VersionType.EXTERNAL).version(version).source(builder));
+        IndexRequest request = Requests.indexRequest(getIndex()).type(getType()).id(getId()).source(builder);
+        if (versioning) {
+            request.versionType(VersionType.EXTERNAL).version(version);
+        }
+        currentBulk.get().add(request);
         if (currentBulk.get().numberOfActions() >= bulkSize) {
             processBulk();
         }

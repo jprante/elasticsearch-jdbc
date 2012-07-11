@@ -36,7 +36,7 @@ public class JDBCRiverPlugin extends AbstractPlugin {
 
     @Override
     public String description() {
-        return "JDBC River Version 1.1.0";
+        return "JDBC River (Version 1.3.0)";
     }
 
     public void onModule(RiversModule module) {

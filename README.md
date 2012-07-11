@@ -44,16 +44,16 @@ the data.
 Installation
 ------------
 
-The current version of the plugin is **1.2.2**
+The current version of the plugin is **1.3.0**
 
-In order to install the plugin, simply run: `bin/plugin -install jprante/elasticsearch-river-jdbc/1.2.2`.
+In order to install the plugin, simply run: `bin/plugin -install jprante/elasticsearch-river-jdbc/1.3.0`.
 
     -------------------------------------
     | JDBC Plugin    | ElasticSearch    |
     -------------------------------------
     | master         | 0.19.x -> master |
     -------------------------------------
-    | 1.2.2          | 0.19.x           |
+    | 1.3.0          | 0.19.x           |
     -------------------------------------
 
 Documentation
@@ -187,13 +187,13 @@ For example, these rows from SQL
 	| _index    | _id   | contact.customer | contact.employee |
 	+-----------+-------+------------------+------------------+
 	| relations | Big   | Big              | Smith            |
-	| relations | Large | Large            | MŸller           |
+	| relations | Large | Large            | Müller           |
 	| relations | Large | Large            | Meier            |
 	| relations | Large | Large            | Schulze          |
-	| relations | Huge  | Huge             | MŸller           |
+	| relations | Huge  | Huge             | Müller           |
 	| relations | Huge  | Huge             | Meier            |
 	| relations | Huge  | Huge             | Schulze          |
-	| relations | Good  | Good             | MŸller           |
+	| relations | Good  | Good             | Müller           |
 	| relations | Good  | Good             | Meier            |
 	| relations | Good  | Good             | Schulze          |
 	| relations | Bad   | Bad              | Jones            |
@@ -203,9 +203,9 @@ For example, these rows from SQL
 will generate fewer JSON objects for the index `relations`.
 
 	index=relations id=Big {"contact":{"employee":"Smith","customer":"Big"}}
-	index=relations id=Large {"contact":{"employee":["MŸller","Meier","Schulze"],"customer":"Large"}}
-	index=relations id=Huge {"contact":{"employee":["MŸller","Meier","Schulze"],"customer":"Huge"}}
-	index=relations id=Good {"contact":{"employee":["MŸller","Meier","Schulze"],"customer":"Good"}}
+	index=relations id=Large {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Large"}}
+	index=relations id=Huge {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Huge"}}
+	index=relations id=Good {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Good"}}
 	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
 
 Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
@@ -238,6 +238,37 @@ Example result
 	id=0 {"product":{"name":"Oranges","customer":{"bill":6.0,"name":"Huge"}}}
 	id=1 {"product":{"name":"Oranges","customer":{"bill":9.0,"name":"Bad"}}}
 
+BigDecimal conversion
+---------------------
+
+By default, java.math.BigDecimal values are converted to java.lang.String in JSON to maintain scale and precision. If numeric values (double) are required, two parameters ``scale`` and ``rounding`` can be declared for conversion. Note that conversions from BigDecimal to double may lead to a loss of precision and is not recommended for sensible data such as financial data.
+
+Example:
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "type" : "jdbc",
+	    "jdbc" : {
+	        "driver" : "com.mysql.jdbc.Driver",
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+	        "sql" : "select * from orders",
+	        "rounding" : "halfup",
+	        "scale" : 4
+	    }
+	}'
+	
+
+Valid rounding modes:
+
+``ceiling`` - Rounding mode to round towards positive infinity
+``down`` - Rounding mode to round towards zero
+``floor`` - Rounding mode to round towards negative infinity
+``halfdown`` - Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round down
+``halfeven`` - Rounding mode to round towards the "nearest neighbor" unless both neighbors are equidistant, in which case, round towards the even neighbor
+``halfup`` - Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up
+``unnecessary`` - Rounding mode to assert that the requested operation has an exact result, hence no rounding is necessary
+``up`` - Rounding mode to round away from zero
 
 Time-based selecting
 --------------------
@@ -470,6 +501,25 @@ Here is an example of a deletion. Deletions are updates where document IDs are n
 	[2012-06-22 14:20:23,126][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] waiting for 1 active bulk requests
 	[2012-06-22 14:20:23,128][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] bulk request success (2 millis, 1 docs, total of 5 docs)
 	[2012-06-22 14:20:23,129][INFO ][river.jdbc               ] [Mekano] [jdbc][my_jdbc_river] next run, waiting 1h, URL [jdbc:mysql://localhost:3306/test] driver [com.mysql.jdbc.Driver] sql [select * from orders]
+
+Disabling versioning
+--------------------
+
+Sometimes, the indexed data and the JDBC river do not agree about the current version count. In that case, disabling versioning may be a workaround because it is currently not possible to retrieve the maximum version count in an index. 
+
+Example:
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	        "type" : "jdbc",
+	        "jdbc" : {
+	            "driver" : "com.mysql.jdbc.Driver",
+	            "url" : "jdbc:mysql://localhost:3306/test",
+	            "user" : "",
+	            "password" : "",
+	            "versioning" : false
+	        }
+	    }
+	
 
 Stopping/deleting the river
 ---------------------------

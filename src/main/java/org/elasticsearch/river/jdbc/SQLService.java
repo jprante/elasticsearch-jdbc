@@ -48,6 +48,8 @@ public class SQLService implements BulkAcknowledge {
 
     private ESLogger logger;
     private Connection connection;
+    private int rounding;
+    private int scale = -1;
 
     public SQLService() {
         this(null);
@@ -55,6 +57,32 @@ public class SQLService implements BulkAcknowledge {
 
     public SQLService(ESLogger logger) {
         this.logger = logger;
+    }
+
+    public SQLService setRounding(String rounding) {
+        if ("ceiling".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_CEILING;
+        } else if ("down".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_DOWN;
+        } else if ("floor".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_FLOOR;
+        } else if ("halfdown".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_DOWN;
+        } else if ("halfeven".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_EVEN;
+        } else if ("halfup".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_UP;
+        } else if ("unnecessary".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_UNNECESSARY;
+        } else if ("up".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_UP;
+        }
+        return this;
+    }
+    
+    public SQLService setPrecision(int scale) {
+        this.scale = scale;
+        return this;
     }
 
     /**
@@ -95,11 +123,10 @@ public class SQLService implements BulkAcknowledge {
      * Prepare statement for processing a river sync table
      *
      * @param connection the JDBC connection
-     * @param riverSyncTable the river sync table
-     * @param target the target name
-     * @param from start date for sync
-     * @param to rnd date for sync
-     * @return
+     * @param riverName the name of the river
+     * @param optype the operation type
+     * @param interval the interval to cover, in milliseconds (back from current time)
+     * @return a preapred river table statement
      * @throws SQLException
      */
     public PreparedStatement prepareRiverTableStatement(Connection connection, String riverName, String optype, long interval)
@@ -359,7 +386,7 @@ public class SQLService implements BulkAcknowledge {
                         if (n > Integer.MAX_VALUE) {
                             throw new IOException("can't process blob larger than Integer.MAX_VALUE");
                         }
-                        values.add(blob.getBytes(1, (int)n));
+                        values.add(blob.getBytes(1, (int) n));
                         blob.free();
                     }
                     break;
@@ -383,7 +410,7 @@ public class SQLService implements BulkAcknowledge {
                         if (n > Integer.MAX_VALUE) {
                             throw new IOException("can't process clob larger than Integer.MAX_VALUE");
                         }
-                        values.add(clob.getSubString(1, (int)n));
+                        values.add(clob.getSubString(1, (int) n));
                         clob.free();
                     }
                     break;
@@ -395,8 +422,8 @@ public class SQLService implements BulkAcknowledge {
                         if (n > Integer.MAX_VALUE) {
                             throw new IOException("can't process nclob larger than Integer.MAX_VALUE");
                         }
-                        values.add(nclob.getSubString(1, (int)n));
-                        nclob.free();                        
+                        values.add(nclob.getSubString(1, (int) n));
+                        nclob.free();
                     }
                     break;
                 }
@@ -506,7 +533,9 @@ public class SQLService implements BulkAcknowledge {
                 case Types.DECIMAL:
                 case Types.NUMERIC: {
                     BigDecimal bd = result.getBigDecimal(i);
-                    values.add(bd != null ? bd.toString() : null);
+                    values.add(scale >= 0 ?
+                            bd.setScale(scale, rounding).doubleValue() :
+                            bd != null ? bd.toString() : null);
                     break;
                 }
                 /**
