@@ -823,7 +823,7 @@ public class SQLService implements BulkAcknowledge {
 
     /**
      * Acknowledge a bulk item response back to the river table. Fill columns
-     * target_timestamp, taget_operation, target_failed, target_message.
+     * target_timestamp, target_operation, target_failed, target_message.
      *
      * @param riverName
      * @param response
