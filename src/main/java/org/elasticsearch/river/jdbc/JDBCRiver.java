@@ -132,7 +132,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         service = new SQLService(logger);
         operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setVersioning(versioning)
                 .setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests)
-                .setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), service);
+                .setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), rivertable ? service : null);
     }
 
     @Override

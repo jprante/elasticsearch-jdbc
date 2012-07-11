@@ -193,9 +193,6 @@ public class BulkOperation implements Action {
     }
     
     public void flush() throws IOException {
-        if (currentBulk.get() == null) {
-            return;
-        }
         if (totalTimeouts > MAX_TOTAL_TIMEOUTS) {
             // waiting some minutes is much too long, do not wait any longer            
             throw new IOException("total flush() timeouts exceeded limit of + " + MAX_TOTAL_TIMEOUTS + ", aborting");
