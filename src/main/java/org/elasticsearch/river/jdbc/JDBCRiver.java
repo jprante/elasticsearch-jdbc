@@ -18,6 +18,22 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.block.ClusterBlockException;
+import org.elasticsearch.common.base.Objects;
+import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.util.concurrent.EsExecutors;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.river.*;
+import org.elasticsearch.search.SearchHit;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,55 +41,41 @@ import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import org.elasticsearch.ExceptionsHelper;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.client.Client;
+
 import static org.elasticsearch.client.Requests.indexRequest;
-import org.elasticsearch.cluster.block.ClusterBlockException;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.util.concurrent.EsExecutors;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.river.AbstractRiverComponent;
-import org.elasticsearch.river.River;
-import org.elasticsearch.river.RiverIndexName;
-import org.elasticsearch.river.RiverName;
-import org.elasticsearch.river.RiverSettings;
-import org.elasticsearch.search.SearchHit;
 
 public class JDBCRiver extends AbstractRiverComponent implements River {
 
     private final Client client;
-    private final String riverIndexName;
-    private final String indexName;
-    private final String typeName;
+    private volatile Thread thread;
     private final SQLService service;
     private final BulkOperation operation;
-    private final int bulkSize;
-    private final int maxBulkRequests;
-    private final TimeValue bulkTimeout;
-    private final TimeValue poll;
-    private final TimeValue interval;
-    private final String url;
-    private final String driver;
-    private final String user;
-    private final String password;
-    private final String sql;
-    private final int fetchsize;
-    private final List<Object> params;
-    private final boolean rivertable;
-    private final boolean versioning;
-    private final String rounding;
-    private final int scale;
-    private volatile Thread thread;
-    private volatile boolean closed;
+
+    // ~ Default Settings
+    private final String riverIndexName;
+    private String indexName = "jdbc";
+    private String typeName = "jdbc";
+    private String url;
+    private String driver;
+    private String user;
+    private String password;
+    private String sql;
+    private List<Object> params;
+    private int bulkSize = 100;
+    private int maxBulkRequests = 30;
+    private int fetchsize = 0;
+    private TimeValue bulkTimeout = TimeValue.timeValueMillis(60000);
+    private TimeValue poll = TimeValue.timeValueMinutes(60);
+    private TimeValue interval = TimeValue.timeValueMinutes(60);
+    private boolean rivertable = false;
+    private boolean versioning = true;
+    private String rounding;
+    private int scale = 0;
+
     private Date creationDate;
+    private volatile boolean closed;
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
@@ -81,6 +83,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         super(riverName, settings);
         this.riverIndexName = riverIndexName;
         this.client = client;
+        // Define settings 
         if (settings.settings().containsKey("jdbc")) {
             Map<String, Object> jdbcSettings = (Map<String, Object>) settings.settings().get("jdbc");
             poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), TimeValue.timeValueMinutes(60));
@@ -96,20 +99,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             versioning = XContentMapValues.nodeBooleanValue(jdbcSettings.get("versioning"), true);
             rounding = XContentMapValues.nodeStringValue(jdbcSettings.get("rounding"), null);
             scale = XContentMapValues.nodeIntegerValue(jdbcSettings.get("scale"), 0);
-        } else {
-            poll = TimeValue.timeValueMinutes(60);
-            url = null;
-            driver = null;
-            user = null;
-            password = null;
-            sql = null;
-            fetchsize = 0;
-            params = null;
-            rivertable = false;
-            interval = TimeValue.timeValueMinutes(60);
-            versioning = true;
-            rounding = null;
-            scale = 0;
         }
         if (settings.settings().containsKey("index")) {
             Map<String, Object> indexSettings = (Map<String, Object>) settings.settings().get("index");
@@ -122,12 +111,6 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             } else {
                 bulkTimeout = TimeValue.timeValueMillis(60000);
             }
-        } else {
-            indexName = "jdbc";
-            typeName = "jdbc";
-            bulkSize = 100;
-            maxBulkRequests = 30;
-            bulkTimeout = TimeValue.timeValueMillis(60000);
         }
         service = new SQLService(logger).setPrecision(scale).setRounding(rounding);
         operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setVersioning(versioning)
@@ -335,4 +318,67 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             }
         }
     }
+
+    // ~ equals, hashCode, toString methods
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        JDBCRiver jdbcRiver = (JDBCRiver) o;
+        return Objects.equal(riverIndexName, jdbcRiver.riverIndexName)
+                && Objects.equal(indexName, jdbcRiver.indexName)
+                && Objects.equal(typeName, jdbcRiver.typeName)
+                && Objects.equal(url, jdbcRiver.url)
+                && Objects.equal(driver, jdbcRiver.driver)
+                && Objects.equal(user, jdbcRiver.user)
+                && Objects.equal(password, jdbcRiver.password)
+                && Objects.equal(sql, jdbcRiver.sql)
+                && Objects.equal(params, jdbcRiver.params)
+                && Objects.equal(bulkSize, jdbcRiver.bulkSize)
+                && Objects.equal(maxBulkRequests, jdbcRiver.maxBulkRequests)
+                && Objects.equal(fetchsize, jdbcRiver.fetchsize)
+                && Objects.equal(bulkTimeout, jdbcRiver.bulkTimeout)
+                && Objects.equal(poll, jdbcRiver.poll)
+                && Objects.equal(interval, jdbcRiver.interval)
+                && Objects.equal(versioning, jdbcRiver.versioning)
+                && Objects.equal(rounding, jdbcRiver.rounding)
+                && Objects.equal(scale, jdbcRiver.scale)
+                && Objects.equal(rivertable, jdbcRiver.rivertable);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(riverIndexName, indexName, typeName, url, driver, user, password, sql, params, bulkSize, maxBulkRequests, fetchsize,
+                bulkTimeout, poll, interval, versioning, rounding, scale, rivertable);
+    }
+
+
+    @Override
+    public String toString() {
+        final String pwd = password != null ? password.replaceAll(".", "\\*") : null;
+        return Objects.toStringHelper(this)
+                .add("riverIndexName", riverIndexName)
+                .add("indexName", indexName)
+                .add("typeName", typeName)
+                .add("url", url)
+                .add("driver", driver)
+                .add("user", user)
+                .add("password", pwd)
+                .add("sql", sql)
+                .add("params", params)
+                .add("bulkSize", bulkSize)
+                .add("maxBulkRequests", maxBulkRequests)
+                .add("fetchsize", fetchsize)
+                .add("bulkTimeout", bulkTimeout)
+                .add("poll", poll)
+                .add("interval", interval)
+                .add("versioning", versioning)
+                .add("rounding", rounding)
+                .add("scale", scale)
+                .add("rivertable", rivertable)
+                .toString();
+    }
+
 }
