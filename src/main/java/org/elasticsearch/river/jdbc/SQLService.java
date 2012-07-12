@@ -79,7 +79,7 @@ public class SQLService implements BulkAcknowledge {
         }
         return this;
     }
-    
+
     public SQLService setPrecision(int scale) {
         this.scale = scale;
         return this;
@@ -125,7 +125,8 @@ public class SQLService implements BulkAcknowledge {
      * @param connection the JDBC connection
      * @param riverName the name of the river
      * @param optype the operation type
-     * @param interval the interval to cover, in milliseconds (back from current time)
+     * @param interval the interval to cover, in milliseconds (back from current
+     * time)
      * @return a preapred river table statement
      * @throws SQLException
      */
@@ -533,9 +534,9 @@ public class SQLService implements BulkAcknowledge {
                 case Types.DECIMAL:
                 case Types.NUMERIC: {
                     BigDecimal bd = result.getBigDecimal(i);
-                    values.add(scale >= 0 ?
-                            bd.setScale(scale, rounding).doubleValue() :
-                            bd != null ? bd.toString() : null);
+                    values.add(bd == null ? null
+                            : scale >= 0 ? bd.setScale(scale, rounding).doubleValue()
+                            : bd.toString());
                     break;
                 }
                 /**
