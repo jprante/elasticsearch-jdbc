@@ -2,6 +2,12 @@ package org.elasticsearch.river.jdbc;
 
 import java.util.*;
 
+
+/**
+ * Merge the results of the database. Algo is based on specified fieldnames.
+ * Differents sperators are authorized like . and [] to specify list of subfield
+ * Beware : the _id must at the first level
+ */
 public class ComplexMerger {
 
 
@@ -18,7 +24,7 @@ public class ComplexMerger {
 
 
     public void merge(PropertyRoot root,String key,String value)throws Exception{
-        /* Simple case, with value or multi value */
+        /* Simple case, with value or multi value, leaf */
         if(!key.contains(".") && !key.contains("[")){
             if(root.containsNode(key)){
                 PropertyNode node = root.getNode(key);
@@ -32,19 +38,22 @@ public class ComplexMerger {
             }
             return;
         }
-        /* Case with object in list */
+        /* Case with a list of object */
         if(key.indexOf("[") !=-1 && (key.indexOf("[") < key.indexOf(".") || key.indexOf(".") == -1)){
             // Extract the content in []
             String rootKey = key.substring(0,key.indexOf("["));
             String subContent = key.substring(key.indexOf("[")+1,key.indexOf("]"));
-            // On cree un propertyList qu'on ajoute au root. S'il existe, on le recupere
-            PropertyListRoot list = new PropertyListRoot(rootKey);
+            // If not property have been created, we create it
+            PropertyListRoot list = null;
             if(root.containsNode(rootKey)){
                 PropertyNode node = root.getNode(rootKey);
                 if(!node.isRoot()){
-                    throw new Exception("Mauvaise configuration");
+                    throw new Exception("Bad configuration");
                 }
                 list = (PropertyListRoot)node;
+            }
+            else{
+                list = new PropertyListRoot(rootKey);
             }
             root.putProperty(list);
             merge(list,subContent,value);
@@ -66,18 +75,35 @@ public class ComplexMerger {
     }
 
 
+    public interface JSONable{
+        String toJSON();
+    }
+
+
     /**
      * Node structure of JSON representation
      */
-    public abstract class PropertyNode{
+    public abstract class PropertyNode implements JSONable{
         String name;
 
         public String getName() {
             return name;
         }
+        /**
+         * If the the node is the root
+         * @return
+         */
         public boolean isRoot(){return false;}
 
+        /**
+         * To set the value of a node
+         * @param value
+         */
         public abstract void addValue(String value);
+
+        public String toString(){
+            return toJSON();
+        }
     }
 
     /**
@@ -92,11 +118,17 @@ public class ComplexMerger {
             this.name = name;
         }
 
+        /**
+         * Put a new property in the root
+         * @param propertyNode
+         */
         public void putProperty(PropertyNode propertyNode){
             properties.put(propertyNode.getName(),propertyNode);
         }
+
         public boolean isRoot(){return true;}
-        
+
+
         public PropertyNode getNode(String name){
             return properties.get(name);
         }
@@ -112,22 +144,23 @@ public class ComplexMerger {
             throw new RuntimeException("Impossible");
         }
 
-        public String toString(){
+        public String toJSON(){
             StringBuilder builder = new StringBuilder();
             builder.append("").append("{");
             int pos = 0;
             for(String s : properties.keySet()){
-                builder.append((pos++>0)?",":"").append("\"").append(s).append("\" : \"").append(properties.get(s).toString()).append("\"");
+                builder.append((pos++>0)?",":"").append("\"").append(s).append("\" : ").append(properties.get(s).toJSON());
             }
             builder.append("}");
             return builder.toString();
         }
     }
 
+
     /**
-     * Stocke plusieurs property root dans une liste (liste d'objets)
-     * A chaque ajout d'une valeur, on renvoie le dernier propertyRoot si la cle a ajouter n'existe pas encore. Sinon, on cree un nouvel element
-     * Ne permet pas l'ajout de la meme valeur plusieurs fois sur une feuille (nouvel element)
+     * Can stock many properties.
+     * Use to lead [] structure
+     * Use an internal map to know when to create a new element
      */
     public class PropertyListRoot extends PropertyRoot{
         private LinkedList<PropertyRoot> properties = new LinkedList<PropertyRoot>();
@@ -169,8 +202,15 @@ public class ComplexMerger {
             root.putProperty(propertyNode);
         }
 
+        /**
+         * Special method which use the complete key to test if the node exist.
+         * If a node with this complete key exist, need to create a new Property root and define it as last
+         * @param name
+         * @param completeKey
+         * @return
+         */
         public boolean containsNode(String name,String completeKey){
-            // On test la cle complete. Une map des cles completes est stockees
+
             if(completeKey!=null){
                 if(keyList.contains(completeKey)){
                     // Case when we have already visit this node. Create a new Root
@@ -180,7 +220,8 @@ public class ComplexMerger {
                 }else{
                     keyList.add(completeKey);
                 }
-                return true;    // To avoid creating root by calling method, all is lead here
+                // To avoid creating root by calling method, all is lead here
+                return true;
             }
             return false;
         }
@@ -200,12 +241,12 @@ public class ComplexMerger {
             return properties.getLast();
         }
 
-        public String toString(){
+         public String toJSON(){
             StringBuilder builder = new StringBuilder();
             builder.append("[");
             int pos = 0;
             for(PropertyNode node : properties){
-                builder.append((pos++>0)?",":"").append(node.toString());
+                builder.append((pos++>0)?",":"").append(node.toJSON());
             }
             builder.append("]");
             return builder.toString();
@@ -215,7 +256,7 @@ public class ComplexMerger {
 
     /**
      * Leaf representation, contains a single value
-     * Can stock many values for a same key
+     * Can stock many values for a same key. The values a stock in a list
      */
     public class PropertyLeaf extends PropertyNode{
         private List<String> values = new ArrayList<String>();
@@ -224,20 +265,33 @@ public class ComplexMerger {
             this.name = key;
             values.add(value);
         }
+
+        /**
+         * Set the value of the leaf. If a value have already been set, the new is add in the list (no replace)
+         * @param value
+         */
         public void addValue(String value){
             values.add(value);
         }
+
+        /**
+         * Return the differents values of the leaf
+         * @return
+         */
         public List<String> getValues() {
             return values;
         }
 
-        public String toString(){
-            StringBuilder s = new StringBuilder();
+        public String toJSON(){
+            StringBuilder builder = new StringBuilder();
             int pos = 0;
             for(String str : values){
-                s.append((pos++>0)?",":"").append(str);
+                builder.append((pos++ > 0) ? "," : "").append("\"").append(str).append("\"");
             }
-            return s.toString();
+            if(values.size() > 1){
+                return "[" + builder.toString() + "]";
+            }
+            return builder.toString();
         }
     }
 }

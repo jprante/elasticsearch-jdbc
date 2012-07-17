@@ -53,6 +53,8 @@ public class ComplexMergerTest {
     public void testOffre()throws Exception{
         ComplexMerger.PropertyRoot root = merger.createRoot();
 
+        merger.merge(root,"_id","12");
+        merger.merge(root,"offre.id","12");
         merger.merge(root,"offre.title","Titre");
         merger.merge(root,"offre.jobcategories[id]","1");
         merger.merge(root,"offre.jobcategories[label]","Fonction 1");
@@ -71,7 +73,7 @@ public class ComplexMergerTest {
         merger.merge(root,"offre.howToApply.contact.address.locality","Paris");
         merger.merge(root,"offre.howToApply.contact.address.postalCode","75001");
         
-        System.out.println(root);
+        System.out.println(root.toJSON());
     }
 
 
