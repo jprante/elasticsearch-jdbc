@@ -533,7 +533,16 @@ public class SQLService implements BulkAcknowledge {
                  */
                 case Types.DECIMAL:
                 case Types.NUMERIC: {
-                    BigDecimal bd = result.getBigDecimal(i);
+                    BigDecimal bd = null;
+                    try {
+                        bd = result.getBigDecimal(i);
+                    } catch (NullPointerException e) {
+                        // getBigDecimal() should get obsolete. Most seem to use getString/getObject anayway.
+                        // But is it true? JDBC NPE exists since 13 years? 
+                        // http://forums.codeguru.com/archive/index.php/t-32443.html
+                        // Null values are driving us nuts in JDBC:
+                        // http://stackoverflow.com/questions/2777214/when-accessing-resultsets-in-jdbc-is-there-an-elegant-way-to-distinguish-betwee
+                    }
                     values.add(bd == null ? null
                             : scale >= 0 ? bd.setScale(scale, rounding).doubleValue()
                             : bd.toString());

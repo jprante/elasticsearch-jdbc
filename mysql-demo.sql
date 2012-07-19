@@ -44,7 +44,7 @@ create table orders (
 insert into employees (name, department, salary) values('Smith', 'American Fruits', '10,000 $');
 insert into employees (name, department, salary) values('Jones', 'English Fruits', '6,000 £');
 insert into employees (name, department, salary) values('Müller', 'German Fruits', '8,000 €');
-insert into employees (name, department, salary) values('Meier', 'German Fruits', '7,000 €');
+insert into employees (name, department, salary) values('Meier', 'German Fruits', NULL);
 insert into employees (name, department, salary) values('Schulze', 'German Fruits', '6,000 €');
 
 insert into departments (name, country) values('American Fruits', 'us'); 
@@ -59,7 +59,7 @@ insert into customers (name, country) values('Bad', 'de');
 
 insert into products (name, amount, price) values('Apples', 2, '1.50');
 insert into products (name, amount, price) values('Bananas', 3, '2.7446785');
-insert into products (name, amount, price) values('Oranges', 5, '3.00');
+insert into products (name, amount, price) values('Oranges', 5, NULL);
 
 insert into orders (customer, department, product, quantity) values('Big', 'American Fruits', 'Apples', 1);
 insert into orders (customer, department, product, quantity) values('Large', 'German Fruits', 'Bananas', 1);
