@@ -1,6 +1,10 @@
 package org.elasticsearch.river.jdbc;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ComplexMergerTest {
     private ComplexMerger merger = new ComplexMerger();
@@ -47,6 +51,7 @@ public class ComplexMergerTest {
         merger.merge(root,"a.b[d.label]","Sleep");
 
         System.out.println(root);
+        System.out.println(root.getXBuilder().string());
     }
 
     @Test
@@ -72,9 +77,59 @@ public class ComplexMergerTest {
         merger.merge(root,"offre.howToApply.contact.tel","01.01.01.01.01");
         merger.merge(root,"offre.howToApply.contact.address.locality","Paris");
         merger.merge(root,"offre.howToApply.contact.address.postalCode","75001");
-        
+
+
+        Assert.assertTrue(root.containsNode("_id"));
+
         System.out.println(root.toJSON());
+        System.out.println(root.getXBuilder().string());
     }
 
+    @Test
+    public void testMerger()throws Exception{
+        List<String> keys = new ArrayList<String>();
+        List<Object> values = new ArrayList<Object>();
+        
+        keys.add("offre.id");
+        keys.add("offre.title");
+        keys.add("offre.jobcategories[id]");
+        keys.add("offre.jobcategories[label]");
+        keys.add("offre.jobcategories[id]");
+        keys.add("offre.jobcategories[label]");
+        keys.add("offre.industries[id]");
+        keys.add("offre.industries[label]");
+        keys.add("offre.industries[id]");
+        keys.add("offre.industries[label]");
+        keys.add("offre.howToApply.reference");
+        keys.add("offre.howToApply.url");
+        keys.add("offre.howToApply.contact.name");
+        keys.add("offre.howToApply.contact.email");
+        keys.add("offre.howToApply.contact.url");
+        keys.add("offre.howToApply.contact.tel");
+        keys.add("offre.howToApply.contact.address.locality");
+        keys.add("offre.howToApply.contact.address.postalCode");
+
+        values.add("12");
+        values.add("Titre");
+        values.add("1");
+        values.add("Fonction 1");
+        values.add("2");
+        values.add("Fonction 2");
+        values.add("12");
+        values.add("Secteur 12");
+        values.add("15");
+        values.add("Secteur 15");
+        values.add("370");
+        values.add("http://bob.com");
+        values.add("Bob marley");
+        values.add("bob.marley@bob.com");
+        values.add("http://www.bob.com");
+        values.add("01.01.01.01.01");
+        values.add("Paris");
+        values.add("75001");
+
+        new ComplexMerger().row("index","jobs","job","1",keys,values);
+
+    }
 
 }

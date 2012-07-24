@@ -74,6 +74,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private volatile Thread thread;
     private volatile boolean closed;
     private Date creationDate;
+    private String strategy;
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
@@ -89,6 +90,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
+            strategy = XContentMapValues.nodeStringValue(jdbcSettings.get("strategy"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
             rivertable = XContentMapValues.nodeBooleanValue(jdbcSettings.get("rivertable"), false);
@@ -103,6 +105,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = null;
             password = null;
             sql = null;
+            strategy = null;
             fetchsize = 0;
             params = null;
             rivertable = false;
@@ -284,6 +287,62 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             } while (!done);
             long t1 = System.currentTimeMillis();
             logger.info("housekeeper ready, {} documents deleted, took {} ms", deleted, t1 - t0);
+        }
+    }
+
+    private class JDBCConnectorIncremental implements Runnable {
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    /* Test of differents parameters. The field _id is mandatory (indicate the id in the index) */
+                    String requestSQL = sql;
+                    if(!requestSQL.contains(" _id")){
+                        // Error
+                        return;
+                    }
+                    /* Add the order instruction */
+                    if(!requestSQL.toLowerCase().contains("order by")){
+                        requestSQL += " order by _id";
+                    }
+                    String indexOperation = sql.contains("_operation") ? null : "index";
+
+                    Number version;
+                    String digest;
+                    // read state from _custom
+                    client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
+                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
+                    if (creationDate != null || !get.exists()) {
+                        version = 1L;
+                        digest = null;
+                    } else {
+                        Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
+                        if (jdbcState != null) {
+                            version = (Number) jdbcState.get("version");
+                            version = version.longValue() + 1; // increase to next version
+                            digest = (String) jdbcState.get("digest");
+                        } else {
+                            throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName().name());
+                        }
+                    }
+                    Connection connection = service.getConnection(driver, url, user, password, true);
+                    PreparedStatement statement = service.prepareStatement(connection, requestSQL);
+                    service.bind(statement, params);
+                    
+                    service.treat(statement, fetchsize,indexOperation,operation);
+
+                    service.close(statement);
+                    service.close(connection);
+                    delay("next run");
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e, (Object) null);
+                    closed = true;
+                }
+                if (closed) {
+                    return;
+                }
+            }
         }
     }
 

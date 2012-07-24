@@ -101,6 +101,11 @@ public class Merger implements RowListener {
         this.closed = false;
     }
 
+
+    public void row(List<String> columns, List<Object> row) throws IOException {
+        row(columns.toArray(new String[]{}),row.toArray(new Object[]{}));
+    }
+
     /**
      * Merge a row given by string arrays
      *

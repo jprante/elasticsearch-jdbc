@@ -37,11 +37,11 @@ import org.elasticsearch.index.VersionType;
  */
 public class BulkOperation implements Action {
 
-    private String index;
-    private String type;
+    protected String index;
+    protected String type;
     private String id;
     private Client client;
-    private ESLogger logger;
+    protected ESLogger logger;
     private int bulkSize = 100;
     private int maxActiveRequests = 30;
     private long millisBeforeContinue = 60000L;

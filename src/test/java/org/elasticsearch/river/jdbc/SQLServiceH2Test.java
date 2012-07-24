@@ -1,7 +1,6 @@
 package org.elasticsearch.river.jdbc;
 
-import org.hsqldb.Server;
-import org.hsqldb.persist.HsqlProperties;
+import org.h2.tools.Server;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -14,19 +13,17 @@ public class SQLServiceH2Test {
     private Server server;
 
     @BeforeClass
-    public void startHsqldbServer(){
-        HsqlProperties p = new HsqlProperties();
-        p.setProperty("server.database.0","mem:test");
-        p.setProperty("server.dbname.0","test");
-        
+    public void startHsqldbServer()throws SQLException, ClassNotFoundException{
+        server = Server.createTcpServer().start();
+        Class.forName("org.h2.Driver");
+        Connection conn = DriverManager.getConnection("jdbc:h2:mem","SA","");
 
-
-        server = new Server();
-        server.setProperties(p);
-        server.setLogWriter(null); // can use custom writer
-        server.setErrWriter(null); // can use custom writer
-        server.start();
-        // Insert new data
+        try{
+            conn.createStatement().execute("drop table test");
+        }catch(Exception e){}
+        conn.createStatement().execute("create table test(id int,label varchar(255) )");
+        conn.createStatement().execute("insert into test values(1,'test1')");
+        conn.close();
 
     }
 
@@ -35,29 +32,21 @@ public class SQLServiceH2Test {
         server.stop();
     }
 
+
     @Test
     public void testConnexion()throws Exception{
-        Connection connection = sqlService.getConnection("oracle.jdbc.driver.OracleDriver","jdbc:oracle:thin:@cebdd:1521:CADREMP","CADREMP","CADREMP",true);
-        Assert.assertNotNull(connection,"Test connection");
-        connection.close();
-    }
-
-    @Test
-    public void testRequest()throws Exception{
-        Connection connection = sqlService.getConnection("oracle.jdbc.driver.OracleDriver","jdbc:oracle:thin:@cebdd:1521:CADREMP","CADREMP","CADREMP",true);
-
-        PreparedStatement statement = sqlService.prepareStatement(connection,"select * from mission");
-        ResultSet results = sqlService.execute(statement,100);
-        Assert.assertNotNull(results);
-        Assert.assertTrue(results.next());
-
-        connection.close();
-    }
-
-    @Test
-    public void testHsqldbConnexion()throws Exception{
-        Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
+        Connection connection = sqlService.getConnection("org.h2.Driver","jdbc:h2:mem", "SA", "",true);
         Assert.assertFalse(connection.isClosed());
+    }
+
+    @Test
+    public void testTable()throws Exception{
+        Connection connection = sqlService.getConnection("org.h2.Driver","jdbc:h2:mem", "SA", "",true);
+        PreparedStatement ps = sqlService.prepareStatement(connection,"select * from test");
+        ResultSet rs = sqlService.execute(ps,100);
+        Assert.assertTrue(rs.next());
+        Assert.assertFalse(rs.next());
+        
     }
 
 

@@ -1,19 +1,42 @@
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
+
+import java.io.IOException;
 import java.util.*;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 
 /**
  * Merge the results of the database. Algo is based on specified fieldnames.
  * Differents sperators are authorized like . and [] to specify list of subfield
- * Beware : the _id must at the first level
+ * Beware : the _id must be at the first level
  */
-public class ComplexMerger {
+public class ComplexMerger implements RowListener{
+
+    private ESLogger logger = ESLoggerFactory.getLogger("ComplexMerger");
+    private PropertyRoot root;
 
 
-    public PropertyRoot createRoot()throws Exception{
-        PropertyRoot root = new PropertyRoot("Root");
+    public ComplexMerger(){
+        this.root = createRoot();
+    }
+
+    public PropertyRoot createRoot(){
+        PropertyRoot root = new PropertyRoot();
         return root;
+    }
+
+    public PropertyRoot getRoot(){
+        return this.root;
+    }
+
+    public void reset(){
+        this.root = new PropertyRoot();
     }
 
     public PropertyRoot run(String key,String value)throws Exception{
@@ -23,7 +46,44 @@ public class ComplexMerger {
     }
 
 
-    public void merge(PropertyRoot root,String key,String value)throws Exception{
+    @Override
+    public void row(String operation, String index, String type, String id, List<String> keys, List<Object> values) throws IOException {
+        if(keys == null || values == null || keys.size()!=values.size()){
+            throw new RuntimeException("Impossible");
+        }
+
+        PropertyRoot root = new PropertyRoot("Root");
+        for(int i = 0 ; i < keys.size() ; i++){
+            try{
+                merge(root,keys.get(i),values.get(i));
+            }catch(Exception e){
+                logger.error("Probleme merge",e);
+            }
+        }
+        logger.info(root.toJSON());
+
+    }
+
+    @Override
+    public void row(List<String> keys, List<Object> values) throws IOException {
+        if(keys == null || values == null || keys.size()!=values.size()){
+            throw new RuntimeException("Impossible");
+        }
+
+        for(int i = 0 ; i < keys.size() ; i++){
+            try{
+                merge(root,keys.get(i),values.get(i));
+            }catch(Exception e){
+                logger.error("Probleme merge",e);
+            }
+        }
+        //logger.info(root.toJSON());
+
+    }
+
+
+
+    public void merge(PropertyRoot root,String key,Object value)throws Exception{
         /* Simple case, with value or multi value, leaf */
         if(!key.contains(".") && !key.contains("[")){
             if(root.containsNode(key)){
@@ -99,11 +159,13 @@ public class ComplexMerger {
          * To set the value of a node
          * @param value
          */
-        public abstract void addValue(String value);
+        public abstract void addValue(Object value);
 
         public String toString(){
             return toJSON();
         }
+
+        public abstract XContentBuilder getXBuilder(XContentBuilder builder,boolean writeTitle)throws IOException;
     }
 
     /**
@@ -111,7 +173,8 @@ public class ComplexMerger {
      */
     public class PropertyRoot extends PropertyNode{
         private Map<String,PropertyNode> properties = new HashMap<String,PropertyNode>();
-
+        private String id;
+        private String operation;
         public PropertyRoot(){}
 
         public PropertyRoot(String name){
@@ -140,8 +203,24 @@ public class ComplexMerger {
             return properties.containsKey(name);
         }
 
-        public void addValue(String value){
+        public void addValue(Object value){
             throw new RuntimeException("Impossible");
+        }
+
+        public String getOperation() {
+            return operation;
+        }
+
+        public void setOperation(String operation) {
+            this.operation = operation;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
         }
 
         public String toJSON(){
@@ -153,6 +232,26 @@ public class ComplexMerger {
             }
             builder.append("}");
             return builder.toString();
+        }
+
+        public XContentBuilder getXBuilder()throws IOException{
+            return getXBuilder(null,false);
+        }
+
+        public XContentBuilder getXBuilder(XContentBuilder builder,boolean writeTitle)throws IOException{
+            if(builder == null){
+                builder = jsonBuilder();
+            }
+            if(writeTitle){
+                builder.startObject(this.name);
+            }else{
+                builder.startObject();
+            }
+            for(String s : properties.keySet()){
+                properties.get(s).getXBuilder(builder,true);
+            }
+            builder.endObject();
+            return builder;
         }
     }
 
@@ -251,6 +350,20 @@ public class ComplexMerger {
             builder.append("]");
             return builder.toString();
         }
+
+        public XContentBuilder getXBuilder(XContentBuilder builder,boolean writeTitle)throws IOException{
+            if(builder == null){
+                builder = jsonBuilder();
+            }
+            builder.startArray(this.name);
+            for(PropertyNode node : properties){
+                node.getXBuilder(builder,false);
+            }
+            builder.endArray();
+
+            return builder;
+
+        }
     }
 
 
@@ -259,9 +372,9 @@ public class ComplexMerger {
      * Can stock many values for a same key. The values a stock in a list
      */
     public class PropertyLeaf extends PropertyNode{
-        private List<String> values = new ArrayList<String>();
+        private List<Object> values = new ArrayList<Object>();
 
-        public PropertyLeaf(String key,String value){
+        public PropertyLeaf(String key,Object value){
             this.name = key;
             values.add(value);
         }
@@ -270,28 +383,44 @@ public class ComplexMerger {
          * Set the value of the leaf. If a value have already been set, the new is add in the list (no replace)
          * @param value
          */
-        public void addValue(String value){
-            values.add(value);
+        public void addValue(Object value){
+            if(!values.contains(value)){
+                values.add(value);
+            }
         }
 
         /**
          * Return the differents values of the leaf
          * @return
          */
-        public List<String> getValues() {
+        public List<Object> getValues() {
             return values;
         }
 
         public String toJSON(){
             StringBuilder builder = new StringBuilder();
             int pos = 0;
-            for(String str : values){
-                builder.append((pos++ > 0) ? "," : "").append("\"").append(str).append("\"");
+            for(Object str : values){
+                builder.append((pos++ > 0) ? "," : "").append("\"").append(str.toString()).append("\"");
             }
             if(values.size() > 1){
                 return "[" + builder.toString() + "]";
             }
             return builder.toString();
+        }
+
+        public XContentBuilder getXBuilder(XContentBuilder builder,boolean writeTitle)throws IOException{
+            builder.field(this.name);
+            if(values.size()>1){
+                builder.startArray();
+            }
+            for(Object str : values){
+                builder.value(str);
+            }
+            if(values.size()>1){
+                builder.endArray();
+            }
+            return builder;
         }
     }
 }
