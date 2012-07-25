@@ -40,7 +40,7 @@ public class BulkOperation implements Action {
     protected String index;
     protected String type;
     private String id;
-    private Client client;
+    protected Client client;
     protected ESLogger logger;
     private int bulkSize = 100;
     private int maxActiveRequests = 30;
@@ -266,5 +266,8 @@ public class BulkOperation implements Action {
     private boolean isNullOrEmpty(String s) {
         return s == null || s.length() == 0;
     }
-    
+
+    public Client getClient() {
+        return client;
+    }
 }

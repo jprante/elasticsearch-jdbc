@@ -252,10 +252,14 @@ public class SQLService implements BulkAcknowledge {
     }
 
     private void saveIndex(ComplexMerger.PropertyRoot root,BulkOperation bulkOp)throws IOException{
-        //logger.info(root.getOperation() + " : " + root.getId() + " : " +root.toJSON());
-        //client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
-        if(root.getOperation().equals("index")){
+        if(root.getOperation().equals("create")){
             bulkOp.create(null,null,root.getId(),1L,root.getXBuilder());
+        }
+        if(root.getOperation().equals("index")){
+            bulkOp.index(null,null,root.getId(),1L,root.getXBuilder());
+        }
+        if(root.getOperation().equals("delete")){
+            bulkOp.delete(null,null,root.getId());
         }
     }
 

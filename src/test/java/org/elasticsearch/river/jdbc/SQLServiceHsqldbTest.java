@@ -1,24 +1,42 @@
 package org.elasticsearch.river.jdbc;
 
 import org.apache.log4j.Logger;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.log4j.Log4jESLogger;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeBuilder;
 import org.hsqldb.Server;
 import org.hsqldb.persist.HsqlProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.sql.*;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class SQLServiceHsqldbTest {
     private final ESLogger logger = new Log4jESLogger("ES river", Logger.getLogger("Test"));
     private SQLService sqlService = new SQLService(logger);
     private Server server;
+    private String complexQuery = "select 'index' as \"_operation\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options[label]\"," +
+                "            o.price as \"car.options[price]\"" +
+                "            from car left join car_opt_have co on car.id = co.id_car" +
+                "            left join opt o on o.id = co.id_opt";
+
+     private String complexQuery2 = "select 'index' as \"_operation\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
+                "            o.price as \"options[price]\"" +
+                "            from car left join car_opt_have co on car.id = co.id_car" +
+                "            left join opt o on o.id = co.id_opt";
+
+    private final String INDEX_NAME = "shop";
 
     @BeforeClass
     public void startHsqldbServer()throws ClassNotFoundException,SQLException{
@@ -72,7 +90,7 @@ public class SQLServiceHsqldbTest {
 
     @Test
     public void testRequest()throws Exception{
-        
+
     }
 
     @Test
@@ -81,14 +99,6 @@ public class SQLServiceHsqldbTest {
         Assert.assertFalse(connection.isClosed());
     }
 
-    @Test
-    public void testTable()throws Exception{
-        Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
-        PreparedStatement ps = sqlService.prepareStatement(connection,"select * from test");
-        ResultSet rs = sqlService.execute(ps,100);
-        Assert.assertTrue(rs.next());
-
-    }
 
     @Test
     public void testMerger()throws Exception{
@@ -98,19 +108,36 @@ public class SQLServiceHsqldbTest {
 
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,query);
-        sqlService.treat(ps,5,"index",null);
+        sqlService.treat(ps,5,"index",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
     }
 
     @Test
     public void testComplexMerger()throws Exception{
-        String query = "select 'index' as \"_operation\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options[label]\"," +
-                "            o.price as \"car.options[price]\"" +
-                "            from car left join car_opt_have co on car.id = co.id_car" +
-                "            left join opt o on o.id = co.id_opt";
-
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
-        PreparedStatement ps = sqlService.prepareStatement(connection,query);
-        sqlService.treat(ps,5,"index",getMockBulkOperation(logger).setIndex("shop").setType("car"));
+        PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery);
+        sqlService.treat(ps,5,"index",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+    }
+
+
+    @Test
+    public void testComplexMergerInMemory()throws Exception{
+        Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
+        PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery2);
+        BulkOperation op = getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+
+        sqlService.treat(ps,2,"index",op);
+        refreshIndex(op.getClient(),INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 2);
+
+        sqlService.treat(ps,4,"index",op);
+        refreshIndex(op.getClient(),INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 4);
+
+    }
+
+  
+    private void refreshIndex(Client client,String index){
+        client.admin().indices().refresh(new RefreshRequest(index)).actionGet();
     }
 
     private BulkOperation getMockBulkOperation(ESLogger logger){
@@ -136,6 +163,55 @@ public class SQLServiceHsqldbTest {
             @Override
             public void delete(String index, String type, String id) {
                 logger.info(" DELETE: " + this.index + "/" + this.type + "/" + id);
+            }
+        };
+    }
+
+    private BulkOperation getMemoryBulkOperation(ESLogger logger){
+        Settings settings = ImmutableSettings.settingsBuilder()
+                .put("gateway.type","none")
+                .put("index.gateway.type", "none")
+                .put("index.store.type", "memory")
+                .put("path.data","target/data")
+                .build();
+
+        Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
+        final Client client = node.client();
+
+
+        return new BulkOperation(client,logger){
+            @Override
+            public BulkOperation setIndex(String index) {
+                super.setIndex(index);
+                // We create the index in memory
+                client.admin().indices().prepareCreate(index).execute().actionGet();
+                return this;
+            }
+
+            @Override
+            public void create(String index, String type, String id, long version, XContentBuilder builder) {
+                try{
+                    logger.info(" CREATE : " + this.index + "/" + this.type + "/" + id + " => " + builder.string());
+                    client.prepareIndex(this.index, this.type).setSource(builder).execute().actionGet();
+                }catch(Exception e){
+                    logger.error("Error generating CREATE");
+                }
+            }
+
+            @Override
+            public void index(String index, String type, String id, long version, XContentBuilder builder) {
+                try{
+                    logger.info(" INDEX: " + this.index + "/" + this.type + "/" + id + " => " + builder.string());
+                    IndexResponse r = client.prepareIndex(this.index,this.type,id).setSource(builder).execute().actionGet();
+                }catch(Exception e){
+                    logger.error("Error generating INDEX");
+                }
+            }
+
+            @Override
+            public void delete(String index, String type, String id) {
+                logger.info(" DELETE: " + this.index + "/" + this.type + "/" + id);
+                client.prepareDelete(this.index, this.type, id).execute().actionGet();
             }
         };
     }
