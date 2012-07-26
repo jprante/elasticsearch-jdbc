@@ -27,6 +27,7 @@ import java.util.TimeZone;
 public class DateUtil {
 
     private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    private static final String FORMAT_SECONDS = "yyyy-MM-dd HH:mm:ss";
     private static final SimpleDateFormat isoFormat = new SimpleDateFormat();
     private static final TimeZone tz = TimeZone.getTimeZone("GMT");
     private static final Calendar cal = Calendar.getInstance();
@@ -45,6 +46,14 @@ public class DateUtil {
         Date d = new Date();
         d.setTime(millis);
         return formatDateISO(d);
+    }
+
+    public static String formatDateStandard(Date date){
+        if (date == null) {
+            return null;
+        }
+        isoFormat.applyPattern(FORMAT_SECONDS);
+        return isoFormat.format(date);
     }
     
     public synchronized static String formatDateISO(Date date) {

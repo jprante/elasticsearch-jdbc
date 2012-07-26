@@ -14,8 +14,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 /**
  * Merge the results of the database. Algo is based on specified fieldnames.
  * Differents sperators are authorized like . and [] to specify list of subfield
- * Beware : the _id must be at the first level
- */
+  */
 public class ComplexMerger implements RowListener{
 
     private ESLogger logger = ESLoggerFactory.getLogger("ComplexMerger");
@@ -57,11 +56,9 @@ public class ComplexMerger implements RowListener{
             try{
                 merge(root,keys.get(i),values.get(i));
             }catch(Exception e){
-                logger.error("Probleme merge",e);
+                logger.error("Merge probleme",e);
             }
         }
-        logger.info(root.toJSON());
-
     }
 
     @Override
@@ -77,8 +74,6 @@ public class ComplexMerger implements RowListener{
                 logger.error("Probleme merge",e);
             }
         }
-        //logger.info(root.toJSON());
-
     }
 
 
@@ -134,16 +129,10 @@ public class ComplexMerger implements RowListener{
 
     }
 
-
-    public interface JSONable{
-        String toJSON();
-    }
-
-
     /**
      * Node structure of JSON representation
      */
-    public abstract class PropertyNode implements JSONable{
+    public abstract class PropertyNode {
         String name;
 
         public String getName() {
@@ -161,9 +150,6 @@ public class ComplexMerger implements RowListener{
          */
         public abstract void addValue(Object value);
 
-        public String toString(){
-            return toJSON();
-        }
 
         public abstract XContentBuilder getXBuilder(XContentBuilder builder,boolean writeTitle)throws IOException;
     }
@@ -223,12 +209,12 @@ public class ComplexMerger implements RowListener{
             this.id = id;
         }
 
-        public String toJSON(){
+        public String toString(){
             StringBuilder builder = new StringBuilder();
             builder.append("").append("{");
             int pos = 0;
             for(String s : properties.keySet()){
-                builder.append((pos++>0)?",":"").append("\"").append(s).append("\" : ").append(properties.get(s).toJSON());
+                builder.append((pos++>0)?",":"").append("\"").append(s).append("\" : ").append(properties.get(s).toString());
             }
             builder.append("}");
             return builder.toString();
@@ -340,12 +326,12 @@ public class ComplexMerger implements RowListener{
             return properties.getLast();
         }
 
-         public String toJSON(){
+         public String toString(){
             StringBuilder builder = new StringBuilder();
             builder.append("[");
             int pos = 0;
             for(PropertyNode node : properties){
-                builder.append((pos++>0)?",":"").append(node.toJSON());
+                builder.append((pos++>0)?",":"").append(node.toString());
             }
             builder.append("]");
             return builder.toString();
@@ -397,7 +383,7 @@ public class ComplexMerger implements RowListener{
             return values;
         }
 
-        public String toJSON(){
+        public String toString(){
             StringBuilder builder = new StringBuilder();
             int pos = 0;
             for(Object str : values){

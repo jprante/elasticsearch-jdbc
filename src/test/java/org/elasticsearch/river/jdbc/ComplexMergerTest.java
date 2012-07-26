@@ -81,7 +81,6 @@ public class ComplexMergerTest {
 
         Assert.assertTrue(root.containsNode("_id"));
 
-        System.out.println(root.toJSON());
         System.out.println(root.getXBuilder().string());
     }
 

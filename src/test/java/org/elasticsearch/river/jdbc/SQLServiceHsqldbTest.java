@@ -54,15 +54,15 @@ public class SQLServiceHsqldbTest {
         // Insert new data
         Class.forName("org.hsqldb.jdbcDriver");
         Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
-        conn.createStatement().execute("create table car(id int,label varchar(255) )");
+        conn.createStatement().execute("create table car(id int,label varchar(255),modification_date timestamp )");
         conn.createStatement().execute("create table opt(id int,label varchar(255), price int)");
         conn.createStatement().execute("create table car_opt_have(id_opt int, id_car int )");
 
-        conn.createStatement().execute("insert into car values(1,'car1')");
-        conn.createStatement().execute("insert into car values(2,'car2')");
-        conn.createStatement().execute("insert into car values(3,'car3')");
-        conn.createStatement().execute("insert into car values(4,'car4')");
-        conn.createStatement().execute("insert into car values(5,'car5')");
+        conn.createStatement().execute("insert into car values(1,'car1','2012-06-02 10:00:00')");
+        conn.createStatement().execute("insert into car values(2,'car2','2012-06-02 11:00:00')");
+        conn.createStatement().execute("insert into car values(3,'car3','2012-06-02 14:00:00')");
+        conn.createStatement().execute("insert into car values(4,'car4','2012-06-02 10:30:00')");
+        conn.createStatement().execute("insert into car values(5,'car5','2012-06-02 15:00:00')");
 
         conn.createStatement().execute("insert into opt values(1,'clim',1000)");
         conn.createStatement().execute("insert into opt values(2,'door',500)");
@@ -88,11 +88,7 @@ public class SQLServiceHsqldbTest {
         server.stop();
     }
 
-    @Test
-    public void testRequest()throws Exception{
-
-    }
-
+  
     @Test
     public void testConnexion()throws Exception{
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
@@ -108,14 +104,14 @@ public class SQLServiceHsqldbTest {
 
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,query);
-        sqlService.treat(ps,5,"index",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+        sqlService.treat(ps,5,"index","modification_date",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
     }
 
     @Test
     public void testComplexMerger()throws Exception{
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery);
-        sqlService.treat(ps,5,"index",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+        sqlService.treat(ps,5,"modification_date","index",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
     }
 
 
@@ -125,14 +121,13 @@ public class SQLServiceHsqldbTest {
         PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery2);
         BulkOperation op = getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
 
-        sqlService.treat(ps,2,"index",op);
+        sqlService.treat(ps,2,"index","modification_date",op);
         refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 2);
 
-        sqlService.treat(ps,4,"index",op);
+        sqlService.treat(ps,4,"index","modification_date",op);
         refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 4);
-
     }
 
   
@@ -167,7 +162,7 @@ public class SQLServiceHsqldbTest {
         };
     }
 
-    private BulkOperation getMemoryBulkOperation(ESLogger logger){
+    protected static BulkOperation getMemoryBulkOperation(ESLogger logger){
         Settings settings = ImmutableSettings.settingsBuilder()
                 .put("gateway.type","none")
                 .put("index.gateway.type", "none")

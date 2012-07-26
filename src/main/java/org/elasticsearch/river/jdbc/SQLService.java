@@ -177,13 +177,14 @@ public class SQLService implements BulkAcknowledge {
     }
 
     /**
-     *
-     * @param statement
-     * @param size
-     * @param operation
+     * Index data returns by the request in statement. At the end of treatment, return the modification date of the last indexed object. When river come again, treatment start a this point.
+     * @param statement Statement which contain request
+     * @param size  Number of elements to index
+     * @param operation Default operation if nothing is define in select results
+     * @return the date of modification of the last indexed document
      * @throws SQLException
      */
-    public void treat(PreparedStatement statement, int fetchsize, String defaultOperation,BulkOperation bulkOp) throws SQLException,IOException {
+    public String treat(PreparedStatement statement, int fetchsize, String defaultOperation, String nameFieldDate,BulkOperation bulkOp) throws SQLException,IOException {
         int size = fetchsize + 10;
         ResultSet results = getResultsWithBounds(statement,0,size + 10);   // +10 is a marge
 
@@ -194,6 +195,7 @@ public class SQLService implements BulkAcknowledge {
         String currentOperation = defaultOperation;
         ResultSetMetaData metadata = results.getMetaData();
 
+        String currentModificationDate = null;  // modification date of last indexed element
 
         int from = 0;
         int pos = 0;
@@ -203,8 +205,9 @@ public class SQLService implements BulkAcknowledge {
                 if(results.getRow() < size + from){
                     // Plus d'elements, on flush on part
                     saveIndex(merger.getRoot(),bulkOp);
+                    bulkOp.flush();
                     results.close();
-                    return;
+                    return currentModificationDate;
                 }
                 from += size;
                 // On recharge les suivants
@@ -212,8 +215,9 @@ public class SQLService implements BulkAcknowledge {
                 if(results == null || !results.next()){
                     // Plus rien, on flush on part
                     saveIndex(merger.getRoot(),bulkOp);
+                    bulkOp.flush();
                     results.close();
-                    return;
+                    return currentModificationDate;
                 }
                 // Sinon, on deroule l'algo
             }
@@ -224,9 +228,10 @@ public class SQLService implements BulkAcknowledge {
                 saveIndex(merger.getRoot(),bulkOp);
                 merger.reset();
                 // Palier atteint, on arrete
-                if(pos++ >= fetchsize){
+                if(++pos >= fetchsize){
+                    bulkOp.flush();
                     results.close();
-                    return;
+                    return currentModificationDate;
                 }
             }
             currentId = id;
@@ -245,10 +250,19 @@ public class SQLService implements BulkAcknowledge {
                     keys.add(columnName);
                     values.add(parseType(results,i,metadata,columnName));
                 }
+                /* Save the modification date of document */
+                if(columnName.toLowerCase().equals("_modificationdate")){
+                    String date = parseType(results,i,metadata,columnName).toString();
+                    if(date!=null){
+                        currentModificationDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date));
+                    }
+                }
             }
             merger.row(keys,values);
             /* Last result, we flag */
         }
+        bulkOp.flush();
+        return currentModificationDate;
     }
 
     private void saveIndex(ComplexMerger.PropertyRoot root,BulkOperation bulkOp)throws IOException{

@@ -65,6 +65,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String user;
     private final String password;
     private final String sql;
+    private final String nameDateField; // use to order request by date and select recent results
     private final int fetchsize;
     private final List<Object> params;
     private final boolean rivertable;
@@ -75,6 +76,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private volatile boolean closed;
     private Date creationDate;
     private String strategy;
+    protected Runnable riverStrategy;
+    protected boolean delay = true; // if thread is launch infinite times. use to test thread only one time
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
@@ -90,6 +93,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
+            nameDateField = XContentMapValues.nodeStringValue(jdbcSettings.get("nameDateField"), null);
             strategy = XContentMapValues.nodeStringValue(jdbcSettings.get("strategy"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
@@ -105,6 +109,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = null;
             password = null;
             sql = null;
+            nameDateField = null;
             strategy = null;
             fetchsize = 0;
             params = null;
@@ -132,10 +137,20 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             maxBulkRequests = 30;
             bulkTimeout = TimeValue.timeValueMillis(60000);
         }
-        service = new SQLService(logger).setPrecision(scale).setRounding(rounding);
-        operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName).setVersioning(versioning)
+        service = new SQLService(logger);
+        operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName)
                 .setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests)
-                .setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), rivertable ? service : null);
+                .setMillisBeforeContinue(bulkTimeout.millis()).setMillisBeforeContinue(bulkTimeout.millis()).setAcknowledge(riverName.getName(), rivertable ? service : null);
+
+        // Strategy
+        riverStrategy = new JDBCConnector();
+        if(strategy!=null && strategy.equals("timebasis")){
+            riverStrategy = new JDBCConnectorTimebasis();
+        }
+        if(strategy!=null && strategy.equals("rivertable")){
+            riverStrategy = new JDBCRiverTableConnector();
+        }
+
     }
 
     @Override
@@ -156,7 +171,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 return;
             }
         }
-        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(rivertable ? new JDBCRiverTableConnector() : new JDBCConnector());
+        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(riverStrategy);
         thread.start();
     }
 
@@ -236,7 +251,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 }
             }
         }
-
+        
         private void housekeeper(long version) throws IOException {
             logger.info("housekeeping for version " + version);
             client.admin().indices().prepareRefresh(indexName).execute().actionGet();
@@ -290,7 +305,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         }
     }
 
-    private class JDBCConnectorIncremental implements Runnable {
+    private class JDBCConnectorTimebasis implements Runnable {
 
         @Override
         public void run() {
@@ -298,43 +313,55 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 try {
                     /* Test of differents parameters. The field _id is mandatory (indicate the id in the index) */
                     String requestSQL = sql;
-                    if(!requestSQL.contains(" _id")){
+                    if(!requestSQL.contains(" _id") || nameDateField == null){
                         // Error
                         return;
                     }
-                    /* Add the order instruction */
-                    if(!requestSQL.toLowerCase().contains("order by")){
-                        requestSQL += " order by _id";
-                    }
-                    String indexOperation = sql.contains("_operation") ? null : "index";
+                    String lastModificationDate = getPreviousDateModification();
 
-                    Number version;
-                    String digest;
-                    // read state from _custom
-                    client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
-                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
-                    if (creationDate != null || !get.exists()) {
-                        version = 1L;
-                        digest = null;
-                    } else {
-                        Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
-                        if (jdbcState != null) {
-                            version = (Number) jdbcState.get("version");
-                            version = version.longValue() + 1; // increase to next version
-                            digest = (String) jdbcState.get("digest");
-                        } else {
-                            throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName().name());
+                    /* If order information are presente, delete */
+                    if(requestSQL.toLowerCase().contains("order by")){
+                        requestSQL = requestSQL.substring(0,requestSQL.toLowerCase().indexOf("order by"));
+                    }
+                    /* Add modification date filter */
+                    if(lastModificationDate!=null){
+                        if(requestSQL.toLowerCase().contains("where")){
+                            requestSQL+=" and " + nameDateField + " >= '" + lastModificationDate + "'";
+                        }
+                        else{
+                            requestSQL+=" where " + nameDateField + " >= '" + lastModificationDate + "'";
                         }
                     }
+                    /* Add the order instruction : id and modification date */
+                    requestSQL += " order by " + nameDateField + " asc, _id asc";
+                    
+                    String indexOperation = sql.contains("_operation") ? null : "index";
+
+                    /* Add name datefield in request */
+                    String substring = sql.substring(0,sql.toLowerCase().indexOf("from"));
+                    if(!substring.contains(nameDateField)){
+                        // TODO : throw exception ?
+                        requestSQL = requestSQL.substring(0,requestSQL.toLowerCase().indexOf("from"))
+                                + ", " + nameDateField + " as _modificationDate "
+                                + requestSQL.substring(requestSQL.toLowerCase().indexOf("from"));
+                                             
+                    }
+
                     Connection connection = service.getConnection(driver, url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, requestSQL);
                     service.bind(statement, params);
-                    
-                    service.treat(statement, fetchsize,indexOperation,operation);
-
+                    lastModificationDate = service.treat(statement, fetchsize,indexOperation,nameDateField,operation);
                     service.close(statement);
                     service.close(connection);
-                    delay("next run");
+
+                    saveContexteInIndex(lastModificationDate);
+
+                    if(delay){
+                        delay("next run");
+                    }
+                    else{
+                        closed = true;
+                    }
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e, (Object) null);
                     closed = true;
@@ -343,6 +370,35 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     return;
                 }
             }
+        }
+
+        /**
+         * The modification date of the last index document
+         * @return
+         */
+        private String getPreviousDateModification()throws Exception{
+            client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
+            GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
+            if (!get.exists()) {
+                return null;
+            } else {
+                Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
+                if (jdbcState != null) {
+                    return (String)jdbcState.get("lastDateModification");
+                } else {
+                    throw new IOException("can't retrieve previously persisted state from " + riverIndexName + "/" + riverName().name());
+                }
+            }
+        }
+
+        private void saveContexteInIndex(String lastDateModification)throws Exception{
+            XContentBuilder builder = jsonBuilder();
+            builder.startObject().startObject("jdbc");
+            if (lastDateModification != null) {
+                builder.field("lastDateModification", lastDateModification);
+            }
+            builder.endObject().endObject();
+            client.prepareIndex(riverIndexName,riverName.name(),"_custom").setSource(builder).execute().actionGet();
         }
     }
 
