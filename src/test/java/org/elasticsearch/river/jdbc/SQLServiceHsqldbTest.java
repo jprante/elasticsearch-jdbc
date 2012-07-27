@@ -3,7 +3,6 @@ package org.elasticsearch.river.jdbc;
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.log4j.Log4jESLogger;
@@ -17,24 +16,27 @@ import org.hsqldb.persist.HsqlProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class SQLServiceHsqldbTest {
     private final ESLogger logger = new Log4jESLogger("ES river", Logger.getLogger("Test"));
     private SQLService sqlService = new SQLService(logger);
     private Server server;
     private String complexQuery = "select 'index' as \"_operation\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options[label]\"," +
-                "            o.price as \"car.options[price]\"" +
-                "            from car left join car_opt_have co on car.id = co.id_car" +
-                "            left join opt o on o.id = co.id_opt";
+            "            o.price as \"car.options[price]\"" +
+            "            from car left join car_opt_have co on car.id = co.id_car" +
+            "            left join opt o on o.id = co.id_opt";
 
-     private String complexQuery2 = "select 'index' as \"_operation\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
-                "            o.price as \"options[price]\"" +
-                "            from car left join car_opt_have co on car.id = co.id_car" +
-                "            left join opt o on o.id = co.id_opt";
+    private String complexQuery2 = "select 'index' as \"_operation\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
+            "            o.price as \"options[price]\"" +
+            "            from car left join car_opt_have co on car.id = co.id_car" +
+            "            left join opt o on o.id = co.id_opt";
 
     private final String INDEX_NAME = "shop";
 
@@ -84,11 +86,23 @@ public class SQLServiceHsqldbTest {
     }
 
     @AfterClass
-    public void stopHsqldbServer(){
+    public void stopHsqldbServer()throws Exception{
+        /* Drop database */
+        Class.forName("org.hsqldb.jdbcDriver");
+        Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
+        conn.createStatement().execute("drop table car_opt_have");
+        conn.createStatement().execute("drop table opt");
+        conn.createStatement().execute("drop table car");
         server.stop();
     }
 
-  
+
+    @BeforeMethod
+    public void resetIndex(){
+        BulkOperation op = getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        op.getClient().admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
+    }
+
     @Test
     public void testConnexion()throws Exception{
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
@@ -130,7 +144,7 @@ public class SQLServiceHsqldbTest {
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 4);
     }
 
-  
+
     private void refreshIndex(Client client,String index){
         client.admin().indices().refresh(new RefreshRequest(index)).actionGet();
     }
@@ -178,8 +192,10 @@ public class SQLServiceHsqldbTest {
             @Override
             public BulkOperation setIndex(String index) {
                 super.setIndex(index);
-                // We create the index in memory
-                client.admin().indices().prepareCreate(index).execute().actionGet();
+                // We create the index in memory if it does'nt exist
+                if(!client.admin().indices().prepareExists(index).execute().actionGet().exists()){
+                    client.admin().indices().prepareCreate(index).execute().actionGet();
+                }
                 return this;
             }
 

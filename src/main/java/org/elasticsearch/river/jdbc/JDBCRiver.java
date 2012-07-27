@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -313,28 +316,35 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 try {
                     /* Test of differents parameters. The field _id is mandatory (indicate the id in the index) */
                     /* Mandatory : aliasDateField must be in select sql request */
-                    if(!sql.contains(" _id") || aliasDateField == null || !sql.contains(aliasDateField)){
+                    if(!sql.contains("_id") || aliasDateField == null || !sql.contains(aliasDateField)){
                         // Error
                         throw new Exception("Field name is mandatory in select clause");
                     }
 
                     // 2nd version with subselect : sql * from (select a,b,c from aa,bb,cc ...) where date >= aliasDateField order by aliasDateField asc, _id asc
                     String requestSQL = "select * from (" + sql + ") ";
-                    
+
                     String lastModificationDate = getPreviousDateModification();
 
                     /* Add modification date filter */
                     if(lastModificationDate!=null){
-                        requestSQL+= " where " + aliasDateField + " >='" + lastModificationDate + "'";
+                        requestSQL+= " where \"" + aliasDateField + "\" >=?";
                     }
                     /* Add the order instruction : id and modification date */
-                    requestSQL += " order by " + aliasDateField + " asc, _id asc";
+                    requestSQL += " order by \"" + aliasDateField + "\" asc, \"_id\" asc";
                     logger.info("Requete SQL : " + requestSQL);
                     String indexOperation = sql.contains("_operation") ? null : "index";
 
                     Connection connection = service.getConnection(driver, url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, requestSQL);
                     service.bind(statement, params);
+                    // Si le lastDateModification!=null, on bind la date
+                    if(lastModificationDate!=null){
+                        List<Object> list = new ArrayList<Object>();
+                        list.add(Timestamp.valueOf(lastModificationDate));
+                        service.bind(statement, list);
+                    }
+
                     lastModificationDate = service.treat(statement, fetchsize,indexOperation, aliasDateField,operation);
                     service.close(statement);
                     service.close(connection);

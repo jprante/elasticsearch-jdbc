@@ -29,7 +29,6 @@ import org.testng.annotations.Test;
 
 public class MySqlTest {
 
-    
     public void testStarQuery() {
         try {
             String driverClassName = "com.mysql.jdbc.Driver";
@@ -66,7 +65,6 @@ public class MySqlTest {
         }
     }
 
-    
     public void testBill() {
         try {
             String driverClassName = "com.mysql.jdbc.Driver";
@@ -103,7 +101,6 @@ public class MySqlTest {
         }
     }    
     
-    
     public void testRelations() {
         try {
             String driverClassName = "com.mysql.jdbc.Driver";
@@ -139,7 +136,6 @@ public class MySqlTest {
             e.printStackTrace();
         }
     }
-    
     
     public void testHighBills() {
         try {
@@ -178,7 +174,6 @@ public class MySqlTest {
         }
     }    
 
-    
     public void testTimePeriod() {
         try {
             String driverClassName = "com.mysql.jdbc.Driver";

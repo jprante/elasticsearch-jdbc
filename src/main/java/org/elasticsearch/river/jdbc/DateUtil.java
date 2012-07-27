@@ -82,6 +82,25 @@ public class DateUtil {
         }
     }
 
+    public synchronized static Date parseDate(String value) {
+         if (value == null) {
+             return null;
+         }
+         isoFormat.applyPattern(FORMAT_SECONDS);
+         try {
+             return isoFormat.parse(value);
+         } catch (ParseException pe) {
+             // skip
+         }
+         isoFormat.applyPattern("yyyy-MM-dd");
+         try {
+             return isoFormat.parse(value);
+         } catch (ParseException pe) {
+             return null;
+         }
+     }
+
+
     public synchronized static int getYear(Date date) {
         cal.setTime(date);
         return cal.get(Calendar.YEAR);

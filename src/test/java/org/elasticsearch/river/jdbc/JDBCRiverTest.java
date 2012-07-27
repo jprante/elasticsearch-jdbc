@@ -2,15 +2,10 @@ package org.elasticsearch.river.jdbc;
 
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.log4j.Log4jESLogger;
 import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 import org.hsqldb.Server;
@@ -18,11 +13,11 @@ import org.hsqldb.persist.HsqlProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,11 +28,11 @@ public class JDBCRiverTest {
     private SQLService sqlService = new SQLService(logger);
     private Server server;
     private String mandatoryQuery = "select 'index' as \"_operation\", id as _id, id as \"id\"" +
-                "            from car ";
-    private String complexQuery2 = "select 'index' as \"_operation\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
-                "            o.price as \"options[price]\", modification_date as _modification_date" +
-                "            from car left join car_opt_have co on car.id = co.id_car" +
-                "            left join opt o on o.id = co.id_opt";
+            "            from car ";
+    private String complexQuery2 = "select 'index' as \"_operation\", id as \"_id\", id as \"id\", label as \"label\", o.label as \"options[label]\"," +
+            "            o.price as \"options[price]\", modification_date as \"_modification_date\"" +
+            "            from car left join car_opt_have co on car.id = co.id_car" +
+            "            left join opt o on o.id = co.id_opt";
 
     private final String INDEX_NAME = "shop";
 
@@ -87,8 +82,19 @@ public class JDBCRiverTest {
     }
 
     @AfterClass
-    public void stopHsqldbServer(){
+    public void stopHsqldbServer()throws Exception{
+        Class.forName("org.hsqldb.jdbcDriver");
+        Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
+        conn.createStatement().execute("drop table car_opt_have");
+        conn.createStatement().execute("drop table opt");
+        conn.createStatement().execute("drop table car");
         server.stop();
+    }
+
+    @BeforeMethod
+    public void resetIndex(){
+        BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        op.getClient().admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
     }
 
     @Test
@@ -160,7 +166,7 @@ public class JDBCRiverTest {
 
     }
 
-  
+
     private void refreshIndex(Client client,String index){
         client.admin().indices().refresh(new RefreshRequest(index)).actionGet();
     }

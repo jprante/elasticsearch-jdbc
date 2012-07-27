@@ -223,6 +223,7 @@ public class SQLService implements BulkAcknowledge {
             }
             /* Search for operation, */
             String id = results.getString("_id");
+            logger.info("Treat document with id : " + id);
             /* If id is different, save the datas and init the contexte */
             if(currentId!=null && !currentId.equals(id)){
                 saveIndex(merger.getRoot(),bulkOp);
@@ -267,10 +268,10 @@ public class SQLService implements BulkAcknowledge {
 
     private void saveIndex(ComplexMerger.PropertyRoot root,BulkOperation bulkOp)throws IOException{
         if(root.getOperation().equals("create")){
-            bulkOp.create(null,null,root.getId(),1L,root.getXBuilder());
+            bulkOp.create(null,null,root.getId(),0L,root.getXBuilder());
         }
         if(root.getOperation().equals("index")){
-            bulkOp.index(null,null,root.getId(),1L,root.getXBuilder());
+            bulkOp.index(null,null,root.getId(),0L,root.getXBuilder());
         }
         if(root.getOperation().equals("delete")){
             bulkOp.delete(null,null,root.getId());
