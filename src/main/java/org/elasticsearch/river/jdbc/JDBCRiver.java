@@ -65,7 +65,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String user;
     private final String password;
     private final String sql;
-    private final String nameDateField; // use to order request by date and select recent results
+    private final String aliasDateField; // use to order request by date and select recent results
     private final int fetchsize;
     private final List<Object> params;
     private final boolean rivertable;
@@ -93,7 +93,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
-            nameDateField = XContentMapValues.nodeStringValue(jdbcSettings.get("nameDateField"), null);
+            aliasDateField = XContentMapValues.nodeStringValue(jdbcSettings.get("aliasDateField"), null);
             strategy = XContentMapValues.nodeStringValue(jdbcSettings.get("strategy"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
@@ -109,7 +109,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = null;
             password = null;
             sql = null;
-            nameDateField = null;
+            aliasDateField = null;
             strategy = null;
             fetchsize = 0;
             params = null;
@@ -312,45 +312,30 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             while (true) {
                 try {
                     /* Test of differents parameters. The field _id is mandatory (indicate the id in the index) */
-                    String requestSQL = sql;
-                    if(!requestSQL.contains(" _id") || nameDateField == null){
+                    /* Mandatory : aliasDateField must be in select sql request */
+                    if(!sql.contains(" _id") || aliasDateField == null || !sql.contains(aliasDateField)){
                         // Error
-                        return;
+                        throw new Exception("Field name is mandatory in select clause");
                     }
+
+                    // 2nd version with subselect : sql * from (select a,b,c from aa,bb,cc ...) where date >= aliasDateField order by aliasDateField asc, _id asc
+                    String requestSQL = "select * from (" + sql + ") ";
+                    
                     String lastModificationDate = getPreviousDateModification();
 
-                    /* If order information are presente, delete */
-                    if(requestSQL.toLowerCase().contains("order by")){
-                        requestSQL = requestSQL.substring(0,requestSQL.toLowerCase().indexOf("order by"));
-                    }
                     /* Add modification date filter */
                     if(lastModificationDate!=null){
-                        if(requestSQL.toLowerCase().contains("where")){
-                            requestSQL+=" and " + nameDateField + " >= '" + lastModificationDate + "'";
-                        }
-                        else{
-                            requestSQL+=" where " + nameDateField + " >= '" + lastModificationDate + "'";
-                        }
+                        requestSQL+= " where " + aliasDateField + " >='" + lastModificationDate + "'";
                     }
                     /* Add the order instruction : id and modification date */
-                    requestSQL += " order by " + nameDateField + " asc, _id asc";
-                    
+                    requestSQL += " order by " + aliasDateField + " asc, _id asc";
+                    logger.info("Requete SQL : " + requestSQL);
                     String indexOperation = sql.contains("_operation") ? null : "index";
-
-                    /* Add name datefield in request */
-                    String substring = sql.substring(0,sql.toLowerCase().indexOf("from"));
-                    if(!substring.contains(nameDateField)){
-                        // TODO : throw exception ?
-                        requestSQL = requestSQL.substring(0,requestSQL.toLowerCase().indexOf("from"))
-                                + ", " + nameDateField + " as _modificationDate "
-                                + requestSQL.substring(requestSQL.toLowerCase().indexOf("from"));
-                                             
-                    }
 
                     Connection connection = service.getConnection(driver, url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, requestSQL);
                     service.bind(statement, params);
-                    lastModificationDate = service.treat(statement, fetchsize,indexOperation,nameDateField,operation);
+                    lastModificationDate = service.treat(statement, fetchsize,indexOperation, aliasDateField,operation);
                     service.close(statement);
                     service.close(connection);
 

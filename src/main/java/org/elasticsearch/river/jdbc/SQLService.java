@@ -184,7 +184,7 @@ public class SQLService implements BulkAcknowledge {
      * @return the date of modification of the last indexed document
      * @throws SQLException
      */
-    public String treat(PreparedStatement statement, int fetchsize, String defaultOperation, String nameFieldDate,BulkOperation bulkOp) throws SQLException,IOException {
+    public String treat(PreparedStatement statement, int fetchsize, String defaultOperation, String aliasDateField,BulkOperation bulkOp) throws SQLException,IOException {
         int size = fetchsize + 10;
         ResultSet results = getResultsWithBounds(statement,0,size + 10);   // +10 is a marge
 
@@ -251,7 +251,7 @@ public class SQLService implements BulkAcknowledge {
                     values.add(parseType(results,i,metadata,columnName));
                 }
                 /* Save the modification date of document */
-                if(columnName.toLowerCase().equals("_modificationdate")){
+                if(columnName.toLowerCase().equals(aliasDateField)){
                     String date = parseType(results,i,metadata,columnName).toString();
                     if(date!=null){
                         currentModificationDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date));

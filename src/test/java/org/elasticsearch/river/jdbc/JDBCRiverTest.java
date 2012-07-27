@@ -32,8 +32,10 @@ public class JDBCRiverTest {
     private final ESLogger logger = new Log4jESLogger("ES river", Logger.getLogger("Test"));
     private SQLService sqlService = new SQLService(logger);
     private Server server;
+    private String mandatoryQuery = "select 'index' as \"_operation\", id as _id, id as \"id\"" +
+                "            from car ";
     private String complexQuery2 = "select 'index' as \"_operation\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
-                "            o.price as \"options[price]\"" +
+                "            o.price as \"options[price]\", modification_date as _modification_date" +
                 "            from car left join car_opt_have co on car.id = co.id_car" +
                 "            left join opt o on o.id = co.id_opt";
 
@@ -114,7 +116,7 @@ public class JDBCRiverTest {
         jdbc.put("driver","org.hsqldb.jdbcDriver");
         jdbc.put("url","jdbc:hsqldb:mem:test");
         jdbc.put("sql",complexQuery2);
-        jdbc.put("nameDateField","modification_date");
+        jdbc.put("aliasDateField","_modification_date");
         jdbc.put("fetchsize",4);
         jdbc.put("strategy","timebasis");
         index.put("index","shop");
@@ -122,6 +124,19 @@ public class JDBCRiverTest {
 
         return new RiverSettings(ImmutableSettings.settingsBuilder().build(),map);
     }
+
+    @Test
+    public void testMandatoryField(){
+        BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+
+        RiverSettings settings = createSettings();
+        ((Map<String,Object>)settings.settings().get("jdbc")).put("sql",mandatoryQuery);
+        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        river.riverStrategy.run();
+
+    }
+
+
     @Test
     public void testComplexMergerInMemory()throws Exception{
         BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
