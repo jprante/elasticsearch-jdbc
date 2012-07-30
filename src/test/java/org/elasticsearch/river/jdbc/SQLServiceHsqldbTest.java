@@ -20,7 +20,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -28,12 +27,12 @@ public class SQLServiceHsqldbTest {
     private final ESLogger logger = new Log4jESLogger("ES river", Logger.getLogger("Test"));
     private SQLService sqlService = new SQLService(logger);
     private Server server;
-    private String complexQuery = "select 'index' as \"_operation\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options[label]\"," +
+    private String complexQuery = "select 'index' as \"_operation\",car.modification_date as \"_modification_date\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options[label]\"," +
             "            o.price as \"car.options[price]\"" +
             "            from car left join car_opt_have co on car.id = co.id_car" +
             "            left join opt o on o.id = co.id_opt";
 
-    private String complexQuery2 = "select 'index' as \"_operation\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
+    private String complexQuery2 = "select 'index' as \"_operation\",car.modification_date as \"_modification_date\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
             "            o.price as \"options[price]\"" +
             "            from car left join car_opt_have co on car.id = co.id_car" +
             "            left join opt o on o.id = co.id_opt";
@@ -54,17 +53,10 @@ public class SQLServiceHsqldbTest {
         server.start();
 
         // Insert new data
-        Class.forName("org.hsqldb.jdbcDriver");
-        Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
+        Connection conn = SQLUtilTest.createConnection();
         conn.createStatement().execute("create table car(id int,label varchar(255),modification_date timestamp )");
         conn.createStatement().execute("create table opt(id int,label varchar(255), price int)");
         conn.createStatement().execute("create table car_opt_have(id_opt int, id_car int )");
-
-        conn.createStatement().execute("insert into car values(1,'car1','2012-06-02 10:00:00')");
-        conn.createStatement().execute("insert into car values(2,'car2','2012-06-02 11:00:00')");
-        conn.createStatement().execute("insert into car values(3,'car3','2012-06-02 14:00:00')");
-        conn.createStatement().execute("insert into car values(4,'car4','2012-06-02 10:30:00')");
-        conn.createStatement().execute("insert into car values(5,'car5','2012-06-02 15:00:00')");
 
         conn.createStatement().execute("insert into opt values(1,'clim',1000)");
         conn.createStatement().execute("insert into opt values(2,'door',500)");
@@ -72,24 +64,21 @@ public class SQLServiceHsqldbTest {
         conn.createStatement().execute("insert into opt values(4,'gearsystem',350)");
         conn.createStatement().execute("insert into opt values(5,'windows',120)");
 
-        conn.createStatement().execute("insert into car_opt_have values(1,1)");
-        conn.createStatement().execute("insert into car_opt_have values(2,1)");
-        conn.createStatement().execute("insert into car_opt_have values(3,1)");
-        conn.createStatement().execute("insert into car_opt_have values(4,1)");
-        conn.createStatement().execute("insert into car_opt_have values(1,2)");
-        conn.createStatement().execute("insert into car_opt_have values(1,3)");
-        conn.createStatement().execute("insert into car_opt_have values(1,4)");
-        conn.createStatement().execute("insert into car_opt_have values(3,4)");
-        conn.createStatement().execute("insert into car_opt_have values(1,5)");
+        SQLUtilTest.addDataTest(conn, 1, "car1", "2012-06-02 10:00:00", new Integer[]{1, 2, 3, 4});
+        SQLUtilTest.addDataTest(conn, 2, "car2", "2012-06-02 11:00:00", new Integer[]{1});
+        SQLUtilTest.addDataTest(conn, 3, "car3", "2012-06-02 10:00:00", new Integer[]{1});
+        SQLUtilTest.addDataTest(conn, 4, "car4", "2012-06-02 14:00:00", new Integer[]{1, 3});
+        SQLUtilTest.addDataTest(conn, 5, "car5", "2012-06-02 15:00:00", new Integer[]{1});
 
         conn.close();
     }
 
+
+
     @AfterClass
     public void stopHsqldbServer()throws Exception{
         /* Drop database */
-        Class.forName("org.hsqldb.jdbcDriver");
-        Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
+        Connection conn = SQLUtilTest.createConnection();
         conn.createStatement().execute("drop table car_opt_have");
         conn.createStatement().execute("drop table opt");
         conn.createStatement().execute("drop table car");
@@ -118,14 +107,14 @@ public class SQLServiceHsqldbTest {
 
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,query);
-        sqlService.treat(ps,5,"index","modification_date",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+        sqlService.treat(ps,5,"index","_modification_date",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
     }
 
     @Test
     public void testComplexMerger()throws Exception{
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery);
-        sqlService.treat(ps,5,"modification_date","index",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+        sqlService.treat(ps,5,"index","_modification_date",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
     }
 
 
@@ -135,13 +124,18 @@ public class SQLServiceHsqldbTest {
         PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery2);
         BulkOperation op = getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
 
-        sqlService.treat(ps,2,"index","modification_date",op);
+        sqlService.treat(ps,5,"index","_modification_date",op);
         refreshIndex(op.getClient(),INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 2);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
 
-        sqlService.treat(ps,4,"index","modification_date",op);
+        // Add new entry to test if it's indexed
+        Connection conn = SQLUtilTest.createConnection();
+        SQLUtilTest.addDataTest(conn, 6, "car6", "2012-07-02 14:00:00", new Integer[]{3});
+        conn.close();
+
+        sqlService.treat(ps,5,"index","_modification_date",op);
         refreshIndex(op.getClient(),INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 4);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 6);
     }
 
 

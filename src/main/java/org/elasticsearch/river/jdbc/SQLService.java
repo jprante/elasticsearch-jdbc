@@ -185,8 +185,8 @@ public class SQLService implements BulkAcknowledge {
      * @throws SQLException
      */
     public String treat(PreparedStatement statement, int fetchsize, String defaultOperation, String aliasDateField,BulkOperation bulkOp) throws SQLException,IOException {
-        int size = fetchsize + 10;
-        ResultSet results = getResultsWithBounds(statement,0,size + 10);   // +10 is a marge
+        //int size = fetchsize + 10;
+        ResultSet results = getResultsWithBounds(statement,fetchsize);
 
         /* Treat all elements. When id change, we flush. If an id is not read completly, we load the next elements */
         ComplexMerger merger = new ComplexMerger();
@@ -200,25 +200,25 @@ public class SQLService implements BulkAcknowledge {
         int from = 0;
         int pos = 0;
         while(pos < fetchsize){
-            /* Cas ou le buffer de traitements est vide */
+            /* Plus de donnees, on enregistre */
             if(!results.next()){
-                if(results.getRow() < size + from){
+                //if(results.getRow() < size + from){
                     // Plus d'elements, on flush on part
                     saveIndex(merger.getRoot(),bulkOp);
                     bulkOp.flush();
                     results.close();
                     return currentModificationDate;
-                }
-                from += size;
+                //}
+                //from += size;
                 // On recharge les suivants
-                results = getResultsWithBounds(statement,from,size);
+                /*results = getResultsWithBounds(statement,from,size);
                 if(results == null || !results.next()){
                     // Plus rien, on flush on part
                     saveIndex(merger.getRoot(),bulkOp);
                     bulkOp.flush();
                     results.close();
                     return currentModificationDate;
-                }
+                }*/
                 // Sinon, on deroule l'algo
             }
             /* Search for operation, */
@@ -229,11 +229,11 @@ public class SQLService implements BulkAcknowledge {
                 saveIndex(merger.getRoot(),bulkOp);
                 merger.reset();
                 // Palier atteint, on arrete
-                if(++pos >= fetchsize){
+                /*if(++pos >= fetchsize){
                     bulkOp.flush();
                     results.close();
                     return currentModificationDate;
-                }
+                }*/
             }
             currentId = id;
             if(defaultOperation == null){
@@ -253,9 +253,12 @@ public class SQLService implements BulkAcknowledge {
                 }
                 /* Save the modification date of document */
                 if(columnName.toLowerCase().equals(aliasDateField)){
-                    String date = parseType(results,i,metadata,columnName).toString();
+                    Object date = parseType(results,i,metadata,columnName);
                     if(date!=null){
-                        currentModificationDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date));
+                        String formatDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date.toString()));
+                        if(formatDate!=null){
+                            currentModificationDate  = formatDate;
+                        }
                     }
                 }
             }
@@ -278,19 +281,19 @@ public class SQLService implements BulkAcknowledge {
         }
     }
 
-       private ResultSet getResultsWithBounds(PreparedStatement statement,int from,int size)throws SQLException{
-           statement.setFetchSize(size + from);
+       private ResultSet getResultsWithBounds(PreparedStatement statement, int fetchsize)throws SQLException{
+           statement.setFetchSize(fetchsize);
            ResultSet results = statement.executeQuery();
 
            // Check number element
-           if(from!=0){
+           /*if(from!=0){
                results.last();
                int length = results.getRow();
                if(length<=size){
                    return null;
                }
                results.absolute(from);
-           }
+           }*/
            return results;
        }
 

@@ -19,6 +19,8 @@ import org.testng.annotations.Test;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,17 +52,10 @@ public class JDBCRiverTest {
         server.start();
 
         // Insert new data
-        Class.forName("org.hsqldb.jdbcDriver");
-        Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
+        Connection conn = SQLUtilTest.createConnection();
         conn.createStatement().execute("create table car(id int,label varchar(255),modification_date timestamp )");
         conn.createStatement().execute("create table opt(id int,label varchar(255), price int)");
         conn.createStatement().execute("create table car_opt_have(id_opt int, id_car int )");
-
-        conn.createStatement().execute("insert into car values(1,'car1','2012-06-02 10:00:02')");
-        conn.createStatement().execute("insert into car values(2,'car2','2012-06-02 11:00:04')");
-        conn.createStatement().execute("insert into car values(3,'car3','2012-06-02 14:22:05')");
-        conn.createStatement().execute("insert into car values(4,'car4','2012-06-02 10:30:03')");
-        conn.createStatement().execute("insert into car values(5,'car5','2012-06-02 09:00:01')");
 
         conn.createStatement().execute("insert into opt values(1,'clim',1000)");
         conn.createStatement().execute("insert into opt values(2,'door',500)");
@@ -68,28 +63,25 @@ public class JDBCRiverTest {
         conn.createStatement().execute("insert into opt values(4,'gearsystem',350)");
         conn.createStatement().execute("insert into opt values(5,'windows',120)");
 
-        conn.createStatement().execute("insert into car_opt_have values(1,1)");
-        conn.createStatement().execute("insert into car_opt_have values(2,1)");
-        conn.createStatement().execute("insert into car_opt_have values(3,1)");
-        conn.createStatement().execute("insert into car_opt_have values(4,1)");
-        conn.createStatement().execute("insert into car_opt_have values(1,2)");
-        conn.createStatement().execute("insert into car_opt_have values(1,3)");
-        conn.createStatement().execute("insert into car_opt_have values(1,4)");
-        conn.createStatement().execute("insert into car_opt_have values(3,4)");
-        conn.createStatement().execute("insert into car_opt_have values(1,5)");
+        SQLUtilTest.addDataTest(conn, 1, "car1", "2012-06-02 10:00:02", new Integer[]{1, 2, 3, 4});
+        SQLUtilTest.addDataTest(conn, 2, "car2", "2012-06-02 11:00:04", new Integer[]{1});
+        SQLUtilTest.addDataTest(conn, 3, "car3", "2012-06-02 14:22:05", new Integer[]{1});
+        SQLUtilTest.addDataTest(conn, 4, "car4", "2012-06-02 10:30:03", new Integer[]{1, 3});
+        SQLUtilTest.addDataTest(conn, 5, "car5", "2012-06-02 09:00:01", new Integer[]{1});
 
         conn.close();
     }
 
     @AfterClass
     public void stopHsqldbServer()throws Exception{
-        Class.forName("org.hsqldb.jdbcDriver");
-        Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
+        Connection conn = SQLUtilTest.createConnection();
         conn.createStatement().execute("drop table car_opt_have");
         conn.createStatement().execute("drop table opt");
         conn.createStatement().execute("drop table car");
         server.stop();
     }
+
+
 
     @BeforeMethod
     public void resetIndex(){
@@ -154,17 +146,53 @@ public class JDBCRiverTest {
         river.delay = false;
         river.riverStrategy.run();
         refreshIndex(op.getClient(),INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 4);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
 
-        // TODO : date problem with GMT
-        //Assert.assertEquals(((Map<String, Object>)op.getClient().prepareGet("_river","river_test","_custom").execute().actionGet().sourceAsMap().get("jdbc")).get("lastDateModification"),"2012-06-02 11:00:04");
+        // Add new entry to test if it's indexed
+        Connection conn = SQLUtilTest.createConnection();
+        SQLUtilTest.addDataTest(conn, 6, "car6", "2012-07-02 14:00:00", new Integer[]{3});
+        conn.close();
+
 
         river.riverStrategy.run();
         refreshIndex(op.getClient(),INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
-
-
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 6);
     }
+
+
+
+    @Test
+    public void testManyEntriesInMemory()throws Exception{
+        // Truncate tables
+        Connection connection = SQLUtilTest.createConnection();
+        SQLUtilTest.truncateTable(connection,"car");
+        SQLUtilTest.truncateTable(connection,"car_opt_have");
+
+        SQLUtilTest.createRandomData(connection,0,1000,2012,06,12);
+        connection.close();
+
+        // Launch treat
+        BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        // Creation of working index, except if it already exist
+        if(op.getClient().admin().indices().prepareExists("_river").execute().actionGet().exists() == false){
+            op.getClient().admin().indices().prepareCreate("_river").execute().actionGet();
+        }
+
+        RiverSettings settings = createSettings();
+        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        river.delay = false;
+        river.riverStrategy.run();
+        refreshIndex(op.getClient(),INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1000);
+
+
+        // Create new Data
+        SQLUtilTest.createRandomData(null,1000,253,2012,07,12);
+        river.riverStrategy.run();
+        refreshIndex(op.getClient(),INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1253);
+    }
+
 
 
     private void refreshIndex(Client client,String index){

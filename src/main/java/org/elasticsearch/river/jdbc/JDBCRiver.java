@@ -328,7 +328,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
                     /* Add modification date filter */
                     if(lastModificationDate!=null){
-                        requestSQL+= " where \"" + aliasDateField + "\" >=?";
+                        requestSQL+= " where \"" + aliasDateField + "\" >?";
                     }
                     /* Add the order instruction : id and modification date */
                     requestSQL += " order by \"" + aliasDateField + "\" asc, \"_id\" asc";
@@ -387,6 +387,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         }
 
         private void saveContexteInIndex(String lastDateModification)throws Exception{
+            logger.info("Last modification date : " + lastDateModification);
             XContentBuilder builder = jsonBuilder();
             builder.startObject().startObject("jdbc");
             if (lastDateModification != null) {
