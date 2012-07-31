@@ -179,8 +179,9 @@ public class SQLService implements BulkAcknowledge {
     /**
      * Index data returns by the request in statement. At the end of treatment, return the modification date of the last indexed object. When river come again, treatment start a this point.
      * @param statement Statement which contain request
-     * @param size  Number of elements to index
-     * @param operation Default operation if nothing is define in select results
+     * @param fetchsize  Number of elements to index
+     * @param defaultOperation Default operation if nothing is define in select results
+     * @param aliasDateField
      * @return the date of modification of the last indexed document
      * @throws SQLException
      */
@@ -197,48 +198,22 @@ public class SQLService implements BulkAcknowledge {
 
         String currentModificationDate = null;  // modification date of last indexed element
 
-        int from = 0;
         int pos = 0;
-        while(pos < fetchsize){
-            /* Plus de donnees, on enregistre */
-            if(!results.next()){
-                //if(results.getRow() < size + from){
-                    // Plus d'elements, on flush on part
-                    saveIndex(merger.getRoot(),bulkOp);
-                    bulkOp.flush();
-                    results.close();
-                    return currentModificationDate;
-                //}
-                //from += size;
-                // On recharge les suivants
-                /*results = getResultsWithBounds(statement,from,size);
-                if(results == null || !results.next()){
-                    // Plus rien, on flush on part
-                    saveIndex(merger.getRoot(),bulkOp);
-                    bulkOp.flush();
-                    results.close();
-                    return currentModificationDate;
-                }*/
-                // Sinon, on deroule l'algo
-            }
+        while(results.next()){
+           pos++;
             /* Search for operation, */
             String id = results.getString("_id");
-            logger.info("Treat document with id : " + id);
             /* If id is different, save the datas and init the contexte */
             if(currentId!=null && !currentId.equals(id)){
                 saveIndex(merger.getRoot(),bulkOp);
                 merger.reset();
-                // Palier atteint, on arrete
-                /*if(++pos >= fetchsize){
-                    bulkOp.flush();
-                    results.close();
-                    return currentModificationDate;
-                }*/
-            }
+               }
             currentId = id;
             if(defaultOperation == null){
                 currentOperation = results.getString("_operation");
             }
+            logger.info("Treat document with id : " + id + " => " + ((defaultOperation == null)?currentOperation:defaultOperation));
+
             merger.getRoot().setOperation(currentOperation);
             merger.getRoot().setId(currentId);
             
@@ -249,11 +224,11 @@ public class SQLService implements BulkAcknowledge {
                 String columnName = metadata.getColumnName(i);
                 if(!columnName.startsWith("_")){
                     keys.add(columnName);
-                    values.add(parseType(results,i,metadata,columnName));
+                    values.add(parseType(results,i,metadata.getColumnType(i),columnName,metadata.getColumnCount()));
                 }
                 /* Save the modification date of document */
                 if(columnName.toLowerCase().equals(aliasDateField)){
-                    Object date = parseType(results,i,metadata,columnName);
+                    Object date = parseType(results,i,93,columnName,metadata.getColumnCount());
                     if(date!=null){
                         String formatDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date.toString()));
                         if(formatDate!=null){
@@ -263,9 +238,14 @@ public class SQLService implements BulkAcknowledge {
                 }
             }
             merger.row(keys,values);
-            /* Last result, we flag */
         }
+        if(pos == 0){
+            return null;
+        }
+
+        saveIndex(merger.getRoot(),bulkOp);
         bulkOp.flush();
+        results.close();
         return currentModificationDate;
     }
 
@@ -381,9 +361,9 @@ public class SQLService implements BulkAcknowledge {
      * @throws SQLException
      * @throws IOException
      */
-    private Object parseType(ResultSet result,Integer i,ResultSetMetaData metadata,String name)throws SQLException,IOException{
+    private Object parseType(ResultSet result,Integer i,int type,String name,int columnCount)throws SQLException,IOException{
 
-        switch (metadata.getColumnType(i)) {
+        switch (type) {
             /**
              * The JDBC types CHAR, VARCHAR, and LONGVARCHAR are closely
              * related. CHAR represents a small, fixed-length character
@@ -578,7 +558,7 @@ public class SQLService implements BulkAcknowledge {
             case Types.TIME: {
                 try {
                     Time t = result.getTime(i);
-                    return t != null ? DateUtil.formatDateISO(t.getTime()) : null;
+                   return t != null ? DateUtil.formatDateISO(t.getTime()) : null;
                 } catch (SQLException e) {
                     return null;
                 }
@@ -752,7 +732,7 @@ public class SQLService implements BulkAcknowledge {
                 return result.getInt(i);
             }
             case Types.SQLXML: {
-                SQLXML xml = result.getSQLXML(metadata.getColumnCount());
+                SQLXML xml = result.getSQLXML(columnCount);
                 return xml != null ? xml.getString() : null;
             }
             /**
@@ -793,7 +773,7 @@ public class SQLService implements BulkAcknowledge {
              * an entry in a java.util.Map object.
              */
             case Types.DISTINCT: {
-                logger.warn("JDBC type not implemented: {}", metadata.getColumnType(i));
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             /**
@@ -817,19 +797,19 @@ public class SQLService implements BulkAcknowledge {
              *
              */
             case Types.STRUCT: {
-                logger.warn("JDBC type not implemented: {}", metadata.getColumnType(i));
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.REF: {
-                logger.warn("JDBC type not implemented: {}", metadata.getColumnType(i));
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.ROWID: {
-                logger.warn("JDBC type not implemented: {}", metadata.getColumnType(i));
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             default: {
-                logger.warn("unknown JDBC type ignored: {}", metadata.getColumnType(i));
+                logger.warn("unknown JDBC type ignored: {}", type);
                 return null;
             }
         }
@@ -856,7 +836,7 @@ public class SQLService implements BulkAcknowledge {
                 continue;
             }
             keys.add(name);
-            values.add(parseType(result,i,metadata,name));
+            values.add(parseType(result,i,metadata.getColumnType(i),name,metadata.getColumnCount()));
         }
         if (id == null) {
             id = Integer.toString(result.getRow());

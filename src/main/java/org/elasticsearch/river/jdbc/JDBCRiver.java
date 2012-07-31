@@ -309,10 +309,13 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     }
 
     private class JDBCConnectorTimebasis implements Runnable {
+        String previousLastModificationDate = null;
 
         @Override
         public void run() {
-            while (true) {
+            // Use to avoid to ignore last insert object when resultset are done. The second pass, use >= to get results created with the same modification date, but after the selection.
+            // If last date are same, strict greater than to avoid index the same objects
+           while (true) {
                 try {
                     /* Test of differents parameters. The field _id is mandatory (indicate the id in the index) */
                     /* Mandatory : aliasDateField must be in select sql request */
@@ -328,7 +331,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
                     /* Add modification date filter */
                     if(lastModificationDate!=null){
-                        requestSQL+= " where \"" + aliasDateField + "\" >?";
+                        requestSQL+= " where \"" + aliasDateField + "\""
+                                + (lastModificationDate.equals(previousLastModificationDate)?">":">=")
+                                + "?";
+                        previousLastModificationDate = lastModificationDate;
                     }
                     /* Add the order instruction : id and modification date */
                     requestSQL += " order by \"" + aliasDateField + "\" asc, \"_id\" asc";
@@ -346,6 +352,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     }
 
                     lastModificationDate = service.treat(statement, fetchsize,indexOperation, aliasDateField,operation);
+                    // If no results to index, the lastmodificationdate is null, get the previous date
+                    if(lastModificationDate == null){
+                        lastModificationDate = previousLastModificationDate;
+                    }
                     service.close(statement);
                     service.close(connection);
 

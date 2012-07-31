@@ -6,6 +6,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.log4j.Log4jESLogger;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 import org.hsqldb.Server;
@@ -20,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +37,13 @@ public class JDBCRiverTest {
             "            o.price as \"options[price]\", modification_date as \"_modification_date\"" +
             "            from car left join car_opt_have co on car.id = co.id_car" +
             "            left join opt o on o.id = co.id_opt";
+
+    private String deleteQuery = "(select 'index' as \"_operation\", id as \"_id\", id as \"id\", label as \"label\", o.label as \"options[label]\"," +
+            "            o.price as \"options[price]\", modification_date as \"_modification_date\"" +
+            "            from car left join car_opt_have co on car.id = co.id_car" +
+            "            left join opt o on o.id = co.id_opt where label not like '%delete%') " +
+            " union (select 'delete' as \"_operation\", id as \"_id\", id as \"id\",'' as \"label\", '' as \"options[label]\"," +
+            "           '0' as \"options[price]\", modification_date as \"_modification_date\" from car where label like'%delete%')";
 
     private final String INDEX_NAME = "shop";
 
@@ -86,7 +95,8 @@ public class JDBCRiverTest {
     @BeforeMethod
     public void resetIndex(){
         BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        op.getClient().admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
+        ESUtilTest.deleteDocumentsInIndex(op.getClient(),INDEX_NAME);
+        ESUtilTest.deleteDocumentInIndex(op.getClient(),"_river","river_test","_custom");
     }
 
     @Test
@@ -138,14 +148,13 @@ public class JDBCRiverTest {
     @Test
     public void testComplexMergerInMemory()throws Exception{
         BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        // Creation of working index
-        op.getClient().admin().indices().prepareCreate("_river").execute().actionGet();
+        ESUtilTest.createIndexIfNotExist(op.getClient(),"_river");
 
         RiverSettings settings = createSettings();
         JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
         river.delay = false;
         river.riverStrategy.run();
-        refreshIndex(op.getClient(),INDEX_NAME);
+        ESUtilTest.refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
 
         // Add new entry to test if it's indexed
@@ -155,10 +164,64 @@ public class JDBCRiverTest {
 
 
         river.riverStrategy.run();
-        refreshIndex(op.getClient(),INDEX_NAME);
+        ESUtilTest.refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 6);
+
+        // Add a new object the same last modification date. We check it's really index
+        conn = SQLUtilTest.createConnection();
+        SQLUtilTest.addDataTest(conn, 7, "car7", "2012-07-02 14:00:00", new Integer[]{1});
+        conn.close();
+
+        river.riverStrategy.run();
+        ESUtilTest.refreshIndex(op.getClient(),INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 7);
+
+        // Add a new object the same last modification date. It must be avoid
+        conn = SQLUtilTest.createConnection();
+        SQLUtilTest.addDataTest(conn, 8, "car8", "2012-07-02 14:00:00", new Integer[]{2,4});
+        conn.close();
+
+        river.riverStrategy.run();
+        ESUtilTest.refreshIndex(op.getClient(),INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 7);
+
     }
 
+
+    @Test
+    public void testDeleteDocuments()throws Exception{
+        // Reset data and index
+        Connection conn = SQLUtilTest.createConnection();
+        SQLUtilTest.truncateTable(conn,"car");
+        SQLUtilTest.truncateTable(conn,"car_opt_have");
+
+        SQLUtilTest.addDataTest(conn,1,"car1","2012-07-30 12:00:00",new Integer[]{3});
+        SQLUtilTest.addDataTest(conn,2,"car2","2012-07-30 15:00:00",new Integer[]{3});
+
+        conn.close();
+
+
+        BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        ESUtilTest.createIndexIfNotExist(op.getClient(),"_river");
+
+        RiverSettings settings = createSettings();
+        ((Map<String,Object>)settings.settings().get("jdbc")).put("sql",deleteQuery);
+
+        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        river.delay = false;
+        river.riverStrategy.run();
+        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 2);
+
+        conn = SQLUtilTest.createConnection();
+        conn.createStatement().execute("update car set label = 'delete_car2' where id = 2");
+        conn.close();
+
+        river.delay = false;
+        river.riverStrategy.run();
+        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1);
+    }
 
 
     @Test
@@ -171,32 +234,26 @@ public class JDBCRiverTest {
         SQLUtilTest.createRandomData(connection,0,1000,2012,06,12);
         connection.close();
 
-        // Launch treat
         BulkOperation op = SQLServiceHsqldbTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        // Creation of working index, except if it already exist
-        if(op.getClient().admin().indices().prepareExists("_river").execute().actionGet().exists() == false){
-            op.getClient().admin().indices().prepareCreate("_river").execute().actionGet();
-        }
-
+        ESUtilTest.createIndexIfNotExist(op.getClient(),"_river");
+        
         RiverSettings settings = createSettings();
         JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
         river.delay = false;
         river.riverStrategy.run();
-        refreshIndex(op.getClient(),INDEX_NAME);
+        ESUtilTest.refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1000);
 
 
         // Create new Data
         SQLUtilTest.createRandomData(null,1000,253,2012,07,12);
         river.riverStrategy.run();
-        refreshIndex(op.getClient(),INDEX_NAME);
+        ESUtilTest.refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1253);
     }
 
 
 
-    private void refreshIndex(Client client,String index){
-        client.admin().indices().refresh(new RefreshRequest(index)).actionGet();
-    }
+
 
 }
