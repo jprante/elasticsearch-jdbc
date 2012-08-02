@@ -1,6 +1,11 @@
 JDBC River Plugin for ElasticSearch
 ===================================
 
+Quick start
+----------
+
+For the impatient, there is a quick start [here](https://github.com/jprante/elasticsearch-river-jdbc/wiki/Quickstart) !
+
 Introduction
 ------------
 
