@@ -19,7 +19,18 @@ public class SQLUtilTest {
     public static void addDataTest(Connection conn,int id,String value,String date,Integer[] options)throws SQLException{
         conn.createStatement().execute("insert into car values(" + id + ",'" + value + "','" + date + "')");
         for(Integer opt : options ){
-            conn.createStatement().execute("insert into car_opt_have values(" + id + "," + opt + ")");
+            conn.createStatement().execute("insert into car_opt_have values(" + opt + "," + id + ")");
+        }
+    }
+
+    public static void addDataTest(Connection conn,int id,String value,String date,Integer[] options,Integer[] colors)throws SQLException{
+        conn.createStatement().execute("insert into car values(" + id + ",'" + value + "','" + date + "')");
+        for(Integer opt : options ){
+            conn.createStatement().execute("insert into car_opt_have values(" + opt + "," + id + ")");
+        }
+
+        for(Integer color : colors ){
+            conn.createStatement().execute("insert into car_color_have values(" + color + "," + id + ")");
         }
     }
 

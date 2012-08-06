@@ -185,8 +185,7 @@ public class SQLService implements BulkAcknowledge {
      * @return the date of modification of the last indexed document
      * @throws SQLException
      */
-    public String treat(PreparedStatement statement, int fetchsize, String defaultOperation, String aliasDateField,BulkOperation bulkOp) throws SQLException,IOException {
-        //int size = fetchsize + 10;
+    public String treat(PreparedStatement statement, int fetchsize, String defaultOperation,BulkOperation bulkOp, List<Object> mappings) throws SQLException,IOException {
         ResultSet results = getResultsWithBounds(statement,fetchsize);
 
         /* Treat all elements. When id change, we flush. If an id is not read completly, we load the next elements */
@@ -201,7 +200,6 @@ public class SQLService implements BulkAcknowledge {
         int pos = 0;
         while(results.next()){
            pos++;
-            /* Search for operation, */
             String id = results.getString("_id");
             /* If id is different, save the datas and init the contexte */
             if(currentId!=null && !currentId.equals(id)){
@@ -221,13 +219,13 @@ public class SQLService implements BulkAcknowledge {
             List<Object> values = new ArrayList<Object>();
 
             for(int i = 1 ; i <= metadata.getColumnCount() ; i++){
-                String columnName = metadata.getColumnName(i);
+                String columnName = (String)mappings.get(i-1);
                 if(!columnName.startsWith("_")){
                     keys.add(columnName);
                     values.add(parseType(results,i,metadata.getColumnType(i),columnName,metadata.getColumnCount()));
                 }
                 /* Save the modification date of document */
-                if(columnName.toLowerCase().equals(aliasDateField)){
+                if(columnName.toLowerCase().equals(JDBCRiver.FIELD_MODIFICATION_DATE)){
                     Object date = parseType(results,i,93,columnName,metadata.getColumnCount());
                     if(date!=null){
                         String formatDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date.toString()));

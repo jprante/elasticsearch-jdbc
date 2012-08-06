@@ -22,18 +22,20 @@ import org.testng.annotations.Test;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SQLServiceHsqldbTest {
     private final ESLogger logger = new Log4jESLogger("ES river", Logger.getLogger("Test"));
     private SQLService sqlService = new SQLService(logger);
     private Server server;
-    private String complexQuery = "select 'index' as \"_operation\",car.modification_date as \"_modification_date\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options[label]\"," +
-            "            o.price as \"car.options[price]\"" +
+    private List<Object> mappingComplexQuery = ESUtilTest.createMapping("_operation","_modification_date","_id","car.id","car.label","car.options[label]","car.options[price]");
+    private String complexQuery = "select 'index' as \"_operation\",car.modification_date as \"_modification_date\", id as _id, id, label, o.label, o.price" +
             "            from car left join car_opt_have co on car.id = co.id_car" +
             "            left join opt o on o.id = co.id_opt";
-
-    private String complexQuery2 = "select 'index' as \"_operation\",car.modification_date as \"_modification_date\", id as _id, id as \"id\", label as \"label\", o.label as \"options[label]\"," +
-            "            o.price as \"options[price]\"" +
+    private List<Object> mappingComplexQuery2 = ESUtilTest.createMapping("_operation","_modification_date","_id","id","label","options[label]","options[price]");
+    private String complexQuery2 = "select 'index' as \"_operation\",car.modification_date as \"_modification_date\", id as _id, id, label , o.label,o.price" +
             "            from car left join car_opt_have co on car.id = co.id_car" +
             "            left join opt o on o.id = co.id_opt";
 
@@ -88,7 +90,7 @@ public class SQLServiceHsqldbTest {
 
     @BeforeMethod
     public void resetIndex(){
-        BulkOperation op = getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
         op.getClient().admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
     }
 
@@ -98,23 +100,23 @@ public class SQLServiceHsqldbTest {
         Assert.assertFalse(connection.isClosed());
     }
 
-
     @Test
     public void testMerger()throws Exception{
-        String query = "select 'index' as \"_operation\", id as _id, id as \"car.id\", label as \"car.label\", o.label as \"car.options\"" +
+        String query = "select 'index' as \"_operation\", id as _id, id, label, o.label " +
                 "            from car left join car_opt_have co on car.id = co.id_car" +
                 "            left join opt o on o.id = co.id_opt";
-
+        List<Object> mapping = ESUtilTest.createMapping("_operation","_id","car.id","car.label","car.options");
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,query);
-        sqlService.treat(ps,5,"index","_modification_date",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+        sqlService.treat(ps,5,"index",ESUtilTest.getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"),mapping);
     }
 
     @Test
     public void testComplexMerger()throws Exception{
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery);
-        sqlService.treat(ps,5,"index","_modification_date",getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"));
+        
+        sqlService.treat(ps,5,"index",ESUtilTest.getMockBulkOperation(logger).setIndex(INDEX_NAME).setType("car"),mappingComplexQuery);
     }
 
 
@@ -122,9 +124,9 @@ public class SQLServiceHsqldbTest {
     public void testComplexMergerInMemory()throws Exception{
         Connection connection = sqlService.getConnection("org.hsqldb.jdbcDriver","jdbc:hsqldb:mem:test", "SA", "",true);
         PreparedStatement ps = sqlService.prepareStatement(connection,complexQuery2);
-        BulkOperation op = getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
 
-        sqlService.treat(ps,5,"index","_modification_date",op);
+        sqlService.treat(ps,5,"index",op,mappingComplexQuery2);
         refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
 
@@ -133,7 +135,7 @@ public class SQLServiceHsqldbTest {
         SQLUtilTest.addDataTest(conn, 6, "car6", "2012-07-02 14:00:00", new Integer[]{3});
         conn.close();
 
-        sqlService.treat(ps,5,"index","_modification_date",op);
+        sqlService.treat(ps,5,"index",op,mappingComplexQuery2);
         refreshIndex(op.getClient(),INDEX_NAME);
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 6);
     }
@@ -143,82 +145,6 @@ public class SQLServiceHsqldbTest {
         client.admin().indices().refresh(new RefreshRequest(index)).actionGet();
     }
 
-    private BulkOperation getMockBulkOperation(ESLogger logger){
-        return new BulkOperation(null,logger){
-            @Override
-            public void create(String index, String type, String id, long version, XContentBuilder builder) {
-                try{
-                    logger.info(" CREATE : " + this.index + "/" + this.type + "/" + id + " => " + builder.string());
-                }catch(Exception e){
-                    logger.error("Error generating CREATE");
-                }
-            }
-
-            @Override
-            public void index(String index, String type, String id, long version, XContentBuilder builder) {
-                try{
-                    logger.info(" INDEX: " + this.index + "/" + this.type + "/" + id + " => " + builder.string());
-                }catch(Exception e){
-                    logger.error("Error generating INDEX");
-                }
-            }
-
-            @Override
-            public void delete(String index, String type, String id) {
-                logger.info(" DELETE: " + this.index + "/" + this.type + "/" + id);
-            }
-        };
-    }
-
-    protected static BulkOperation getMemoryBulkOperation(ESLogger logger){
-        Settings settings = ImmutableSettings.settingsBuilder()
-                .put("gateway.type","none")
-                .put("index.gateway.type", "none")
-                .put("index.store.type", "memory")
-                .put("path.data","target/data")
-                .build();
-
-        Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
-        final Client client = node.client();
-
-
-        return new BulkOperation(client,logger){
-            @Override
-            public BulkOperation setIndex(String index) {
-                super.setIndex(index);
-                // We create the index in memory if it does'nt exist
-                if(!client.admin().indices().prepareExists(index).execute().actionGet().exists()){
-                    client.admin().indices().prepareCreate(index).execute().actionGet();
-                }
-                return this;
-            }
-
-            @Override
-            public void create(String index, String type, String id, long version, XContentBuilder builder) {
-                try{
-                    logger.info(" CREATE : " + this.index + "/" + this.type + "/" + id + " => " + builder.string());
-                    client.prepareIndex(this.index, this.type).setSource(builder).execute().actionGet();
-                }catch(Exception e){
-                    logger.error("Error generating CREATE");
-                }
-            }
-
-            @Override
-            public void index(String index, String type, String id, long version, XContentBuilder builder) {
-                try{
-                    logger.info(" INDEX: " + this.index + "/" + this.type + "/" + id + " => " + builder.string());
-                    IndexResponse r = client.prepareIndex(this.index,this.type,id).setSource(builder).execute().actionGet();
-                }catch(Exception e){
-                    logger.error("Error generating INDEX");
-                }
-            }
-
-            @Override
-            public void delete(String index, String type, String id) {
-                logger.info(" DELETE: " + this.index + "/" + this.type + "/" + id);
-                client.prepareDelete(this.index, this.type, id).execute().actionGet();
-            }
-        };
-    }
+    
 
 }

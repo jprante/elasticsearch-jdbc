@@ -40,7 +40,7 @@ public class ComplexMerger implements RowListener{
 
     public PropertyRoot run(String key,String value)throws Exception{
         PropertyRoot root = new PropertyRoot();
-        merge(root,key,value);
+        merge(root, key, value);
         return root;
     }
 
@@ -66,13 +66,14 @@ public class ComplexMerger implements RowListener{
         if(keys == null || values == null || keys.size()!=values.size()){
             throw new RuntimeException("Impossible");
         }
-
         for(int i = 0 ; i < keys.size() ; i++){
             try{
                 merge(root,keys.get(i),values.get(i));
             }catch(Exception e){
                 logger.error("Probleme merge",e);
             }
+            /* To avoid to have two duplicate elements in list */
+            root.deleteDuplicate();
         }
     }
 
@@ -144,6 +145,8 @@ public class ComplexMerger implements RowListener{
          */
         public boolean isRoot(){return false;}
 
+        public void deleteDuplicate(){}
+
         /**
          * To set the value of a node
          * @param value
@@ -209,6 +212,13 @@ public class ComplexMerger implements RowListener{
             this.id = id;
         }
 
+        @Override
+        public void deleteDuplicate() {
+            for(PropertyNode p : properties.values()){
+                p.deleteDuplicate();
+            }
+        }
+
         public String toString(){
             StringBuilder builder = new StringBuilder();
             builder.append("").append("{");
@@ -238,6 +248,23 @@ public class ComplexMerger implements RowListener{
             }
             builder.endObject();
             return builder;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PropertyRoot that = (PropertyRoot) o;
+            if(properties.size() == 0 && that.properties.size() == 0){return true;}
+            if(properties.size()!= that.properties.size()){return false;}
+
+            for(String key : this.properties.keySet()){
+                if(!that.properties.containsKey(key)){return false;}
+                if(!this.properties.get(key).equals(that.properties.get(key))){return false;}
+            }
+            
+            return true;
         }
     }
 
@@ -274,6 +301,23 @@ public class ComplexMerger implements RowListener{
         }
 
         /**
+         * Verify if last element is duplicate and delete it if yes
+         */
+        public void deleteDuplicate(){
+            if(properties.size()>0){
+                // We check the previous root not equals to an another element in the list (avoid duplicate)
+                // If last equals to another, delete it
+                PropertyRoot previousRoot = properties.getLast();
+                for(int i = 0 ; i < properties.size() -1 ; i++){    // evict the last element which is the current
+                    if(properties.get(i).equals(previousRoot)){
+                        properties.removeLast();
+                        break;
+                    }
+                }
+            }
+        }
+
+        /**
          * Ajoute la propriete dans le dernier PropertyRoot. Si la propriete existe deja, recree un root et l'ajoute a la fin
          * @param propertyNode
          */
@@ -281,6 +325,7 @@ public class ComplexMerger implements RowListener{
         public void putProperty(PropertyNode propertyNode) {
             PropertyRoot root = getLast();
             if(root == null || root.containsNode(propertyNode.getName(),null)){
+                deleteDuplicate();  // not mandatory
                 root = new PropertyRoot("");
                 properties.addLast(root);
             }
@@ -290,8 +335,8 @@ public class ComplexMerger implements RowListener{
         /**
          * Special method which use the complete key to test if the node exist.
          * If a node with this complete key exist, need to create a new Property root and define it as last
-         * @param name
-         * @param completeKey
+         * @param name  Name of node
+         * @param completeKey Complete key to search in full index if exist
          * @return
          */
         public boolean containsNode(String name,String completeKey){
@@ -350,6 +395,24 @@ public class ComplexMerger implements RowListener{
             return builder;
 
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PropertyListRoot that = (PropertyListRoot) o;
+            if(properties.size() == 0 && that.properties.size() == 0){return true;}
+            if(properties.size()!= that.properties.size()){return false;}
+
+
+            for(int i = 0 ; i < this.properties.size() ; i++){
+                if(!this.properties.get(i).equals(that.properties.get(i))){return false;}
+            }
+
+            return true;
+        }
+
     }
 
 
@@ -407,6 +470,22 @@ public class ComplexMerger implements RowListener{
                 builder.endArray();
             }
             return builder;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PropertyLeaf that = (PropertyLeaf) o;
+
+            if(that.getValues().size() == 0 && this.values.size() == 0){return true;}
+            if(that.getValues().size()!=this.values.size()){return false;}
+
+            for(int i = 0 ; i < this.values.size() ; i++){
+                if(!this.values.get(i).equals(that.getValues().get(i))){return false;}
+            }
+            return true;
         }
     }
 }

@@ -24,10 +24,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -68,9 +66,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String user;
     private final String password;
     private final String sql;
-    private final String aliasDateField; // use to order request by date and select recent results
     private final int fetchsize;
     private final List<Object> params;
+    protected final List<Object> mapping;
     private final boolean rivertable;
     private final boolean versioning;
     private final String rounding;
@@ -81,6 +79,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private String strategy;
     protected Runnable riverStrategy;
     protected boolean delay = true; // if thread is launch infinite times. use to test thread only one time
+
+    public static final String FIELD_MODIFICATION_DATE = "_modification_date";
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
@@ -96,10 +96,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = XContentMapValues.nodeStringValue(jdbcSettings.get("user"), null);
             password = XContentMapValues.nodeStringValue(jdbcSettings.get("password"), null);
             sql = XContentMapValues.nodeStringValue(jdbcSettings.get("sql"), null);
-            aliasDateField = XContentMapValues.nodeStringValue(jdbcSettings.get("aliasDateField"), null);
             strategy = XContentMapValues.nodeStringValue(jdbcSettings.get("strategy"), null);
             fetchsize = XContentMapValues.nodeIntegerValue(jdbcSettings.get("fetchsize"), 0);
             params = XContentMapValues.extractRawValues("params", jdbcSettings);
+            mapping = XContentMapValues.extractRawValues("mapping", jdbcSettings);
             rivertable = XContentMapValues.nodeBooleanValue(jdbcSettings.get("rivertable"), false);
             interval = XContentMapValues.nodeTimeValue(jdbcSettings.get("interval"), TimeValue.timeValueMinutes(60));
             versioning = XContentMapValues.nodeBooleanValue(jdbcSettings.get("versioning"), true);
@@ -112,10 +112,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             user = null;
             password = null;
             sql = null;
-            aliasDateField = null;
             strategy = null;
             fetchsize = 0;
             params = null;
+            mapping = null;
             rivertable = false;
             interval = TimeValue.timeValueMinutes(60);
             versioning = true;
@@ -317,13 +317,21 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             // If last date are same, strict greater than to avoid index the same objects
            while (true) {
                 try {
-                    /* Test of differents parameters. The field _id is mandatory (indicate the id in the index) */
-                    /* Mandatory : aliasDateField must be in select sql request */
-                    if(!sql.contains("_id") || aliasDateField == null || !sql.contains(aliasDateField)){
+                    /* Test of differents parameters.*/
+                    /* Mandatory : _id, _modificationDate must be in select sql request */
+                    if(!sql.contains("_id")){
                         // Error
-                        throw new Exception("Field name is mandatory in select clause");
+                        throw new Exception("Field \"_id\" is mandatory in select clause");
                     }
 
+                    if(!sql.contains(FIELD_MODIFICATION_DATE)){
+                        // Error
+                        throw new Exception("Field \"" + FIELD_MODIFICATION_DATE + "\" is mandatory in select clause");
+                    }
+                    if(mapping == null){
+                        throw new Exception("Mapping is mandatory");
+                    }
+                    logger.info("Mapping size : " + mapping.size());
                     // 2nd version with subselect : sql * from (select a,b,c from aa,bb,cc ...) where date >= aliasDateField order by aliasDateField asc, _id asc
                     String requestSQL = "select * from (" + sql + ") ";
 
@@ -331,27 +339,28 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
                     /* Add modification date filter */
                     if(lastModificationDate!=null){
-                        requestSQL+= " where \"" + aliasDateField + "\""
+                        requestSQL+= " where \"" + FIELD_MODIFICATION_DATE + "\""
                                 + (lastModificationDate.equals(previousLastModificationDate)?">":">=")
                                 + "?";
                         previousLastModificationDate = lastModificationDate;
                     }
                     /* Add the order instruction : id and modification date */
-                    requestSQL += " order by \"" + aliasDateField + "\" asc, \"_id\" asc";
+                    requestSQL += " order by \"" + FIELD_MODIFICATION_DATE + "\" asc, \"_id\" asc";
                     logger.info("Requete SQL : " + requestSQL);
                     String indexOperation = sql.contains("_operation") ? null : "index";
 
                     Connection connection = service.getConnection(driver, url, user, password, true);
                     PreparedStatement statement = service.prepareStatement(connection, requestSQL);
                     service.bind(statement, params);
-                    // Si le lastDateModification!=null, on bind la date
+
                     if(lastModificationDate!=null){
                         List<Object> list = new ArrayList<Object>();
                         list.add(Timestamp.valueOf(lastModificationDate));
                         service.bind(statement, list);
                     }
 
-                    lastModificationDate = service.treat(statement, fetchsize,indexOperation, aliasDateField,operation);
+                    lastModificationDate = service.treat(statement, fetchsize,indexOperation,operation,mapping);
+
                     // If no results to index, the lastmodificationdate is null, get the previous date
                     if(lastModificationDate == null){
                         lastModificationDate = previousLastModificationDate;
@@ -359,7 +368,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     service.close(statement);
                     service.close(connection);
 
-                    saveContexteInIndex(lastModificationDate);
+                    saveContexteInIndex(lastModificationDate,"OK");
 
                     if(delay){
                         delay("next run");
@@ -370,6 +379,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e, (Object) null);
                     closed = true;
+                    try{
+                        saveContexteInIndex(null,"KO");
+                    }catch(Exception ex){
+                        logger.error("Impossible te define status in index");
+                    }
                 }
                 if (closed) {
                     return;
@@ -396,13 +410,15 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             }
         }
 
-        private void saveContexteInIndex(String lastDateModification)throws Exception{
+        private void saveContexteInIndex(String lastDateModification,String statut)throws Exception{
             logger.info("Last modification date : " + lastDateModification);
             XContentBuilder builder = jsonBuilder();
             builder.startObject().startObject("jdbc");
             if (lastDateModification != null) {
                 builder.field("lastDateModification", lastDateModification);
             }
+            builder.field("statut",statut);
+            builder.field("lastExecution", Calendar.getInstance().getTime());
             builder.endObject().endObject();
             client.prepareIndex(riverIndexName,riverName.name(),"_custom").setSource(builder).execute().actionGet();
         }
