@@ -145,6 +145,9 @@ public class ComplexMerger implements RowListener{
          */
         public boolean isRoot(){return false;}
 
+        /**
+         * To delete duplicate in the list of sub node
+         */
         public void deleteDuplicate(){}
 
         /**
@@ -153,7 +156,19 @@ public class ComplexMerger implements RowListener{
          */
         public abstract void addValue(Object value);
 
+        /**
+         * Get a quick json representation of node
+         * @return
+         */
+        public abstract String toString();
 
+        /**
+         * Get a XContentBuilder (use to generate json request) from the hierarchical property node
+         * @param builder   The builder in put informations
+         * @param writeTitle    If we write the title into node
+         * @return  The XContentBuilder representing the PropertyNode
+         * @throws IOException  When jsonBuilder throw IOException
+         */
         public abstract XContentBuilder getXBuilder(XContentBuilder builder,boolean writeTitle)throws IOException;
     }
 
@@ -272,7 +287,7 @@ public class ComplexMerger implements RowListener{
     /**
      * Can stock many properties.
      * Use to lead [] structure
-     * Use an internal map to know when to create a new element
+     * Use an internal map to know when to create a new element (with complete path)
      */
     public class PropertyListRoot extends PropertyRoot{
         private LinkedList<PropertyRoot> properties = new LinkedList<PropertyRoot>();
@@ -286,8 +301,8 @@ public class ComplexMerger implements RowListener{
         public boolean isRoot(){return true;}
 
         /**
-         * Renvoie un node qui ne possede pas de valeur
-         * S'il n'existe pas ou s'il contient deja le nom, on en cree un nouveau qu'on ajoute a la fin
+         * Return a node which doesn't have value
+         * If it doesn't exist or already contains the name, add a new element a the end of list
          * @param name
          * @return
          */
@@ -358,10 +373,6 @@ public class ComplexMerger implements RowListener{
 
         public boolean containsNode(String name){
             return false;
-        }
-
-        public void addValue(String value){
-            throw new RuntimeException("Impossible");
         }
 
         private PropertyRoot getLast(){

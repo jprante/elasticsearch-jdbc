@@ -81,6 +81,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     protected boolean delay = true; // if thread is launch infinite times. use to test thread only one time
 
     public static final String FIELD_MODIFICATION_DATE = "_modification_date";
+    public static final String ID_INFO_RIVER_INDEX = "_custom";
+
 
     @Inject
     public JDBCRiver(RiverName riverName, RiverSettings settings,
@@ -198,7 +200,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     String digest;
                     // read state from _custom
                     client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
-                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
+                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), ID_INFO_RIVER_INDEX).execute().actionGet();
                     if (creationDate != null || !get.exists()) {
                         version = 1L;
                         digest = null;
@@ -237,7 +239,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     builder.field("version", version.longValue());
                     builder.field("digest", merger.getDigest());
                     builder.endObject().endObject();
-                    client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
+                    client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id(ID_INFO_RIVER_INDEX).source(builder)).execute().actionGet();
                     // house keeping if data has changed
                     if (digest != null && !merger.getDigest().equals(digest)) {
                         housekeeper(version.longValue());
@@ -331,8 +333,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     if(mapping == null){
                         throw new Exception("Mapping is mandatory");
                     }
-                    logger.info("Mapping size : " + mapping.size());
-                    // 2nd version with subselect : sql * from (select a,b,c from aa,bb,cc ...) where date >= aliasDateField order by aliasDateField asc, _id asc
+
+                    // subselect : sql * from (select a,b,c from aa,bb,cc ...) where date >= aliasDateField order _id asc
                     String requestSQL = "select * from (" + sql + ") ";
 
                     String lastModificationDate = getPreviousDateModification();
@@ -344,11 +346,13 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                                 + "?";
                         previousLastModificationDate = lastModificationDate;
                     }
+
                     /* Add the order instruction : id and modification date */
                     //requestSQL += " order by \"" + FIELD_MODIFICATION_DATE + "\" asc, \"_id\" asc";
                     requestSQL += " order by \"_id\" asc";
 
                     logger.info("Requete SQL : " + requestSQL);
+
                     String indexOperation = sql.contains("_operation") ? null : "index";
 
                     Connection connection = service.getConnection(driver, url, user, password, true);
@@ -399,7 +403,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
          */
         private String getPreviousDateModification()throws Exception{
             client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
-            GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
+            GetResponse get = client.prepareGet(riverIndexName, riverName().name(), ID_INFO_RIVER_INDEX).execute().actionGet();
             if (!get.exists()) {
                 return null;
             } else {
@@ -422,7 +426,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             builder.field("statut",statut);
             builder.field("lastExecution", Calendar.getInstance().getTime());
             builder.endObject().endObject();
-            client.prepareIndex(riverIndexName,riverName.name(),"_custom").setSource(builder).execute().actionGet();
+            client.prepareIndex(riverIndexName,riverName.name(),ID_INFO_RIVER_INDEX).setSource(builder).execute().actionGet();
         }
     }
 

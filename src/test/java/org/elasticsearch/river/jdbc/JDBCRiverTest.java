@@ -102,14 +102,16 @@ public class JDBCRiverTest {
     }
 
 
-
     @BeforeMethod
     public void resetIndex(){
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
         ESUtilTest.deleteDocumentsInIndex(op.getClient(),INDEX_NAME);
-        ESUtilTest.deleteDocumentInIndex(op.getClient(), "_river", "river_test", "_custom");
+        ESUtilTest.deleteDocumentInIndex(op.getClient(), ESUtilTest.NAME_INDEX_RIVER, ESUtilTest.TYPE_INDEX_RIVER, JDBCRiver.ID_INFO_RIVER_INDEX);
     }
 
+    /**
+     * Test the set of parameters of the river (mapping...)
+     */
     @Test
     public void testSettings(){
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
@@ -119,7 +121,7 @@ public class JDBCRiverTest {
         map.put("jdbc",jdbc);
         jdbc.put("user","SA");
         RiverSettings settings = new RiverSettings(ImmutableSettings.settingsBuilder().build(),map);
-        JDBCRiver river = new JDBCRiver(new RiverName("type_test","type_test"),settings,"river_test",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName("type_test","type_test"),settings,ESUtilTest.TYPE_INDEX_RIVER,op.getClient());
         Assert.assertNotNull(river);
         Assert.assertNotNull(river.mapping);
         Assert.assertEquals(5,river.mapping.size());
@@ -154,7 +156,7 @@ public class JDBCRiverTest {
 
         RiverSettings settings = createSettings();
         ((Map<String,Object>)settings.settings().get("jdbc")).put("sql",mandatoryQuery);
-        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.riverStrategy.run();
 
     }
@@ -163,10 +165,10 @@ public class JDBCRiverTest {
     @Test
     public void testComplexMergerInMemory()throws Exception{
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        ESUtilTest.createIndexIfNotExist(op.getClient(),"_river");
+        ESUtilTest.createIndexIfNotExist(op.getClient(),ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
-        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
         ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
@@ -218,13 +220,13 @@ public class JDBCRiverTest {
 
 
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        ESUtilTest.createIndexIfNotExist(op.getClient(), "_river");
+        ESUtilTest.createIndexIfNotExist(op.getClient(),ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
         ((Map<String,Object>)settings.settings().get("jdbc")).put("sql",deleteQuery);
         ((Map<String,Object>)settings.settings().get("jdbc")).put("mapping",mappingDeleteQuery);
 
-        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
         ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
@@ -255,13 +257,13 @@ public class JDBCRiverTest {
         connection.close();
 
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        ESUtilTest.createIndexIfNotExist(op.getClient(), "_river");
+        ESUtilTest.createIndexIfNotExist(op.getClient(), ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
         ((Map<String,Object>)settings.settings().get("jdbc")).put("sql",manyJoinQuery);
         ((Map<String,Object>)settings.settings().get("jdbc")).put("mapping",mappingManyJoinQuery);
 
-        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
 
@@ -277,17 +279,17 @@ public class JDBCRiverTest {
 
         // Test with bad request sql
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        ESUtilTest.createIndexIfNotExist(op.getClient(), "_river");
+        ESUtilTest.createIndexIfNotExist(op.getClient(), ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
         ((Map<String,Object>)settings.settings().get("jdbc")).put("sql","select nothing from error");
         ((Map<String,Object>)settings.settings().get("jdbc")).put("mapping",ESUtilTest.createMapping("nothing"));
 
-        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
 
-        GetResponse response = op.getClient().prepareGet("_river","river_test","_custom").execute().actionGet();
+        GetResponse response = op.getClient().prepareGet(ESUtilTest.NAME_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER,JDBCRiver.ID_INFO_RIVER_INDEX).execute().actionGet();
         Assert.assertEquals(((Map<String,Object>)response.sourceAsMap().get("jdbc")).get("statut"),"KO");
     }
 
@@ -303,10 +305,10 @@ public class JDBCRiverTest {
         connection.close();
 
         BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        ESUtilTest.createIndexIfNotExist(op.getClient(), "_river");
+        ESUtilTest.createIndexIfNotExist(op.getClient(), ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
-        JDBCRiver river = new JDBCRiver(new RiverName("river_test","river_test"),settings,"_river",op.getClient());
+        JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
         ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);

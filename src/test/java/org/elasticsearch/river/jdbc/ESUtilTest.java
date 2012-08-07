@@ -19,6 +19,9 @@ import java.util.List;
  */
 public class ESUtilTest {
 
+    public static final String NAME_INDEX_RIVER = "_river";
+    public static final String TYPE_INDEX_RIVER = "river_test";
+
     public static void refreshIndex(Client client,String index){
         client.admin().indices().refresh(new RefreshRequest(index)).actionGet();
     }
