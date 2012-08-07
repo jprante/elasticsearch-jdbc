@@ -345,7 +345,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                         previousLastModificationDate = lastModificationDate;
                     }
                     /* Add the order instruction : id and modification date */
-                    requestSQL += " order by \"" + FIELD_MODIFICATION_DATE + "\" asc, \"_id\" asc";
+                    //requestSQL += " order by \"" + FIELD_MODIFICATION_DATE + "\" asc, \"_id\" asc";
+                    requestSQL += " order by \"_id\" asc";
+
                     logger.info("Requete SQL : " + requestSQL);
                     String indexOperation = sql.contains("_operation") ? null : "index";
 

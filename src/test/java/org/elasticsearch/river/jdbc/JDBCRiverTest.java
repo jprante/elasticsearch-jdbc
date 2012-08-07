@@ -320,8 +320,4 @@ public class JDBCRiverTest {
         Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1253);
     }
 
-
-
-
-
 }

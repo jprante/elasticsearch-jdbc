@@ -182,12 +182,15 @@ public class SQLService implements BulkAcknowledge {
      * @param fetchsize  Number of elements to index
      * @param defaultOperation Default operation if nothing is define in select results
      * @param aliasDateField
-     * @return the date of modification of the last indexed document
+     * @return the date of modification of the last indexed document. The results are not sorted, the date is getting in comparing all date ang keep the max
      * @throws SQLException
      */
     public String treat(PreparedStatement statement, int fetchsize, String defaultOperation,BulkOperation bulkOp, List<Object> mappings) throws SQLException,IOException {
+        long beginDate = System.currentTimeMillis();
         ResultSet results = getResultsWithBounds(statement,fetchsize);
+        long endDate = System.currentTimeMillis();
 
+        logger.info("Request time : " + ((endDate-beginDate)/1000) + "s");
         /* Treat all elements. When id change, we flush. If an id is not read completly, we load the next elements */
         ComplexMerger merger = new ComplexMerger();
        
@@ -195,7 +198,7 @@ public class SQLService implements BulkAcknowledge {
         String currentOperation = defaultOperation;
         ResultSetMetaData metadata = results.getMetaData();
 
-        String currentModificationDate = null;  // modification date of last indexed element
+        String currentModificationDate = null;  // modification date of last indexed element, search the max
 
         int pos = 0;
         while(results.next()){
@@ -210,7 +213,7 @@ public class SQLService implements BulkAcknowledge {
             if(defaultOperation == null){
                 currentOperation = results.getString("_operation");
             }
-            logger.info("Treat document with id : " + id + " => " + ((defaultOperation == null)?currentOperation:defaultOperation));
+            //logger.info("Treat document with id : " + id + " => " + ((defaultOperation == null)?currentOperation:defaultOperation));
 
             merger.getRoot().setOperation(currentOperation);
             merger.getRoot().setId(currentId);
@@ -230,7 +233,9 @@ public class SQLService implements BulkAcknowledge {
                     if(date!=null){
                         String formatDate = DateUtil.formatDateStandard(DateUtil.parseDateISO(date.toString()));
                         if(formatDate!=null){
-                            currentModificationDate  = formatDate;
+                            if(currentModificationDate == null || formatDate.compareTo(currentModificationDate) > 0){
+                                currentModificationDate  = formatDate;
+                            }
                         }
                     }
                 }
