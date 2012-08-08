@@ -1,0 +1,2 @@
+org.elasticsearch.plugin.river.jdbc
+org.elasticsearch.river.jdbc
