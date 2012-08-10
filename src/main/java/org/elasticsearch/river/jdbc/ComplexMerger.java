@@ -82,6 +82,7 @@ public class ComplexMerger implements RowListener{
     public void merge(PropertyRoot root,String key,Object value)throws Exception{
         /* Simple case, with value or multi value, leaf */
         if(!key.contains(".") && !key.contains("[")){
+            if(value == null){return;}
             if(root.containsNode(key)){
                 PropertyNode node = root.getNode(key);
                 if(node.isRoot()){
