@@ -24,7 +24,7 @@
     </scm>
 
     <properties>
-        <elasticsearch.version>0.19.3</elasticsearch.version>
+        <elasticsearch.version>0.19.4</elasticsearch.version>
         <github.global.server>github</github.global.server>
     </properties>
 
@@ -63,12 +63,6 @@
             <version>5.1.15</version>
             <scope>test</scope>
          </dependency>
-        <dependency>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc14</artifactId>
-            <version>10.2.0.3.0</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
