@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -79,6 +80,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private String strategy;
     protected Runnable riverStrategy;
     protected boolean delay = true; // if thread is launch infinite times. use to test thread only one time
+
+    private final String settingsES;   // json
+    private final String mappingES;    // json
+
 
     public static final String FIELD_MODIFICATION_DATE = "_modification_date";
     public static final String ID_INFO_RIVER_INDEX = "_custom";
@@ -135,13 +140,19 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             } else {
                 bulkTimeout = TimeValue.timeValueMillis(60000);
             }
+            mappingES = XContentMapValues.nodeStringValue(indexSettings.get("mapping"), null);
+            settingsES = XContentMapValues.nodeStringValue(indexSettings.get("settings"), null);
         } else {
             indexName = "jdbc";
             typeName = "jdbc";
             bulkSize = 100;
             maxBulkRequests = 30;
             bulkTimeout = TimeValue.timeValueMillis(60000);
+            mappingES = null;
+            settingsES = null;
         }
+
+
         service = new SQLService(logger);
         operation = new BulkOperation(client, logger).setIndex(indexName).setType(typeName)
                 .setBulkSize(bulkSize).setMaxActiveRequests(maxBulkRequests)
@@ -163,8 +174,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         logger.info("starting JDBC connector: URL [{}], driver [{}], sql [{}], river table [{}], indexing to [{}]/[{}], poll [{}]",
                 url, driver, sql, rivertable, indexName, typeName, poll);
         try {
-            client.admin().indices().prepareCreate(indexName).execute().actionGet();
-            creationDate = new Date();
+            createIndexIfNotExists();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
                 creationDate = null;
@@ -178,6 +188,38 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         }
         thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC connector").newThread(riverStrategy);
         thread.start();
+    }
+
+
+    /**
+     * Create the index if it don't exist.
+     * Can use settings and mapping to create it correctly
+     */
+    private void createIndexIfNotExists()throws Exception{
+        if(client.admin().indices().prepareExists(indexName).execute().actionGet().exists()){
+            logger.info("Index " + indexName + " exists.");
+            if(settingsES!=null && !"".equals(settingsES)){
+                client.admin().indices().prepareUpdateSettings(indexName).setSettings(settingsES).execute().actionGet();
+                logger.info("Use specifics Settings to create index");
+            }
+            if(mappingES!=null && !"".equals(mappingES)){
+                client.admin().indices().preparePutMapping(indexName).setType(typeName).setSource(mappingES).execute().actionGet();
+                logger.info("Create specifics mapping in index");
+            }
+            return;
+        }
+        CreateIndexRequestBuilder builder = client.admin().indices().prepareCreate(indexName);
+        if(settingsES!=null && !"".equals(settingsES)){
+            logger.info("Use specifics Settings to create index");
+            builder.setSettings(settingsES);
+        }
+        builder.execute().actionGet();
+        logger.info("Create of index " + indexName);
+        if(mappingES!=null && !"".equals(mappingES)){
+            client.admin().indices().preparePutMapping(indexName).setType(typeName).setSource(mappingES).execute().actionGet();
+            logger.info("Create specifics mapping in index");
+        }
+        creationDate = new Date();
     }
 
     @Override
@@ -256,7 +298,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 }
             }
         }
-        
+
         private void housekeeper(long version) throws IOException {
             logger.info("housekeeping for version " + version);
             client.admin().indices().prepareRefresh(indexName).execute().actionGet();
@@ -317,7 +359,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         public void run() {
             // Use to avoid to ignore last insert object when resultset are done. The second pass, use >= to get results created with the same modification date, but after the selection.
             // If last date are same, strict greater than to avoid index the same objects
-           while (true) {
+            while (true) {
                 try {
                     /* Test of differents parameters.*/
                     /* Mandatory : _id, _modificationDate must be in select sql request */

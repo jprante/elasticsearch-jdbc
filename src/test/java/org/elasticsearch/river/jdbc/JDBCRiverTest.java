@@ -3,6 +3,7 @@ package org.elasticsearch.river.jdbc;
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.log4j.Log4jESLogger;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -49,7 +50,7 @@ public class JDBCRiverTest {
             "           left join car_color_have cc on cc.id_car = car.id left join color co on co.id_color = cc.id_color";
 
 
-    private final String INDEX_NAME = "shop";
+    private final String RIVER_INDEX_NAME = "shop";
 
     @BeforeClass
     public void startHsqldbServer()throws ClassNotFoundException,SQLException{
@@ -104,9 +105,25 @@ public class JDBCRiverTest {
 
     @BeforeMethod
     public void resetIndex(){
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
-        ESUtilTest.deleteDocumentsInIndex(op.getClient(),INDEX_NAME);
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
+        ESUtilTest.deleteDocumentsInIndex(op.getClient(), RIVER_INDEX_NAME);
         ESUtilTest.deleteDocumentInIndex(op.getClient(), ESUtilTest.NAME_INDEX_RIVER, ESUtilTest.TYPE_INDEX_RIVER, JDBCRiver.ID_INFO_RIVER_INDEX);
+    }
+
+
+    @Test
+    public void testMappings(){
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(ESUtilTest.NAME_INDEX_RIVER).setType("car");
+        RiverSettings settings = createSettings();
+        Map<String,Object> index = (Map<String,Object>)settings.settings().get("index");
+        index.put("settings","{\"analysis\":{\"filter\":{\"snowball\":{\"type\":\"snowball\",\"language\":\"French\"},\"stemmer_french\":{\"type\":\"stemmer\",\"name\":\"french\"}},\"tokenizer\":{\"ngram4\":{\"type\":\"nGram\",\"min_gram\":5,\"max_gram\":8}},\"analyzer\":{\"ngrametastem\":{\"type\":\"custom\",\"tokenizer\":\"ngram4\",\"filter\":[\"standard\",\"lowercase\",\"stemmer_french\"]} }}}");
+        index.put("mapping","{\"" + ESUtilTest.TYPE_INDEX_RIVER + "\":{\"properties\":{\"title\":{\"type\":\"string\"}}}}");
+
+        JDBCRiver river = new JDBCRiver(new RiverName("type_test","type_test"),settings,ESUtilTest.TYPE_INDEX_RIVER,op.getClient());
+        river.start();
+
+        op.getClient().admin().cluster().state(Requests.clusterStateRequest().filteredIndices(ESUtilTest.NAME_INDEX_RIVER)).actionGet().state().metaData();
+
     }
 
     /**
@@ -114,7 +131,7 @@ public class JDBCRiverTest {
      */
     @Test
     public void testSettings(){
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
         Map<String, Object> map = new HashMap<String, Object>();
         Map<String, Object> jdbc = new HashMap<String, Object>();
         jdbc.put("mapping",ESUtilTest.createMapping("_id","_operation","id","label","option"));
@@ -152,7 +169,7 @@ public class JDBCRiverTest {
 
     @Test
     public void testMandatoryField(){
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
 
         RiverSettings settings = createSettings();
         ((Map<String,Object>)settings.settings().get("jdbc")).put("sql",mandatoryQuery);
@@ -164,15 +181,15 @@ public class JDBCRiverTest {
 
     @Test
     public void testComplexMergerInMemory()throws Exception{
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
         ESUtilTest.createIndexIfNotExist(op.getClient(),ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
         JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 5);
 
         // Add new entry to test if it's indexed
         Connection conn = SQLUtilTest.createConnection();
@@ -181,8 +198,8 @@ public class JDBCRiverTest {
 
 
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 6);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 6);
 
         // Add a new object the same last modification date. We check it's really index
         conn = SQLUtilTest.createConnection();
@@ -190,8 +207,8 @@ public class JDBCRiverTest {
         conn.close();
 
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 7);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 7);
 
         // Add a new object the same last modification date. It must be avoid
         conn = SQLUtilTest.createConnection();
@@ -199,8 +216,8 @@ public class JDBCRiverTest {
         conn.close();
 
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 7);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 7);
 
     }
 
@@ -219,7 +236,7 @@ public class JDBCRiverTest {
         conn.close();
 
 
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
         ESUtilTest.createIndexIfNotExist(op.getClient(),ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
@@ -229,8 +246,8 @@ public class JDBCRiverTest {
         JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 2);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 2);
 
         conn = SQLUtilTest.createConnection();
         conn.createStatement().execute("update car set label = 'delete_car2' where id = 2");
@@ -238,8 +255,8 @@ public class JDBCRiverTest {
 
         river.delay = false;
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1);
     }
 
     /**
@@ -256,7 +273,7 @@ public class JDBCRiverTest {
         SQLUtilTest.addDataTest(connection, 1,"car1","2012-07-12 12:00:00",new Integer[]{1},new Integer[]{2,3});
         connection.close();
 
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
         ESUtilTest.createIndexIfNotExist(op.getClient(), ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
@@ -267,8 +284,8 @@ public class JDBCRiverTest {
         river.delay = false;
         river.riverStrategy.run();
 
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        SearchResponse response = op.getClient().prepareSearch(INDEX_NAME).execute().actionGet();
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        SearchResponse response = op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet();
         Assert.assertEquals(response.getHits().getTotalHits(), 1);
         Assert.assertEquals(((List<Object>)response.getHits().hits()[0].sourceAsMap().get("options")).size(),1);
         Assert.assertEquals(((List<Object>)response.getHits().hits()[0].sourceAsMap().get("colors")).size(),2);
@@ -278,7 +295,7 @@ public class JDBCRiverTest {
     public void testStatutExecution()throws Exception{
 
         // Test with bad request sql
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
         ESUtilTest.createIndexIfNotExist(op.getClient(), ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
@@ -304,22 +321,22 @@ public class JDBCRiverTest {
         SQLUtilTest.createRandomData(connection,0,1000,2012,06,12);
         connection.close();
 
-        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(INDEX_NAME).setType("car");
+        BulkOperation op = ESUtilTest.getMemoryBulkOperation(logger).setIndex(RIVER_INDEX_NAME).setType("car");
         ESUtilTest.createIndexIfNotExist(op.getClient(), ESUtilTest.NAME_INDEX_RIVER);
 
         RiverSettings settings = createSettings();
         JDBCRiver river = new JDBCRiver(new RiverName(ESUtilTest.TYPE_INDEX_RIVER,ESUtilTest.TYPE_INDEX_RIVER),settings,ESUtilTest.NAME_INDEX_RIVER,op.getClient());
         river.delay = false;
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1000);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1000);
 
 
         // Create new Data
         SQLUtilTest.createRandomData(null,1000,253,2012,07,12);
         river.riverStrategy.run();
-        ESUtilTest.refreshIndex(op.getClient(), INDEX_NAME);
-        Assert.assertEquals(op.getClient().prepareSearch(INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1253);
+        ESUtilTest.refreshIndex(op.getClient(), RIVER_INDEX_NAME);
+        Assert.assertEquals(op.getClient().prepareSearch(RIVER_INDEX_NAME).execute().actionGet().getHits().getTotalHits(), 1253);
     }
 
 }
