@@ -6,7 +6,7 @@
     <groupId>org.elasticsearch</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
     <name>elasticsearch-river-jdbc</name>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
     <packaging>jar</packaging>
     <description>JDBC River for ElasticSearch</description>
     <inceptionYear>2012</inceptionYear>
