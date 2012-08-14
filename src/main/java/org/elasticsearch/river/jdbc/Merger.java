@@ -40,10 +40,10 @@ public class Merger implements RowListener {
     private final static String OP_CREATE = "create";
     private final static String OP_INDEX = "index";
     private final static String OP_DELETE = "delete";
-    
+
     private final static String DIGEST_ALGORITHM = "SHA-256";
     private final static String DIGEST_ENCODING = "UTF-8";
-    
+
     private char delimiter;
     private XContentBuilder builder;
     private Action listener;
@@ -71,7 +71,7 @@ public class Merger implements RowListener {
     public Merger(Action action) throws IOException, NoSuchAlgorithmException {
         this('.', action, -1L);
     }
-    
+
     /**
      * Constructor for a new Merger object
      *
@@ -99,6 +99,11 @@ public class Merger implements RowListener {
         this.version = version;
         this.digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         this.closed = false;
+    }
+
+
+    public void row(List<String> columns, List<Object> row) throws IOException {
+        row(columns.toArray(new String[]{}),row.toArray(new Object[]{}));
     }
 
     /**
@@ -142,8 +147,8 @@ public class Merger implements RowListener {
         }
         for (int i = 0; i < columns.length; i++) {
             if (!OPTYPE_COLUMN.equals(columns[i]) &&
-                !INDEX_COLUMN.equals(columns[i]) && 
-                    !TYPE_COLUMN.equals(columns[i]) && 
+                !INDEX_COLUMN.equals(columns[i]) &&
+                    !TYPE_COLUMN.equals(columns[i]) &&
                     !ID_COLUMN.equals(columns[i])) {
                 merge(map, columns[i], row[i]);
             }
@@ -153,7 +158,7 @@ public class Merger implements RowListener {
     /**
      * Implement RowListener interface. A row is coming in and needs to be merged.
      *
-     * @param index the index 
+     * @param index the index
      * @param type the type
      * @param id the id
      * @param keys the keys (column labels) of the row
@@ -161,7 +166,7 @@ public class Merger implements RowListener {
      * @throws IOException
      */
     @Override
-    public void row(String optype, String index, String type, String id, List<String> keys, List<Object> values) 
+    public void row(String optype, String index, String type, String id, List<String> keys, List<Object> values)
             throws IOException {
         boolean changed = false;
         if (this.optype != null && !this.optype.equals(optype)) {
@@ -200,7 +205,7 @@ public class Merger implements RowListener {
      * Flush and invoke appropriate operation type
      *
      * @param optype the operation type
-     * @param index the index 
+     * @param index the index
      * @param type the type
      * @param id the id
      * @throws IOException

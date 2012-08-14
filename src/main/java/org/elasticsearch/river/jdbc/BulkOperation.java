@@ -37,11 +37,11 @@ import org.elasticsearch.index.VersionType;
  */
 public class BulkOperation implements Action {
 
-    private String index;
-    private String type;
+    protected String index;
+    protected String type;
     private String id;
-    private Client client;
-    private ESLogger logger;
+    protected Client client;
+    protected ESLogger logger;
     private int bulkSize = 100;
     private int maxActiveRequests = 30;
     private long millisBeforeContinue = 60000L;
@@ -52,7 +52,6 @@ public class BulkOperation implements Action {
     private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
     private String riverName;
     private BulkAcknowledge ack;
-    private boolean versioning;
 
     public BulkOperation(Client client, ESLogger logger) {
         this.client = client;
@@ -86,11 +85,6 @@ public class BulkOperation implements Action {
     
     public String getId() {
         return id;
-    }
-    
-    public BulkOperation setVersioning(boolean versioning) {
-        this.versioning = versioning;
-        return this;
     }
     
     public BulkOperation setBulkSize(int bulkSize) {
@@ -133,7 +127,7 @@ public class BulkOperation implements Action {
             currentBulk.set(client.prepareBulk());
         }
         IndexRequest request = Requests.indexRequest(getIndex()).type(getType()).id(getId()).create(true).source(builder);
-        if (versioning) {
+        if(version!=0){
             request.versionType(VersionType.EXTERNAL).version(version);
         }
         currentBulk.get().add(request);
@@ -160,7 +154,7 @@ public class BulkOperation implements Action {
             currentBulk.set(client.prepareBulk());
         }
         IndexRequest request = Requests.indexRequest(getIndex()).type(getType()).id(getId()).source(builder);
-        if (versioning) {
+        if(version!=0){
             request.versionType(VersionType.EXTERNAL).version(version);
         }
         currentBulk.get().add(request);
@@ -193,6 +187,9 @@ public class BulkOperation implements Action {
     }
     
     public void flush() throws IOException {
+        if (currentBulk.get() == null) {
+            return;
+        }
         if (totalTimeouts > MAX_TOTAL_TIMEOUTS) {
             // waiting some minutes is much too long, do not wait any longer            
             throw new IOException("total flush() timeouts exceeded limit of + " + MAX_TOTAL_TIMEOUTS + ", aborting");
@@ -266,5 +263,8 @@ public class BulkOperation implements Action {
     private boolean isNullOrEmpty(String s) {
         return s == null || s.length() == 0;
     }
-    
+
+    public Client getClient() {
+        return client;
+    }
 }

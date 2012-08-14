@@ -49,16 +49,16 @@ the data.
 Installation
 ------------
 
-The current version of the plugin is **1.3.1**
+The current version of the plugin is **1.4.1**
 
-In order to install the plugin, simply run: `bin/plugin -install jprante/elasticsearch-river-jdbc/1.3.1`.
+In order to install the plugin, simply run: `bin/plugin -install jotitan/elasticsearch-river-jdbc/1.4.1`.
 
     -------------------------------------
     | JDBC Plugin    | ElasticSearch    |
     -------------------------------------
     | master         | 0.19.x -> master |
     -------------------------------------
-    | 1.3.1          | 0.19.x           |
+    | 1.4.1          | 0.19.x           |
     -------------------------------------
 
 Documentation
@@ -125,7 +125,10 @@ of the documents is generated automatically, it is the row number.
 Labeled columns
 ---------------
 
-In SQL, each column may be labeled with a name. This name is used by the JDBC river to JSON object construction.
+In SQL, each column may be labeled with a name, but is not possible with river.
+The reason is simple : SQL have a column name limitation to 30 characters. Or, the key in index may be longer (when you have sub objects...).
+To avoid error with your database, use labelled column
+This name is used by the JDBC river to JSON object construction.
 
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
 	    "type" : "jdbc",
@@ -377,7 +380,7 @@ Example
 Updates
 =======
 
-There are two alternatives how to manage updates: with a river table on the SQL DB side, or with versioning on the Elasticsearch side.
+There are differents alternatives how to manage updates: with a river table on the SQL DB side, with versioning on the Elasticsearch side or with time base (based on last modification document).
 
 Managing updates with the river table
 -------------------------------------
@@ -418,7 +421,7 @@ To set up a JDBC river with river table management after creating the river tabl
 	            "user" : "",
 	            "password" : "",
 	            "poll" : "300s",
-	            "rivertable" : true,
+	            "strategy" : "rivertable",
 	            "interval" : "305s"
 	        },
 	        "index" : {
@@ -525,6 +528,27 @@ Example:
 	        }
 	    }
 	
+
+Managing updates with Elasticsearch timebasis
+
+To create the river table with timebasis, use strategy=timebasis
+
+This strategy works by selecting last modified objets in order to insert those into index. In SQL request, the modification date of document must be in the select clause.
+The river can selects last documents based on this field. The name of the field is defined in the river with aliasDateField.
+
+Example:
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	        "type" : "jdbc",
+	        "jdbc" : {
+	            "driver" : "com.mysql.jdbc.Driver",
+	            "url" : "jdbc:mysql://localhost:3306/test",
+	            "user" : "",
+	            "password" : "",
+	            "versioning" : false,
+	            "strategy" : "timebasis",
+	            "aliasDateField" : "_modification_date"
+	        }
+	    }
 
 Stopping/deleting the river
 ---------------------------

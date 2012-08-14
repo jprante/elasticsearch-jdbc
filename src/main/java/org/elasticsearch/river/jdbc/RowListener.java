@@ -35,5 +35,7 @@ public interface RowListener {
      * @throws IOException 
      */
     void row(String operation, String index, String type, String id, List<String> keys, List<Object> values) throws IOException;
+
+    void row(List<String> keys, List<Object> values) throws IOException;
     
 }
