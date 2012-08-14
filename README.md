@@ -125,7 +125,10 @@ of the documents is generated automatically, it is the row number.
 Labeled columns
 ---------------
 
-In SQL, each column may be labeled with a name. This name is used by the JDBC river to JSON object construction.
+In SQL, each column may be labeled with a name, but is not possible with river.
+The reason is simple : SQL have a column name limitation to 30 characters. Or, the key in index may be longer (when you have sub objects...).
+To avoid error with your database, use labelled column
+This name is used by the JDBC river to JSON object construction.
 
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
 	    "type" : "jdbc",
