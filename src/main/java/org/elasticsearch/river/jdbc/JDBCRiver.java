@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -224,6 +225,14 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                         operation.flush();
                     }
                     delay("next run");
+                } catch(SQLException e) { 
+                	logger.warn(e.getMessage(), e, (Object) null); 
+                	logger.warn("Will wait for 30sec", e, (Object) null); 
+                	try {
+						thread.sleep(30000);
+					} catch (InterruptedException e1) {
+						closed = true;
+					}
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e, (Object) null);
                     closed = true;
