@@ -37,6 +37,7 @@ public class Merger implements RowListener {
     private final static String INDEX_COLUMN = "_index";
     private final static String TYPE_COLUMN = "_type";
     private final static String ID_COLUMN = "_id";
+    private final static String PARENT_COLUMN = "_parent";
     private final static String OP_CREATE = "create";
     private final static String OP_INDEX = "index";
     private final static String OP_DELETE = "delete";
@@ -52,10 +53,12 @@ public class Merger implements RowListener {
     private String previndex;
     private String prevtype;
     private String previd;
+    private String prevparent;
     private String optype;
     private String index;
     private String type;
     private String id;
+    private String parent;
     private final long version;
     private final MessageDigest digest;
     private String digestString;
@@ -95,7 +98,6 @@ public class Merger implements RowListener {
         this.delimiter = delimiter;
         this.builder = jsonBuilder();
         this.listener = action;
-        this.map = new HashMap();
         this.version = version;
         this.digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         this.closed = false;
@@ -135,10 +137,16 @@ public class Merger implements RowListener {
                 }
                 previd = id;
                 id = (String) row[i];
+            } else if (PARENT_COLUMN.equals(columns[i])) {
+            	if (parent != null && !parent.equals(row[i])) {
+            		changed = true;
+            	}
+            	prevparent = parent;
+            	parent = (String) row[i];
             }
         }
         if (changed) {
-            flush(prevoptype, previndex, prevtype, previd);
+            flush(prevoptype, previndex, prevtype, previd, prevparent);
         }
         for (int i = 0; i < columns.length; i++) {
             if (!OPTYPE_COLUMN.equals(columns[i]) &&
@@ -161,7 +169,7 @@ public class Merger implements RowListener {
      * @throws IOException
      */
     @Override
-    public void row(String optype, String index, String type, String id, List<String> keys, List<Object> values) 
+    public void row(String optype, String index, String type, String id, String parent, List<String> keys, List<Object> values) 
             throws IOException {
         boolean changed = false;
         if (this.optype != null && !this.optype.equals(optype)) {
@@ -184,8 +192,13 @@ public class Merger implements RowListener {
         }
         this.previd = this.id;
         this.id = id;
+        if (this.parent != null && !this.parent.equals(parent)) {
+        	changed = true;
+        }
+        this.prevparent = this.parent;
+        this.parent = parent;
         if (changed) {
-            flush(prevoptype, previndex, prevtype, previd);
+            flush(prevoptype, previndex, prevtype, previd, prevparent);
         }
         for (int i = 0; i < keys.size(); i++) {
             merge(map, keys.get(i), values.get(i));
@@ -205,7 +218,7 @@ public class Merger implements RowListener {
      * @param id the id
      * @throws IOException
      */
-    public void flush(String optype, String index, String type, String id) throws IOException {
+    public void flush(String optype, String index, String type, String id, String parent) throws IOException {
         if (!map.isEmpty()) {
             if (index != null) {
                 digest.update(index.getBytes(DIGEST_ENCODING));
@@ -219,16 +232,15 @@ public class Merger implements RowListener {
             build(map);
             if (listener != null) {
                 if (OP_CREATE.equals(optype)) {
-                    listener.create(index, type, id, version, builder);
+                    listener.create(index, type, id, parent, version, builder);
                 } else if (OP_INDEX.equals(optype)) {
-                    listener.index(index, type, id, version, builder);
+                    listener.index(index, type, id, parent, version, builder);
                 } else if (OP_DELETE.equals(optype)) {
                     listener.delete(index, type, id);
                 }
             }
             builder.close();
             builder = jsonBuilder();
-            map = new HashMap();
         }
     }
 
@@ -248,7 +260,7 @@ public class Merger implements RowListener {
      */
     public void close() throws IOException {
         if (!closed) {
-            flush(optype, index, type, id);
+            flush(optype, index, type, id, parent);
             this.digestString = Base64.encodeBytes(digest.digest());
             closed = true;
         }
@@ -269,7 +281,8 @@ public class Merger implements RowListener {
      * @param key the key
      * @param value the value
      */
-    protected void merge(Map<String, Object> map, String key, Object value) {
+    @SuppressWarnings("unchecked")
+	protected void merge(Map<String, Object> map, String key, Object value) {
         int i = key.indexOf(delimiter);
         if (i <= 0) {
             map.put(key, new ValueSet(map.get(key), value));
@@ -284,7 +297,7 @@ public class Merger implements RowListener {
                     throw new IllegalArgumentException("illegal prefix: " + p);
                 }
             } else {
-                Map<String, Object> m = new HashMap();
+                Map<String, Object> m = new HashMap<String, Object>();
                 map.put(p, m);
                 merge(m, q, value);
             }
@@ -297,7 +310,8 @@ public class Merger implements RowListener {
      * @param map the map holding the JSON object
      * @throws IOException
      */
-    private void build(Map<String, Object> map) throws IOException {
+    @SuppressWarnings("unchecked")
+	private void build(Map<String, Object> map) throws IOException {
         builder.startObject();
         for (String k : map.keySet()) {
             builder.field(k);

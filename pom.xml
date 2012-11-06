@@ -18,13 +18,13 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</connection>
-        <developerConnection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</developerConnection>
-        <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
+        <connection>scm:git:git@github.com:biiwide/elasticsearch-river-jdbc.git</connection>
+        <developerConnection>scm:git:git@github.com:biiwide/elasticsearch-river-jdbc.git</developerConnection>
+        <url>http://github.com/biiwide/elasticsearch-river-jdbc</url>
     </scm>
 
     <properties>
-        <elasticsearch.version>0.19.8</elasticsearch.version>
+        <elasticsearch.version>0.19.11</elasticsearch.version>
         <github.global.server>github</github.global.server>
     </properties>
 

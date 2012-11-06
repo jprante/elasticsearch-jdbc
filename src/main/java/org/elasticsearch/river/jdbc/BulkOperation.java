@@ -20,6 +20,7 @@ package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -49,7 +50,7 @@ public class BulkOperation implements Action {
     private static final int MAX_TOTAL_TIMEOUTS = 10;
     private static final AtomicInteger onGoingBulks = new AtomicInteger(0);
     private static final AtomicInteger counter = new AtomicInteger(0);
-    private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal();
+    private ThreadLocal<BulkRequestBuilder> currentBulk = new ThreadLocal<BulkRequestBuilder>();
     private String riverName;
     private BulkAcknowledge ack;
     private boolean versioning;
@@ -116,7 +117,7 @@ public class BulkOperation implements Action {
 
     
     @Override
-    public void create(String index, String type, String id, long version, XContentBuilder builder) {
+    public void create(String index, String type, String id, String parent, long version, XContentBuilder builder) {
         if (!isNullOrEmpty(index)) {
             setIndex(index);
         }
@@ -136,6 +137,9 @@ public class BulkOperation implements Action {
         if (versioning) {
             request.versionType(VersionType.EXTERNAL).version(version);
         }
+        if (parent != null) {
+        	request.parent(parent);
+        }
         currentBulk.get().add(request);
         if (currentBulk.get().numberOfActions() >= bulkSize) {
             processBulk();
@@ -143,7 +147,7 @@ public class BulkOperation implements Action {
     }    
     
     @Override
-    public void index(String index, String type, String id, long version, XContentBuilder builder) {
+    public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) {
         if (!isNullOrEmpty(index)) {
             setIndex(index);
         }
@@ -162,6 +166,9 @@ public class BulkOperation implements Action {
         IndexRequest request = Requests.indexRequest(getIndex()).type(getType()).id(getId()).source(builder);
         if (versioning) {
             request.versionType(VersionType.EXTERNAL).version(version);
+        }
+        if (parent != null) {
+        	request.parent(parent);
         }
         currentBulk.get().add(request);
         if (currentBulk.get().numberOfActions() >= bulkSize) {

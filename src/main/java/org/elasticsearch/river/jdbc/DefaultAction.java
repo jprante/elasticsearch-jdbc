@@ -24,11 +24,11 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 public class DefaultAction implements Action {
 
     @Override
-    public void create(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+    public void create(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
     }
 
     @Override
-    public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+    public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
     }
 
     @Override

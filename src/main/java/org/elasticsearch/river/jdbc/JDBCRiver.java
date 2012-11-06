@@ -82,6 +82,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         this.riverIndexName = riverIndexName;
         this.client = client;
         if (settings.settings().containsKey("jdbc")) {
+            @SuppressWarnings("unchecked")
             Map<String, Object> jdbcSettings = (Map<String, Object>) settings.settings().get("jdbc");
             poll = XContentMapValues.nodeTimeValue(jdbcSettings.get("poll"), TimeValue.timeValueMinutes(60));
             url = XContentMapValues.nodeStringValue(jdbcSettings.get("url"), null);
@@ -112,6 +113,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             scale = 0;
         }
         if (settings.settings().containsKey("index")) {
+            @SuppressWarnings("unchecked")
             Map<String, Object> indexSettings = (Map<String, Object>) settings.settings().get("index");
             indexName = XContentMapValues.nodeStringValue(indexSettings.get("index"), "jdbc");
             typeName = XContentMapValues.nodeStringValue(indexSettings.get("type"), "jdbc");
@@ -182,7 +184,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                         version = 1L;
                         digest = null;
                     } else {
-                        Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
+                        @SuppressWarnings("unchecked")
+						Map<String, Object> jdbcState = (Map<String, Object>) get.sourceAsMap().get("jdbc");
                         if (jdbcState != null) {
                             version = (Number) jdbcState.get("version");
                             version = version.longValue() + 1; // increase to next version

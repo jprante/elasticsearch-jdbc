@@ -34,8 +34,8 @@ public class MergerTest {
         Action listener =  new DefaultAction() {
 
             @Override
-            public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
-               System.err.println("index="+index + " type="+type + " id="+id+ " builder="+builder.string());
+            public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
+               System.err.println("index="+index + " type="+type + " id="+id+ " parent=" + parent + " builder="+builder.string());
             }
             
         };

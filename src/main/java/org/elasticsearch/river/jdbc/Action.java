@@ -35,7 +35,7 @@ public interface Action {
      * @param builder the builder
      * @throws IOException 
      */
-    void create(String index, String type, String id, long version, XContentBuilder builder) 
+    void create(String index, String type, String id, String parent, long version, XContentBuilder builder) 
             throws IOException;
 
     /**
@@ -48,7 +48,7 @@ public interface Action {
      * @param builder the XContentBuilder
      * @throws IOException 
      */
-    void index(String index, String type, String id, long version, XContentBuilder builder) 
+    void index(String index, String type, String id, String parent, long version, XContentBuilder builder) 
             throws IOException;
 
     /**
