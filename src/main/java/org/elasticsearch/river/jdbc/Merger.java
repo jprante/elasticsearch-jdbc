@@ -98,6 +98,7 @@ public class Merger implements RowListener {
         this.delimiter = delimiter;
         this.builder = jsonBuilder();
         this.listener = action;
+        this.map = new HashMap<String, Object>();
         this.version = version;
         this.digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         this.closed = false;
