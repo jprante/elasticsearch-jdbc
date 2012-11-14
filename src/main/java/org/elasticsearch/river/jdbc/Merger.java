@@ -242,6 +242,7 @@ public class Merger implements RowListener {
             }
             builder.close();
             builder = jsonBuilder();
+            map = new HashMap<String, Object>();
         }
     }
 
