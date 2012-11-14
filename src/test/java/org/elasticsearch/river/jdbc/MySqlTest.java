@@ -19,6 +19,7 @@
 package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -77,65 +78,59 @@ public class MySqlTest {
     }
 
     @Test
-    public void testBill() {
-        try {
-            String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product ";
-            List<Object> params = new ArrayList<Object>();
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
+    public void testBill() throws SQLException, NoSuchAlgorithmException, IOException
+    {
+        String sql = "select products.name as \"product.name\", orders.customer as \"product.customer.name\", orders.quantity * products.price as \"product.customer.bill\" from products, orders where products.name = orders.product ";
+        List<Object> params = new ArrayList<Object>();
+        int fetchsize = 0;
+        Action listener = new DefaultAction() {
 
-                @Override
-                public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " parent=" + parent + " builder=" + builder.string());
-                }
-            };
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
+            @Override
+            public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
+                System.err.println("index=" + index + " type=" + type + " id=" + id + " parent=" + parent + " builder=" + builder.string());
             }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
+        };
+        PreparedStatement statement = service.prepareStatement(connection, sql);
+        service.bind(statement, params);
+        ResultSet results = service.execute(statement, fetchsize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
         }
+        merger.close();
+        System.err.println("rows = " + rows);
+        service.close(results);
+        service.close(statement);
+        service.close(connection);
     }    
     
     @Test
-    public void testRelations() {
-        try {
-            String sql = "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department";
-            List<Object> params = new ArrayList<Object>();
-            int fetchsize = 0;
-            Action listener = new DefaultAction() {
+    public void testRelations() throws SQLException, IOException, NoSuchAlgorithmException
+    {
+        String sql = "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department";
+        List<Object> params = new ArrayList<Object>();
+        int fetchsize = 0;
+        Action listener = new DefaultAction() {
 
-                @Override
-                public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
-                    System.err.println("index=" + index + " type=" + type + " id=" + id + " parent=" + parent + " builder=" + builder.string());
-                }
-            };
-            PreparedStatement statement = service.prepareStatement(connection, sql);
-            service.bind(statement, params);
-            ResultSet results = service.execute(statement, fetchsize);
-            Merger merger = new Merger(listener, 1L);
-            long rows = 0L;
-            while (service.nextRow(results, merger)) {
-                rows++;
+            @Override
+            public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
+                System.err.println("index=" + index + " type=" + type + " id=" + id + " parent=" + parent + " builder=" + builder.string());
             }
-            merger.close();
-            System.err.println("rows = " + rows);
-            service.close(results);
-            service.close(statement);
-            service.close(connection);
-        } catch (Exception e) {
-            e.printStackTrace();
+        };
+        PreparedStatement statement = service.prepareStatement(connection, sql);
+        service.bind(statement, params);
+        ResultSet results = service.execute(statement, fetchsize);
+        Merger merger = new Merger(listener, 1L);
+        long rows = 0L;
+        while (service.nextRow(results, merger)) {
+            rows++;
         }
+        merger.close();
+        System.err.println("rows = " + rows);
+        service.close(results);
+        service.close(statement);
+        service.close(connection);
     }
     
     @Test

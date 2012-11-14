@@ -20,6 +20,7 @@ package org.elasticsearch.river.jdbc;
 
 import java.io.IOException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class MergerTest {
@@ -39,6 +40,47 @@ public class MergerTest {
             }
             
         };
+        Merger merger = new Merger(listener, 1L);
+        merger.row(columns, row1);
+        merger.row(columns, row2);
+        merger.close();
+    }
+
+    @Test
+    public void testSimpleFields() throws Exception {
+
+        String columns[] = new String[] {"_id","salary","name", "position", "since"};
+        String row1[] = new String[]{"1","$1000","Joe Doe", "Worker", "2012-06-12"};
+        String row2[] = new String[]{"2","$2000","Bill Smith", "Boss", "2012-06-13"};
+        
+        Action listener =  new DefaultAction() {
+            @Override
+            public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
+               System.err.println("index="+index + " type="+type + " id="+id+ " parent=" + parent + " builder="+builder.string());
+            }
+        };
+
+        Merger merger = new Merger(listener, 1L);
+        merger.row(columns, row1);
+        merger.row(columns, row2);
+        merger.close();
+    }
+
+    @Test
+    public void testWithParent() throws Exception {
+
+        String columns[] = new String[] {"_id","_parent","person.salary","person.name", "person.position.name", "person.position.since"};
+        String row1[] = new String[]{"1","111","$1000","Joe Doe", "Worker", "2012-06-12"};
+        String row2[] = new String[]{"2","111","$2000","Bill Smith", "Boss", "2012-06-13"};
+
+        Action listener =  new DefaultAction() {
+            @Override
+            public void index(String index, String type, String id, String parent, long version, XContentBuilder builder) throws IOException {
+               Assert.assertEquals(parent, "111");
+               System.err.println("index="+index + " type="+type + " id="+id+ " parent=" + parent + " builder="+builder.string());
+            }
+        };
+
         Merger merger = new Merger(listener, 1L);
         merger.row(columns, row1);
         merger.row(columns, row2);

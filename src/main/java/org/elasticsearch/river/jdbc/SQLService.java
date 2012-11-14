@@ -396,6 +396,8 @@ public class SQLService implements BulkAcknowledge {
                         }
                         values.add(blob.getBytes(1, (int) n));
                         blob.free();
+                    } else {
+                    	values.add(null);
                     }
                     break;
                 }
@@ -420,6 +422,8 @@ public class SQLService implements BulkAcknowledge {
                         }
                         values.add(clob.getSubString(1, (int) n));
                         clob.free();
+                    } else {
+                    	values.add(null);
                     }
                     break;
                 }
@@ -432,6 +436,8 @@ public class SQLService implements BulkAcknowledge {
                         }
                         values.add(nclob.getSubString(1, (int) n));
                         nclob.free();
+                    } else {
+                    	values.add(null);
                     }
                     break;
                 }
