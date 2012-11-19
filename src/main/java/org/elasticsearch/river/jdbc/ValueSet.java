@@ -57,6 +57,9 @@ public class ValueSet {
                 value = new Object[l + 1];
                 System.arraycopy(values, 0, value, 0, l);
                 value[l] = v;
+            }else if (found && v != null){
+            	value = new Object[1];
+                value[0] = v;
             }
         } else {
             value = new Object[1];
