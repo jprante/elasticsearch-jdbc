@@ -99,7 +99,7 @@ public class ComplexMerger implements RowListener{
         if(key.indexOf("[") !=-1 && (key.indexOf("[") < key.indexOf(".") || key.indexOf(".") == -1)){
             // Extract the content in []
             String rootKey = key.substring(0,key.indexOf("["));
-            String subContent = key.substring(key.indexOf("[")+1,key.indexOf("]"));
+            String subContent = key.substring(key.indexOf("[")+1,key.lastIndexOf("]"));
             // If not property have been created, we create it
             PropertyListRoot list = null;
             if(root.containsNode(rootKey)){
@@ -309,9 +309,9 @@ public class ComplexMerger implements RowListener{
          */
         public PropertyNode getNode(String name){
             PropertyRoot root = getLast();
-            if(root == null || root.containsNode(name,null)){
-                root = new PropertyRoot("");
-                properties.addLast(root);
+            /* Si l'element existe dans l'objet courant, on le renvoie (traitement sur les sous fils) */
+            if(root.containsNode(name)){
+                return root.properties.get(name);
             }
             return root;
         }
@@ -366,13 +366,24 @@ public class ComplexMerger implements RowListener{
                 }else{
                     keyList.add(completeKey);
                 }
-                // To avoid creating root by calling method, all is lead here
+                // Traitement sur sous element, on ajoute un sous objet a l'objet courant sauf s'il existe deja (completekey est unique)
+                if(completeKey.contains(".") && (properties.size() == 0 || !properties.getLast().containsNode(name))){
+                    return false;
+                }
+                /* */
                 return true;
             }
             return false;
         }
 
+        /* Test l'existence du noeud. S'il existe deja, on en cree un nouveau et renvoie false (le traitement est effectue ici) */
         public boolean containsNode(String name){
+            if(keyList.contains(name)){
+                 PropertyRoot root = new PropertyRoot("");
+                 properties.addLast(root);
+                 keyList.removeAll(keyList);
+            }
+            keyList.add(name);
             return false;
         }
 

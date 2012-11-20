@@ -50,8 +50,21 @@ public class ComplexMergerTest {
         merger.merge(root,"a.b[d.id]","Eat");
         merger.merge(root,"a.b[d.label]","Sleep");
 
-        System.out.println(root);
         System.out.println(root.getXBuilder().string());
+
+        ComplexMerger.PropertyRoot root2 = merger.createRoot();
+
+        merger.merge(root2,"a.title","Titre");
+        merger.merge(root2,"a.b[id]","Bonjour");
+        merger.merge(root2,"a.b[label]","Au revoir");
+        merger.merge(root2,"a.b[id]","Hi");
+        merger.merge(root2,"a.b[label]","Bye");
+        merger.merge(root2,"a.b[id]","Manger");
+        merger.merge(root2,"a.b[label]","Dormir");
+        merger.merge(root2,"a.b[id]","Eat");
+        merger.merge(root2,"a.b[label]","Sleep");
+
+        System.out.println(root2.getXBuilder().string());
     }
 
     @Test
@@ -65,6 +78,8 @@ public class ComplexMergerTest {
         merger.merge(root,"offre.jobcategories[label]","Fonction 1");
         merger.merge(root,"offre.jobcategories[id]","2");
         merger.merge(root,"offre.jobcategories[label]","Fonction 2");
+        merger.merge(root,"offre.jobcategories[id]","3");
+        merger.merge(root,"offre.jobcategories[label]","Fonction 3");
         merger.merge(root,"offre.industries[id]","12");
         merger.merge(root,"offre.industries[label]","Secteur 12");
         merger.merge(root,"offre.industries[id]","15");
@@ -77,6 +92,30 @@ public class ComplexMergerTest {
         merger.merge(root,"offre.howToApply.contact.tel","01.01.01.01.01");
         merger.merge(root,"offre.howToApply.contact.address.locality","Paris");
         merger.merge(root,"offre.howToApply.contact.address.postalCode","75001");
+
+
+        Assert.assertTrue(root.containsNode("_id"));
+
+        System.out.println(root.getXBuilder().string());
+    }
+
+    @Test
+    public void testSubObject()throws Exception{
+        ComplexMerger.PropertyRoot root = merger.createRoot();
+
+        merger.merge(root,"_id","12");
+        merger.merge(root,"offre.id","12");
+        merger.merge(root,"offre.title","Titre");
+        merger.merge(root,"offre.categories[title]","Title categories");
+        merger.merge(root,"offre.categories[job.id]","1");
+        merger.merge(root,"offre.categories[job.label]","Fonction 1");
+        merger.merge(root,"offre.categories[title]","Deuxieme categorie");
+        merger.merge(root,"offre.categories[job.id]","12");
+        merger.merge(root,"offre.categories[job.label]","Fonction 12");
+        merger.merge(root,"offre.industries[id]","12");
+        merger.merge(root,"offre.industries[label]","Secteur 12");
+        merger.merge(root,"offre.industries[id]","15");
+        merger.merge(root,"offre.industries[label]","Secteur 15");
 
 
         Assert.assertTrue(root.containsNode("_id"));
@@ -127,7 +166,9 @@ public class ComplexMergerTest {
         values.add("Paris");
         values.add("75001");
 
-        new ComplexMerger().row("index","jobs","job","1",keys,values);
+        ComplexMerger merger = new ComplexMerger();
+        merger.row("index","jobs","job","1",keys,values);
+        System.out.println(merger.getRoot().getXBuilder().string());
 
     }
 
