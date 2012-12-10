@@ -18,26 +18,32 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
  * The Merger class consumes SQL rows and produces Elasticsearch JSON sources.
  */
 public class Merger implements RowListener {
 
+    private ESLogger logger;
+
     private final static String OPTYPE_COLUMN = "_optype";
     private final static String INDEX_COLUMN = "_index";
     private final static String TYPE_COLUMN = "_type";
     private final static String ID_COLUMN = "_id";
     private final static String PARENT_COLUMN = "_parent";
+    private final static String VERSION_COLUMN = "_version";
     private final static String OP_CREATE = "create";
     private final static String OP_INDEX = "index";
     private final static String OP_DELETE = "delete";
@@ -54,12 +60,14 @@ public class Merger implements RowListener {
     private String prevtype;
     private String previd;
     private String prevparent;
+    private Long prevver;
     private String optype;
     private String index;
     private String type;
     private String id;
     private String parent;
-    private final long version;
+    private Long ver;
+    private final Long staticVersion;
     private final MessageDigest digest;
     private String digestString;
     private boolean closed;
@@ -68,11 +76,12 @@ public class Merger implements RowListener {
      * Constructor for a new Merger object
      * 
      * @param action
+     * @param logger ElasticSearch logger
      * @throws IOException
      * @throws NoSuchAlgorithmException 
      */
-    public Merger(Action action) throws IOException, NoSuchAlgorithmException {
-        this('.', action, -1L);
+    public Merger(Action action, ESLogger logger) throws IOException, NoSuchAlgorithmException {
+        this('.', action, -1L, logger);
     }
     
     /**
@@ -83,7 +92,19 @@ public class Merger implements RowListener {
      * @throws IOException
      */
     public Merger(Action action, long version) throws IOException, NoSuchAlgorithmException {
-        this('.', action, version);
+        this('.', action, version, null);
+    }
+
+    /**
+     * Constructor for a new Merger object
+     *
+     * @param action the action
+     * @param version the version
+     * @param logger ElasticSearch logger
+     * @throws IOException
+     */
+    public Merger(Action action, long version, ESLogger logger) throws IOException, NoSuchAlgorithmException {
+        this('.', action, version, logger);
     }
 
     /**
@@ -92,16 +113,19 @@ public class Merger implements RowListener {
      * @param delimiter the delimiter
      * @param action the action
      * @param version the version
+     * @param logger ElasticSearch logger
      * @throws IOException
      */
-    public Merger(char delimiter, Action action, long version) throws IOException, NoSuchAlgorithmException {
+    public Merger(char delimiter, Action action, long version, ESLogger logger) throws IOException, NoSuchAlgorithmException {
         this.delimiter = delimiter;
         this.builder = jsonBuilder();
         this.listener = action;
         this.map = new HashMap<String, Object>();
-        this.version = version;
+        this.staticVersion = version;
+        this.ver = version;
         this.digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
         this.closed = false;
+        this.logger = logger;
     }
 
     /**
@@ -144,16 +168,24 @@ public class Merger implements RowListener {
             	}
             	prevparent = parent;
             	parent = (String) row[i];
+            } else if (VERSION_COLUMN.equals(columns[i])) {
+            	if (ver != null && !ver.equals(row[i])) {
+            		changed = true;
+            	}
+            	prevver = ver;
+            	ver = (Long) row[i];
             }
         }
         if (changed) {
-            flush(prevoptype, previndex, prevtype, previd, prevparent);
+            flush(prevoptype, previndex, prevtype, previd, prevparent, prevver);
         }
         for (int i = 0; i < columns.length; i++) {
             if (!OPTYPE_COLUMN.equals(columns[i]) &&
-                !INDEX_COLUMN.equals(columns[i]) && 
+                    !INDEX_COLUMN.equals(columns[i]) && 
                     !TYPE_COLUMN.equals(columns[i]) && 
-                    !ID_COLUMN.equals(columns[i])) {
+                    !ID_COLUMN.equals(columns[i]) &&
+                    !PARENT_COLUMN.equals(columns[i]) &&
+                    !VERSION_COLUMN.equals(columns[i])) {
                 merge(map, columns[i], row[i]);
             }
         }
@@ -170,7 +202,7 @@ public class Merger implements RowListener {
      * @throws IOException
      */
     @Override
-    public void row(String optype, String index, String type, String id, String parent, List<String> keys, List<Object> values) 
+    public void row(String optype, String index, String type, String id, String parent, Long version, List<String> keys, List<Object> values) 
             throws IOException {
         boolean changed = false;
         if (this.optype != null && !this.optype.equals(optype)) {
@@ -198,11 +230,33 @@ public class Merger implements RowListener {
         }
         this.prevparent = this.parent;
         this.parent = parent;
+        if (version == null) {
+        	this.ver = staticVersion;
+        	this.prevver = staticVersion;
+        } else {
+	        if ((this.ver != null) && (this.ver != version)) {
+	        	changed = true;
+	        }
+	        this.prevver = this.ver;
+	        this.ver = version;
+        }
         if (changed) {
-            flush(prevoptype, previndex, prevtype, previd, prevparent);
+            flush(prevoptype, previndex, prevtype, previd, prevparent, prevver);
         }
         for (int i = 0; i < keys.size(); i++) {
-            merge(map, keys.get(i), values.get(i));
+        	String key = null;
+        	Object value = null;
+        	try {
+        		key = keys.get(i);
+        		value = values.get(i);
+        		merge(map, key, value);
+        	} catch (RuntimeException re) {
+        		if (logger != null) {
+	        		logger.error("unable to merge key #{} - {}:{}", i, key, value);
+	        		logger.error("map: {}", map.toString());
+        		}
+        		throw re;
+        	}
         }
     }
 
@@ -219,7 +273,7 @@ public class Merger implements RowListener {
      * @param id the id
      * @throws IOException
      */
-    public void flush(String optype, String index, String type, String id, String parent) throws IOException {
+    public void flush(String optype, String index, String type, String id, String parent, long version) throws IOException {
         if (!map.isEmpty()) {
             if (index != null) {
                 digest.update(index.getBytes(DIGEST_ENCODING));
@@ -262,7 +316,7 @@ public class Merger implements RowListener {
      */
     public void close() throws IOException {
         if (!closed) {
-            flush(optype, index, type, id, parent);
+            flush(optype, index, type, id, parent, ver);
             this.digestString = Base64.encodeBytes(digest.digest());
             closed = true;
         }

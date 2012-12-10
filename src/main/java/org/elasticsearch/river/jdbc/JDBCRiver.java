@@ -198,7 +198,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     PreparedStatement statement = service.prepareStatement(connection, sql);
                     service.bind(statement, params);
                     ResultSet results = service.execute(statement, fetchsize);
-                    Merger merger = new Merger(operation, version.longValue());
+                    Merger merger = new Merger(operation, version.longValue(), logger);
                     long rows = 0L;
                     while (service.nextRow(results, merger)) {
                         rows++;
@@ -302,7 +302,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                         Connection connection = service.getConnection(driver, url, user, password, false);
                         PreparedStatement statement = service.prepareRiverTableStatement(connection, riverName.getName(), optype, interval.millis());
                         ResultSet results = service.execute(statement, fetchsize);
-                        Merger merger = new Merger(operation);
+                        Merger merger = new Merger(operation, logger);
                         long rows = 0L;
                         while (service.nextRiverTableRow(results, merger)) {
                             rows++;
