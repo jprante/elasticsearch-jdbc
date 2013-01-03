@@ -53,7 +53,7 @@ The current version of the plugin is **1.3.2**
 
 In order to install the plugin, please run
 
-`/bin/plugin -url https://github.com/downloads/jprante/elasticsearch-river-jdbc/elasticsearch-river-jdbc-1.3.2.zip -install river-jdbc
+	/bin/plugin -url https://github.com/downloads/jprante/elasticsearch-river-jdbc/elasticsearch-river-jdbc-1.3.2.zip -install river-jdbc
 
 In case the version number is omitted, you will have the source code installed for manual compilation.
 
