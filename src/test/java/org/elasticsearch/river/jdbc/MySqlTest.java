@@ -216,5 +216,42 @@ public class MySqlTest {
             e.printStackTrace();
         }
     }    
+
+    @Test
+    public void testJsonParsing() {
+        try {
+            String driverClassName = "com.mysql.jdbc.Driver";
+            String url = "jdbc:mysql://localhost/test";
+            String username = "";
+            String password = "";
+            String sql = "select '{\"A\":\"a\"}' as a__json";
+            List<Object> params = new ArrayList();
+            int fetchsize = 0;
+            Action listener = new DefaultAction() {
+
+                @Override
+                public void index(String index, String type, String id, long version, XContentBuilder builder) throws IOException {
+                    System.err.println("index=" + index + " type=" + type + " id=" + id + " builder=" + builder.string());
+                }
+            };
+            SQLService service = new SQLService();
+            Connection connection = service.getConnection(driverClassName, url, username, password, true);
+            PreparedStatement statement = service.prepareStatement(connection, sql);
+            service.bind(statement, params);
+            ResultSet results = service.execute(statement, fetchsize);
+            Merger merger = new Merger(listener, 1L);
+            long rows = 0L;
+            while (service.nextRow(results, merger)) {
+                rows++;
+            }
+            merger.close();
+            System.err.println("rows = " + rows);
+            service.close(results);
+            service.close(statement);
+            service.close(connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
 }

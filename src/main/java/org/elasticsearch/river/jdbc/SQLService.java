@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
 
 /**
  * The SQL service class manages the SQL access to the JDBC connection.
@@ -277,7 +278,12 @@ public class SQLService implements BulkAcknowledge {
                 case Types.VARCHAR:
                 case Types.LONGVARCHAR: {
                     String s = result.getString(i);
-                    values.add(s);
+                    if (name.endsWith("__json")) {
+                      Object o = JsonXContent.jsonXContent.createParser(s).mapAndClose();
+                      values.add(o);
+                    } else {
+                      values.add(s);
+                    }
                     break;
                 }
                 case Types.NCHAR:
