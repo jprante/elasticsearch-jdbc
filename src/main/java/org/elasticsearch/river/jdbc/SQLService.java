@@ -188,7 +188,9 @@ public class SQLService implements BulkAcknowledge {
             String index = null;
             String type = null;
             String id = null;
-            processRow(result, listener, "index", index, type, id);
+            String parent = null;
+            Long version = null;
+            processRow(result, listener, "index", index, type, id, parent, version);
             return true;
         }
         return false;
@@ -212,6 +214,8 @@ public class SQLService implements BulkAcknowledge {
             String index = null;
             String type = null;
             String id = null;
+            String parent = null;
+            Long version = null;
             String sql = null;
             int columns = metadata.getColumnCount();
             for (int i = 1; i <= columns; i++) {
@@ -222,6 +226,10 @@ public class SQLService implements BulkAcknowledge {
                     type = result.getString(i);
                 } else if ("_id".equalsIgnoreCase(name)) {
                     id = result.getString(i);
+                } else if ("_parent".equalsIgnoreCase(name)) {
+                	parent = result.getString(i);
+                } else if ("_version".equalsIgnoreCase(name)) {
+                	version = result.getLong(i);
                 } else if ("source_operation".equalsIgnoreCase(name)) {
                     operation = result.getString(i);
                 } else if ("source_sql".equalsIgnoreCase(name)) {
@@ -234,7 +242,7 @@ public class SQLService implements BulkAcknowledge {
                 ResultSet rs = stmt.executeQuery();
                 long rows = 0L;
                 if (rs.next()) {
-                    processRow(rs, listener, operation, index, type, id);
+                    processRow(rs, listener, operation, index, type, id, parent, version);
                     rows++;
                 }
                 logger.info("embedded sql gave " + rows + " rows");
@@ -246,10 +254,10 @@ public class SQLService implements BulkAcknowledge {
         return false;
     }
 
-    private void processRow(ResultSet result, RowListener listener, String operation, String index, String type, String id)
+    private void processRow(ResultSet result, RowListener listener, String operation, String index, String type, String id, String parent, Long version)
             throws SQLException, IOException {
-        LinkedList<String> keys = new LinkedList();
-        LinkedList<Object> values = new LinkedList();
+        LinkedList<String> keys = new LinkedList<String>();
+        LinkedList<Object> values = new LinkedList<Object>();
         ResultSetMetaData metadata = result.getMetaData();
         int columns = metadata.getColumnCount();
         for (int i = 1; i <= columns; i++) {
@@ -263,6 +271,12 @@ public class SQLService implements BulkAcknowledge {
             } else if ("_id".equalsIgnoreCase(name)) {
                 id = result.getString(i);
                 continue;
+            } else if ("_parent".equalsIgnoreCase(name)) {
+            	parent = result.getString(i);
+            	continue;
+            } else if ("_version".equalsIgnoreCase(name)) {
+            	version = result.getLong(i);
+            	continue;
             }
             keys.add(name);
             switch (metadata.getColumnType(i)) {
@@ -389,6 +403,8 @@ public class SQLService implements BulkAcknowledge {
                         }
                         values.add(blob.getBytes(1, (int) n));
                         blob.free();
+                    } else {
+                    	values.add(null);
                     }
                     break;
                 }
@@ -413,6 +429,8 @@ public class SQLService implements BulkAcknowledge {
                         }
                         values.add(clob.getSubString(1, (int) n));
                         clob.free();
+                    } else {
+                    	values.add(null);
                     }
                     break;
                 }
@@ -425,6 +443,8 @@ public class SQLService implements BulkAcknowledge {
                         }
                         values.add(nclob.getSubString(1, (int) n));
                         nclob.free();
+                    } else {
+                    	values.add(null);
                     }
                     break;
                 }
@@ -768,7 +788,7 @@ public class SQLService implements BulkAcknowledge {
             id = Integer.toString(result.getRow());
         }
         if (listener != null) {
-            listener.row(operation, index, type, id, keys, values);
+            listener.row(operation, index, type, id, parent, version, keys, values);
         }
     }
 

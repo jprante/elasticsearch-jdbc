@@ -1,5 +1,5 @@
-create database if not exists test default character set utf8;
-use test;
+create database if not exists test_jdbc_river default character set utf8;
+use test_jdbc_river;
 
 drop table if exists employees;
 

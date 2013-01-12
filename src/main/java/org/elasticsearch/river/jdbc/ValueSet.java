@@ -83,18 +83,22 @@ public class ValueSet {
      * @throws IOException
      */
     public void build(XContentBuilder builder, MessageDigest digest, String encoding) throws IOException {
-        if (value.length > 1) {
-            builder.startArray();
-        }
-        for (int i = 0; i < value.length; i++) {
-            builder.value(value[i]);
-            if (value[i] != null) {
-                digest.update(value[i].toString().getBytes(encoding));
-            }
-        }
-        if (value.length > 1) {
-            builder.endArray();
-        }
+    	if (value == null || value.length < 1) {
+    		builder.value((String) null);
+    	} else {
+	        if (value.length > 1) {
+	            builder.startArray();
+	        }
+	        for (int i = 0; i < value.length; i++) {
+	            builder.value(value[i]);
+	            if (value[i] != null) {
+	                digest.update(value[i].toString().getBytes(encoding));
+	            }
+	        }
+	        if (value.length > 1) {
+	            builder.endArray();
+	        }
+    	}
     }
 
     @Override

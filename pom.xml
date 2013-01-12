@@ -6,7 +6,7 @@
     <groupId>org.elasticsearch</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
     <name>elasticsearch-river-jdbc</name>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
     <packaging>jar</packaging>
     <description>JDBC River for ElasticSearch</description>
     <inceptionYear>2012</inceptionYear>
@@ -18,13 +18,13 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</connection>
-        <developerConnection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</developerConnection>
-        <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
+        <connection>scm:git:git@github.com:biiwide/elasticsearch-river-jdbc.git</connection>
+        <developerConnection>scm:git:git@github.com:biiwide/elasticsearch-river-jdbc.git</developerConnection>
+        <url>http://github.com/biiwide/elasticsearch-river-jdbc</url>
     </scm>
 
     <properties>
-        <elasticsearch.version>0.19.8</elasticsearch.version>
+        <elasticsearch.version>0.19.11</elasticsearch.version>
         <github.global.server>github</github.global.server>
     </properties>
 
@@ -181,12 +181,30 @@
                     <configuration>
                         <message>Building site for ${project.version}</message>
                     </configuration>
-                    <executions>   
+                    <executions>
                         <execution>
                             <goals>
                                 <goal>site</goal>
                             </goals>
                             <phase>site</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.github</groupId>
+                    <artifactId>downloads-maven-plugin</artifactId>
+                    <version>0.5</version>
+                    <configuration>
+                        <description>${project.version} release of ${project.name}</description>
+                        <override>true</override>
+                        <includeAttached>true</includeAttached>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>upload</goal>
+                            </goals>
+                            <phase>package</phase>
                         </execution>
                     </executions>
                 </plugin>
