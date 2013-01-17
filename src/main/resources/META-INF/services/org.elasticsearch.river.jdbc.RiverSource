@@ -1,0 +1,3 @@
+org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource
+org.elasticsearch.river.jdbc.strategy.oneshot.OneShotRiverSource
+org.elasticsearch.river.jdbc.strategy.table.TableRiverSource

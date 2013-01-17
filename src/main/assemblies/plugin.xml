@@ -11,23 +11,17 @@
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>false</unpack>
             <scope>compile</scope>
-            <includes>
-                <include>org.xbib:xbib-core</include>
-                <include>org.xbib:xbib-oai</include>
-                <include>xerces:xercesImpl</include>
-                <include>xalan:xalan</include>
-                <include>xalan:serializer</include>
-                <include>com.ning:async-http-client</include>
-                <include>io.netty:netty</include>
-                <include>org.slf4j:slf4j-api</include>
-                <include>org.slf4j:slf4j-log4j12</include>
-                <include>com.google.guava:guava</include>
-            </includes>
             <excludes>
                 <exclude>org.elasticsearch:elasticsearch</exclude>
+                <exclude>org.apache.lucene:lucene-core</exclude>
+                <exclude>org.apache.lucene:lucene-analyzers</exclude>
+                <exclude>org.apache.lucene:lucene-queries</exclude>
+                <exclude>org.apache.lucene:lucene-memory</exclude>
+                <exclude>org.apache.lucene:lucene-highlighter</exclude>
+                <exclude>log4j:log4j</exclude>
             </excludes>
         </dependencySet>
-    </dependencySets>  
+    </dependencySets>
     <fileSets>
         <fileSet>
             <directory>${project.build.directory}</directory>
@@ -36,7 +30,7 @@
                 <include>*.jar</include>
             </includes>
             <excludes>
-                <exclude>*sources*.jar</exclude>    
+                <exclude>*sources*.jar</exclude>
             </excludes>
         </fileSet>
     </fileSets>

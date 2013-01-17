@@ -1,0 +1,13 @@
+{
+    "jdbc" :{
+        "strategy" : "table",
+        "driver" : "org.apache.derby.jdbc.EmbeddedDriver",
+        "url" : "jdbc:derby:memory:myDB",
+        "user" : "",
+        "password" : ""        
+    },
+    "index" : {
+        "index" : "my_jdbc_river",
+        "type" : "my_jdbc_river"
+    }
+}

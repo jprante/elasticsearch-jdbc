@@ -1,0 +1,13 @@
+{
+    "jdbc" :{
+        "driver" : "org.hsqldb.jdbcDriver",
+        "url" : "jdbc:hsqldb:mem:test",
+        "user" : "sa",
+        "password" : "",
+        "sql" : "select * from orders"
+    },
+    "index" : {
+        "index" : "my_jdbc_river",
+        "type" : "my_jdbc_river"
+    }
+}

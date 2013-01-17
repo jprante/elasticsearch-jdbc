@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Elasticsearch JDBC River Test Suite" verbose="1">
+    <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
+    <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
+    <parameter name="driver" value="com.mysql.jdbc.Driver"/>
+    <parameter name="user" value=""/>
+    <parameter name="password" value=""/>
+
+    <test name="Simple JDBC River Source Tests">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="sql1" value="select * from orders"/>
+        <parameter name="sql2" value="select * from orders"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="Simple JDBC River Source Data Tests">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="sql1"
+                   value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product"/>
+        <parameter name="sql2"
+                   value="select orders.department as &quot;_index&quot;, orders.customer as &quot;_id&quot;, orders.customer as &quot;contact.customer&quot;, employees.name as &quot;contact.employee&quot; from orders left join employees on orders.department = employees.department"/>
+        <parameter name="sql3"
+                   value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product and orders.quantity * products.price > ?"/>
+        <parameter name="sql4"
+                   value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product and TIMESTAMPDIFF(DAY, ?, orders.created) > 14"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceDataTests"/>
+        </classes>
+    </test>
+
+    <test name="Simple JDBC River Target Tests">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="river1" value="mysql/river-1.json"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+        </classes>
+    </test>
+
+    <test name="Simple JDBC River Target Data Tests">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="river2" value="mysql/river-2.json"/>
+        <parameter name="river3" value="mysql/river-3.json"/>
+        <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthDataTests"/>
+        </classes>
+    </test>
+
+    <test name="Simple JDBC River Target Job Tests">
+        <parameter name="create" value="mysql/create-jobtables.sql"/>
+        <parameter name="delete" value="mysql/delete-jobtables.sql"/>
+        <parameter name="river1" value="mysql/jobriver-1.json"/>
+        <parameter name="sql1" value="select count(*) from products"/>
+        <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
+        </classes>
+    </test>
+
+    <test name="Table JDBC River Target Tests">
+        <parameter name="create" value="mysql/create-rivertables.sql"/>
+        <parameter name="delete" value="mysql/delete-rivertables.sql"/>
+        <parameter name="river1" value="mysql/river-1.json"/>
+        <parameter name="sql1"
+                   value="insert into my_jdbc_river (`_index`,`_type`,`_id`, `source_operation`, `name`, `amount`, `price`) values(?,?,?,?,?,?,?)"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
+        </classes>
+    </test>
+
+</suite>

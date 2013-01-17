@@ -1,0 +1,13 @@
+{
+    "jdbc" :{
+        "driver" : "oracle.jdbc.driver.OracleDriver",
+        "url" : "jdbc:oracle:thin:@//localhost:1521/test?autoReconnect=true",
+        "user" : "test",
+        "password" : "test",
+        "sql" : "select * from \"orders\""
+    },
+    "index" : {
+        "index" : "my_jdbc_river",
+        "type" : "my_jdbc_river"
+    }
+}

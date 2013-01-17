@@ -23,6 +23,8 @@ import org.elasticsearch.river.River;
 
 /**
  * The JDBC river module
+ *
+ * @author Jörg Prante <joergprante@gmail.com>
  */
 public class JDBCRiverModule extends AbstractModule {
 

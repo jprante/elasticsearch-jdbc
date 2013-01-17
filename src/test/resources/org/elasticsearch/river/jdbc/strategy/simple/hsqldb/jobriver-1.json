@@ -1,0 +1,15 @@
+{
+    "jdbc" :{
+        "driver" : "org.hsqldb.jdbcDriver",
+        "url" : "jdbc:hsqldb:mem:test",
+        "user" : "sa",
+        "password" : "",
+        "sql" : "select * from products",
+        "acksql" : "delete from products where \"_job\" = ?",
+        "acksqlparams" : [ "$job" ]
+    },
+    "index" : {
+        "index" : "my_jdbc_river",
+        "type" : "my_jdbc_river"
+    }
+}

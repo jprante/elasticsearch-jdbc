@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Elasticsearch JDBC River Test Suite" verbose="1">
+    <parameter name="starturl" value="jdbc:csv:src/test/resources/csv?separator=;"/>
+    <parameter name="stopurl" value="jdbc:csv:src/test/resources/csv?separator=;"/>
+    <parameter name="driver" value="org.xbib.jdbc.csv.CsvDriver"/>
+    <parameter name="user" value=""/>
+    <parameter name="password" value=""/>
+
+    <test name="Simple JDBC River Source Tests">
+        <parameter name="sql1" value="select * from &quot;Gesamtfinanzplan&quot;"/>
+        <parameter name="sql2" value="select * from &quot;Gesamtfinanzplan&quot;"/>
+        <parameter name="n" value="36"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="Simple JDBC River Target Tests">
+        <parameter name="create" value=""/>
+        <parameter name="delete" value=""/>
+        <parameter name="river1" value="csv/river-1.json"/>
+        <classes>
+            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+        </classes>
+    </test>
+
+</suite>
