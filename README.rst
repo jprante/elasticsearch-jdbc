@@ -34,27 +34,27 @@ Download:
 Documentation
 -------------
 
-`<wiki/Quickstart>`_
+`Quickstart <elasticsearch-river-jdbc/wiki/Quickstart>`_
 
-`<wiki/Strategies>`_
+`Strategies <elasticsearch-river-jdbc/wiki/Strategies>`_
 
-`<wiki/Moving-a-table-into-Elasticsearch>`_
+`Moving a table <elasticsearch-river-jdbc/wiki/Moving-a-table-into-Elasticsearch>`_
 
-`<wiki/Labeled-columns>`_
+`Labeled columns <elasticsearch-river-jdbc/wiki/Labeled-columns>`_
 
-`<wiki/Structured-Objects>`_
+`Structured objects <elasticsearch-river-jdbc/wiki/Structured-Objects>`_
 
-`<wiki/RiverSource,-RiverMouth,-and-RiverFlow>`_
+`RiverSource, RiverMouth, RiverFlow <elasticsearch-river-jdbc/wiki/RiverSource,-RiverMouth,-and-RiverFlow>`_
 
-`<wiki/Bulk-indexing>`_
+`Bulk indexing <elasticsearch-river-jdbc/wiki/Bulk-indexing>`_
 
-`<wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
+`Updates with versioning <elasticsearch-river-jdbc/wiki/Updates-with-versioning>`_
 
-`<wiki/Updates-with-versioning>`_
+`Updates with database table <elasticsearch-river-jdbc/wiki/Updates-with-database-table>`_
 
-`<wiki/Updates-with-database-table>`_
+`Setting up the river with PostgreSQL <elasticsearch-river-jdbc/wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
 
-`<wiki/Loading-CSV>`_
+`Loading from CSV <elasticsearch-river-jdbc/wiki/Loading-CSV>`_
 
 License
 =======
