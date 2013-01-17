@@ -38,7 +38,7 @@ Download URL:
 
 Command:::
 
-  ./bin/plugin -url http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/elasticsearch/elasticsearch-river-jdbc/2.0.0/elasticsearch-river-jdbc-2.0.0.zip -install river-jdbc
+  ./bin/plugin -url http://bit.ly/13JtumA  -install river-jdbc
 
 Documentation
 -------------
