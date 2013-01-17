@@ -32,11 +32,13 @@ Prerequisites::
   Elasticsearch 0.20.x
   JDBC driver jar
 
-Download URL:
+Bintray:
 
-`Bintray <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/elasticsearch/elasticsearch-river-jdbc/2.0.0/elasticsearch-river-jdbc-2.0.0.zip>`_
+https://bintray.com/pkg/show/general/jprante/elasticsearch-plugins/elasticsearch-river-jdbc
 
-Command:::
+`Direct download <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/elasticsearch/elasticsearch-river-jdbc/2.0.0/elasticsearch-river-jdbc-2.0.0.zip>`_
+
+Command::
 
   ./bin/plugin -url http://bit.ly/13JtumA  -install river-jdbc
 
