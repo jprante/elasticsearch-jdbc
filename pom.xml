@@ -28,6 +28,14 @@
         <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>bintray-jprante-elasticsearch-plugins-elasticsearch-river-jdbc</id>
+            <name>jprante-elasticsearch-plugins-elasticsearch-river-jdbc</name>
+            <url>https://api.bintray.com/maven/jprante/elasticsearch-plugins/elasticsearch-river-jdbc/release</url>
+        </repository>
+    </distributionManagement>
+
     <repositories>
         <!-- for modified CSV JDBC driver -->
         <repository>
