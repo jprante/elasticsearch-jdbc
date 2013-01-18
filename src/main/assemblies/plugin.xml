@@ -12,6 +12,7 @@
             <unpack>false</unpack>
             <scope>compile</scope>
             <excludes>
+                <exclude>org.xbib.elasticsearch:elasticsearch:jar:javadoc</exclude>
                 <exclude>org.elasticsearch:elasticsearch</exclude>
                 <exclude>org.apache.lucene:lucene-core</exclude>
                 <exclude>org.apache.lucene:lucene-analyzers</exclude>
