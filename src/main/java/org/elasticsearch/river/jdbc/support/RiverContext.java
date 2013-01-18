@@ -255,7 +255,7 @@ public class RiverContext {
     }
 
     public RiverContext locale(String languageTag) {
-        this.locale = Locale.forLanguageTag(languageTag);
+        this.locale = LocaleUtil.toLocale(languageTag);
         Locale.setDefault(locale); // for JDBC drivers internals
         return this;
     }

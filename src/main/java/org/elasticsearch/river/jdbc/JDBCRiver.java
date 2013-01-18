@@ -31,6 +31,7 @@ import org.elasticsearch.river.River;
 import org.elasticsearch.river.RiverIndexName;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
+import org.elasticsearch.river.jdbc.support.LocaleUtil;
 import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.elasticsearch.river.jdbc.support.RiverServiceLoader;
 
@@ -110,7 +111,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
         maxretries = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_retries"), 3);
         maxretrywait = TimeValue.parseTimeValue(XContentMapValues.nodeStringValue(sourceSettings.get("max_retries_wait"), "10s"), TimeValue.timeValueMillis(30000));
-        locale = XContentMapValues.nodeStringValue(sourceSettings.get("locale"), Locale.getDefault().toLanguageTag());
+        locale = XContentMapValues.nodeStringValue(sourceSettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
         digesting = XContentMapValues.nodeBooleanValue(sourceSettings.get("digesting"), Boolean.TRUE);
         acksql = XContentMapValues.nodeStringValue(sourceSettings.get("acksql"), null);
         acksqlparams = XContentMapValues.extractRawValues("acksqlparams", sourceSettings);
