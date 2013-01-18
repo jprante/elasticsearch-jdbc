@@ -47,6 +47,8 @@ Documentation
 
 `Quickstart <elasticsearch-river-jdbc/wiki/Quickstart>`_
 
+`JDBC river parameters <elasticsearch-river-jdbc/wiki/JDBC-River-parameters>`_
+
 `Strategies <elasticsearch-river-jdbc/wiki/Strategies>`_
 
 `Moving a table <elasticsearch-river-jdbc/wiki/Moving-a-table-into-Elasticsearch>`_
