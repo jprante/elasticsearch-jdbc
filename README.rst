@@ -25,7 +25,7 @@ Creating a JDBC river is easy::
 Installation
 ------------
 
-Current version of the plugin: **2.0.1** (January 18, 2013)
+Current version of the plugin: **2.0.2** (January 23, 2013)
 
 Prerequisites:: 
 

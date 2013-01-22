@@ -140,13 +140,13 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
         riverMouth = RiverServiceLoader.findRiverMouth(strategy);
         logger.debug("found river target {} for strategy {}", riverMouth.getClass().getName(), strategy);
-        riverMouth.client(client)
-                .index(indexName)
+        riverMouth.index(indexName)
                 .type(typeName)
                 .maxBulkActions(bulkSize)
                 .maxConcurrentBulkRequests(maxBulkRequests)
                 .acknowledge(acknowledgeBulk)
-                .versioning(versioning);
+                .versioning(versioning)
+                .client(client);
 
         // scripting ...
 
