@@ -18,6 +18,7 @@
  */
 package org.elasticsearch.river.jdbc.support;
 
+import org.elasticsearch.common.base.Objects;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
@@ -106,10 +107,10 @@ public class StructuredObject implements PseudoColumnNames, Comparable<Structure
             return false;
         }
         StructuredObject c = (StructuredObject) o;
-        return optype() != null && optype().equals(c.optype())
-                && index() != null && index().equals(c.index())
-                && type() != null && type().equals(c.type())
-                && id() != null && id().equals(c.id());
+        return Objects.equal(optype(), c.optype()) &&
+               Objects.equal(index(), c.index()) &&
+               Objects.equal(type(), c.type()) &&
+               id() != null && id().equals(c.id());
     }
 
     @Override
