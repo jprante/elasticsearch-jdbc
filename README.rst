@@ -36,11 +36,11 @@ Bintray:
 
 https://bintray.com/pkg/show/general/jprante/elasticsearch-plugins/elasticsearch-river-jdbc
 
-`Direct download <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/xbib/elasticsearch/elasticsearch-river-jdbc/2.0.1/elasticsearch-river-jdbc-2.0.1.zip>`_
+`Direct download <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/xbib/elasticsearch/elasticsearch-river-jdbc/2.0.2/elasticsearch-river-jdbc-2.0.2.zip>`_
 
 Command::
 
-  ./bin/plugin -url http://bit.ly/U75w1N -install river-jdbc
+  ./bin/plugin -url http://bit.ly/10FJhEd -install river-jdbc
 
 Documentation
 -------------
