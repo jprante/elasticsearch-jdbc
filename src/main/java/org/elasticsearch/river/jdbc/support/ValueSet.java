@@ -44,10 +44,17 @@ public class ValueSet<O extends Object> {
      * @param v        the value
      */
     public ValueSet(Object valueset, O v) {
+        ValueSet t;
+        Object[] values = null;
+        int l = 0;
+
         if (valueset instanceof ValueSet) {
-            ValueSet t = (ValueSet) valueset;
-            Object[] values = t.getValues();
-            int l = values.length;
+            t = (ValueSet) valueset;
+            values = t.getValues();
+            l = values.length;
+        }
+
+        if (l > 0) {
             boolean found = false;
             for (int i = 0; i < l; i++) {
                 found = v != null && v.equals(values[i]);
@@ -55,17 +62,28 @@ public class ValueSet<O extends Object> {
                     break;
                 }
             }
-            if (!found && v != null) {
-                value = (O[]) new Object[l + 1];
-                System.arraycopy(values, 0, value, 0, l);
-                value[l] = v;
-            } else if (found && v != null) {
-                value = (O[]) new Object[1];
-                value[0] = v;
+
+            if (v == null) {
+                //never add a null-value to an existing list of values
+                value = (O[]) values;
+            } else {
+                if (!found) {
+                    if (l == 1 && values[0] == null) {
+                        //if there's one existing value and it's null, replace it with the new one
+                        value = (O[]) new Object[] { v };
+                    } else {
+                        //otherwise copy the existing value(s) and add the new one
+                        value = (O[]) new Object[l + 1];
+                        System.arraycopy(values, 0, value, 0, l);
+                        value[l] = v;
+                    }
+                } else {
+                    //value already found, so just use existing data
+                    value = (O[]) values;
+                }
             }
         } else {
-            value = (O[]) new Object[1];
-            value[0] = v;
+            value = (O[]) new Object[] { v };
         }
     }
 
@@ -142,6 +160,6 @@ public class ValueSet<O extends Object> {
         // stringify
         String t = o.toString();
         t = t.replaceAll("\"", "\\\"");
-        return "\"" + t + "\"";
+        return '"' + t + '"';
     }
 }
