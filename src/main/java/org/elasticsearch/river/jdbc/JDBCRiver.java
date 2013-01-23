@@ -49,6 +49,7 @@ import java.util.Map;
 public class JDBCRiver extends AbstractRiverComponent implements River {
 
     public final static String NAME = "jdbc-river";
+    public final static String TYPE = "jdbc";
 
     private final String strategy;
     private final TimeValue poll;
@@ -92,9 +93,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         // riverIndexName = _river
 
         Map<String, Object> sourceSettings =
-                riverSettings.settings().containsKey("jdbc")
-                        ? (Map<String, Object>) riverSettings.settings().get("jdbc")
-                        : new HashMap();
+                riverSettings.settings().containsKey(TYPE)
+                        ? (Map<String, Object>) riverSettings.settings().get(TYPE)
+                        : new HashMap<String, Object>();
         // default is a single run
         strategy = XContentMapValues.nodeStringValue(sourceSettings.get("strategy"), "oneshot");
         url = XContentMapValues.nodeStringValue(sourceSettings.get("url"), null);
@@ -119,9 +120,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         Map<String, Object> targetSettings =
                 riverSettings.settings().containsKey("index")
                         ? (Map<String, Object>) riverSettings.settings().get("index")
-                        : new HashMap();
-        indexName = XContentMapValues.nodeStringValue(targetSettings.get("index"), "jdbc");
-        typeName = XContentMapValues.nodeStringValue(targetSettings.get("type"), "jdbc");
+                        : new HashMap<String, Object>();
+        indexName = XContentMapValues.nodeStringValue(targetSettings.get("index"), TYPE);
+        typeName = XContentMapValues.nodeStringValue(targetSettings.get("type"), TYPE);
         bulkSize = XContentMapValues.nodeIntegerValue(targetSettings.get("bulk_size"), 100);
         maxBulkRequests = XContentMapValues.nodeIntegerValue(targetSettings.get("max_bulk_requests"), 30);
         indexSettings = XContentMapValues.nodeStringValue(targetSettings.get("index_settings"), null);
@@ -205,7 +206,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         if (closed) {
             return;
         }
-        logger.info("closing JDBC river [" + riverName.name() + "/" + strategy + "]");
+        logger.info("closing JDBC river [" + riverName.name() + '/' + strategy + ']');
         if (thread != null) {
             thread.interrupt();
         }
@@ -238,7 +239,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         RiverFlow riverTask = RiverServiceLoader.findRiverFlow(strategy);
         // prepare task for run
         riverTask.riverContext(riverContext);
-        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC river(fired) [" + riverName.name() + "/" + strategy + ")")
+        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC river (fired) [" + riverName.name() + '/' + strategy + ')')
                 .newThread(riverTask);
         riverTask.abort();
         thread.start(); // once

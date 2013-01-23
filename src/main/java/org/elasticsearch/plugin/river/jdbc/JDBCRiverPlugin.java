@@ -58,7 +58,7 @@ public class JDBCRiverPlugin extends AbstractPlugin {
      * @param module
      */
     public void onModule(RiversModule module) {
-        module.registerRiver("jdbc", JDBCRiverModule.class);
+        module.registerRiver(JDBCRiver.TYPE, JDBCRiverModule.class);
     }
 
     /**
