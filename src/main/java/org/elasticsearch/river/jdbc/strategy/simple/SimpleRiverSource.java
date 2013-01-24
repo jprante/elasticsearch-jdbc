@@ -162,6 +162,7 @@ public class SimpleRiverSource implements RiverSource {
                 retries--;
                 try {
                     readConnection = DriverManager.getConnection(url, user, password);
+                    // required by MySQL for large result streaming
                     readConnection.setReadOnly(true);
                     // Postgresql needs this holdability
                     readConnection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);

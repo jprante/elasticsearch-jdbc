@@ -108,7 +108,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         rounding = XContentMapValues.nodeStringValue(sourceSettings.get("rounding"), null);
         scale = XContentMapValues.nodeIntegerValue(sourceSettings.get("scale"), 0);
         autocommit = XContentMapValues.nodeBooleanValue(sourceSettings.get("autocommit"), Boolean.FALSE);
-        fetchsize = XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
+        fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
+                XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
         maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
         maxretries = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_retries"), 3);
         maxretrywait = TimeValue.parseTimeValue(XContentMapValues.nodeStringValue(sourceSettings.get("max_retries_wait"), "10s"), TimeValue.timeValueMillis(30000));
