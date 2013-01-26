@@ -178,6 +178,8 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
             current.meta(StructuredObject.PERCOLATE, v);
         } else if (StructuredObject.PARENT.equals(k)) {
             current.meta(StructuredObject.PARENT, v);
+        } else if (StructuredObject.TIMESTAMP.equals(k)) {
+            current.meta(StructuredObject.TIMESTAMP, v);
         } else if (StructuredObject.TTL.equals(k)) {
             current.meta(StructuredObject.TTL, v);
         } else if (StructuredObject.SOURCE.equals(k)) {

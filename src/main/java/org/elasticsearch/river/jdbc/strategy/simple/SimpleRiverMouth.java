@@ -236,21 +236,24 @@ public class SimpleRiverMouth implements RiverMouth {
         if (create) {
             request.create(create);
         }
-        if (object.meta(StructuredObject.PERCOLATE) != null) {
-            request.percolate(object.meta(StructuredObject.PERCOLATE));
+        if (object.meta(StructuredObject.VERSION) != null && versioning) {
+            request.versionType(VersionType.EXTERNAL)
+                    .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
         }
         if (object.meta(StructuredObject.ROUTING) != null) {
             request.routing(object.meta(StructuredObject.ROUTING));
         }
+        if (object.meta(StructuredObject.PERCOLATE) != null) {
+            request.percolate(object.meta(StructuredObject.PERCOLATE));
+        }
         if (object.meta(StructuredObject.PARENT) != null) {
             request.parent(object.meta(StructuredObject.PARENT));
         }
+        if (object.meta(StructuredObject.TIMESTAMP) != null) {
+            request.timestamp(object.meta(StructuredObject.TIMESTAMP));
+        }
         if (object.meta(StructuredObject.TTL) != null) {
             request.ttl(Long.parseLong(object.meta(StructuredObject.TTL)));
-        }
-        if (object.meta(StructuredObject.VERSION) != null && versioning) {
-            request.versionType(VersionType.EXTERNAL)
-                    .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
         }
         bulk.add(request);
     }
