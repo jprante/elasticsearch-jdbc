@@ -163,4 +163,24 @@ public class SimpleValueTests extends Assert {
             "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Joe Doe\", salary=\"$1000\"}, _id=\"1\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"},\"_id\":\"1\"}}");
     }
 
+    @Test
+    public void testExpandValues() throws Exception {
+        List<String> columns = Arrays.asList("_id", "person.salary", "person.name[]", "person.position.name", "person.position.since");
+        List<String> row1 = Arrays.asList("1", "$1000", "Joe,John", "Worker", null);
+        List<String> row2 = Arrays.asList("1", "$1000", "Mark", "Worker", "2012-06-13");
+        List<String> row3 = Arrays.asList("2", "$1000", "Mark", "Worker", "2012-06 -13");
+        MockRiverMouth target = new MockRiverMouth();
+        new SimpleValueListener()
+            .target(target)
+            .begin()
+            .keys(columns)
+            .values(row1)
+            .values(row2)
+            .values(row3)
+            .end();
+        assertEquals(target.data().size(), 2, "Number of inserted objects");
+        assertEquals(target.data().toString(),
+            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=[\"Joe\",\"John\",\"Mark\"], salary=\"$1000\"}, _id=\"1\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":[\"Joe\",\"John\",\"Mark\"],\"salary\":\"$1000\"},\"_id\":\"1\"}, null/null/null/2 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Mark\", salary=\"$1000\"}, _id=\"2\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Mark\",\"salary\":\"$1000\"},\"_id\":\"2\"}}");
+    }
+
 }

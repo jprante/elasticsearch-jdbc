@@ -266,10 +266,19 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
     protected Map<String, ValueSet<O>> merge(Map map, String key, Object value) {
         int i = key.indexOf(delimiter);
         if (i <= 0) {
-            map.put(key, new ValueSet(map.get(key), value));
+            boolean expandValue = key.endsWith("[]");
+            String storeKey = key;
+            if (expandValue) {
+                storeKey = storeKey.substring(0, storeKey.length() - 2);
+            }
+            map.put(storeKey, new ValueSet(map.get(storeKey), value, expandValue));
         } else {
             String p = key.substring(0, i);
+            if (p.endsWith("[]")) {
+                p = p.substring(0, p.length() - 2);
+            }
             String q = key.substring(i + 1);
+
             if (map.containsKey(p)) {
                 Object o = map.get(p);
                 if (o instanceof Map) {
@@ -278,7 +287,7 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
                     throw new IllegalArgumentException("illegal prefix: " + p);
                 }
             } else {
-                Map<String, ValueSet<O>> m = new HashMap();
+                Map<String, ValueSet<O>> m = new HashMap<String, ValueSet<O>>();
                 map.put(p, m);
                 merge(m, q, value);
             }
