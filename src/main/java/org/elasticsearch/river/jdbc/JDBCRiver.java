@@ -197,7 +197,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 return;
             }
         }
-        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC river [" + riverName.name() + "/" + strategy + ")")
+        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC river [" + riverName.name() + '/' + strategy + ']')
                 .newThread(riverFlow);
         thread.start();
     }

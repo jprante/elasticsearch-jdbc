@@ -114,8 +114,9 @@ public class SimpleRiverFlow implements RiverFlow {
             logger.info("{}, waiting {}", reason, poll);
             try {
                 Thread.sleep(poll.millis());
-            } catch (InterruptedException e1) {
-                // ignore
+            } catch (InterruptedException e) {
+                logger.debug("Thread interrupted while waiting, stopping");
+                abort();
             }
         }
         return this;
@@ -134,7 +135,7 @@ public class SimpleRiverFlow implements RiverFlow {
      */
     @Override
     public void run() {
-        while (true) {
+        while (!abort) {
             move();
             if (abort) {
                 return;
