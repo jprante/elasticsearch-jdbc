@@ -153,9 +153,10 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
     @Test
     @Parameters({"sql5"})
     public void testIndexId(String sql) throws Exception {
-        RiverMouth target = new MockRiverMouth() {
+        MockRiverMouth target = new MockRiverMouth() {
             @Override
             public void index(StructuredObject object) throws IOException {
+                super.index(object);
                 logger.debug("products={}", object);
             }
         };
@@ -169,7 +170,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
             rows++;
         }
         listener.reset();
-        assertEquals(rows, 3);
+        assertEquals(target.getCounter(), 3);
         source.close(results);
         source.close(statement);
     }

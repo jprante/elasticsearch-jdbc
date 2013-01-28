@@ -33,6 +33,7 @@ public class MockRiverMouth implements RiverMouth {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
     private Map<String, String> data;
+    private long counter;
 
     @Override
     public String strategy() {
@@ -41,24 +42,28 @@ public class MockRiverMouth implements RiverMouth {
 
     public MockRiverMouth() {
         data = new TreeMap(); // sort order for stability in assertions
+        counter = 0L;
     }
 
     @Override
     public void create(StructuredObject object) throws IOException {
         data.put(object.toString(), object.build());
         logger.debug("got data for creation: {} {}", data, object.checksum());
+        counter++;
     }
 
     @Override
     public void index(StructuredObject object) throws IOException {
         data.put(object.toString(), object.build());
         logger.debug("got data for index: {} {}", data, object.checksum());
+        counter++;
     }
 
     @Override
     public void delete(StructuredObject object) throws IOException {
         data.remove(object.toString());
         logger.debug("got data for delete: {}", data);
+        counter--;
     }
 
     public Map<String, String> data() {
@@ -155,6 +160,10 @@ public class MockRiverMouth implements RiverMouth {
 
     @Override
     public void createIndexIfNotExists(String settings, String mapping) {
+    }
+
+    public long getCounter() {
+        return counter;
     }
 
 }
