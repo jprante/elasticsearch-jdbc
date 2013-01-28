@@ -31,12 +31,15 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.river.jdbc.RiverMouth;
+import org.elasticsearch.river.jdbc.support.HealthMonitorThread;
 import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.elasticsearch.river.jdbc.support.StructuredObject;
 
 import java.io.IOException;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -46,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * create(), index(), or delete() methods and passes them to the bulk indexing client.
  * <p/>
  * Bulk indexing is implemented concurrently. Therefore, many JDBC rivers can pass their
- * data through this river target to ELasticsearch, without having to take precaution
+ * data through this river target to ElasticSearch, without having to take precaution
  * of overwhelming the index.
  * <p/>
  * The default size of a bulk request is 100 documents, the maximum number of concurrent requests is 30.
@@ -55,7 +58,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SimpleRiverMouth implements RiverMouth {
 
-    private final static ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
+    private static final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
+
+    private static final AtomicInteger outstandingBulkRequests = new AtomicInteger(0);
+    private static final ThreadFactory THREAD_FACTORY_HEALTH = EsExecutors.daemonThreadFactory("jdbc-river-health");
+
     protected RiverContext context;
     protected String index;
     protected String type;
@@ -65,11 +72,11 @@ public class SimpleRiverMouth implements RiverMouth {
     private int maxConcurrentBulkRequests = 30;
     private boolean versioning = false;
     private boolean acknowledge = false;
-    private static final AtomicInteger outstandingBulkRequests = new AtomicInteger(0);
-    private static boolean error;
+    private volatile boolean error;
     private BulkProcessor bulk;
+    private HealthMonitorThread healthThread;
 
-    private final static BulkProcessor.Listener listener = new BulkProcessor.Listener() {
+    private final BulkProcessor.Listener listener = new BulkProcessor.Listener() {
 
         @Override
         public void beforeBulk(long executionId, BulkRequest request) {
@@ -112,16 +119,11 @@ public class SimpleRiverMouth implements RiverMouth {
                 .setConcurrentRequests(maxConcurrentBulkRequests)
                 .setFlushInterval(TimeValue.timeValueSeconds(1))
                 .build();
-        // wait for cluster health
-        logger.info("waiting for cluster...");
-        ClusterHealthResponse health = client.admin().cluster().prepareHealth()
-                .setWaitForYellowStatus()
-                .setTimeout(TimeValue.timeValueMinutes(10))
-                .execute().actionGet();
-        if (health.timedOut()) {
-            logger.error("timeout, cluster not available for river");
-            error = true;
-        }
+
+        //Monitor cluster health in separate thread
+        healthThread = new HealthMonitorThread(client);
+        THREAD_FACTORY_HEALTH.newThread(healthThread).start();
+
         return this;
     }
 
@@ -217,9 +219,10 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     public void index(StructuredObject object, boolean create) throws IOException {
-        if (error) {
+        if (!checkStatus()) {
             return;
         }
+
         if (Strings.hasLength(object.index())) {
             index(object.index());
         }
@@ -261,9 +264,10 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void delete(StructuredObject object) {
-        if (error) {
+        if (!checkStatus()) {
             return;
         }
+
         if (Strings.hasLength(object.index())) {
             index(object.index());
         }
@@ -301,10 +305,15 @@ public class SimpleRiverMouth implements RiverMouth {
     @Override
     public void close() {
         bulk.close();
+        healthThread.stop();
     }
 
     @Override
     public void createIndexIfNotExists(String settings, String mapping) {
+        if (!checkStatus()) {
+            return;
+        }
+
         if (client.admin().indices().prepareExists(index).execute().actionGet().exists()) {
             if (Strings.hasLength(settings)) {
                 client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();
@@ -322,6 +331,23 @@ public class SimpleRiverMouth implements RiverMouth {
         if (Strings.hasLength(mapping)) {
             client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();
         }
+    }
+
+    /**
+     * Checks the cluster health and error flag.
+     * @return True if status is ok, false if action should be aborted.
+     */
+    private boolean checkStatus() {
+        while (!healthThread.isHealthy()) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                logger.warn("Thread interrupted while waiting to load", e);
+                Thread.interrupted();
+                return false;
+            }
+        }
+        return !error;
     }
 
 }
