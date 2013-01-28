@@ -168,7 +168,7 @@ public class SimpleValueTests extends Assert {
         List<String> columns = Arrays.asList("_id", "person.salary", "person.name[]", "person.position.name", "person.position.since");
         List<String> row1 = Arrays.asList("1", "$1000", "Joe,John", "Worker", null);
         List<String> row2 = Arrays.asList("1", "$1000", "Mark", "Worker", "2012-06-13");
-        List<String> row3 = Arrays.asList("2", "$1000", "Mark", "Worker", "2012-06 -13");
+        List<String> row3 = Arrays.asList("2", "$1000", "Mark", "Worker", "2012-06-13");
         MockRiverMouth target = new MockRiverMouth();
         new SimpleValueListener()
             .target(target)
