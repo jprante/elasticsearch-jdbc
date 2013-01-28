@@ -31,9 +31,6 @@ import java.io.IOException;
  */
 public class ValueSet<O extends Object> {
 
-    /**
-     * the values
-     */
     private O[] value = (O[]) new Object[0];
 
     /**
@@ -42,44 +39,54 @@ public class ValueSet<O extends Object> {
      *
      * @param valueset the valueset
      * @param v        the value
+     * @param expandValue True to expand the value to multiple values by splitting on commas.
      */
-    public ValueSet(Object valueset, O v) {
-        ValueSet t;
-        Object[] values = null;
-        int l = 0;
-
+    public ValueSet(Object valueset, O v, boolean expandValue) {
         if (valueset instanceof ValueSet) {
-            t = (ValueSet) valueset;
-            values = t.getValues();
-            l = values.length;
+            O[] values = (O[]) ((ValueSet) valueset).getValues();
+            if (values != null) {
+                value = values;
+            }
+        }
+
+        O[] newValues;
+        if (expandValue && v != null) {
+            newValues = (O[]) v.toString().split(",");
+        } else {
+            newValues = (O[]) new Object[] { v };
+        }
+
+        for (O value : newValues) {
+            addValue(value);
+        }
+    }
+
+    /**
+     * Adds the given value
+     * @param v
+     */
+    public void addValue(O v) {
+        int l = value.length;
+
+        for (int i = 0; i < l; i++) {
+            if (v != null && v.equals(value[i])) {
+                //value already found, do nothing
+                return;
+            }
         }
 
         if (l > 0) {
-            boolean found = false;
-            for (int i = 0; i < l; i++) {
-                found = v != null && v.equals(values[i]);
-                if (found) {
-                    break;
-                }
-            }
-
-            if (v == null) {
-                //never add a null-value to an existing list of values
-                value = (O[]) values;
-            } else {
-                if (!found) {
-                    if (l == 1 && values[0] == null) {
-                        //if there's one existing value and it's null, replace it with the new one
-                        value = (O[]) new Object[] { v };
-                    } else {
-                        //otherwise copy the existing value(s) and add the new one
-                        value = (O[]) new Object[l + 1];
-                        System.arraycopy(values, 0, value, 0, l);
-                        value[l] = v;
-                    }
+            //never add a null-value to an existing list of values
+            if (v != null) {
+                if (l == 1 && value[0] == null) {
+                    //if there's one existing value and it's null, replace it with the new one
+                    value = (O[]) new Object[] { v };
                 } else {
-                    //value already found, so just use existing data
-                    value = (O[]) values;
+                    //otherwise copy the existing value(s) and add the new one
+                    O[] oldValues = value;
+                    value = (O[]) new Object[l + 1];
+                    System.arraycopy(oldValues, 0, value, 0, l);
+                    value[l] = v;
                 }
             }
         } else {

@@ -1,6 +1,5 @@
 package org.elasticsearch.river.jdbc.support;
 
-import org.elasticsearch.river.jdbc.support.ValueSet;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -12,7 +11,7 @@ public class ValueSetTests extends Assert {
 
     @Test
     public void testSingleValue() {
-        ValueSet<String> vs = new ValueSet<String>(null, "TEST");
+        ValueSet<String> vs = new ValueSet<String>(null, "TEST", false);
 
         Object[] values = vs.getValues();
         assertEquals(1, values.length);
@@ -21,7 +20,7 @@ public class ValueSetTests extends Assert {
 
     @Test
     public void testSingleNull() {
-        ValueSet<String> vs = new ValueSet<String>(null, null);
+        ValueSet<String> vs = new ValueSet<String>(null, null, false);
 
         Object[] values = vs.getValues();
         assertEquals(values.length, 1);
@@ -31,8 +30,8 @@ public class ValueSetTests extends Assert {
     @Test
     public void testMultipleValues() {
         ValueSet<String> vs = null;
-        vs = new ValueSet<String>(vs, "TEST");
-        vs = new ValueSet<String>(vs, "TEST2");
+        vs = new ValueSet<String>(vs, "TEST", false);
+        vs = new ValueSet<String>(vs, "TEST2", false);
 
         Object[] values = vs.getValues();
         assertEquals(values.length, 2);
@@ -43,8 +42,8 @@ public class ValueSetTests extends Assert {
     @Test
     public void testMultipleValuesNullFirst() {
         ValueSet<String> vs = null;
-        vs = new ValueSet<String>(vs, null);
-        vs = new ValueSet<String>(vs, "TEST");
+        vs = new ValueSet<String>(vs, null, false);
+        vs = new ValueSet<String>(vs, "TEST", false);
 
         Object[] values = vs.getValues();
         assertEquals(values.length, 1);
@@ -54,8 +53,8 @@ public class ValueSetTests extends Assert {
     @Test
     public void testMultipleValuesNullLast() {
         ValueSet<String> vs = null;
-        vs = new ValueSet<String>(vs, "TEST");
-        vs = new ValueSet<String>(vs, null);
+        vs = new ValueSet<String>(vs, "TEST", false);
+        vs = new ValueSet<String>(vs, null, false);
 
         Object[] values = vs.getValues();
         assertEquals(values.length, 1);
@@ -65,9 +64,9 @@ public class ValueSetTests extends Assert {
     @Test
     public void testMultipleValuesWithDuplicates() {
         ValueSet<String> vs = null;
-        vs = new ValueSet<String>(vs, "TEST");
-        vs = new ValueSet<String>(vs, "TEST2");
-        vs = new ValueSet<String>(vs, "TEST");
+        vs = new ValueSet<String>(vs, "TEST", false);
+        vs = new ValueSet<String>(vs, "TEST2", false);
+        vs = new ValueSet<String>(vs, "TEST", false);
 
         Object[] values = vs.getValues();
         assertEquals(values.length, 2);
@@ -78,13 +77,27 @@ public class ValueSetTests extends Assert {
     @Test
     public void testMultipleValuesWithDuplicatesAndNull() {
         ValueSet<String> vs = null;
-        vs = new ValueSet<String>(vs, "TEST");
-        vs = new ValueSet<String>(vs, null);
-        vs = new ValueSet<String>(vs, "TEST");
+        vs = new ValueSet<String>(vs, "TEST", false);
+        vs = new ValueSet<String>(vs, null, false);
+        vs = new ValueSet<String>(vs, "TEST", false);
 
         Object[] values = vs.getValues();
         assertEquals(values.length, 1);
         assertEquals(values[0], "TEST");
+    }
+
+    @Test
+    public void testExpandValue() {
+        ValueSet<String> vs = null;
+        vs = new ValueSet<String>(vs, "TEST,TEST2", true);
+        vs = new ValueSet<String>(vs, null, true);
+        vs = new ValueSet<String>(vs, "TEST3,TEST2", true);
+
+        Object[] values = vs.getValues();
+        assertEquals(values.length, 3);
+        assertEquals(values[0], "TEST");
+        assertEquals(values[1], "TEST2");
+        assertEquals(values[2], "TEST3");
     }
 
 }
