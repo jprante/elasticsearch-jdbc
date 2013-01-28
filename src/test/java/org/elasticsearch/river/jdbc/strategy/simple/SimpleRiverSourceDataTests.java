@@ -23,6 +23,7 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.river.jdbc.RiverMouth;
 import org.elasticsearch.river.jdbc.RiverSource;
 import org.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
+import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.elasticsearch.river.jdbc.support.StructuredObject;
 import org.elasticsearch.river.jdbc.support.ValueListener;
 import org.testng.annotations.Parameters;
@@ -51,7 +52,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
             RiverMouth target = new MockRiverMouth() {
                 @Override
                 public void index(StructuredObject object) throws IOException {
-                    logger.debug("object={}", object);
+                    logger.debug("sql1={}", object);
                 }
             };
             PreparedStatement statement = source.prepareQuery(sql);
@@ -79,7 +80,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         RiverMouth target = new MockRiverMouth() {
             @Override
             public void index(StructuredObject object) throws IOException {
-                logger.debug("object={}", object);
+                logger.debug("sql2={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
@@ -105,7 +106,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         RiverMouth target = new MockRiverMouth() {
             @Override
             public void index(StructuredObject object) throws IOException {
-                logger.debug("object={}", object);
+                logger.debug("sql3={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
@@ -148,5 +149,30 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         source.close(results);
         source.close(statement);
     }
+
+    @Test
+    @Parameters({"sql5"})
+    public void testIndexId(String sql) throws Exception {
+        RiverMouth target = new MockRiverMouth() {
+            @Override
+            public void index(StructuredObject object) throws IOException {
+                logger.debug("products={}", object);
+            }
+        };
+        target.index("products").type("products");
+        PreparedStatement statement = source.prepareQuery(sql);
+        ResultSet results = source.executeQuery(statement);
+        SimpleValueListener listener = new SimpleValueListener().target(target);
+        long rows = 0L;
+        source.beforeFirstRow(results, listener);
+        while (source.nextRow(results, listener)) {
+            rows++;
+        }
+        listener.reset();
+        assertEquals(rows, 3);
+        source.close(results);
+        source.close(statement);
+    }
+
 
 }
