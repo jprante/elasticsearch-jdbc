@@ -18,12 +18,12 @@
  */
 package org.elasticsearch.river.jdbc.strategy.simple;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class SimpleValueTests extends Assert {
 
@@ -124,7 +124,7 @@ public class SimpleValueTests extends Assert {
         assertEquals(target.data().size(), 2,
                 "Number of inserted objects");
         assertEquals(target.data().toString(),
-                "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-12\"}, name=\"Joe Doe\", salary=\"$1000\"}, _id=\"1\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"},\"_id\":\"1\"}, null/null/null/2 {person={position={name=\"Boss\", since=\"2012-06-13\"}, name=\"Bill Smith\", salary=\"$2000\"}, _id=\"2\"}={\"person\":{\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"},\"name\":\"Bill Smith\",\"salary\":\"$2000\"},\"_id\":\"2\"}}");
+                "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-12\"}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}, null/null/null/2 {person={position={name=\"Boss\", since=\"2012-06-13\"}, name=\"Bill Smith\", salary=\"$2000\"}}={\"person\":{\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"},\"name\":\"Bill Smith\",\"salary\":\"$2000\"}}}");
     }
 
     @Test
@@ -142,7 +142,7 @@ public class SimpleValueTests extends Assert {
             .end();
         assertEquals(target.data().size(), 1, "Number of inserted objects");
         assertEquals(target.data().toString(),
-            "{null/null/null/1 {person={position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}, name=\"Joe Doe\", salary=\"$1000\"}, _id=\"1\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]},\"name\":\"Joe Doe\",\"salary\":\"$1000\"},\"_id\":\"1\"}}");
+            "{null/null/null/1 {person={position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}}");
     }
 
     @Test
@@ -160,7 +160,7 @@ public class SimpleValueTests extends Assert {
             .end();
         assertEquals(target.data().size(), 1, "Number of inserted objects");
         assertEquals(target.data().toString(),
-            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Joe Doe\", salary=\"$1000\"}, _id=\"1\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"},\"_id\":\"1\"}}");
+            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}}");
     }
 
     @Test
@@ -180,7 +180,7 @@ public class SimpleValueTests extends Assert {
             .end();
         assertEquals(target.data().size(), 2, "Number of inserted objects");
         assertEquals(target.data().toString(),
-            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=[\"Joe\",\"John\",\"Mark\"], salary=\"$1000\"}, _id=\"1\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":[\"Joe\",\"John\",\"Mark\"],\"salary\":\"$1000\"},\"_id\":\"1\"}, null/null/null/2 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Mark\", salary=\"$1000\"}, _id=\"2\"}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Mark\",\"salary\":\"$1000\"},\"_id\":\"2\"}}");
+            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=[\"Joe\",\"John\",\"Mark\"], salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":[\"Joe\",\"John\",\"Mark\"],\"salary\":\"$1000\"}}, null/null/null/2 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Mark\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Mark\",\"salary\":\"$1000\"}}}");
     }
 
 }

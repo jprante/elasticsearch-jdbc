@@ -18,6 +18,8 @@
  */
 package org.elasticsearch.river.jdbc.strategy.table;
 
+import java.util.Map;
+
 import org.elasticsearch.river.jdbc.strategy.simple.SimpleValueListener;
 
 /**
@@ -27,4 +29,22 @@ import org.elasticsearch.river.jdbc.strategy.simple.SimpleValueListener;
  */
 public class TableValueListener extends SimpleValueListener {
 
+	public static final String SOURCE_OPERATION = "source_operation";
+	public static final String SOURCE_TIMESTAMP = "source_timestamp";
+	
+
+	@Override
+	protected Map merge(Map map, String key, Object value) {
+		if(SOURCE_OPERATION.equals(key)
+				|| SOURCE_TIMESTAMP.equals(key)) { 
+			// skip elements in content
+			return map;
+		} 
+		
+		return super.merge(map, key, value);
+	}
+	
+	
+
+	
 }
