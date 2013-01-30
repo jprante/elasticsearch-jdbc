@@ -18,7 +18,10 @@
  */
 package org.elasticsearch.river.jdbc.strategy.simple;
 
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import java.io.IOException;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -37,10 +40,6 @@ import org.elasticsearch.river.jdbc.RiverMouth;
 import org.elasticsearch.river.jdbc.support.HealthMonitorThread;
 import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.elasticsearch.river.jdbc.support.StructuredObject;
-
-import java.io.IOException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A river mouth implementation for the 'simple' strategy.
@@ -87,9 +86,17 @@ public class SimpleRiverMouth implements RiverMouth {
 
         @Override
         public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-            outstandingBulkRequests.decrementAndGet();
+            if(acknowledge()){
+	        	try {
+					context.riverSource().acknowledge(response);
+				} catch (IOException e) {
+					logger.error("bulk ["+executionId+"] acknowledge error", e);
+				}
+            }
+        	outstandingBulkRequests.decrementAndGet();
             logger.info("bulk [{}] success [{} items] [{}ms]",
                     executionId, response.items().length, response.took().millis());
+            
         }
 
         @Override
