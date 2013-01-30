@@ -18,14 +18,6 @@
  */
 package org.elasticsearch.river.jdbc.strategy.table;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import org.elasticsearch.client.Client;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
@@ -34,6 +26,14 @@ import org.elasticsearch.river.jdbc.RiverSource;
 import org.elasticsearch.river.jdbc.strategy.simple.AbstractRiverNodeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class TableRiverMouthTests extends AbstractRiverNodeTest {
 
@@ -48,8 +48,7 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
     @Parameters({"river1", "sql1"})
     public void testTableRiver(String riverResource, String sql) throws SQLException, IOException, InterruptedException {
         Connection connection = source.connectionForWriting();
-        createData(connection, sql, 101);
-        createDelete(connection, sql, 1);
+        createData(connection, sql, 100);
         source.closeWriting();
         startNode("1");
         client = client("1");
@@ -61,43 +60,19 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
         river.close();
     }
 
-    @SuppressWarnings("unchecked")
-	private void createDelete(Connection connection, String sql, final int id)
-            throws SQLException {
-        
-    	PreparedStatement stmt = connection.prepareStatement(sql);
-        List<Object> params = new ArrayList() {
-            {
-                add(INDEX);
-                add(TYPE);
-                add(Integer.toString(id));
-                add("delete");
-                add(null);
-                add(null);
-                add(null);
-            }
-        };
-        source.bind(stmt, params);
-        stmt.execute();
-
-        if (!connection.getAutoCommit()) {
-            connection.commit();
-        }
-    }
-    
     private void createData(Connection connection, String sql, int size)
             throws SQLException {
         for (int i = 0; i < size; i++) {
             long amount = Math.round(Math.random() * 1000);
             double price = (Math.random() * 10000) / 100.00;
-            addData(connection, sql, INDEX, TYPE, Integer.toString(i), "index", UUID.randomUUID().toString().substring(0, 32), amount, price);
+            addData(connection, sql, INDEX, TYPE, Integer.toString(i), UUID.randomUUID().toString().substring(0, 32), amount, price);
         }
         if (!connection.getAutoCommit()) {
             connection.commit();
         }
     }
 
-    private void addData(Connection connection, String sql, final String index, final String type, final String id, final String operationType, final String name, final long amount, final double price)
+    private void addData(Connection connection, String sql, final String index, final String type, final String id, final String name, final long amount, final double price)
             throws SQLException {
         PreparedStatement stmt = connection.prepareStatement(sql);
         List<Object> params = new ArrayList() {
@@ -105,7 +80,7 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
                 add(index);
                 add(type);
                 add(id);
-                add(operationType);
+                add("index");
                 add(name);
                 add(amount);
                 add(price);
