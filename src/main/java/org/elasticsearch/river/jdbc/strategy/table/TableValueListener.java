@@ -18,7 +18,11 @@
  */
 package org.elasticsearch.river.jdbc.strategy.table;
 
+import java.io.IOException;
+import java.util.Map;
+
 import org.elasticsearch.river.jdbc.strategy.simple.SimpleValueListener;
+import org.elasticsearch.river.jdbc.support.StructuredObject;
 
 /**
  * Value listener for the 'table' strategy
@@ -27,4 +31,31 @@ import org.elasticsearch.river.jdbc.strategy.simple.SimpleValueListener;
  */
 public class TableValueListener extends SimpleValueListener {
 
+	public static final String SOURCE_OPERATION = "source_operation";
+	public static final String SOURCE_TIMESTAMP = "source_timestamp";
+	
+	@Override
+	protected void map(String k, String v, StructuredObject current)
+			throws IOException {
+		if(SOURCE_OPERATION.equals(k)) { 
+			current.optype(v);
+		} else { 
+			super.map(k, v, current);
+		}
+	}
+
+	@Override
+	protected Map merge(Map map, String key, Object value) {
+		if(SOURCE_OPERATION.equals(key)
+				|| SOURCE_TIMESTAMP.equals(key)) { 
+			// skip elements in content
+			return map;
+		} 
+		
+		return super.merge(map, key, value);
+	}
+	
+	
+
+	
 }

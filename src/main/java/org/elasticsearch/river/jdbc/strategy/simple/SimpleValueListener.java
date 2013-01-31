@@ -18,19 +18,20 @@
  */
 package org.elasticsearch.river.jdbc.strategy.simple;
 
-import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.elasticsearch.river.jdbc.RiverMouth;
-import org.elasticsearch.river.jdbc.support.Operations;
-import org.elasticsearch.river.jdbc.support.StructuredDigestObject;
-import org.elasticsearch.river.jdbc.support.StructuredObject;
-import org.elasticsearch.river.jdbc.support.ValueListener;
-import org.elasticsearch.river.jdbc.support.ValueSet;
-
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.elasticsearch.river.jdbc.RiverMouth;
+import org.elasticsearch.river.jdbc.support.Operations;
+import org.elasticsearch.river.jdbc.support.PseudoColumnNames;
+import org.elasticsearch.river.jdbc.support.StructuredDigestObject;
+import org.elasticsearch.river.jdbc.support.StructuredObject;
+import org.elasticsearch.river.jdbc.support.ValueListener;
+import org.elasticsearch.river.jdbc.support.ValueSet;
 
 /**
  * The SimpleValueListener class consumes values from a database and transports
@@ -266,6 +267,14 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      * @param value the value
      */
     protected Map<String, ValueSet<O>> merge(Map map, String key, Object value) {
+    	
+    	if(PseudoColumnNames.INDEX.equals(key)
+    			|| PseudoColumnNames.ID.equals(key)
+    			|| PseudoColumnNames.TYPE.equals(key)
+    			|| PseudoColumnNames.PARENT.equals(key)){
+    		return map;
+    	}
+    	
         int i = key.indexOf(delimiter);
         if (i <= 0) {
             boolean expandValue = key.endsWith("[]");

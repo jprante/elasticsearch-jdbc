@@ -18,14 +18,6 @@
  */
 package org.elasticsearch.river.jdbc.strategy.table;
 
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
-import org.elasticsearch.river.jdbc.support.Operations;
-import org.elasticsearch.river.jdbc.support.ValueListener;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -34,6 +26,14 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
+import org.elasticsearch.river.jdbc.support.Operations;
+import org.elasticsearch.river.jdbc.support.ValueListener;
 
 /**
  * River source implementation of the 'table' strategy
@@ -87,6 +87,7 @@ public class TableRiverSource extends SimpleRiverSource {
             }
             close(results);
             close(statement);
+            acknowledge();
         }
         return null;
     }
@@ -142,7 +143,6 @@ public class TableRiverSource extends SimpleRiverSource {
                 params.add(resp.opType());
                 params.add(resp.failed());
                 params.add(resp.failureMessage());
-                params.add(resp.opType());
                 params.add(resp.index());
                 params.add(resp.type());
                 params.add(resp.id());
