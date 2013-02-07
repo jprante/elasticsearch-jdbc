@@ -1,4 +1,4 @@
-.. image:: elasticsearch-river-jdbc/raw/master/src/site/origami.png
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/origami.png
 
 Elasticsearch JDBC river
 ========================
