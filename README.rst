@@ -25,7 +25,7 @@ Creating a JDBC river is easy::
 Installation
 ------------
 
-Current version of the plugin: **2.0.2** (January 23, 2013)
+Current version of the plugin: **2.0.3** (February 12, 2013)
 
 Prerequisites:: 
 
@@ -36,38 +36,38 @@ Bintray:
 
 https://bintray.com/pkg/show/general/jprante/elasticsearch-plugins/elasticsearch-river-jdbc
 
-`Direct download <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/xbib/elasticsearch/elasticsearch-river-jdbc/2.0.2/elasticsearch-river-jdbc-2.0.2.zip>`_
+`Direct download <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/xbib/elasticsearch/elasticsearch-river-jdbc/2.0.3/elasticsearch-river-jdbc-2.0.3.zip>`_
 
 Command::
 
-  ./bin/plugin -url http://bit.ly/10FJhEd -install river-jdbc
+  ./bin/plugin -url http://bit.ly/Yp2Drj -install river-jdbc
 
 Documentation
 -------------
 
-`Quickstart <elasticsearch-river-jdbc/wiki/Quickstart>`_
+`Quickstart <../../../elasticsearch-river-jdbc/wiki/Quickstart>`_
 
-`JDBC river parameters <elasticsearch-river-jdbc/wiki/JDBC-River-parameters>`_
+`JDBC river parameters <../../../elasticsearch-river-jdbc/wiki/JDBC-River-parameters>`_
 
-`Strategies <elasticsearch-river-jdbc/wiki/Strategies>`_
+`Strategies <../../../elasticsearch-river-jdbc/wiki/Strategies>`_
 
-`Moving a table <elasticsearch-river-jdbc/wiki/Moving-a-table-into-Elasticsearch>`_
+`Moving a table <../../../elasticsearch-river-jdbc/wiki/Moving-a-table-into-Elasticsearch>`_
 
-`Labeled columns <elasticsearch-river-jdbc/wiki/Labeled-columns>`_
+`Labeled columns <../../../elasticsearch-river-jdbc/wiki/Labeled-columns>`_
 
-`Structured objects <elasticsearch-river-jdbc/wiki/Structured-Objects>`_
+`Structured objects <../../../elasticsearch-river-jdbc/wiki/Structured-Objects>`_
 
-`RiverSource, RiverMouth, RiverFlow <elasticsearch-river-jdbc/wiki/RiverSource,-RiverMouth,-and-RiverFlow>`_
+`RiverSource, RiverMouth, RiverFlow <../../../elasticsearch-river-jdbc/wiki/RiverSource,-RiverMouth,-and-RiverFlow>`_
 
-`Bulk indexing <elasticsearch-river-jdbc/wiki/Bulk-indexing>`_
+`Bulk indexing <../../../elasticsearch-river-jdbc/wiki/Bulk-indexing>`_
 
-`Updates with versioning <elasticsearch-river-jdbc/wiki/Updates-with-versioning>`_
+`Updates with versioning <../../../elasticsearch-river-jdbc/wiki/Updates-with-versioning>`_
 
-`Updates with database table <elasticsearch-river-jdbc/wiki/Updates-with-database-table>`_
+`Updates with database table <../../../elasticsearch-river-jdbc/wiki/Updates-with-database-table>`_
 
-`Setting up the river with PostgreSQL <elasticsearch-river-jdbc/wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
+`Setting up the river with PostgreSQL <../../../elasticsearch-river-jdbc/wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
 
-`Loading from CSV <elasticsearch-river-jdbc/wiki/Loading-CSV>`_
+`Loading from CSV <../../../elasticsearch-river-jdbc/wiki/Loading-CSV>`_
 
 License
 =======
