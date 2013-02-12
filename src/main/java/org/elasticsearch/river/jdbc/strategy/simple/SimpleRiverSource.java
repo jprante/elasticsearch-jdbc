@@ -50,6 +50,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -164,8 +165,10 @@ public class SimpleRiverSource implements RiverSource {
                     readConnection = DriverManager.getConnection(url, user, password);
                     // required by MySQL for large result streaming
                     readConnection.setReadOnly(true);
-                    // Postgresql needs this holdability
-                    readConnection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
+                    // Postgresql cursor mode condition:
+                    // fetchsize > 0, no scrollable result set, no auto commit, no holdable cursors over commit
+                    // https://github.com/pgjdbc/pgjdbc/blob/master/org/postgresql/jdbc2/AbstractJdbc2Statement.java#L514
+                    //readConnection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
                     if (context != null) {
                         // many drivers don't like autocommit=true
                         readConnection.setAutoCommit(context.autocommit());
@@ -228,9 +231,16 @@ public class SimpleRiverSource implements RiverSource {
 
     @Override
     public String fetch() throws SQLException, IOException {
-        PreparedStatement statement = prepareQuery(context.pollStatement());
-        bind(statement, context.pollStatementParams());
-        ResultSet results = executeQuery(statement);
+        PreparedStatement statement = null;
+        ResultSet results;
+        if (context.pollStatementParams().isEmpty()) {
+            // Postgresql requires executeQuery(sql) for cursor with fetchsize
+            results = executeQuery(context.pollStatement());
+        } else {
+            statement = prepareQuery(context.pollStatement());
+            bind(statement, context.pollStatementParams());
+            results = executeQuery(statement);
+        }
         String mergeDigest;
         try {
             ValueListener listener = new SimpleValueListener()
@@ -321,6 +331,7 @@ public class SimpleRiverSource implements RiverSource {
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
         }
+        logger.debug("preparing statement with SQL {}", sql);
         return connection.prepareStatement(sql,
                 ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
@@ -381,12 +392,28 @@ public class SimpleRiverSource implements RiverSource {
     public ResultSet executeQuery(PreparedStatement statement) throws SQLException {
         statement.setMaxRows(context.maxRows());
         statement.setFetchSize(context.fetchSize());
+        logger.debug("executing prepared statement");
         ResultSet set = statement.executeQuery();
-        if (!readConnection.getAutoCommit()) {
-            readConnection.commit();
-        }
         return set;
     }
+
+    /**
+     * Execute query statement
+     *
+     * @param sql
+     * @return
+     * @throws SQLException
+     */
+    @Override
+    public ResultSet executeQuery(String sql) throws SQLException {
+        Statement statement = connectionForReading().createStatement();
+        statement.setMaxRows(context.maxRows());
+        statement.setFetchSize(context.fetchSize());
+        logger.debug("executing SQL {}", sql);
+        ResultSet set = statement.executeQuery(sql);
+        return set;
+    }
+
 
     /**
      * Execute prepared update statement
@@ -463,7 +490,9 @@ public class SimpleRiverSource implements RiverSource {
      */
     @Override
     public SimpleRiverSource close(ResultSet result) throws SQLException {
-        result.close();
+        if (result != null) {
+            result.close();
+        }
         return this;
     }
 
@@ -475,7 +504,9 @@ public class SimpleRiverSource implements RiverSource {
      */
     @Override
     public SimpleRiverSource close(PreparedStatement statement) throws SQLException {
-        statement.close();
+        if (statement != null) {
+            statement.close();
+        }
         return this;
     }
 
