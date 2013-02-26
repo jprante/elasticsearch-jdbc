@@ -772,7 +772,15 @@ public class SimpleRiverSource implements RiverSource {
              * to use the JDBC SMALLINT type, which is widely supported.
              */
             case Types.BIT: {
-                return result.getInt(i);
+                try {
+                    return result.getInt(i);
+                } catch (Exception e) {
+                    // PSQLException: Bad value for type int : t
+                    if (e.getMessage().startsWith("Bad value for type int")) {
+                        return "t".equals(result.getString(i));
+                    }
+                    throw new IOException(e);
+                }
             }
             /**
              * The JDBC type BOOLEAN, which is new in the JDBC 3.0 API, maps to
