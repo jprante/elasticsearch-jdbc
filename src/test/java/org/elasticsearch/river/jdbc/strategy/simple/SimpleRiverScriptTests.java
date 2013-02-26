@@ -1,12 +1,11 @@
 package org.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 import org.elasticsearch.river.jdbc.JDBCRiver;
 import org.elasticsearch.river.jdbc.RiverSource;
+import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
@@ -14,13 +13,18 @@ import java.io.IOException;
 
 public class SimpleRiverScriptTests extends AbstractRiverNodeTest {
 
-
-    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouthTests.class.getName());
     private Client client;
 
     @Override
     public RiverSource getRiverSource() {
         return new SimpleRiverSource();
+    }
+
+    @Override
+    public RiverContext getRiverContext() {
+        RiverContext context = new RiverContext();
+        context.digesting(true);
+        return context;
     }
 
     /**

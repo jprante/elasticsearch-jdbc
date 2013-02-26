@@ -244,7 +244,7 @@ public class SimpleRiverSource implements RiverSource {
         String mergeDigest;
         try {
             ValueListener listener = new SimpleValueListener()
-                    .target(context.riverTarget())
+                    .target(context.riverMouth())
                     .digest(context.digesting());
             mergeDigest = merge(results, listener);
         } catch (Exception e) {

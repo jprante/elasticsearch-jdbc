@@ -22,7 +22,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.network.NetworkUtils;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -40,7 +40,7 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 public abstract class AbstractRiverNodeTest extends AbstractRiverTest {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(AbstractRiverNodeTest.class.getName());
+    private static final ESLogger logger = Loggers.getLogger(AbstractRiverNodeTest.class);
 
     public final String INDEX = "my_jdbc_river";
     public final String TYPE = "my_jdbc_river";

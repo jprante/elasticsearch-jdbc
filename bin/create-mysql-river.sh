@@ -6,6 +6,7 @@ curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
-        "sql" : "select * from orders"
+        "sql" : "select * from orders",
+        "strategy" : "simple"
     }
 }'

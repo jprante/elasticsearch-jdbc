@@ -32,6 +32,7 @@ import org.elasticsearch.river.RiverSettings;
 import org.elasticsearch.river.jdbc.JDBCRiver;
 import org.elasticsearch.river.jdbc.RiverSource;
 import org.elasticsearch.river.jdbc.strategy.simple.AbstractRiverNodeTest;
+import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
@@ -42,6 +43,13 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
     @Override
     public RiverSource getRiverSource() {
         return new TableRiverSource();
+    }
+
+    @Override
+    public RiverContext getRiverContext() {
+        RiverContext context = new RiverContext();
+        context.digesting(true);
+        return context;
     }
 
     @Test

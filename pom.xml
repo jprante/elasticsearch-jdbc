@@ -46,7 +46,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <elasticsearch.version>0.20.2</elasticsearch.version>
+        <elasticsearch.version>0.20.5</elasticsearch.version>
         <github.global.server>github</github.global.server>
     </properties>
 
@@ -123,14 +123,12 @@
                 <configuration>
                     <skip>false</skip>
                     <forkMode>once</forkMode>
+                    <useSystemClassLoader>false</useSystemClassLoader>
                     <systemPropertyVariables>
                         <file.encoding>UTF-8</file.encoding>
                         <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
                         <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
-                        <derby.system.home>${project.build.directory}/derby</derby.system.home>
-                        <derby.stream.error.file>${project.build.directory}/derby.log</derby.stream.error.file>
-                        <java.util.logging.config.file>${basedir}/src/test/resources/logging.properties</java.util.logging.config.file>
-                        <oracle.jdbc.Trace>true</oracle.jdbc.Trace>
+                        <log4j.configuration>file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
                     </systemPropertyVariables>
                     <includes>
                         <include>**/*Tests.java</include>
@@ -240,6 +238,10 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <systemPropertyVariables>
+                                <derby.system.home>${project.build.directory}/derby</derby.system.home>
+                                <derby.stream.error.file>${project.build.directory}/derby.log</derby.stream.error.file>
+                            </systemPropertyVariables>
                             <suiteXmlFiles>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite-derby.xml</suiteXmlFile>
                             </suiteXmlFiles>

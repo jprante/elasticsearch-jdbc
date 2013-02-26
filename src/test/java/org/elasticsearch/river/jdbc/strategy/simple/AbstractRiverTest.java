@@ -21,6 +21,7 @@ package org.elasticsearch.river.jdbc.strategy.simple;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -42,11 +43,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public abstract class AbstractRiverTest extends Assert {
-    private final ESLogger logger = ESLoggerFactory.getLogger(AbstractRiverTest.class.getName());
+
+    private static final ESLogger logger = Loggers.getLogger(AbstractRiverTest.class);
 
     protected static RiverSource source;
 
+    protected static RiverContext context;
+
     public abstract RiverSource getRiverSource();
+
+    public abstract RiverContext getRiverContext();
 
     @BeforeMethod
     @Parameters({"driver", "starturl", "user", "password"})
@@ -57,7 +63,7 @@ public abstract class AbstractRiverTest extends Assert {
                 .url(starturl)
                 .user(user)
                 .password(password);
-        RiverContext context = new RiverContext()
+        context = getRiverContext()
                 .riverSource(source)
                 .retries(1)
                 .maxRetryWait(TimeValue.timeValueSeconds(5))

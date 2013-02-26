@@ -151,8 +151,8 @@ public class SimpleRiverFlow implements RiverFlow {
     public void move() {
         try {
             RiverSource source = context.riverSource();
-            RiverMouth target = context.riverTarget();
-            Client client = context.riverTarget().client();
+            RiverMouth target = context.riverMouth();
+            Client client = context.riverMouth().client();
             Number version;
             String digest;
             GetResponse get = null;
@@ -218,10 +218,10 @@ public class SimpleRiverFlow implements RiverFlow {
      */
     protected void versionHouseKeeping(long version) throws IOException {
         logger.info("housekeeping for version " + version);
-        Client client = context.riverTarget().client();
-        String indexName = context.riverTarget().index();
-        String typeName = context.riverTarget().type();
-        int bulkSize = context.riverTarget().maxBulkActions();
+        Client client = context.riverMouth().client();
+        String indexName = context.riverMouth().index();
+        String typeName = context.riverMouth().type();
+        int bulkSize = context.riverMouth().maxBulkActions();
         client.admin().indices().prepareRefresh(indexName).execute().actionGet();
         SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN)
                 .setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
@@ -258,7 +258,7 @@ public class SimpleRiverFlow implements RiverFlow {
                     for (SearchHit hit : response.getHits().getHits()) {
                         // delete all documents with lower version
                         if (hit.getVersion() < version) {
-                            context.riverTarget().delete(new StructuredObject()
+                            context.riverMouth().delete(new StructuredObject()
                                     .index(hit.getIndex())
                                     .type(hit.getType())
                                     .id(hit.getId()));

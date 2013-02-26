@@ -157,7 +157,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .riverIndexName(riverIndexName)
                 .riverSettings(riverSettings.settings())
                 .riverSource(riverSource)
-                .riverTarget(riverMouth)
+                .riverMouth(riverMouth)
                 .pollInterval(poll)
                 .pollStatement(sql)
                 .pollStatementParams(sqlparams)

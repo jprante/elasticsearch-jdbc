@@ -79,7 +79,7 @@ public class TableRiverSource extends SimpleRiverSource {
             }
             try {
                 ValueListener listener = new TableValueListener()
-                        .target(context.riverTarget())
+                        .target(context.riverMouth())
                         .digest(context.digesting());
                 merge(results, listener); // ignore digest
             } catch (Exception e) {

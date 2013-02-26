@@ -53,7 +53,7 @@ public class RiverContext {
     /**
      * The target of the river
      */
-    private RiverMouth target;
+    private RiverMouth mouth;
     /**
      * The polling interval
      */
@@ -146,13 +146,13 @@ public class RiverContext {
         return source;
     }
 
-    public RiverContext riverTarget(RiverMouth target) {
-        this.target = target;
+    public RiverContext riverMouth(RiverMouth mouth) {
+        this.mouth = mouth;
         return this;
     }
 
-    public RiverMouth riverTarget() {
-        return target;
+    public RiverMouth riverMouth() {
+        return mouth;
     }
 
     public RiverContext job(String job) {
@@ -277,8 +277,8 @@ public class RiverContext {
         if (source != null) {
             source.riverContext(this);
         }
-        if (target != null) {
-            target.riverContext(this);
+        if (mouth != null) {
+            mouth.riverContext(this);
         }
         return this;
     }
