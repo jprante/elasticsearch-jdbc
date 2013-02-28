@@ -16,7 +16,7 @@ import org.elasticsearch.common.unit.TimeValue;
  */
 public class HealthMonitorThread implements Runnable {
 
-    private static final ESLogger LOG = ESLoggerFactory.getLogger(HealthMonitorThread.class.getName());
+    private static final ESLogger logger = ESLoggerFactory.getLogger(HealthMonitorThread.class.getName());
 
     private boolean stop = false;
     private boolean healthy = false;
@@ -41,9 +41,8 @@ public class HealthMonitorThread implements Runnable {
                     .setWaitForYellowStatus()
                     .setTimeout(TimeValue.timeValueMinutes(1))
                     .execute().actionGet();
-
-                if (health.timedOut()) {
-                    LOG.info("Waiting for cluster ({} minutes elapsed)...", curTime);
+                if (health.isTimedOut()) {
+                    logger.info("Waiting for cluster ({} minutes elapsed)...", curTime);
                     curTime++;
                 } else {
                     healthy = true;
@@ -55,7 +54,7 @@ public class HealthMonitorThread implements Runnable {
             } catch (InterruptedException e) {
                 Thread.interrupted();
                 if (!stop) {
-                    LOG.warn("Thread interrupted unexpectedly, stopping", e);
+                    logger.warn("Thread interrupted unexpectedly, stopping", e);
                     stop = true;
                 }
             }

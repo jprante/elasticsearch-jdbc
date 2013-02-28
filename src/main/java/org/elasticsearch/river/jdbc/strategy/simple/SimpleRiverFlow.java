@@ -163,8 +163,8 @@ public class SimpleRiverFlow implements RiverFlow {
             } catch (IndexMissingException e) {
                 logger.warn("river state missing: {}/{}/{}", context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX);
             }
-            if (get != null && get.exists()) {
-                Map jdbcState = (Map) get.sourceAsMap().get("jdbc");
+            if (get != null && get.isExists()) {
+                Map jdbcState = (Map) get.getSourceAsMap().get("jdbc");
                 if (jdbcState != null) {
                     version = (Number) jdbcState.get("version");
                     version = version.longValue() + 1; // increase to next version
@@ -225,12 +225,12 @@ public class SimpleRiverFlow implements RiverFlow {
         client.admin().indices().prepareRefresh(indexName).execute().actionGet();
         SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN)
                 .setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
-        if (response.timedOut()) {
+        if (response.isTimedOut()) {
             logger.error("housekeeper scan query timeout");
             return;
         }
-        if (response.failedShards() > 0) {
-            logger.error("housekeeper failed shards in scan response: {0}", response.failedShards());
+        if (response.getFailedShards() > 0) {
+            logger.error("housekeeper failed shards in scan response: {}", response.getFailedShards());
             return;
         }
         String scrollId = response.getScrollId();
@@ -244,15 +244,15 @@ public class SimpleRiverFlow implements RiverFlow {
         long t0 = System.currentTimeMillis();
         do {
             response = client.prepareSearchScroll(response.getScrollId()).setScroll(TimeValue.timeValueMinutes(10)).execute().actionGet();
-            if (response.timedOut()) {
+            if (response.isTimedOut()) {
                 logger.error("housekeeper scroll query timeout");
                 done = true;
-            } else if (response.failedShards() > 0) {
-                logger.error("housekeeper failed shards in scroll response: {}", response.failedShards());
+            } else if (response.getFailedShards() > 0) {
+                logger.error("housekeeper failed shards in scroll response: {}", response.getFailedShards());
                 done = true;
             } else {
                 // terminate scrolling?
-                if (response.hits() == null) {
+                if (response.getHits() == null) {
                     done = true;
                 } else {
                     for (SearchHit hit : response.getHits().getHits()) {

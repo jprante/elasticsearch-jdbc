@@ -25,22 +25,21 @@ Creating a JDBC river is easy::
 Installation
 ------------
 
-Current version of the plugin: **2.0.3** (February 12, 2013)
+Prerequisites::
 
-Prerequisites:: 
+  Elasticsearch 0.20+ / 0.90.0.Beta1+
+  a JDBC driver jar of your database
 
-  Elasticsearch 0.20.x
-  JDBC driver jar
+=============  =========  =================  ============================================================
+ES version     Plugin     Release date       Command
+-------------  ---------  -----------------  ------------------------------------------------------------
+0.20+          **2.0.3**  February 12, 2013  ./bin/plugin -url http://bit.ly/Yp2Drj -install river-jdbc
+0.90.0.Beta1+  **2.2.0**  February 28, 2013
+=============  =========  =================  ============================================================
 
 Bintray:
 
 https://bintray.com/pkg/show/general/jprante/elasticsearch-plugins/elasticsearch-river-jdbc
-
-`Direct download <http://dl.bintray.com/content/jprante/elasticsearch-plugins/release/org/xbib/elasticsearch/elasticsearch-river-jdbc/2.0.3/elasticsearch-river-jdbc-2.0.3.zip>`_
-
-Command::
-
-  ./bin/plugin -url http://bit.ly/Yp2Drj -install river-jdbc
 
 Documentation
 -------------

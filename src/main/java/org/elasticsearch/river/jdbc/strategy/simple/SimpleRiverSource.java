@@ -401,7 +401,7 @@ public class SimpleRiverSource implements RiverSource {
      * Execute query statement
      *
      * @param sql
-     * @return
+     * @return the result set
      * @throws SQLException
      */
     @Override
