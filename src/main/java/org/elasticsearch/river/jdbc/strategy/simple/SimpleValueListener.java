@@ -127,6 +127,8 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      */
     @Override
     public SimpleValueListener values(List<? extends Object> values) throws IOException {
+    	boolean hasSource = false;
+    	
         if (current == null) {
             current = newObject();
         }
@@ -144,7 +146,18 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
             // JAVA7: string switch
             String k = keys.get(i);
             map(k, v, current);
+            if (StructuredObject.SOURCE.equals(k)) { 
+            	hasSource = true;
+            }
         }
+        
+        if (hasSource) {
+        	end(current);
+        	current = newObject();
+        	
+        	return this;
+        }
+        
         // switch to next structured object if current is not equal to previous
         if (!current.equals(prev) || current.isEmpty()) {
             prev.source(current.source()); // "steal" source 
