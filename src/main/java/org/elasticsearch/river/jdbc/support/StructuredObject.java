@@ -197,7 +197,11 @@ public class StructuredObject implements PseudoColumnNames, Comparable<Structure
             } else if (o instanceof Map) {
                 build(builder, (Map<String, ? super Object>) o);
             } else {
-                throw new IOException("unknown object class:" + o.getClass().getName());
+                try {
+                	builder.value(o);
+                } catch (Exception e) {
+                	throw new IOException("unknown object class:" + o.getClass().getName());
+                }
             }
         }
         builder.endObject();
