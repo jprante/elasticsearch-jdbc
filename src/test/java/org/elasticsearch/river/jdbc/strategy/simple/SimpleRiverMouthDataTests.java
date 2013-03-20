@@ -68,7 +68,7 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
         river.start();
         Thread.sleep(3000L); // let the good things happen
-        assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 103);
+        assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 104);
         river.close();
     }
 
@@ -92,7 +92,7 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
         Thread.sleep(3000L); // let some good things happen
         river.once();
         Thread.sleep(3000L); // let other good things happen
-        assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 206);
+        assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 208);
         river.close();
     }
 

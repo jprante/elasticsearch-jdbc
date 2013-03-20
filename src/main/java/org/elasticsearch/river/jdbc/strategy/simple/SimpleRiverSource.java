@@ -698,6 +698,7 @@ public class SimpleRiverSource implements RiverSource {
         if (logger.isTraceEnabled()) {
             logger.trace("{} {} {}", i, type, result.getString(i));
         }
+
         switch (type) {
             /**
              * The JDBC types CHAR, VARCHAR, and LONGVARCHAR are closely
@@ -755,7 +756,8 @@ public class SimpleRiverSource implements RiverSource {
              * long.
              */
             case Types.BIGINT: {
-                return result.getLong(i);
+                Object o = result.getLong(i);
+                return result.wasNull() ? null : o;
             }
             /**
              * The JDBC type BIT represents a single bit value that can be zero
@@ -773,7 +775,8 @@ public class SimpleRiverSource implements RiverSource {
              */
             case Types.BIT: {
                 try {
-                    return result.getInt(i);
+                    Object o = result.getInt(i);
+                    return result.wasNull() ? null : o;
                 } catch (Exception e) {
                     // PSQLException: Bad value for type int : t
                     if (e.getMessage().startsWith("Bad value for type int")) {
@@ -961,7 +964,7 @@ public class SimpleRiverSource implements RiverSource {
                     // Null values are driving us nuts in JDBC:
                     // http://stackoverflow.com/questions/2777214/when-accessing-resultsets-in-jdbc-is-there-an-elegant-way-to-distinguish-betwee
                 }
-                if (bd == null) {
+                if (bd == null || result.wasNull()) {
                     return null;
                 }
                 if (scale >= 0) {
@@ -996,8 +999,10 @@ public class SimpleRiverSource implements RiverSource {
              * double.
              */
             case Types.DOUBLE: {
-                //return result.getDouble(i);
                 String s = result.getString(i);
+                if (result.wasNull()) {
+                    return null;
+                }
                 NumberFormat format = NumberFormat.getInstance(locale);
                 Number number = format.parse(s);
                 return number.doubleValue();
@@ -1021,8 +1026,10 @@ public class SimpleRiverSource implements RiverSource {
              * DOUBLE type in preference to FLOAT.
              */
             case Types.FLOAT: {
-                //return result.getDouble(i);
                 String s = result.getString(i);
+                if (result.wasNull()) {
+                    return null;
+                }
                 NumberFormat format = NumberFormat.getInstance(locale);
                 Number number = format.parse(s);
                 return number.doubleValue();
@@ -1040,7 +1047,8 @@ public class SimpleRiverSource implements RiverSource {
              * int.
              */
             case Types.INTEGER: {
-                return result.getInt(i);
+                Object o = result.getInt(i);
+                return result.wasNull() ? null : o;
             }
             /**
              * The JDBC type JAVA_OBJECT, added in the JDBC 2.0 core API, makes
@@ -1081,8 +1089,10 @@ public class SimpleRiverSource implements RiverSource {
              * float.
              */
             case Types.REAL: {
-                //return result.getFloat(i);
                 String s = result.getString(i);
+                if (result.wasNull()) {
+                    return null;
+                }
                 NumberFormat format = NumberFormat.getInstance(locale);
                 Number number = format.parse(s);
                 return number.doubleValue();
@@ -1100,7 +1110,8 @@ public class SimpleRiverSource implements RiverSource {
              * Java short.
              */
             case Types.SMALLINT: {
-                return result.getInt(i);
+                Object o = result.getInt(i);
+                return result.wasNull() ? null : o;
             }
             case Types.SQLXML: {
                 SQLXML xml = result.getSQLXML(i);
@@ -1121,7 +1132,8 @@ public class SimpleRiverSource implements RiverSource {
              * short will always be able to hold all TINYINT values.
              */
             case Types.TINYINT: {
-                return result.getInt(i);
+                Object o = result.getInt(i);
+                return result.wasNull() ? null : o;
             }
             case Types.NULL: {
                 return null;

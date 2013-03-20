@@ -103,6 +103,10 @@ public class ValueSet<O extends Object> {
         return value;
     }
 
+    public boolean isNull() {
+        return value.length == 0 || (value.length == 1 && value[0] == null);
+    }
+
     /**
      * Build ValueSet as XContent
      *

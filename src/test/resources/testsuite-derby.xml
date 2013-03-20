@@ -13,6 +13,7 @@
         <parameter name="delete" value="derby/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from &quot;orders&quot;"/>
         <parameter name="sql2" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql3" value="select * from &quot;products&quot; where &quot;amount&quot; is NULL"/>
         <classes>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>

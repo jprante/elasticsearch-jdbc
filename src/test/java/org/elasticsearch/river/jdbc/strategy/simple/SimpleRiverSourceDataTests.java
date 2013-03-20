@@ -59,7 +59,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
             RiverMouth target = new MockRiverMouth() {
                 @Override
                 public void index(StructuredObject object) throws IOException {
-                    logger.debug("sql1={}", object);
+                    logger.debug("sql1 object={}", object);
                 }
             };
             PreparedStatement statement = source.prepareQuery(sql);
@@ -87,7 +87,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         RiverMouth target = new MockRiverMouth() {
             @Override
             public void index(StructuredObject object) throws IOException {
-                logger.debug("sql2={}", object);
+                logger.debug("sql2 object={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);

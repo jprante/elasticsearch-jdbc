@@ -13,6 +13,7 @@
         <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
         <parameter name="sql2" value="select * from orders"/>
+        <parameter name="sql3" value="select * from products where amount is null"/>
         <classes>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>

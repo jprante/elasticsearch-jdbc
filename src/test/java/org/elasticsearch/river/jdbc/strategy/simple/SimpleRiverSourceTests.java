@@ -27,6 +27,7 @@ import org.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.elasticsearch.river.jdbc.support.RiverContext;
 import org.elasticsearch.river.jdbc.support.StructuredObject;
 import org.elasticsearch.river.jdbc.support.ValueListener;
+import org.elasticsearch.river.jdbc.support.ValueSet;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
@@ -122,10 +123,47 @@ public class SimpleRiverSourceTests extends AbstractRiverTest {
             rows++;
         }
         listener.reset();
-        assertEquals(Base64.encodeBytes(listener.digest().digest()), "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=");
+        assertEquals(Base64.encodeBytes(listener.digest().digest()),
+                "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=");
         assertEquals(rows, n == null ? 5 : n);
         source.close(results);
         source.close(statement);
     }
 
+    @Test
+    @Parameters({"sql3"})
+    public void testNullInteger(String sql) throws Exception {
+        List<? extends Object> params = new ArrayList();
+        RiverMouth mouth = new MockRiverMouth() {
+            @Override
+            public void index(StructuredObject object) throws IOException {
+                if (object == null || object.source() == null) {
+                    throw new IllegalArgumentException("object missing");
+                }
+                ValueSet o = (ValueSet)object.source().get("amount");
+                if (o == null) {
+                    o = (ValueSet)object.source().get("AMOUNT"); // hsqldb is uppercase
+                }
+                if (!o.isNull()) {
+                    throw new IllegalArgumentException("amount not null??? " + o.getClass().getName() );
+                }
+            }
+        };
+        PreparedStatement statement = source.prepareQuery(sql);
+        source.bind(statement, params);
+        ResultSet results = source.executeQuery(statement);
+        ValueListener listener = new SimpleValueListener()
+                .digest(context.digesting())
+                .target(mouth);
+        long rows = 0L;
+        source.beforeFirstRow(results, listener);
+        if (source.nextRow(results, listener)) {
+            // only one row
+            rows++;
+        }
+        listener.reset();
+        assertEquals(rows, 1);
+        source.close(results);
+        source.close(statement);
+    }
 }
