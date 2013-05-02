@@ -1000,7 +1000,7 @@ public class SimpleRiverSource implements RiverSource {
              */
             case Types.DOUBLE: {
                 String s = result.getString(i);
-                if (result.wasNull()) {
+                if (result.wasNull() || s == null) {
                     return null;
                 }
                 NumberFormat format = NumberFormat.getInstance(locale);
@@ -1027,7 +1027,7 @@ public class SimpleRiverSource implements RiverSource {
              */
             case Types.FLOAT: {
                 String s = result.getString(i);
-                if (result.wasNull()) {
+                if (result.wasNull() || s == null) {
                     return null;
                 }
                 NumberFormat format = NumberFormat.getInstance(locale);
@@ -1090,7 +1090,7 @@ public class SimpleRiverSource implements RiverSource {
              */
             case Types.REAL: {
                 String s = result.getString(i);
-                if (result.wasNull()) {
+                if (result.wasNull() || s == null) {
                     return null;
                 }
                 NumberFormat format = NumberFormat.getInstance(locale);
