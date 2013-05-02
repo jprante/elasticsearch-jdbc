@@ -996,8 +996,10 @@ public class SimpleRiverSource implements RiverSource {
              * double.
              */
             case Types.DOUBLE: {
-                //return result.getDouble(i);
                 String s = result.getString(i);
+                if (result.wasNull() || s == null) {
+                    return null;
+                }
                 NumberFormat format = NumberFormat.getInstance(locale);
                 Number number = format.parse(s);
                 return number.doubleValue();
@@ -1021,8 +1023,10 @@ public class SimpleRiverSource implements RiverSource {
              * DOUBLE type in preference to FLOAT.
              */
             case Types.FLOAT: {
-                //return result.getDouble(i);
                 String s = result.getString(i);
+                if (result.wasNull() || s == null) {
+                    return null;
+                }
                 NumberFormat format = NumberFormat.getInstance(locale);
                 Number number = format.parse(s);
                 return number.doubleValue();
@@ -1081,8 +1085,10 @@ public class SimpleRiverSource implements RiverSource {
              * float.
              */
             case Types.REAL: {
-                //return result.getFloat(i);
                 String s = result.getString(i);
+                if (result.wasNull() || s == null) {
+                    return null;
+                }
                 NumberFormat format = NumberFormat.getInstance(locale);
                 Number number = format.parse(s);
                 return number.doubleValue();
