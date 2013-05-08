@@ -235,9 +235,9 @@ public class SimpleRiverSource implements RiverSource {
         ResultSet results;
         if (context.pollStatementParams().isEmpty()) {
             // Postgresql requires executeQuery(sql) for cursor with fetchsize
-            results = executeQuery(context.pollStatement());
+            results = executeQuery(getSql());
         } else {
-            statement = prepareQuery(context.pollStatement());
+            statement = prepareQuery(getSql());
             bind(statement, context.pollStatementParams());
             results = executeQuery(statement);
         }
@@ -309,6 +309,16 @@ public class SimpleRiverSource implements RiverSource {
         }
     }
 
+    private String getSql() throws IOException {
+        String sql = context.pollStatement();
+        if (sql.endsWith(".sql")) {
+            Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
+            sql = Streams.copyToString(r);
+            r.close();
+        }
+        return sql;
+    }
+
     /**
      * Prepare a query statement
      *
@@ -318,15 +328,6 @@ public class SimpleRiverSource implements RiverSource {
      */
     @Override
     public PreparedStatement prepareQuery(String sql) throws SQLException {
-        if (sql.endsWith(".sql")) {
-            try {
-                Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
-                sql = Streams.copyToString(r);
-                r.close();
-            } catch (IOException e) {
-                throw new SQLException("file not found: " + sql);
-            }
-        }
         Connection connection = connectionForReading();
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
