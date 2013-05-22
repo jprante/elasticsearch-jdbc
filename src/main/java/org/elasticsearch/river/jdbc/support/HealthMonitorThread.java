@@ -42,7 +42,7 @@ public class HealthMonitorThread implements Runnable {
                     .setTimeout(TimeValue.timeValueMinutes(1))
                     .execute().actionGet();
 
-                if (health.timedOut()) {
+                if (health.isTimedOut()) {
                     LOG.info("Waiting for cluster ({} minutes elapsed)...", curTime);
                     curTime++;
                 } else {
