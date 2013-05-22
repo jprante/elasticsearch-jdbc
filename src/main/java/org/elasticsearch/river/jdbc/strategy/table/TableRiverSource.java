@@ -107,7 +107,7 @@ public class TableRiverSource extends SimpleRiverSource {
         try {
             Connection connection = connectionForWriting();
             String riverName = context.riverName();
-            for (BulkItemResponse resp : response.items()) {
+            for (BulkItemResponse resp : response.getItems()) {
                 PreparedStatement pstmt;
                 try {
                     pstmt = prepareUpdate("update \"" + riverName + "\" set \"source_operation\" = 'ack' where \"_index\" = ? and \"_type\" = ? and \"_id\" = ?");
@@ -121,9 +121,9 @@ public class TableRiverSource extends SimpleRiverSource {
                     }
                 }
                 List<Object> params = new ArrayList();
-                params.add(resp.index());
-                params.add(resp.type());
-                params.add(resp.id());
+                params.add(resp.getIndex());
+                params.add(resp.getType());
+                params.add(resp.getId());
                 bind(pstmt, params);
                 executeUpdate(pstmt);
                 close(pstmt);
@@ -140,12 +140,12 @@ public class TableRiverSource extends SimpleRiverSource {
                 }
                 params = new ArrayList();
                 params.add(new Timestamp(new java.util.Date().getTime()));
-                params.add(resp.opType());
-                params.add(resp.failed());
-                params.add(resp.failureMessage());
-                params.add(resp.index());
-                params.add(resp.type());
-                params.add(resp.id());
+                params.add(resp.getOpType());
+                params.add(resp.isFailed());
+                params.add(resp.getFailureMessage());
+                params.add(resp.getIndex());
+                params.add(resp.getType());
+                params.add(resp.getId());
                 bind(pstmt, params);
                 executeUpdate(pstmt);
                 close(pstmt);
