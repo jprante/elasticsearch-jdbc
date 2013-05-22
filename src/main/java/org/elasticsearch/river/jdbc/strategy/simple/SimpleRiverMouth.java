@@ -95,7 +95,7 @@ public class SimpleRiverMouth implements RiverMouth {
             }
         	outstandingBulkRequests.decrementAndGet();
             logger.info("bulk [{}] success [{} items] [{}ms]",
-                    executionId, response.items().length, response.took().millis());
+                    executionId, response.getItems().length, response.getTook().millis());
             
         }
 
@@ -321,7 +321,8 @@ public class SimpleRiverMouth implements RiverMouth {
             return;
         }
 
-        if (client.admin().indices().prepareExists(index).execute().actionGet().exists()) {
+        logger.info("client.admin().indices()");
+        if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             if (Strings.hasLength(settings)) {
                 client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();
             }
