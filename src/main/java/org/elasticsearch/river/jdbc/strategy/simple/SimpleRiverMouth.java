@@ -321,7 +321,6 @@ public class SimpleRiverMouth implements RiverMouth {
             return;
         }
 
-        logger.info("client.admin().indices()");
         if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             if (Strings.hasLength(settings)) {
                 client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();
