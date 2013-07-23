@@ -13,7 +13,7 @@
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
         <parameter name="sql2" value="select * from orders"/>
-        <parameter name="sql3" value="select * from productcs where amount is NULL"/>
+        <parameter name="sql3" value="select * from products where amount is NULL"/>
         <classes>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
@@ -31,6 +31,8 @@
                    value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product and orders.quantity * products.price > ?"/>
         <parameter name="sql4"
                    value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product and TIMESTAMPDIFF(DAY, ?, orders.created) > 14"/>
+        <parameter name="sql5"
+                   value="select 'product' as &quot;_index&quot;, orders.department as &quot;_id&quot;, orders.product as &quot;orders.product&quot; from orders"/>
         <classes>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceDataTests"/>
         </classes>

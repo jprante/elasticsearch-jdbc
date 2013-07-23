@@ -59,7 +59,6 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
         createData(connection, sql, 101);
         createDelete(connection, sql, 1);
         source.closeWriting();
-        startNode("1");
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
