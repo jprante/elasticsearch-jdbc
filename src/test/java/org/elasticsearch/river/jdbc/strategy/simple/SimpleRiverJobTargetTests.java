@@ -69,7 +69,6 @@ public class SimpleRiverJobTargetTests extends AbstractRiverNodeTest {
         source.closeReading();
         assertEquals(count, 100);
 
-        startNode("1");
         client = client("1");
         assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 0);
 

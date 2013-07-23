@@ -37,7 +37,6 @@ public class SimpleRiverScriptTests extends AbstractRiverNodeTest {
     @Test
     @Parameters({"river1"})
     public void testSimpleRiverOnce(String riverResource) throws IOException, InterruptedException {
-        startNode("1");
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);

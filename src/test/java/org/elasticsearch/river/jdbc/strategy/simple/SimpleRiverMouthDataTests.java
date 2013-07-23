@@ -62,7 +62,6 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
         Connection connection = source.connectionForWriting();
         createRandomProducts(connection, sql, 100);
         source.closeWriting();
-        startNode("1");
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
@@ -84,7 +83,6 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
         Connection connection = source.connectionForWriting();
         createRandomProducts(connection, sql, 100);
         source.closeWriting();
-        startNode("1");
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);

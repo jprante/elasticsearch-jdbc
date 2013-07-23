@@ -31,6 +31,8 @@
                    value="select &quot;products&quot;.&quot;name&quot; as &quot;product.name&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;product.customer.name&quot;, &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; as &quot;product.customer.bill&quot; from &quot;products&quot;, &quot;orders&quot; where &quot;products&quot;.&quot;name&quot; = &quot;orders&quot;.&quot;product&quot; and &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; > ?"/>
         <parameter name="sql4"
                    value="select &quot;products&quot;.&quot;name&quot; as &quot;product.name&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;product.customer.name&quot;, &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; as &quot;product.customer.bill&quot; from &quot;products&quot;, &quot;orders&quot; where &quot;products&quot;.&quot;name&quot; = &quot;orders&quot;.&quot;product&quot; and {fn timestampdiff(SQL_TSI_DAY, cast(? as timestamp), &quot;orders&quot;.&quot;created&quot;)} > 14"/>
+        <parameter name="sql5"
+                   value="select 'product' as &quot;_index&quot;, &quot;orders&quot;.&quot;department&quot; as &quot;_id&quot;, &quot;orders&quot;.&quot;product&quot; as &quot;orders.product&quot; from &quot;orders&quot;"/>
         <classes>
             <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceDataTests"/>
         </classes>
