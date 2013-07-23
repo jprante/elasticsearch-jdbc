@@ -80,8 +80,8 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
                 add(Integer.toString(id));
                 add("delete");
                 add(null);
-                add(null);
-                add(null);
+                add(1);
+                add(1.0);
             }
         };
         source.bind(stmt, params);
