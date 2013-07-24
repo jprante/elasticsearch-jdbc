@@ -59,7 +59,6 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
         createData(connection, sql, 101);
         createDelete(connection, sql, 1);
         source.closeWriting();
-        startNode("1");
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
@@ -81,8 +80,8 @@ public class TableRiverMouthTests extends AbstractRiverNodeTest {
                 add(Integer.toString(id));
                 add("delete");
                 add(null);
-                add(null);
-                add(null);
+                add(1);
+                add(1.0);
             }
         };
         source.bind(stmt, params);
