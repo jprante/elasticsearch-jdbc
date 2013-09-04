@@ -3,11 +3,11 @@
 Elasticsearch JDBC river
 ========================
 
-The Java Database Connection (JDBC) `river <http://www.elasticsearch.org/guide/reference/river/>`_  allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_. 
+The Java Database Connection (JDBC) `river <http://www.elasticsearch.org/guide/reference/river/>`_  allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_.
 
 It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guide/reference/modules/plugins.html>`_.
 
-The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch. 
+The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch.
 
 Creating a JDBC river is easy::
 
@@ -35,6 +35,7 @@ ES version     Plugin     Release date       Command
 -------------  ---------  -----------------  ------------------------------------------------------------
 0.20+          **2.0.3**  February 12, 2013  ./bin/plugin -url http://bit.ly/Yp2Drj -install river-jdbc
 0.90.0.Beta1+  **2.2.0**  February 28, 2013  ./bin/plugin -url http://bit.ly/145e9Ly -install river-jdbc
+0.90.0.Beta1+  **2.2.1**  May 02, 2013       ./bin/plugin -url http://bit.ly/19iNdvZ -install river-jdbc
 =============  =========  =================  ============================================================
 
 Bintray:
