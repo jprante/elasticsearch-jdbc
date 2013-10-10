@@ -64,6 +64,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String acksql;
     private final List<? super Object> acksqlparams;
     private final boolean autocommit;
+    private final String columnUpdatedAt;
+    private final String columnCreatedAt;
+    private final String columnDeletedAt;
     private final int fetchsize;
     private final int maxrows;
     private final int maxretries;
@@ -108,6 +111,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         rounding = XContentMapValues.nodeStringValue(sourceSettings.get("rounding"), null);
         scale = XContentMapValues.nodeIntegerValue(sourceSettings.get("scale"), 2);
         autocommit = XContentMapValues.nodeBooleanValue(sourceSettings.get("autocommit"), Boolean.FALSE);
+        columnCreatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_created_at"), "created_at");
+        columnUpdatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_updated_at"), "updated_at");
+        columnDeletedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_deleted_at"), "deleted_at");
         fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
                 XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
         maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
@@ -164,6 +170,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .pollAckStatement(acksql)
                 .pollAckStatementParams(acksqlparams)
                 .autocommit(autocommit)
+                .columnCreatedAt(columnCreatedAt)
+                .columnUpdatedAt(columnUpdatedAt)
+                .columnDeletedAt(columnDeletedAt)
                 .maxRows(maxrows)
                 .fetchSize(fetchsize)
                 .retries(maxretries)
