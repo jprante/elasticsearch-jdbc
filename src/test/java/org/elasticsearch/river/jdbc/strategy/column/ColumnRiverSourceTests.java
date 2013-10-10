@@ -74,8 +74,11 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     
     @Test()
     @Parameters({"river1", "sql1"})
-    public void testColumnRiver_createSomeIndexes(String riverResource, String sql) throws SQLException, IOException, InterruptedException {
-        
+    public void testColumnRiver_createSomeObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {        
+        verifyCreateSomeObjects(riverResource, sql);
+    }
+    
+    private void verifyCreateSomeObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {
         final int newRecordsOutOfTimeRange = 3;
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
@@ -95,8 +98,14 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
     
     @Test()
+    @Parameters({"river-sqlparams", "sql1"})
+    public void testColumnRiver_createSomeObjects_configurationWithSqlParams(String riverResource, String sql)  throws SQLException, IOException, InterruptedException {
+        verifyCreateSomeObjects(riverResource, sql);
+    }
+    
+    @Test()
     @Parameters({"river2", "sql1", "sql2"})
-    public void testColumnRiver_removeIndexes(String riverResource, String insertSql, String updateSql) throws SQLException, IOException, InterruptedException {
+    public void testColumnRiver_removeObjects(String riverResource, String insertSql, String updateSql) throws SQLException, IOException, InterruptedException {
         
         MockRiverMouth riverMouth = new MockRiverMouth();
 
@@ -168,6 +177,7 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         context.columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null));
         context.columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null));
         context.riverSettings(riverSettings.settings());
+        context.pollStatementParams(XContentMapValues.extractRawValues("sqlparams", settings));
     }
     
     private Timestamp okTimestamp() {

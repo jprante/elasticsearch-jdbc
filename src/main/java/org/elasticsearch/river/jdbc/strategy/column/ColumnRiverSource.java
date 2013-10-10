@@ -28,6 +28,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,7 +80,18 @@ public class ColumnRiverSource extends SimpleRiverSource {
             logger.info("sql: {}", fullSql);
             
             PreparedStatement stmt = connection.prepareStatement(fullSql);
-            stmt.setTimestamp(1, from);
+
+            List<? extends Object> statementParams = context.pollStatementParams() != null ? context.pollStatementParams() : Collections.emptyList();
+            
+            List<Object> params = new ArrayList<Object>(statementParams.size() + 1);
+            
+            params.add(from);
+            
+            for(Object param : statementParams) {
+                params.add(param);
+            }
+            
+            bind(stmt, params);
             
             ResultSet result = executeQuery(stmt);
             
