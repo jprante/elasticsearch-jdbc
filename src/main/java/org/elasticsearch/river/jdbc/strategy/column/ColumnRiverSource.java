@@ -30,6 +30,7 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -66,11 +67,13 @@ public class ColumnRiverSource extends SimpleRiverSource {
         String quoteString = connection.getMetaData().getIdentifierQuoteString();
         quoteString = quoteString == null ? "" : quoteString;  
 
-        OpInfo[] opInfos = new OpInfo[]{
-            new OpInfo(Operations.OP_CREATE, quoteString+context.columnCreatedAt()+quoteString+" >= ?"),
-            new OpInfo(Operations.OP_INDEX, quoteString+context.columnUpdatedAt()+quoteString+" >= ?"),
-            new OpInfo(Operations.OP_DELETE, quoteString+context.columnDeletedAt()+quoteString+" >= ?"),
-        };
+        List<OpInfo> opInfos = new LinkedList<OpInfo>();
+        opInfos.add(new OpInfo(Operations.OP_CREATE, quoteString+context.columnCreatedAt()+quoteString+" >= ?"));
+        opInfos.add(new OpInfo(Operations.OP_INDEX, quoteString+context.columnUpdatedAt()+quoteString+" >= ?"));
+
+        if(context.columnDeletedAt() != null) {
+            opInfos.add(new OpInfo(Operations.OP_DELETE, quoteString+context.columnDeletedAt()+quoteString+" >= ?"));
+        }
 
         Timestamp from = getLastRunTimestamp();
         
