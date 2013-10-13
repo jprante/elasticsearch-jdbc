@@ -1,4 +1,6 @@
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/origami.png
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/database-128.png
+
+This icon is provided by `icons8 <http://www.iconsdb.com/icons8/?icon=database>`_ as Creative Commons Attribution-NoDerivs 3.0 Unported.
 
 Elasticsearch JDBC river
 ========================
@@ -27,15 +29,15 @@ Installation
 
 Prerequisites::
 
-  Elasticsearch 0.20+ / 0.90.0.Beta1+
+  Elasticsearch 0.90+
   a JDBC driver jar of your database
 
 =============  =========  =================  ============================================================
 ES version     Plugin     Release date       Command
 -------------  ---------  -----------------  ------------------------------------------------------------
-0.20+          **2.0.3**  February 12, 2013  ./bin/plugin -url http://bit.ly/Yp2Drj -install river-jdbc
 0.90.0.Beta1+  **2.2.0**  February 28, 2013  ./bin/plugin -url http://bit.ly/145e9Ly -install river-jdbc
 0.90.0.Beta1+  **2.2.1**  May 02, 2013       ./bin/plugin -url http://bit.ly/19iNdvZ -install river-jdbc
+0.90.5         **2.2.2**  Oct 13, 2013       ./bin/plugin -url http://bit.ly/GMYV9l -install river-jdbc
 =============  =========  =================  ============================================================
 
 Bintray:

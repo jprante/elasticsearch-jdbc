@@ -13,8 +13,8 @@
         <parameter name="sql2" value="select * from &quot;Gesamtfinanzplan&quot;"/>
         <parameter name="n" value="36"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.support.ValueListenerTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
         </classes>
     </test>
 
@@ -23,7 +23,7 @@
         <parameter name="delete" value=""/>
         <parameter name="river1" value="csv/river-1.json"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
         </classes>
     </test>
 

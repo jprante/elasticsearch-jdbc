@@ -1,3 +1,0 @@
-org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow
-org.elasticsearch.river.jdbc.strategy.oneshot.OneShotRiverFlow
-org.elasticsearch.river.jdbc.strategy.table.TableRiverFlow
