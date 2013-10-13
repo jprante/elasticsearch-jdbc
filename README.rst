@@ -1,4 +1,4 @@
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/database-512.png
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/database-128.png
 
 This icon is provided by `icons8 <http://www.iconsdb.com/icons8/?icon=database>`_ as Creative Commons Attribution-NoDerivs 3.0 Unported.
 
