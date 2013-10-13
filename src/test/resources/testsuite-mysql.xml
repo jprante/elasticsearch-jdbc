@@ -13,9 +13,10 @@
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
         <parameter name="sql2" value="select * from orders"/>
+        <parameter name="sql3" value="select * from products where amount is NULL"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleValueTests"/>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.support.ValueListenerTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
         </classes>
     </test>
 
@@ -30,8 +31,10 @@
                    value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product and orders.quantity * products.price > ?"/>
         <parameter name="sql4"
                    value="select products.name as &quot;product.name&quot;, orders.customer as &quot;product.customer.name&quot;, orders.quantity * products.price as &quot;product.customer.bill&quot; from products, orders where products.name = orders.product and TIMESTAMPDIFF(DAY, ?, orders.created) > 14"/>
+        <parameter name="sql5"
+                   value="select 'product' as &quot;_index&quot;, orders.department as &quot;_id&quot;, orders.product as &quot;orders.product&quot; from orders"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceDataTests"/>
         </classes>
     </test>
 
@@ -40,7 +43,7 @@
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="river1" value="mysql/river-1.json"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
         </classes>
     </test>
 
@@ -51,7 +54,7 @@
         <parameter name="river3" value="mysql/river-3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthDataTests"/>
         </classes>
     </test>
 
@@ -62,7 +65,7 @@
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
         </classes>
     </test>
 
@@ -73,7 +76,7 @@
         <parameter name="sql1"
                    value="insert into my_jdbc_river (`_index`,`_type`,`_id`, `source_operation`, `name`, `amount`, `price`) values(?,?,?,?,?,?,?)"/>
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
         </classes>
     </test>
 

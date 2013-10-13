@@ -1,13 +1,15 @@
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/origami.png
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/database-512.png
+
+This icon is provided by `icons8 <http://www.iconsdb.com/icons8/?icon=database>`_ as Creative Commons Attribution-NoDerivs 3.0 Unported.
 
 Elasticsearch JDBC river
 ========================
 
-The Java Database Connection (JDBC) `river <http://www.elasticsearch.org/guide/reference/river/>`_  allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_. 
+The Java Database Connection (JDBC) `river <http://www.elasticsearch.org/guide/reference/river/>`_  allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_.
 
 It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guide/reference/modules/plugins.html>`_.
 
-The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch. 
+The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch.
 
 Creating a JDBC river is easy::
 
@@ -27,14 +29,15 @@ Installation
 
 Prerequisites::
 
-  Elasticsearch 0.20+ / 0.90.0.Beta1+
+  Elasticsearch 0.90+
   a JDBC driver jar of your database
 
 =============  =========  =================  ============================================================
 ES version     Plugin     Release date       Command
 -------------  ---------  -----------------  ------------------------------------------------------------
-0.20+          **2.0.3**  February 12, 2013  ./bin/plugin -url http://bit.ly/Yp2Drj -install river-jdbc
-0.90+          **2.2.1**  May 3, 2013        ./bin/plugin -url http://bit.ly/16vsw1j -install river-jdbc
+0.90.0.Beta1+  **2.2.0**  February 28, 2013  ./bin/plugin -url http://bit.ly/145e9Ly -install river-jdbc
+0.90.0.Beta1+  **2.2.1**  May 02, 2013       ./bin/plugin -url http://bit.ly/19iNdvZ -install river-jdbc
+0.90.5         **2.2.2**  Oct 02, 2013       ./bin/plugin -url http://... -install river-jdbc
 =============  =========  =================  ============================================================
 
 Bintray:
