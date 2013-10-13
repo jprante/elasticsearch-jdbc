@@ -37,7 +37,7 @@ ES version     Plugin     Release date       Command
 -------------  ---------  -----------------  ------------------------------------------------------------
 0.90.0.Beta1+  **2.2.0**  February 28, 2013  ./bin/plugin -url http://bit.ly/145e9Ly -install river-jdbc
 0.90.0.Beta1+  **2.2.1**  May 02, 2013       ./bin/plugin -url http://bit.ly/19iNdvZ -install river-jdbc
-0.90.5         **2.2.2**  Oct 02, 2013       ./bin/plugin -url http://... -install river-jdbc
+0.90.5         **2.2.2**  Oct 13, 2013       ./bin/plugin -url http://bit.ly/GMYV9l -install river-jdbc
 =============  =========  =================  ============================================================
 
 Bintray:

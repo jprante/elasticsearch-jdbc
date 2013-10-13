@@ -47,7 +47,7 @@
     <properties>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <elasticsearch.version>0.90.4</elasticsearch.version>
+        <elasticsearch.version>0.90.5</elasticsearch.version>
     </properties>
 
     <dependencies>
