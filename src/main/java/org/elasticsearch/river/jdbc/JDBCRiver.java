@@ -113,7 +113,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         autocommit = XContentMapValues.nodeBooleanValue(sourceSettings.get("autocommit"), Boolean.FALSE);
         columnCreatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_created_at"), "created_at");
         columnUpdatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_updated_at"), "updated_at");
-        columnDeletedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_deleted_at"), "deleted_at");
+        columnDeletedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_deleted_at"), null);
         fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
                 XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
         maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
