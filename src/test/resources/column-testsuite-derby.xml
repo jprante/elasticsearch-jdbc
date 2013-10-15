@@ -19,8 +19,8 @@
         <parameter name="sql2"
                     value="update &quot;products&quot; set &quot;deleted_at&quot;=? where &quot;id&quot;=?" />
         <classes>
-            <class name="org.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
-            <class name="org.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
         </classes>
     </test>
 
