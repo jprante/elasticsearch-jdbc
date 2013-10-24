@@ -279,6 +279,8 @@ public class SimpleRiverSource implements RiverSource {
         }
         if (rows > 0) {
             logger.info("merged {} rows", rows);
+        } else {
+            logger.info("no rows to merge");
         }
         listener.reset();
         return context.digesting() && listener.digest() != null

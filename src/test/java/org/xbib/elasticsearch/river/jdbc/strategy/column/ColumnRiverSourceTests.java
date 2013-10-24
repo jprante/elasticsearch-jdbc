@@ -28,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -181,6 +182,7 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         context.columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null));
         context.riverSettings(riverSettings.settings());
         context.pollStatementParams(XContentMapValues.extractRawValues("sqlparams", settings));
+        context.columnEscape(true);
     }
     
     private Timestamp okTimestamp() {
@@ -207,16 +209,29 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         logger.info("timestamps: ["+fixture.createdAt+", "+fixture.updatedAt+", "+fixture.deletedAt+"]");
         
         for(int i=0; i<fixture.size; i++) {
-            List<Object> params = new ArrayList<Object>();
-            params.add(fixture.id >= 0 ? fixture.id : random.nextInt());
-            params.add(null);
-            params.add(1);
-            params.add(1.1);
-            params.add(fixture.createdAt);
-            params.add(fixture.updatedAt);
-            params.add(fixture.deletedAt);
+            stmt.setInt(1, fixture.id >= 0 ? fixture.id : random.nextInt());
+            stmt.setNull(2, Types.VARCHAR);
+            stmt.setInt(3, 1);
+            stmt.setDouble(4, 1.1);
             
-            source.bind(stmt, params);
+            if(fixture.createdAt != null) {
+                stmt.setTimestamp(5, fixture.createdAt);
+            } else {
+                stmt.setNull(5, Types.TIMESTAMP);
+            }
+            
+            if(fixture.updatedAt != null) {
+                stmt.setTimestamp(6, fixture.updatedAt);
+            } else {
+                stmt.setNull(6, Types.TIMESTAMP);
+            }
+            
+            if(fixture.deletedAt != null) {
+                stmt.setTimestamp(7, fixture.deletedAt);
+            } else {
+                stmt.setNull(7, Types.TIMESTAMP);
+            }
+
             stmt.execute();
         }
     }

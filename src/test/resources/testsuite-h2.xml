@@ -81,4 +81,20 @@
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
         </classes>
     </test>
+    
+    <test name="Column JDBC River Target Tests">
+        <parameter name="create" value="h2/create-producttables.sql"/>
+        <parameter name="delete" value="h2/delete-producttables.sql"/>
+        <parameter name="river1" value="h2/river-1.json"/>
+        <parameter name="river2" value="h2/river-2.json"/>
+        <parameter name="river-sqlparams" value="h2/river-sqlparams.json"/>
+        <parameter name="sql1"
+                    value="insert into &quot;products&quot; (&quot;id&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;, &quot;created_at&quot;, &quot;updated_at&quot;, &quot;deleted_at&quot;) VALUES(?,?,?,?,?,?,?)" />
+        <parameter name="sql2"
+                    value="update &quot;products&quot; set &quot;deleted_at&quot;=? where &quot;id&quot;=?" />
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+        </classes>
+    </test>
 </suite>

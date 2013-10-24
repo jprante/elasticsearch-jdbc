@@ -69,6 +69,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
     private final String columnUpdatedAt;
     private final String columnCreatedAt;
     private final String columnDeletedAt;
+    private final boolean columnEscape;
     private final int fetchsize;
     private final int maxrows;
     private final int maxretries;
@@ -116,6 +117,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         columnCreatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_created_at"), "created_at");
         columnUpdatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_updated_at"), "updated_at");
         columnDeletedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_deleted_at"), null);
+        columnEscape = XContentMapValues.nodeBooleanValue(sourceSettings.get("column_escape"), true);
         fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
                 XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
         maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
@@ -175,6 +177,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .columnCreatedAt(columnCreatedAt)
                 .columnUpdatedAt(columnUpdatedAt)
                 .columnDeletedAt(columnDeletedAt)
+                .columnEscape(columnEscape)
                 .maxRows(maxrows)
                 .fetchSize(fetchsize)
                 .retries(maxretries)

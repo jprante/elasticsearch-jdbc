@@ -118,6 +118,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
         context.riverIndexName("_river");
         context.riverName(new RiverName(INDEX, TYPE).getName());
         context.riverSettings(riverSettings.settings());
+        context.columnEscape(true);
     }
     
     private void assertLastRiverRunTimeExists(Client client) {

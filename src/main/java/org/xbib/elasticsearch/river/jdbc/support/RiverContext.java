@@ -126,6 +126,11 @@ public class RiverContext {
      * Column name that contains delete time (for column strategy)
      */
     private String columnDeletedAt;
+    
+    /**
+     * Column name should be automatically escaped or not
+     */
+    private boolean columnEscape;
 
     public RiverContext riverSettings(Map<String, Object> settings) {
         this.settings = settings;
@@ -278,6 +283,15 @@ public class RiverContext {
     
     public String columnDeletedAt() {
         return columnDeletedAt;
+    }
+    
+    public RiverContext columnEscape(boolean escape) {
+        this.columnEscape = escape;
+        return this;
+    }
+    
+    public boolean columnEscape() {
+        return this.columnEscape;
     }
 
     public RiverContext retries(int retries) {
