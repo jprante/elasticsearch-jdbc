@@ -12,11 +12,9 @@
             <unpack>false</unpack>
             <scope>compile</scope>
             <excludes>
-                <exclude>org.xbib.elasticsearch:elasticsearch:jar:javadoc</exclude>
-                <exclude>org.elasticsearch:elasticsearch</exclude>
+                <exclude>org.elasticsearch</exclude>
                 <exclude>org.apache.lucene</exclude>
                 <exclude>com.spatial4j</exclude>
-                <exclude>log4j:log4j</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
