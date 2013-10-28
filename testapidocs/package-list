@@ -1,1 +1,6 @@
-org.elasticsearch.river.jdbc
+org.elasticsearch.river.jdbc.strategy
+org.xbib.elasticsearch.river.jdbc.strategy
+org.xbib.elasticsearch.river.jdbc.strategy.mock
+org.xbib.elasticsearch.river.jdbc.strategy.simple
+org.xbib.elasticsearch.river.jdbc.strategy.table
+org.xbib.elasticsearch.river.jdbc.support
