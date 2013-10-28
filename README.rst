@@ -11,7 +11,8 @@ It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guid
 
 The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch.
 
-Creating a JDBC river is easy. Download a JDBC driver jar form your vendor's site (here MySQL). Install the plugin and issue this command::
+Creating a JDBC river is easy. Install the plugin. Download a JDBC driver jar from your vendor's site (here MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
+Then issue this command::
 
     curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
         "type" : "jdbc",
