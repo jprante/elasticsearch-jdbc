@@ -163,14 +163,6 @@ public interface RiverSource {
     ResultSet executeQuery(PreparedStatement statement) throws SQLException;
 
     /**
-     * Execute query without binding parameters
-     * @param sql the SQL statement
-     * @return the result set
-     * @throws SQLException
-     */
-    ResultSet executeQuery(String sql) throws SQLException;
-
-    /**
      * Execute insert/update
      * @param statement
      * @return this river source

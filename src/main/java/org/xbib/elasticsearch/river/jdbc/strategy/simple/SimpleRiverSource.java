@@ -378,23 +378,6 @@ public class SimpleRiverSource implements RiverSource {
         return set;
     }
 
-    /**
-     * Execute query statement
-     *
-     * @param sql
-     * @return the result set
-     * @throws SQLException
-     */
-    @Override
-    public ResultSet executeQuery(String sql) throws SQLException {
-        Statement statement = connectionForReading().createStatement();
-        statement.setMaxRows(context.maxRows());
-        statement.setFetchSize(context.fetchSize());
-        logger.debug("executing SQL {}", sql);
-        ResultSet set = statement.executeQuery(sql);
-        return set;
-    }
-
 
     /**
      * Execute prepared update statement
