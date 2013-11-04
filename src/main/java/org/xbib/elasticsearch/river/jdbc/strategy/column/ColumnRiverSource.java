@@ -53,9 +53,7 @@ import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 public class ColumnRiverSource extends SimpleRiverSource {
     
     private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSource.class.getName());
-    
-    private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    
+
     @Override
     public String strategy() {
         return "column";
@@ -85,8 +83,10 @@ public class ColumnRiverSource extends SimpleRiverSource {
         
         List<OpInfo> opInfos = new LinkedList<OpInfo>();
         
-        opInfos.add(new OpInfo(Operations.OP_CREATE, quoteColumn(context.columnCreatedAt(), quoteString)+" >= ?"));
-        opInfos.add(new OpInfo(Operations.OP_INDEX, quoteColumn(context.columnUpdatedAt(), quoteString)+" >= ? AND ("+quoteColumn(context.columnCreatedAt(), quoteString)+" IS NULL OR "+quoteColumn(context.columnCreatedAt(), quoteString)+" < ?)", 2));
+        String noDeletedWhereClause = context.columnDeletedAt() != null ? " AND "+quoteColumn(context.columnDeletedAt(), quoteString)+" IS NULL" : "";
+        
+        opInfos.add(new OpInfo(Operations.OP_CREATE, quoteColumn(context.columnCreatedAt(), quoteString)+" >= ?"+noDeletedWhereClause));
+        opInfos.add(new OpInfo(Operations.OP_INDEX, quoteColumn(context.columnUpdatedAt(), quoteString)+" >= ? AND ("+quoteColumn(context.columnCreatedAt(), quoteString)+" IS NULL OR "+quoteColumn(context.columnCreatedAt(), quoteString)+" < ?)"+noDeletedWhereClause, 2));
 
         if(context.columnDeletedAt() != null) {
             opInfos.add(new OpInfo(Operations.OP_DELETE, quoteColumn(context.columnDeletedAt(), quoteString)+" >= ?"));
