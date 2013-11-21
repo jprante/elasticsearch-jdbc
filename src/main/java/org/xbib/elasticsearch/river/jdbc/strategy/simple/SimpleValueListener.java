@@ -168,8 +168,13 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
         }
         // create current object from values by sequentially merging the values
         for (int i = 0; i < keys.size(); i++) {
-            Map m = merge(current.source(), keys.get(i), values.get(i));
-            current.source(m);
+        	Map map = null;
+        	try {
+        		map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
+        	} catch (Exception e) {}
+        	
+        	Map m = merge(current.source(), keys.get(i), map != null && map.size() > 0 ? map : values.get(i));
+    		current.source(m);
         }
         return this;
     }
