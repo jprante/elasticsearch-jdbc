@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
@@ -164,11 +165,12 @@ public interface RiverSource {
 
     /**
      * Execute query without binding parameters
-     * @param sql the SQL statement
+     * @param statement the SQL statement
+     * @param sql the SQL query
      * @return the result set
      * @throws SQLException
      */
-    ResultSet executeQuery(String sql) throws SQLException;
+    ResultSet executeQuery(Statement statement, String sql) throws SQLException;
 
     /**
      * Execute insert/update
@@ -237,7 +239,7 @@ public interface RiverSource {
      * @return this river source
      * @throws SQLException
      */
-    RiverSource close(PreparedStatement statement) throws SQLException;
+    RiverSource close(Statement statement) throws SQLException;
 
     /**
      * Close reading from this river source
