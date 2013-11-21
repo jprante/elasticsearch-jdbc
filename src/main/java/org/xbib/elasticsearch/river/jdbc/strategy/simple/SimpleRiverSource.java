@@ -29,9 +29,6 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,24 +36,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLNonTransientConnectionException;
-import java.sql.SQLXML;
-import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.LinkedList;
@@ -236,14 +216,11 @@ public class SimpleRiverSource implements RiverSource {
     public String fetch() throws SQLException, IOException {
         PreparedStatement statement = null;
         ResultSet results;
-        if (context.pollStatementParams().isEmpty()) {
-            // Postgresql requires executeQuery(sql) for cursor with fetchsize
-            results = executeQuery(getSql());
-        } else {
-            statement = prepareQuery(getSql());
+        statement = prepareQuery(getSql());
+        if (!context.pollStatementParams().isEmpty()) {
             bind(statement, context.pollStatementParams());
-            results = executeQuery(statement);
         }
+        results = executeQuery(statement);
         String mergeDigest;
         try {
             ValueListener listener = new SimpleValueListener()
@@ -398,23 +375,6 @@ public class SimpleRiverSource implements RiverSource {
         statement.setFetchSize(context.fetchSize());
         logger.debug("executing prepared statement");
         ResultSet set = statement.executeQuery();
-        return set;
-    }
-
-    /**
-     * Execute query statement
-     *
-     * @param sql
-     * @return the result set
-     * @throws SQLException
-     */
-    @Override
-    public ResultSet executeQuery(String sql) throws SQLException {
-        Statement statement = connectionForReading().createStatement();
-        statement.setMaxRows(context.maxRows());
-        statement.setFetchSize(context.fetchSize());
-        logger.debug("executing SQL {}", sql);
-        ResultSet set = statement.executeQuery(sql);
         return set;
     }
 
