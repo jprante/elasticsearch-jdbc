@@ -18,20 +18,6 @@
  */
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,6 +35,7 @@ import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
@@ -62,6 +49,19 @@ import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.format.DateTimeFormat;
+import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 
 /**
  * A river source implementation for the 'simple' strategy.
@@ -78,17 +78,23 @@ import java.util.Locale;
 public class SimpleRiverSource implements RiverSource {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getName());
-    /**
-     * The river context
-     */
+
     protected RiverContext context;
+
     protected String url;
+
     protected String driver;
+
     protected String user;
+
     protected String password;
+
     protected Connection readConnection;
+
     protected Connection writeConnection;
+
     private int rounding;
+
     private int scale = -1;
 
     public SimpleRiverSource() {
@@ -109,6 +115,7 @@ public class SimpleRiverSource implements RiverSource {
     public SimpleRiverSource driver(String driver) {
         this.driver = driver;
         try {
+            // TODO: do we need this? older drivers?
             Class.forName(driver);
         } catch (ClassNotFoundException ex) {
             logger.error(ex.getMessage(), ex);
@@ -234,35 +241,52 @@ public class SimpleRiverSource implements RiverSource {
 
     @Override
     public String fetch() throws SQLException, IOException {
-        PreparedStatement statement = null;
-        ResultSet results;
+        String mergeDigest = null;
         if (context.pollStatementParams().isEmpty()) {
-            // Postgresql requires executeQuery(sql) for cursor with fetchsize
-            results = executeQuery(getSql());
+            Statement statement = null;
+            ResultSet results = null;
+            try {
+                // Postgresql: do not use prepareStatement.
+                // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize
+                statement = connectionForReading().createStatement();
+                results = executeQuery(statement, getSql());
+                ValueListener listener = new SimpleValueListener()
+                        .target(context.riverMouth())
+                        .digest(context.digesting());
+                mergeDigest = merge(results, listener);
+            } catch (Exception e) {
+                throw new IOException(e);
+            } finally {
+                close(results);
+                close(statement);
+                acknowledge();
+            }
         } else {
-            statement = prepareQuery(getSql());
-            bind(statement, context.pollStatementParams());
-            results = executeQuery(statement);
+            PreparedStatement statement = null;
+            ResultSet results = null;
+            try {
+                statement = prepareQuery(getSql());
+                bind(statement, context.pollStatementParams());
+                results = executeQuery(statement);
+                ValueListener listener = new SimpleValueListener()
+                        .target(context.riverMouth())
+                        .digest(context.digesting());
+                mergeDigest = merge(results, listener);
+            } catch (Exception e) {
+                throw new IOException(e);
+            } finally {
+                close(results);
+                close(statement);
+                acknowledge();
+            }
         }
-        String mergeDigest;
-        try {
-            ValueListener listener = new SimpleValueListener()
-                    .target(context.riverMouth())
-                    .digest(context.digesting());
-            mergeDigest = merge(results, listener);
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
-        close(results);
-        close(statement);
-        acknowledge();
         return mergeDigest;
     }
 
     /**
      * Merge rows.
      *
-     * @param results  the ResultSet
+     * @param results the ResultSet
      * @param listener
      * @return a digest of the merged row content
      * @throws IOException
@@ -399,8 +423,7 @@ public class SimpleRiverSource implements RiverSource {
         statement.setMaxRows(context.maxRows());
         statement.setFetchSize(context.fetchSize());
         logger.debug("executing prepared statement");
-        ResultSet set = statement.executeQuery();
-        return set;
+        return statement.executeQuery();
     }
 
     /**
@@ -411,13 +434,11 @@ public class SimpleRiverSource implements RiverSource {
      * @throws SQLException
      */
     @Override
-    public ResultSet executeQuery(String sql) throws SQLException {
-        Statement statement = connectionForReading().createStatement();
+    public ResultSet executeQuery(Statement statement, String sql) throws SQLException {
         statement.setMaxRows(context.maxRows());
         statement.setFetchSize(context.fetchSize());
         logger.debug("executing SQL {}", sql);
-        ResultSet set = statement.executeQuery(sql);
-        return set;
+        return statement.executeQuery(sql);
     }
 
 
@@ -509,7 +530,7 @@ public class SimpleRiverSource implements RiverSource {
      * @throws SQLException
      */
     @Override
-    public SimpleRiverSource close(PreparedStatement statement) throws SQLException {
+    public SimpleRiverSource close(Statement statement) throws SQLException {
         if (statement != null) {
             statement.close();
         }
@@ -1041,22 +1062,6 @@ public class SimpleRiverSource implements RiverSource {
                 return number.doubleValue();
             }
             /**
-             * The JDBC type INTEGER represents a 32-bit signed integer value
-             * ranging between -2147483648 and 2147483647.
-             *
-             * The corresponding SQL type, INTEGER, is defined in SQL-92 and is
-             * widely supported by all the major databases. The SQL-92 standard
-             * leaves the precision of INTEGER up to the implementation, but in
-             * practice all the major databases support at least 32 bits.
-             *
-             * The recommended Java mapping for the INTEGER type is as a Java
-             * int.
-             */
-            case Types.INTEGER: {
-                Object o = result.getInt(i);
-                return result.wasNull() ? null : o;
-            }
-            /**
              * The JDBC type JAVA_OBJECT, added in the JDBC 2.0 core API, makes
              * it easier to use objects in the Java programming language as
              * values in a database. JAVA_OBJECT is simply a type code for an
@@ -1104,26 +1109,6 @@ public class SimpleRiverSource implements RiverSource {
                 return number.doubleValue();
             }
             /**
-             * The JDBC type SMALLINT represents a 16-bit signed integer value
-             * between -32768 and 32767.
-             *
-             * The corresponding SQL type, SMALLINT, is defined in SQL-92 and is
-             * supported by all the major databases. The SQL-92 standard leaves
-             * the precision of SMALLINT up to the implementation, but in
-             * practice, all the major databases support at least 16 bits.
-             *
-             * The recommended Java mapping for the JDBC SMALLINT type is as a
-             * Java short.
-             */
-            case Types.SMALLINT: {
-                Object o = result.getInt(i);
-                return result.wasNull() ? null : o;
-            }
-            case Types.SQLXML: {
-                SQLXML xml = result.getSQLXML(i);
-                return xml != null ? xml.getString() : null;
-            }
-            /**
              * The JDBC type TINYINT represents an 8-bit integer value between 0
              * and 255 that may be signed or unsigned.
              *
@@ -1137,10 +1122,47 @@ public class SimpleRiverSource implements RiverSource {
              * be appropriate for larger TINYINT values, whereas the 16-bit Java
              * short will always be able to hold all TINYINT values.
              */
-            case Types.TINYINT: {
-                Object o = result.getInt(i);
-                return result.wasNull() ? null : o;
+            /**
+             * The JDBC type SMALLINT represents a 16-bit signed integer value
+             * between -32768 and 32767.
+             *
+             * The corresponding SQL type, SMALLINT, is defined in SQL-92 and is
+             * supported by all the major databases. The SQL-92 standard leaves
+             * the precision of SMALLINT up to the implementation, but in
+             * practice, all the major databases support at least 16 bits.
+             *
+             * The recommended Java mapping for the JDBC SMALLINT type is as a
+             * Java short.
+             */
+            /**
+             * The JDBC type INTEGER represents a 32-bit signed integer value
+             * ranging between -2147483648 and 2147483647.
+             *
+             * The corresponding SQL type, INTEGER, is defined in SQL-92 and is
+             * widely supported by all the major databases. The SQL-92 standard
+             * leaves the precision of INTEGER up to the implementation, but in
+             * practice all the major databases support at least 32 bits.
+             *
+             * The recommended Java mapping for the INTEGER type is as a Java
+             * int.
+             */
+            case Types.TINYINT:
+            case Types.SMALLINT:
+            case Types.INTEGER: {
+                try {
+                    Integer integer = result.getInt(i);
+                    return result.wasNull() ? null : integer;
+                } catch (SQLDataException e) {
+                    Long l = result.getLong(i);
+                    return result.wasNull() ? null : l;
+                }
             }
+
+            case Types.SQLXML: {
+                SQLXML xml = result.getSQLXML(i);
+                return xml != null ? xml.getString() : null;
+            }
+
             case Types.NULL: {
                 return null;
             }

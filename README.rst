@@ -30,15 +30,16 @@ Installation
 
 .. image:: https://travis-ci.org/jprante/elasticsearch-river-jdbc.png
 
-Prerequisites::
+Prerequisites
 
-  Elasticsearch 0.90+
-  a JDBC driver jar for your database (download from vendor site)
+  - Elasticsearch 0.90+
+  - a JDBC driver jar for your database (download from vendor site and put into JDBC river plugin folder)
 
 =============  =========  =================  ===========================================================
 ES version     Plugin     Release date       Command
 -------------  ---------  -----------------  -----------------------------------------------------------
 0.90.5         **2.2.2**  Oct 13, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1iovWV9
+0.90.7         **2.2.3**  Nov 21, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/I7kz9q
 =============  =========  =================  ===========================================================
 
 Do not forget to restart the node after installing.
