@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
@@ -114,11 +115,6 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public ResultSet executeQuery(String sql) throws SQLException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public RiverSource executeUpdate(PreparedStatement statement) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -149,7 +145,7 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public RiverSource close(PreparedStatement statement) throws SQLException {
+    public RiverSource close(Statement statement) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -163,4 +159,8 @@ public class MockRiverSource implements RiverSource {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
+    public ResultSet executeQuery(Statement statement, String sql) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
