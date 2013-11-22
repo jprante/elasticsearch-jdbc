@@ -113,22 +113,22 @@ public class RiverContext {
     private boolean digesting;
     
     /**
-     * Column name that contains create time (for column strategy)
+     * Column name that contains creation time (for column strategy)
      */
     private String columnCreatedAt;
     
     /**
-     * Column name that contains update time (for column strategy)
+     * Column name that contains last update time (for column strategy)
      */
     private String columnUpdatedAt;
     
     /**
-     * Column name that contains delete time (for column strategy)
+     * Column name that contains deletion time (for column strategy)
      */
     private String columnDeletedAt;
     
     /**
-     * Column name should be automatically escaped or not
+     * Columns name should be automatically escaped by proper db quote mark or not (for column strategy)
      */
     private boolean columnEscape;
 
