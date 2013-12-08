@@ -179,28 +179,57 @@ public class SimpleRiverFlow implements RiverFlow {
                 version = 1L;
                 digest = null;
             }
+
+            // save state, write activity flag
+            try {
+                XContentBuilder builder = jsonBuilder();
+                builder.startObject().startObject("jdbc");
+                if (startDate != null) {
+                    builder.field("created", startDate);
+                }
+                builder.field("since", new Date())
+                        .field("active", true);
+                builder.endObject().endObject();
+                client.index(indexRequest(context.riverIndexName())
+                        .type(riverContext().riverName())
+                        .id(ID_INFO_RIVER_INDEX)
+                        .source(builder)).actionGet();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+
+
             // set default job name to current version number
             context.job(Long.toString(version.longValue()));
             String mergeDigest = source.fetch();
             // this end is required before house keeping starts
             target.flush();
-            // save state to _custom
-            XContentBuilder builder = jsonBuilder();
-            builder.startObject().startObject("jdbc");
-            if (startDate != null) {
-                builder.field("created", startDate);
-            }
-            builder.field("version", version.longValue());
-            builder.field("digest", mergeDigest);
-            builder.endObject().endObject();
-            if (logger.isDebugEnabled()) {
-                logger.debug(builder.string());
-            }
-            client.prepareBulk().add(indexRequest(context.riverIndexName())
+
+            // save state
+            try {
+                // save state to _custom
+                XContentBuilder builder = jsonBuilder();
+                builder.startObject().startObject("jdbc");
+                if (startDate != null) {
+                    builder.field("created", startDate);
+                }
+                builder.field("version", version.longValue())
+                        .field("digest", mergeDigest)
+                        .field("since", new Date())
+                        .field("active", false);
+                builder.endObject().endObject();
+                if (logger.isDebugEnabled()) {
+                    logger.debug(builder.string());
+                }
+                client.index(indexRequest(context.riverIndexName())
                     .type(context.riverName())
                     .id(ID_INFO_RIVER_INDEX)
                     .source(builder))
-                    .execute().actionGet();
+                    .actionGet();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+
             // house keeping if data has changed
             if (digest != null && mergeDigest != null && !mergeDigest.equals(digest)) {
                 versionHouseKeeping(version.longValue());
