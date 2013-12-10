@@ -1,0 +1,18 @@
+{
+    "jdbc" :{
+        "strategy" : "column",
+        "driver" : "org.h2.Driver",
+        "url" : "jdbc:h2:target/test?TRACE_LEVEL_FILE=target/trace",
+        "user" : "",
+        "password" : "",
+        "sql": "SELECT \"id\" AS \"_id\", \"id\", \"name\" FROM \"products\" WHERE 1=1",
+        "poll": "1h",
+        "column_updated_at": "updated_at",
+        "column_created_at": "created_at",
+        "column_deleted_at": "deleted_at"
+    },
+    "index" : {
+        "index" : "my_jdbc_river",
+        "type" : "my_jdbc_river"
+    }
+}

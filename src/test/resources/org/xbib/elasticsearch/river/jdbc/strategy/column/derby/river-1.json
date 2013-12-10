@@ -1,0 +1,19 @@
+{
+    "jdbc" :{
+        "strategy" : "column",
+        "driver" : "org.apache.derby.jdbc.EmbeddedDriver",
+        "url" : "jdbc:derby:memory:myDB",
+        "user" : "",
+        "password" : "",
+        "sql": "SELECT \"id\", \"name\" FROM \"products\" WHERE 1=?",
+        "sqlparams": [1],
+        "poll": "1h",
+        "column_updated_at": "updated_at",
+        "column_created_at": "created_at",
+        "column_deleted_at": "deleted_at"
+    },
+    "index" : {
+        "index" : "my_jdbc_river",
+        "type" : "my_jdbc_river"
+    }
+}

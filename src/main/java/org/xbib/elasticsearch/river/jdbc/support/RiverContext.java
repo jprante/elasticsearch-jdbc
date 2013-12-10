@@ -111,6 +111,26 @@ public class RiverContext {
      * If digesting should be used or not
      */
     private boolean digesting;
+    
+    /**
+     * Column name that contains creation time (for column strategy)
+     */
+    private String columnCreatedAt;
+    
+    /**
+     * Column name that contains last update time (for column strategy)
+     */
+    private String columnUpdatedAt;
+    
+    /**
+     * Column name that contains deletion time (for column strategy)
+     */
+    private String columnDeletedAt;
+    
+    /**
+     * Columns name should be automatically escaped by proper db quote mark or not (for column strategy)
+     */
+    private boolean columnEscape;
 
     public RiverContext riverSettings(Map<String, Object> settings) {
         this.settings = settings;
@@ -236,6 +256,42 @@ public class RiverContext {
 
     public int maxRows() {
         return maxRows;
+    }
+    
+    public RiverContext columnUpdatedAt(String updatedAt) {
+        this.columnUpdatedAt = updatedAt;
+        return this;
+    }
+    
+    public String columnUpdatedAt() {
+        return columnUpdatedAt;
+    }
+    
+    public RiverContext columnCreatedAt(String createdAt) {
+        this.columnCreatedAt = createdAt;
+        return this;
+    }
+    
+    public String columnCreatedAt() {
+        return columnCreatedAt;
+    }
+    
+    public RiverContext columnDeletedAt(String deletedAt) {
+        this.columnDeletedAt = deletedAt;
+        return this;
+    }
+    
+    public String columnDeletedAt() {
+        return columnDeletedAt;
+    }
+    
+    public RiverContext columnEscape(boolean escape) {
+        this.columnEscape = escape;
+        return this;
+    }
+    
+    public boolean columnEscape() {
+        return this.columnEscape;
     }
 
     public RiverContext retries(int retries) {
