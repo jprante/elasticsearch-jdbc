@@ -1,7 +1,7 @@
 org.xbib.elasticsearch.plugin.river.jdbc
 org.xbib.elasticsearch.rest.action
 org.xbib.elasticsearch.river.jdbc
+org.xbib.elasticsearch.river.jdbc.strategy.column
 org.xbib.elasticsearch.river.jdbc.strategy.oneshot
 org.xbib.elasticsearch.river.jdbc.strategy.simple
-org.xbib.elasticsearch.river.jdbc.strategy.table
 org.xbib.elasticsearch.river.jdbc.support
