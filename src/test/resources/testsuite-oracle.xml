@@ -71,15 +71,4 @@
         </classes>
     </test>
 
-    <test name="Table JDBC River Target Tests">
-        <parameter name="create" value="oracle/create-rivertables.sql"/>
-        <parameter name="delete" value="oracle/delete-rivertables.sql"/>
-        <parameter name="river1" value="oracle/river-1.json"/>
-        <parameter name="sql1"
-                   value="insert into &quot;my_jdbc_river&quot; (&quot;_index&quot;,&quot;_type&quot;,&quot;_id&quot;, &quot;source_operation&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?,?,?,?)"/>
-        <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
-        </classes>
-    </test>
-
 </suite>

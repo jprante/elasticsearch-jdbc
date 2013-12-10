@@ -1,26 +1,8 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc;
 
 import org.elasticsearch.client.Client;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
 import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
 
 import java.io.IOException;
@@ -73,12 +55,14 @@ public interface RiverMouth {
 
     /**
      * Return index
+     *
      * @return the index
      */
     String index();
 
     /**
      * Set type
+     *
      * @param type the type
      * @return this river mouth
      */
@@ -86,12 +70,14 @@ public interface RiverMouth {
 
     /**
      * Return type
+     *
      * @return the type
      */
     String type();
 
     /**
      * Set ID
+     *
      * @param id the id
      * @return this river mouth
      */
@@ -107,12 +93,14 @@ public interface RiverMouth {
 
     /**
      * Get maximum number of bulk actions
+     *
      * @return max bulk actions
      */
     int maxBulkActions();
 
     /**
      * Set maximum number of concurrent bulk requests
+     *
      * @param max the  maximum number of concurrent bulk requests
      * @return this river mouth
      */
@@ -120,25 +108,14 @@ public interface RiverMouth {
 
     /**
      * Get maximum concurrent bulk requests
+     *
      * @return maximum concurrent requests
      */
     int maxConcurrentBulkRequests();
 
     /**
-     * Set versioning
-     * @param enable true if versioning
-     * @return this river mouth
-     */
-    RiverMouth versioning(boolean enable);
-
-    /**
-     * Get versioning
-     * @return the versioning
-     */
-    boolean versioning();
-
-    /**
      * Set acknowledge
+     *
      * @param enable true for enable
      * @return this river mouth
      */
@@ -146,6 +123,7 @@ public interface RiverMouth {
 
     /**
      * Get acknowledge
+     *
      * @return true if the acknowledge is enabled
      */
     boolean acknowledge();
@@ -191,9 +169,12 @@ public interface RiverMouth {
 
     /**
      * Create index with optional settings and mapping
+     *
      * @param settings the settings
-     * @param mapping the mapping
+     * @param mapping  the mapping
      */
     void createIndexIfNotExists(String settings, String mapping);
+
+    void waitForCluster() throws IOException;
 
 }

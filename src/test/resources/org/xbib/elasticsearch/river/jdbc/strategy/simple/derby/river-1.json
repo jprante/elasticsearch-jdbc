@@ -4,9 +4,7 @@
         "url" : "jdbc:derby:memory:myDB",
         "user" : "",
         "password" : "",
-        "sql" : "select * from \"orders\""        
-    },
-    "index" : {
+        "sql" : "select * from \"orders\"",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

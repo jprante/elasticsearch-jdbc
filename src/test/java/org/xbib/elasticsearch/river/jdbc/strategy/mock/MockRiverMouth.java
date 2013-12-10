@@ -19,8 +19,6 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
 
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
@@ -32,8 +30,8 @@ import java.util.TreeMap;
 
 public class MockRiverMouth implements RiverMouth {
 
-    //private final ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
     private Map<String, String> data;
+
     private long counter;
 
     @Override
@@ -132,16 +130,6 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     @Override
-    public RiverMouth versioning(boolean enable) {
-        return this;
-    }
-
-    @Override
-    public boolean versioning() {
-        return false;
-    }
-
-    @Override
     public RiverMouth acknowledge(boolean enable) {
         return this;
     }
@@ -161,6 +149,10 @@ public class MockRiverMouth implements RiverMouth {
 
     @Override
     public void createIndexIfNotExists(String settings, String mapping) {
+    }
+
+    @Override
+    public void waitForCluster() throws IOException {
     }
 
     public long getCounter() {

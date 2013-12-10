@@ -1,21 +1,4 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc;
 
 import org.elasticsearch.ExceptionsHelper;
@@ -34,8 +17,6 @@ import org.elasticsearch.river.RiverSettings;
 import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.RiverServiceLoader;
-import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -51,44 +32,33 @@ import java.util.Map;
 public class JDBCRiver extends AbstractRiverComponent implements River {
 
     public final static String NAME = "jdbc-river";
+
     public final static String TYPE = "jdbc";
 
     private final String strategy;
-    private final TimeValue poll;
+
     private final String url;
+
     private final String driver;
-    private final String user;
-    private final String password;
-    private final String rounding;
-    private final int scale;
-    private final String sql;
-    private final List<? super Object> sqlparams;
-    private final String acksql;
-    private final List<? super Object> acksqlparams;
-    private final boolean autocommit;
-    private final String columnUpdatedAt;
-    private final String columnCreatedAt;
-    private final String columnDeletedAt;
-    private final boolean columnEscape;
-    private final int fetchsize;
-    private final int maxrows;
-    private final int maxretries;
-    private final TimeValue maxretrywait;
-    private final String locale;
+
     private final String indexName;
+
     private final String typeName;
-    private final int bulkSize;
-    private final int maxBulkRequests;
+
     private final String indexSettings;
+
     private final String typeMapping;
-    private final boolean versioning;
-    private final boolean digesting;
-    private final boolean acknowledgeBulk;
+
     private final RiverSource riverSource;
+
     private final RiverMouth riverMouth;
+
     private final RiverContext riverContext;
+
     private final RiverFlow riverFlow;
+
     private volatile Thread thread;
+
     private volatile boolean closed;
 
     @Inject
@@ -98,48 +68,44 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         super(riverName, riverSettings);
         // riverIndexName = _river
 
-        Map<String, Object> sourceSettings =
+        Map<String, Object> mySettings =
                 riverSettings.settings().containsKey(TYPE)
                         ? (Map<String, Object>) riverSettings.settings().get(TYPE)
                         : new HashMap<String, Object>();
         // default is a single run
-        strategy = XContentMapValues.nodeStringValue(sourceSettings.get("strategy"), "oneshot");
-        url = XContentMapValues.nodeStringValue(sourceSettings.get("url"), null);
-        driver = XContentMapValues.nodeStringValue(sourceSettings.get("driver"), null);
-        user = XContentMapValues.nodeStringValue(sourceSettings.get("user"), null);
-        password = XContentMapValues.nodeStringValue(sourceSettings.get("password"), null);
-        poll = XContentMapValues.nodeTimeValue(sourceSettings.get("poll"), TimeValue.timeValueMinutes(60));
-        sql = XContentMapValues.nodeStringValue(sourceSettings.get("sql"), null);
-        sqlparams = XContentMapValues.extractRawValues("sqlparams", sourceSettings);
-        rounding = XContentMapValues.nodeStringValue(sourceSettings.get("rounding"), null);
-        scale = XContentMapValues.nodeIntegerValue(sourceSettings.get("scale"), 2);
-        autocommit = XContentMapValues.nodeBooleanValue(sourceSettings.get("autocommit"), Boolean.FALSE);
-        columnCreatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_created_at"), "created_at");
-        columnUpdatedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_updated_at"), "updated_at");
-        columnDeletedAt = XContentMapValues.nodeStringValue(sourceSettings.get("column_deleted_at"), null);
-        columnEscape = XContentMapValues.nodeBooleanValue(sourceSettings.get("column_escape"), true);
-        fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
-                XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
-        maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
-        maxretries = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_retries"), 3);
-        maxretrywait = TimeValue.parseTimeValue(XContentMapValues.nodeStringValue(sourceSettings.get("max_retries_wait"), "10s"), TimeValue.timeValueMillis(30000));
-        locale = XContentMapValues.nodeStringValue(sourceSettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
-        digesting = XContentMapValues.nodeBooleanValue(sourceSettings.get("digesting"), Boolean.TRUE);
-        acksql = XContentMapValues.nodeStringValue(sourceSettings.get("acksql"), null);
-        acksqlparams = XContentMapValues.extractRawValues("acksqlparams", sourceSettings);
-
-        Map<String, Object> targetSettings =
-                riverSettings.settings().containsKey("index")
-                        ? (Map<String, Object>) riverSettings.settings().get("index")
-                        : new HashMap<String, Object>();
-        indexName = XContentMapValues.nodeStringValue(targetSettings.get("index"), TYPE);
-        typeName = XContentMapValues.nodeStringValue(targetSettings.get("type"), TYPE);
-        bulkSize = XContentMapValues.nodeIntegerValue(targetSettings.get("bulk_size"), 100);
-        maxBulkRequests = XContentMapValues.nodeIntegerValue(targetSettings.get("max_bulk_requests"), 30);
-        indexSettings = XContentMapValues.nodeStringValue(targetSettings.get("index_settings"), null);
-        typeMapping = XContentMapValues.nodeStringValue(targetSettings.get("type_mapping"), null);
-        versioning = XContentMapValues.nodeBooleanValue(sourceSettings.get("versioning"), Boolean.FALSE);
-        acknowledgeBulk = XContentMapValues.nodeBooleanValue(sourceSettings.get("acknowledge"), Boolean.FALSE);
+        strategy = XContentMapValues.nodeStringValue(mySettings.get("strategy"), "oneshot");
+        url = XContentMapValues.nodeStringValue(mySettings.get("url"), null);
+        driver = XContentMapValues.nodeStringValue(mySettings.get("driver"), null);
+        String user = XContentMapValues.nodeStringValue(mySettings.get("user"), null);
+        String password = XContentMapValues.nodeStringValue(mySettings.get("password"), null);
+        TimeValue poll = XContentMapValues.nodeTimeValue(mySettings.get("poll"), TimeValue.timeValueMinutes(60));
+        String sql = XContentMapValues.nodeStringValue(mySettings.get("sql"), null);
+        List<? super Object> sqlparams = XContentMapValues.extractRawValues("sqlparams", mySettings);
+        boolean callable = XContentMapValues.nodeBooleanValue(mySettings.get("callable"), Boolean.FALSE);
+        String rounding = XContentMapValues.nodeStringValue(mySettings.get("rounding"), null);
+        int scale = XContentMapValues.nodeIntegerValue(mySettings.get("scale"), 2);
+        boolean autocommit = XContentMapValues.nodeBooleanValue(mySettings.get("autocommit"), Boolean.FALSE);
+        String columnCreatedAt;
+        columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("column_created_at"), "created_at");
+        String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("column_updated_at"), "updated_at");
+        String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("column_deleted_at"), null);
+        boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);
+        int fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
+                XContentMapValues.nodeIntegerValue(mySettings.get("fetchsize"), 10);
+        int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
+        int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
+        TimeValue maxretrywait = TimeValue.parseTimeValue(XContentMapValues.nodeStringValue(mySettings.get("max_retries_wait"), "10s"), TimeValue.timeValueMillis(30000));
+        String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
+        boolean digesting = XContentMapValues.nodeBooleanValue(mySettings.get("digesting"), Boolean.TRUE);
+        String acksql = XContentMapValues.nodeStringValue(mySettings.get("acksql"), null);
+        List<? super Object> acksqlparams = XContentMapValues.extractRawValues("acksqlparams", mySettings);
+        indexName = XContentMapValues.nodeStringValue(mySettings.get("index"), TYPE);
+        typeName = XContentMapValues.nodeStringValue(mySettings.get("type"), TYPE);
+        int bulkSize = XContentMapValues.nodeIntegerValue(mySettings.get("bulk_size"), 100);
+        int maxBulkRequests = XContentMapValues.nodeIntegerValue(mySettings.get("max_bulk_requests"), 30);
+        indexSettings = XContentMapValues.nodeStringValue(mySettings.get("index_settings"), null);
+        typeMapping = XContentMapValues.nodeStringValue(mySettings.get("type_mapping"), null);
+        boolean acknowledgeBulk = XContentMapValues.nodeBooleanValue(mySettings.get("acknowledge"), Boolean.FALSE);
 
         riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source {} for strategy {}", riverSource.getClass().getName(), strategy);
@@ -157,10 +123,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .maxBulkActions(bulkSize)
                 .maxConcurrentBulkRequests(maxBulkRequests)
                 .acknowledge(acknowledgeBulk)
-                .versioning(versioning)
                 .client(client);
-
-        // scripting ...
 
         riverContext = new RiverContext()
                 .riverName(riverName.getName())
@@ -171,6 +134,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .pollInterval(poll)
                 .pollStatement(sql)
                 .pollStatementParams(sqlparams)
+                .callable(callable)
                 .pollAckStatement(acksql)
                 .pollAckStatementParams(acksqlparams)
                 .autocommit(autocommit)

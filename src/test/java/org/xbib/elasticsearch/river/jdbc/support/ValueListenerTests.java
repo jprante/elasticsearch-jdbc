@@ -21,16 +21,11 @@ package org.xbib.elasticsearch.river.jdbc.support;
 import java.util.Arrays;
 import java.util.List;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleValueListener;
 
 public class ValueListenerTests extends Assert {
-
-    private static final ESLogger logger = Loggers.getLogger(ValueListenerTests.class);
 
     @Test
     public void testId() throws Exception {

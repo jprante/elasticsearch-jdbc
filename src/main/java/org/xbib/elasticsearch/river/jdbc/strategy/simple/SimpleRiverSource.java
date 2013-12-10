@@ -1,23 +1,18 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.format.DateTimeFormat;
+import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
+import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,6 +22,7 @@ import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Date;
@@ -50,19 +46,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-
 /**
  * A river source implementation for the 'simple' strategy.
  * <p/>
@@ -77,7 +60,7 @@ import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
  */
 public class SimpleRiverSource implements RiverSource {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getSimpleName());
 
     protected RiverContext context;
 
@@ -100,6 +83,10 @@ public class SimpleRiverSource implements RiverSource {
     public SimpleRiverSource() {
     }
 
+    protected ESLogger logger() {
+        return logger;
+    }
+
     @Override
     public String strategy() {
         return "simple";
@@ -118,7 +105,7 @@ public class SimpleRiverSource implements RiverSource {
             // TODO: do we need this? older drivers?
             Class.forName(driver);
         } catch (ClassNotFoundException ex) {
-            logger.error(ex.getMessage(), ex);
+            logger().error(ex.getMessage(), ex);
         }
         return this;
     }
@@ -162,10 +149,10 @@ public class SimpleRiverSource implements RiverSource {
             cond = cond || !readConnection.isValid(5);
         } catch (AbstractMethodError e) {
             // old/buggy JDBC driver
-            logger.debug(e.getMessage());
+            logger().debug(e.getMessage());
         } catch (SQLFeatureNotSupportedException e) {
             // postgresql does not support isValid()
-            logger.debug(e.getMessage());
+            logger().debug(e.getMessage());
         }
         if (cond) {
             int retries = context != null ? context.retries() : 1;
@@ -185,7 +172,7 @@ public class SimpleRiverSource implements RiverSource {
                     }
                     return readConnection;
                 } catch (SQLException e) {
-                    logger.error("while opening read connection: " + url + " " + e.getMessage(), e);
+                    logger().error("while opening read connection: " + url + " " + e.getMessage(), e);
                     try {
                         Thread.sleep(context != null ? context.maxRetryWait().millis() : 1000L);
                     } catch (InterruptedException ex) {
@@ -227,12 +214,12 @@ public class SimpleRiverSource implements RiverSource {
                 } catch (SQLNonTransientConnectionException e) {
                     // ignore derby drop=true
                 } catch (SQLException e) {
-                    logger.error("while opening write connection: " + url + " " + e.getMessage(), e);
-                        try {
-                            Thread.sleep(context != null ? context.maxRetryWait().millis() : 1000L);
-                        } catch (InterruptedException ex) {
-                            // do nothing
-                        }
+                    logger().error("while opening write connection: " + url + " " + e.getMessage(), e);
+                    try {
+                        Thread.sleep(context != null ? context.maxRetryWait().millis() : 1000L);
+                    } catch (InterruptedException ex) {
+                        // do nothing
+                    }
                 }
             }
         }
@@ -260,6 +247,29 @@ public class SimpleRiverSource implements RiverSource {
                 close(results);
                 close(statement);
                 acknowledge();
+                closeReading();
+                closeWriting();
+            }
+        } else if (context.callable()) {
+            // call stored procedure
+            CallableStatement statement = null;
+            ResultSet results = null;
+            try {
+                statement = connectionForReading().prepareCall(getSql());
+                bind(statement, context.pollStatementParams());
+                results = executeQuery(statement);
+                ValueListener listener = new SimpleValueListener()
+                        .target(context.riverMouth())
+                        .digest(context.digesting());
+                mergeDigest = merge(results, listener);
+            } catch (Exception e) {
+                throw new IOException(e);
+            } finally {
+                close(results);
+                close(statement);
+                acknowledge();
+                closeReading();
+                closeWriting();
             }
         } else {
             PreparedStatement statement = null;
@@ -278,6 +288,8 @@ public class SimpleRiverSource implements RiverSource {
                 close(results);
                 close(statement);
                 acknowledge();
+                closeReading();
+                closeWriting();
             }
         }
         return mergeDigest;
@@ -286,12 +298,11 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * Merge rows.
      *
-     * @param results the ResultSet
+     * @param results  the ResultSet
      * @param listener
      * @return a digest of the merged row content
      * @throws IOException
      * @throws java.security.NoSuchAlgorithmException
-     *
      * @throws SQLException
      */
     public String merge(ResultSet results, ValueListener listener)
@@ -302,9 +313,9 @@ public class SimpleRiverSource implements RiverSource {
             rows++;
         }
         if (rows > 0) {
-            logger.info("merged {} rows", rows);
+            logger().info("merged {} rows", rows);
         } else {
-            logger.info("no rows to merge");
+            logger().info("no rows to merge");
         }
         listener.reset();
         return context.digesting() && listener.digest() != null
@@ -361,7 +372,7 @@ public class SimpleRiverSource implements RiverSource {
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
         }
-        logger.debug("preparing statement with SQL {}", sql);
+        logger().debug("preparing statement with SQL {}", sql);
         return connection.prepareStatement(sql,
                 ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
@@ -402,7 +413,7 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public SimpleRiverSource bind(PreparedStatement pstmt, List<? extends Object> values) throws SQLException {
         if (values == null) {
-            logger.warn("no values given for bind");
+            logger().warn("no values given for bind");
             return this;
         }
         for (int i = 1; i <= values.size(); i++) {
@@ -422,7 +433,7 @@ public class SimpleRiverSource implements RiverSource {
     public ResultSet executeQuery(PreparedStatement statement) throws SQLException {
         statement.setMaxRows(context.maxRows());
         statement.setFetchSize(context.fetchSize());
-        logger.debug("executing prepared statement");
+        logger().debug("executing prepared statement");
         return statement.executeQuery();
     }
 
@@ -437,7 +448,7 @@ public class SimpleRiverSource implements RiverSource {
     public ResultSet executeQuery(Statement statement, String sql) throws SQLException {
         statement.setMaxRows(context.maxRows());
         statement.setFetchSize(context.fetchSize());
-        logger.debug("executing SQL {}", sql);
+        logger().debug("executing SQL {}", sql);
         return statement.executeQuery(sql);
     }
 
@@ -499,8 +510,8 @@ public class SimpleRiverSource implements RiverSource {
         int columns = metadata.getColumnCount();
         for (int i = 1; i <= columns; i++) {
             Object value = parseType(result, i, metadata.getColumnType(i), locale);
-            if (logger.isTraceEnabled()) {
-                logger.trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+            if (logger().isTraceEnabled()) {
+                logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
             }
             values.add(value);
         }
@@ -555,7 +566,7 @@ public class SimpleRiverSource implements RiverSource {
                 }
             }
         } catch (SQLException e) {
-            logger.warn("while closing read connection: " + e.getMessage());
+            logger().warn("while closing read connection: " + e.getMessage());
         }
         return this;
     }
@@ -578,7 +589,7 @@ public class SimpleRiverSource implements RiverSource {
                 }
             }
         } catch (SQLException e) {
-            logger.warn("while closing write connection: " + e.getMessage());
+            logger().warn("while closing write connection: " + e.getMessage());
         }
         return this;
     }
@@ -684,7 +695,7 @@ public class SimpleRiverSource implements RiverSource {
             if ("$now".equals(s)) {
                 pstmt.setDate(i, new Date(new java.util.Date().getTime()));
             } else if ("$job".equals(s)) {
-                logger.debug("job = {}", context.job());
+                logger().debug("job = {}", context.job());
                 pstmt.setString(i, context.job());
             } else {
                 pstmt.setString(i, (String) value);
@@ -722,8 +733,8 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public Object parseType(ResultSet result, Integer i, int type, Locale locale)
             throws SQLException, IOException, ParseException {
-        if (logger.isTraceEnabled()) {
-            logger.trace("{} {} {}", i, type, result.getString(i));
+        if (logger().isTraceEnabled()) {
+            logger().trace("{} {} {}", i, type, result.getString(i));
         }
 
         switch (type) {
@@ -999,7 +1010,7 @@ public class SimpleRiverSource implements RiverSource {
                     try {
                         long l = bd.longValueExact();
                         // TODO argh
-                        if (Long.toString(l).equals(result.getString(i) )) {
+                        if (Long.toString(l).equals(result.getString(i))) {
                             return l;
                         } else {
                             return bd.doubleValue();
@@ -1182,7 +1193,7 @@ public class SimpleRiverSource implements RiverSource {
              * java.util.Map object.
              */
             case Types.DISTINCT: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             /**
@@ -1204,19 +1215,19 @@ public class SimpleRiverSource implements RiverSource {
              *
              */
             case Types.STRUCT: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.REF: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.ROWID: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             default: {
-                logger.warn("unknown JDBC type ignored: {}", type);
+                logger().warn("unknown JDBC type ignored: {}", type);
                 return null;
             }
         }

@@ -6,9 +6,7 @@
         "password" : "test",
         "sql" : "select * from \"products\"",
         "maxrows" : 50,
-        "autocommit" : true
-    },
-    "index" : {
+        "autocommit" : true,
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

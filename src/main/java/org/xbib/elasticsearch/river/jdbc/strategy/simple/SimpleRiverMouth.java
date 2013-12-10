@@ -1,27 +1,9 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import java.io.IOException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import org.elasticsearch.ElasticSearchTimeoutException;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -34,14 +16,13 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.index.VersionType;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.support.HealthMonitorThread;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.HealthMonitorThread;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A river mouth implementation for the 'simple' strategy.
@@ -59,52 +40,62 @@ import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
  */
 public class SimpleRiverMouth implements RiverMouth {
 
-    private static final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
+    private static final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getSimpleName());
 
     private static final AtomicInteger outstandingBulkRequests = new AtomicInteger(0);
-    private static final ThreadFactory THREAD_FACTORY_HEALTH = EsExecutors.daemonThreadFactory("jdbc-river-health");
 
     protected RiverContext context;
+
     protected String index;
+
     protected String type;
+
     protected String id;
+
     protected Client client;
+
     private int maxBulkActions = 100;
+
     private int maxConcurrentBulkRequests = 30;
-    private boolean versioning = false;
+
     private boolean acknowledge = false;
+
     private volatile boolean error;
+
     private BulkProcessor bulk;
-    private HealthMonitorThread healthThread;
+
+    protected ESLogger logger() {
+        return logger;
+    }
 
     private final BulkProcessor.Listener listener = new BulkProcessor.Listener() {
 
         @Override
         public void beforeBulk(long executionId, BulkRequest request) {
             long l = outstandingBulkRequests.incrementAndGet();
-            logger.info("new bulk [{}] of [{} items], {} outstanding bulk requests",
+            logger().info("new bulk [{}] of [{} items], {} outstanding bulk requests",
                     executionId, request.numberOfActions(), l);
         }
 
         @Override
         public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-            if(acknowledge()){
-	        	try {
-					context.riverSource().acknowledge(response);
-				} catch (IOException e) {
-					logger.error("bulk ["+executionId+"] acknowledge error", e);
-				}
+            if (acknowledge()) {
+                try {
+                    context.riverSource().acknowledge(response);
+                } catch (IOException e) {
+                    logger().error("bulk [" + executionId + "] acknowledge error", e);
+                }
             }
-        	outstandingBulkRequests.decrementAndGet();
-            logger.info("bulk [{}] success [{} items] [{}ms]",
+            outstandingBulkRequests.decrementAndGet();
+            logger().info("bulk [{}] success [{} items] [{}ms]",
                     executionId, response.getItems().length, response.getTookInMillis());
-            
+
         }
 
         @Override
         public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
             outstandingBulkRequests.decrementAndGet();
-            logger.error("bulk [" + executionId + "] error", failure);
+            logger().error("bulk [" + executionId + "] error", failure);
             error = true;
         }
     };
@@ -124,14 +115,10 @@ public class SimpleRiverMouth implements RiverMouth {
     public SimpleRiverMouth client(Client client) {
         this.client = client;
         this.bulk = BulkProcessor.builder(client, listener)
-                .setBulkActions(maxBulkActions-1)
+                .setBulkActions(maxBulkActions - 1)
                 .setConcurrentRequests(maxConcurrentBulkRequests)
                 .setFlushInterval(TimeValue.timeValueSeconds(1))
                 .build();
-
-        //Monitor cluster health in separate thread
-        healthThread = new HealthMonitorThread(client);
-        THREAD_FACTORY_HEALTH.newThread(healthThread).start();
 
         return this;
     }
@@ -196,17 +183,6 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth versioning(boolean enable) {
-        this.versioning = enable;
-        return this;
-    }
-
-    @Override
-    public boolean versioning() {
-        return versioning;
-    }
-
-    @Override
     public SimpleRiverMouth acknowledge(boolean enable) {
         this.acknowledge = enable;
         return this;
@@ -228,10 +204,6 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     public void index(StructuredObject object, boolean create) throws IOException {
-        if (!checkStatus()) {
-            return;
-        }
-
         if (Strings.hasLength(object.index())) {
             index(object.index());
         }
@@ -248,7 +220,7 @@ public class SimpleRiverMouth implements RiverMouth {
         if (create) {
             request.create(create);
         }
-        if (object.meta(StructuredObject.VERSION) != null && versioning) {
+        if (object.meta(StructuredObject.VERSION) != null) {
             request.versionType(VersionType.EXTERNAL)
                     .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
         }
@@ -273,10 +245,6 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void delete(StructuredObject object) {
-        if (!checkStatus()) {
-            return;
-        }
-
         if (Strings.hasLength(object.index())) {
             index(object.index());
         }
@@ -296,7 +264,7 @@ public class SimpleRiverMouth implements RiverMouth {
         if (object.meta(StructuredObject.PARENT) != null) {
             request.parent(object.meta(StructuredObject.PARENT));
         }
-        if (object.meta(StructuredObject.VERSION) != null && versioning) {
+        if (object.meta(StructuredObject.VERSION) != null) {
             request.versionType(VersionType.EXTERNAL)
                     .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
         }
@@ -314,14 +282,10 @@ public class SimpleRiverMouth implements RiverMouth {
     @Override
     public void close() {
         bulk.close();
-        healthThread.stop();
     }
 
     @Override
     public void createIndexIfNotExists(String settings, String mapping) {
-        if (!checkStatus()) {
-            return;
-        }
 
         if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             if (Strings.hasLength(settings)) {
@@ -342,21 +306,25 @@ public class SimpleRiverMouth implements RiverMouth {
         }
     }
 
-    /**
-     * Checks the cluster health and error flag.
-     * @return True if status is ok, false if action should be aborted.
-     */
-    private boolean checkStatus() {
-        while (!healthThread.isHealthy()) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                logger.warn("Thread interrupted while waiting to load", e);
-                Thread.interrupted();
-                return false;
-            }
-        }
-        return !error;
+    @Override
+    public void waitForCluster() throws IOException {
+        waitForCluster(ClusterHealthStatus.YELLOW, TimeValue.timeValueSeconds(30));
     }
 
+    public void waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {
+        try {
+            logger().info("waiting for cluster state {}", status.name());
+            ClusterHealthResponse healthResponse =
+                    client.admin().cluster().prepareHealth().setWaitForStatus(status).setTimeout(timeout).execute().actionGet();
+            if (healthResponse.isTimedOut()) {
+                throw new IOException("cluster state is " + healthResponse.getStatus().name()
+                        + " and not " + status.name()
+                        + ", cowardly refusing to continue with operations");
+            } else {
+                logger().info("... cluster state ok");
+            }
+        } catch (ElasticSearchTimeoutException e) {
+            throw new IOException("timeout, cluster does not respond to health request, cowardly refusing to continue with operations");
+        }
+    }
 }

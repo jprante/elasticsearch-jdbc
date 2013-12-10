@@ -5,9 +5,7 @@
         "user" : "",
         "password" : "",
         "sql" : "select * from \"products\"",
-        "maxrows" : 50
-    },
-    "index" : {
+        "maxrows" : 50,
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

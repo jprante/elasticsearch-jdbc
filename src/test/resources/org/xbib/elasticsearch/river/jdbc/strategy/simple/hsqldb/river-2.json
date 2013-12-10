@@ -4,9 +4,7 @@
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
         "password" : "",
-        "sql" : "select * from products"
-    },
-    "index" : {
+        "sql" : "select * from products",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

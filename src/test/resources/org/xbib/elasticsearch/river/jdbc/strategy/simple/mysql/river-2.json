@@ -4,9 +4,7 @@
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
-        "sql" : "select * from products"
-    },
-    "index" : {
+        "sql" : "select * from products",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

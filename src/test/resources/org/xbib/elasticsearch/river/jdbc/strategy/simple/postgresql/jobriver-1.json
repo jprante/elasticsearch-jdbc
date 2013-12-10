@@ -6,9 +6,7 @@
         "password" : "test",
         "sql" : "select * from \"products\"",
         "acksql" : "delete from \"products\" where \"_job\" = ?",
-        "acksqlparams" : [ "$job" ]
-    },
-    "index" : {
+        "acksqlparams" : [ "$job" ],
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

@@ -68,17 +68,6 @@
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
         </classes>
     </test>
-
-    <test name="Table JDBC River Target Tests">
-        <parameter name="create" value="mysql/create-rivertables.sql"/>
-        <parameter name="delete" value="mysql/delete-rivertables.sql"/>
-        <parameter name="river1" value="mysql/river-1.json"/>
-        <parameter name="sql1"
-                   value="insert into my_jdbc_river (`_index`,`_type`,`_id`, `source_operation`, `name`, `amount`, `price`) values(?,?,?,?,?,?,?)"/>
-        <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
-        </classes>
-    </test>
     
     <test name="Column JDBC River Target Tests">
         <parameter name="create" value="mysql/create-producttables.sql"/>

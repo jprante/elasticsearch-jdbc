@@ -1,4 +1,4 @@
-package org.elasticsearch.river.jdbc.strategy;
+package org.xbib.elasticsearch.river.jdbc;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
@@ -8,7 +8,7 @@ import org.testng.ITestResult;
 
 public class Listener implements ITestListener {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(Listener.class.getName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(Listener.class.getSimpleName());
     
     @Override
     public void onTestStart(ITestResult result) {
@@ -18,27 +18,20 @@ public class Listener implements ITestListener {
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        // TODO Auto-generated method stub
         logger.info("Skipped test: {}", result.getMethod().getMethodName());
         result.setStatus(ITestResult.FAILURE);
     }
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -49,8 +42,6 @@ public class Listener implements ITestListener {
 
     @Override
     public void onFinish(ITestContext context) {
-        // TODO Auto-generated method stub
-
     }
 
 }

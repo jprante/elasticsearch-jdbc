@@ -31,6 +31,7 @@ import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverTest;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
 import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
 import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 import org.xbib.elasticsearch.river.jdbc.support.Values;

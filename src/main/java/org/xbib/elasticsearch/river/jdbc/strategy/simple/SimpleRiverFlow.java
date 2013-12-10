@@ -1,26 +1,7 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
@@ -30,9 +11,7 @@ import org.elasticsearch.indices.IndexMissingException;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.PlainStructuredObject;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
 import java.util.Date;
@@ -40,7 +19,6 @@ import java.util.Map;
 
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 /**
  * A river flow implementation for the 'simple' strategy.
@@ -49,10 +27,6 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
  * <p/>
  * A version counter is incremented each time a fetch move is executed.
  * <p/>
- * A checksum is computed over the fetched data. If it differs between runs, it is assumed
- * the data has changed, and a houskeeper is run to clean up the documents which have
- * a smaller version than the river state.
- * <p/>
  * The state of the river flow is saved between runs. So, in case of a restart, the
  * river flow will recover with the last known state of the river.
  *
@@ -60,13 +34,17 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
  */
 public class SimpleRiverFlow implements RiverFlow {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverFlow.class.getName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverFlow.class.getSimpleName());
 
     protected RiverContext context;
 
     protected Date startDate;
 
     protected boolean abort = false;
+
+    protected ESLogger logger() {
+        return logger;
+    }
 
     @Override
     public String strategy() {
@@ -114,11 +92,11 @@ public class SimpleRiverFlow implements RiverFlow {
     public SimpleRiverFlow delay(String reason) {
         TimeValue poll = context.pollingInterval();
         if (poll.millis() > 0L) {
-            logger.info("{}, waiting {}", reason, poll);
+            logger().info("{}, waiting {}", reason, poll);
             try {
                 Thread.sleep(poll.millis());
             } catch (InterruptedException e) {
-                logger.debug("Thread interrupted while waiting, stopping");
+                logger().debug("Thread interrupted while waiting, stopping");
                 abort();
             }
         }
@@ -154,30 +132,31 @@ public class SimpleRiverFlow implements RiverFlow {
     public void move() {
         try {
             RiverSource source = context.riverSource();
-            RiverMouth target = context.riverMouth();
+            RiverMouth riverMouth = context.riverMouth();
             Client client = context.riverMouth().client();
             Number version;
-            String digest;
             GetResponse get = null;
+
+            // wait for cluster health
+            riverMouth.waitForCluster();
+
             try {
                 // read state from _custom
                 client.admin().indices().prepareRefresh(context.riverIndexName()).execute().actionGet();
                 get = client.prepareGet(context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX).execute().actionGet();
             } catch (IndexMissingException e) {
-                logger.warn("river state missing: {}/{}/{}", context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX);
+                logger().warn("river state missing: {}/{}/{}", context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX);
             }
             if (get != null && get.isExists()) {
                 Map jdbcState = (Map) get.getSourceAsMap().get("jdbc");
                 if (jdbcState != null) {
                     version = (Number) jdbcState.get("version");
                     version = version.longValue() + 1; // increase to next version
-                    digest = (String) jdbcState.get("digest");
                 } else {
                     throw new IOException("can't retrieve previously persisted state from " + context.riverIndexName() + "/" + context.riverName());
                 }
             } else {
                 version = 1L;
-                digest = null;
             }
 
             // save state, write activity flag
@@ -195,7 +174,7 @@ public class SimpleRiverFlow implements RiverFlow {
                         .id(ID_INFO_RIVER_INDEX)
                         .source(builder)).actionGet();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger().error(e.getMessage(), e);
             }
 
 
@@ -203,7 +182,7 @@ public class SimpleRiverFlow implements RiverFlow {
             context.job(Long.toString(version.longValue()));
             String mergeDigest = source.fetch();
             // this end is required before house keeping starts
-            target.flush();
+            riverMouth.flush();
 
             // save state
             try {
@@ -218,93 +197,22 @@ public class SimpleRiverFlow implements RiverFlow {
                         .field("since", new Date())
                         .field("active", false);
                 builder.endObject().endObject();
-                if (logger.isDebugEnabled()) {
-                    logger.debug(builder.string());
+                if (logger().isDebugEnabled()) {
+                    logger().debug(builder.string());
                 }
                 client.index(indexRequest(context.riverIndexName())
-                    .type(context.riverName())
-                    .id(ID_INFO_RIVER_INDEX)
-                    .source(builder))
-                    .actionGet();
+                        .type(context.riverName())
+                        .id(ID_INFO_RIVER_INDEX)
+                        .source(builder))
+                        .actionGet();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger().error(e.getMessage(), e);
             }
 
-            // house keeping if data has changed
-            if (digest != null && mergeDigest != null && !mergeDigest.equals(digest)) {
-                versionHouseKeeping(version.longValue());
-                // perform outstanding versionHouseKeeping bulk requests
-                target.flush();
-            }
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger().error(e.getMessage(), e);
             abort = true;
         }
     }
 
-    /**
-     * Do the house keeping for a specific version in the index
-     *
-     * @param version the version
-     * @throws IOException
-     */
-    protected void versionHouseKeeping(long version) throws IOException {
-        logger.info("housekeeping for version " + version);
-        Client client = context.riverMouth().client();
-        String indexName = context.riverMouth().index();
-        String typeName = context.riverMouth().type();
-        int bulkSize = context.riverMouth().maxBulkActions();
-        client.admin().indices().prepareRefresh(indexName).execute().actionGet();
-        SearchResponse response = client.prepareSearch().setIndices(indexName).setTypes(typeName).setSearchType(SearchType.SCAN)
-                .setScroll(TimeValue.timeValueMinutes(10)).setSize(bulkSize).setVersion(true).setQuery(matchAllQuery()).execute().actionGet();
-        if (response.isTimedOut()) {
-            logger.error("housekeeper scan query timeout");
-            return;
-        }
-        if (response.getFailedShards() > 0) {
-            logger.error("housekeeper failed shards in scan response: {}", response.getFailedShards());
-            return;
-        }
-        String scrollId = response.getScrollId();
-        if (scrollId == null) {
-            logger.error("housekeeper failed, no scroll ID");
-            return;
-        }
-        boolean done = false;
-        // scroll
-        long deleted = 0L;
-        long t0 = System.currentTimeMillis();
-        do {
-            response = client.prepareSearchScroll(response.getScrollId()).setScroll(TimeValue.timeValueMinutes(10)).execute().actionGet();
-            if (response.isTimedOut()) {
-                logger.error("housekeeper scroll query timeout");
-                done = true;
-            } else if (response.getFailedShards() > 0) {
-                logger.error("housekeeper failed shards in scroll response: {}", response.getFailedShards());
-                done = true;
-            } else {
-                // terminate scrolling?
-                if (response.getHits() == null) {
-                    done = true;
-                } else {
-                    for (SearchHit hit : response.getHits().getHits()) {
-                        // delete all documents with lower version
-                        if (hit.getVersion() < version) {
-                            context.riverMouth().delete(new PlainStructuredObject()
-                                    .index(hit.getIndex())
-                                    .type(hit.getType())
-                                    .id(hit.getId()));
-                            deleted++;
-                        }
-                    }
-                    scrollId = response.getScrollId();
-                }
-            }
-            if (scrollId != null) {
-                done = true;
-            }
-        } while (!done);
-        long t1 = System.currentTimeMillis();
-        logger.info("housekeeping done, {} documents deleted, took {} ms", deleted, t1 - t0);
-    }
 }

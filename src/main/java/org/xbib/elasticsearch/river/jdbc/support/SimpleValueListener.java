@@ -1,22 +1,8 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-package org.xbib.elasticsearch.river.jdbc.strategy.simple;
+
+package org.xbib.elasticsearch.river.jdbc.support;
+
+import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -26,16 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.support.DigestStructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.Operations;
-import org.xbib.elasticsearch.river.jdbc.support.PlainStructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.PseudoColumnNames;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-import org.xbib.elasticsearch.river.jdbc.support.Values;
 
 /**
  * The SimpleValueListener class consumes values from a database and transports
@@ -132,7 +108,7 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      */
     @Override
     public SimpleValueListener values(List<? extends Object> values) throws IOException {
-    	boolean hasSource = false;
+        boolean hasSource = false;
         if (current == null) {
             current = newObject();
         }
@@ -150,14 +126,14 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
             // JAVA7: string switch
             String k = keys.get(i);
             map(k, v, current);
-            if (StructuredObject.SOURCE.equals(k)) { 
-            	hasSource = true;
+            if (StructuredObject.SOURCE.equals(k)) {
+                hasSource = true;
             }
         }
         if (hasSource) {
-        	end(current);
-        	current = newObject();
-        	return this;
+            end(current);
+            current = newObject();
+            return this;
         }
         // switch to next structured object if current is not equal to previous
         if (!current.equals(prev) || current.isEmpty()) {
@@ -168,13 +144,14 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
         }
         // create current object from values by sequentially merging the values
         for (int i = 0; i < keys.size(); i++) {
-        	Map map = null;
-        	try {
-        		map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
-        	} catch (Exception e) {}
-        	
-        	Map m = merge(current.source(), keys.get(i), map != null && map.size() > 0 ? map : values.get(i));
-    		current.source(m);
+            Map map = null;
+            try {
+                map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
+            } catch (Exception e) {
+            }
+
+            Map m = merge(current.source(), keys.get(i), map != null && map.size() > 0 ? map : values.get(i));
+            current.source(m);
         }
         return this;
     }
@@ -277,12 +254,12 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      * @param value the value
      */
     protected Map<String, Values<O>> merge(Map map, String key, Object value) {
-    	if (PseudoColumnNames.INDEX.equals(key)
-    			|| PseudoColumnNames.ID.equals(key)
-    			|| PseudoColumnNames.TYPE.equals(key)
-    			|| PseudoColumnNames.PARENT.equals(key)){
-    		return map;
-    	}
+        if (PseudoColumnNames.INDEX.equals(key)
+                || PseudoColumnNames.ID.equals(key)
+                || PseudoColumnNames.TYPE.equals(key)
+                || PseudoColumnNames.PARENT.equals(key)) {
+            return map;
+        }
         int i = key.indexOf(delimiter);
         String index = null;
         if (i <= 0) {
@@ -301,8 +278,8 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
                 }
                 Object o = map.get(head);
                 if (o instanceof List) {
-                    List l = (List)o;
-                    int j = l.isEmpty() ? -1 : l.size()-1;
+                    List l = (List) o;
+                    int j = l.isEmpty() ? -1 : l.size() - 1;
                     if (j >= 0) {
                         Map<String, Values<O>> m = (Map<String, Values<O>>) l.get(j);
                         if (!m.containsKey(index)) {

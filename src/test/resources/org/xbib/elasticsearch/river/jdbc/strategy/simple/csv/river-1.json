@@ -4,9 +4,7 @@
         "url" : "jdbc:csv:src/test/resources/csv?separator=;",
         "user" : "",
         "password" : "",
-        "sql" : "select * from Gesamtfinanzplan"
-    },
-    "index" : {
+        "sql" : "select * from Gesamtfinanzplan",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

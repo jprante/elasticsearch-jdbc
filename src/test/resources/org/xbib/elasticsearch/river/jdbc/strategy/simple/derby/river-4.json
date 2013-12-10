@@ -6,9 +6,6 @@
         "password" : "",
         "sql" : "select * from \"products\"",
         "script" : "",
-
-    },
-    "index" : {
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

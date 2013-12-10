@@ -10,9 +10,7 @@
         "poll": "1h",
         "column_updated_at": "updated_at",
         "column_created_at": "created_at",
-        "column_deleted_at": "deleted_at"
-    },
-    "index" : {
+        "column_deleted_at": "deleted_at",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }

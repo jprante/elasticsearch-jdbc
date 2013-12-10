@@ -36,7 +36,7 @@ public class LocaleUtil {
         }
         return new Locale(language, country, variant);
     }
-    
+
     public static String fromLocale(Locale locale) {
         return locale.getLanguage() + (locale.getCountry() != null ? "_" + locale.getCountry() : "");
     }

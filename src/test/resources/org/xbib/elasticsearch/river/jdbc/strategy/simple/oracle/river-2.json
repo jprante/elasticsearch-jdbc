@@ -4,9 +4,7 @@
         "url" : "jdbc:oracle:thin:@//localhost:1521/test?autoReconnect=true",
         "user" : "test",
         "password" : "test",
-        "sql" : "select * from \"products\""
-    },
-    "index" : {
+        "sql" : "select * from \"products\"",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }
