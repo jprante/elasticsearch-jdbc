@@ -41,6 +41,7 @@ ES version     Plugin     Release date       Command
 0.90.5         **2.2.2**  Oct 13, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1iovWV9
 0.90.7         **2.2.3**  Nov 21, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/I7kz9q
 0.90.7         **2.2.4**  Dec  8, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1f95nE4
+0.90.7         **2.3.0**  Dec 10, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1kwWDI9
 =============  =========  =================  ===========================================================
 
 Do not forget to restart the node after installing.
@@ -74,10 +75,6 @@ Documentation
 `RiverSource, RiverMouth, RiverFlow <../../../elasticsearch-river-jdbc/wiki/RiverSource,-RiverMouth,-and-RiverFlow>`_
 
 `Bulk indexing <../../../elasticsearch-river-jdbc/wiki/Bulk-indexing>`_
-
-`Updates with versioning <../../../elasticsearch-river-jdbc/wiki/Updates-with-versioning>`_
-
-`Updates with database table <../../../elasticsearch-river-jdbc/wiki/Updates-with-database-table>`_
 
 `Setting up the river with PostgreSQL <../../../elasticsearch-river-jdbc/wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
 
