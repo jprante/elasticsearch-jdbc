@@ -38,7 +38,7 @@
 <span class="sourceLineNo">030</span> * The state of the river flow is saved between runs. So, in case of a restart, the<a name="line.30"></a>
 <span class="sourceLineNo">031</span> * river flow will recover with the last known state of the river.<a name="line.31"></a>
 <span class="sourceLineNo">032</span> *<a name="line.32"></a>
-<span class="sourceLineNo">033</span> * @author Jörg Prante &lt;joergprante@gmail.com&gt;<a name="line.33"></a>
+<span class="sourceLineNo">033</span> * @author J?rg Prante &lt;joergprante@gmail.com&gt;<a name="line.33"></a>
 <span class="sourceLineNo">034</span> */<a name="line.34"></a>
 <span class="sourceLineNo">035</span>public class SimpleRiverFlow implements RiverFlow {<a name="line.35"></a>
 <span class="sourceLineNo">036</span><a name="line.36"></a>
@@ -159,7 +159,7 @@
 <span class="sourceLineNo">151</span>                Map jdbcState = (Map) get.getSourceAsMap().get("jdbc");<a name="line.151"></a>
 <span class="sourceLineNo">152</span>                if (jdbcState != null) {<a name="line.152"></a>
 <span class="sourceLineNo">153</span>                    version = (Number) jdbcState.get("version");<a name="line.153"></a>
-<span class="sourceLineNo">154</span>                    version = version.longValue() + 1; // increase to next version<a name="line.154"></a>
+<span class="sourceLineNo">154</span>                    version = version == null ? 1L : version.longValue() + 1; // increase to next version<a name="line.154"></a>
 <span class="sourceLineNo">155</span>                } else {<a name="line.155"></a>
 <span class="sourceLineNo">156</span>                    throw new IOException("can't retrieve previously persisted state from " + context.riverIndexName() + "/" + context.riverName());<a name="line.156"></a>
 <span class="sourceLineNo">157</span>                }<a name="line.157"></a>
