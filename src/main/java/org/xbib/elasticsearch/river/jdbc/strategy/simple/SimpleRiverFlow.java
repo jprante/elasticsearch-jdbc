@@ -151,7 +151,7 @@ public class SimpleRiverFlow implements RiverFlow {
                 Map jdbcState = (Map) get.getSourceAsMap().get("jdbc");
                 if (jdbcState != null) {
                     version = (Number) jdbcState.get("version");
-                    version = version.longValue() + 1; // increase to next version
+                    version = version == null ? 1L : version.longValue() + 1; // increase to next version
                 } else {
                     throw new IOException("can't retrieve previously persisted state from " + context.riverIndexName() + "/" + context.riverName());
                 }
