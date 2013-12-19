@@ -244,12 +244,13 @@ public class SimpleRiverSource implements RiverSource {
                         .target(context.riverMouth())
                         .digest(context.digesting());
                 mergeDigest = merge(results, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             } finally {
                 close(results);
                 close(statement);
-                acknowledge();
+
                 closeReading();
                 closeWriting();
             }
@@ -265,12 +266,13 @@ public class SimpleRiverSource implements RiverSource {
                         .target(context.riverMouth())
                         .digest(context.digesting());
                 mergeDigest = merge(results, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             } finally {
                 close(results);
                 close(statement);
-                acknowledge();
+
                 closeReading();
                 closeWriting();
             }
@@ -285,12 +287,12 @@ public class SimpleRiverSource implements RiverSource {
                         .target(context.riverMouth())
                         .digest(context.digesting());
                 mergeDigest = merge(results, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             } finally {
                 close(results);
                 close(statement);
-                acknowledge();
                 closeReading();
                 closeWriting();
             }

@@ -126,6 +126,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
                         .digest(context.digesting());
 
                 merge(result, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             }
@@ -134,7 +135,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
             close(stmt);
         }
 
-        acknowledge();
+
     }
 
     private String addWhereClauseToSqlQuery(String sql, String whereClauseToAppend) {
