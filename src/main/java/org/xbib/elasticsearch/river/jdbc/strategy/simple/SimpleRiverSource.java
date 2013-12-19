@@ -229,10 +229,13 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public String fetch() throws SQLException, IOException {
         String mergeDigest = null;
+
+        initiate();
         if (context.pollStatementParams().isEmpty()) {
             Statement statement = null;
             ResultSet results = null;
             try {
+
                 // Postgresql: do not use prepareStatement.
                 // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize
                 statement = connectionForReading().createStatement();
@@ -241,12 +244,12 @@ public class SimpleRiverSource implements RiverSource {
                         .target(context.riverMouth())
                         .digest(context.digesting());
                 mergeDigest = merge(results, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             } finally {
                 close(results);
                 close(statement);
-                acknowledge();
                 closeReading();
                 closeWriting();
             }
@@ -262,12 +265,12 @@ public class SimpleRiverSource implements RiverSource {
                         .target(context.riverMouth())
                         .digest(context.digesting());
                 mergeDigest = merge(results, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             } finally {
                 close(results);
                 close(statement);
-                acknowledge();
                 closeReading();
                 closeWriting();
             }
@@ -282,12 +285,12 @@ public class SimpleRiverSource implements RiverSource {
                         .target(context.riverMouth())
                         .digest(context.digesting());
                 mergeDigest = merge(results, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             } finally {
                 close(results);
                 close(statement);
-                acknowledge();
                 closeReading();
                 closeWriting();
             }
@@ -335,6 +338,32 @@ public class SimpleRiverSource implements RiverSource {
             PreparedStatement statement = prepareUpdate(context.pollAckStatement());
             if (context.pollAckStatementParams() != null) {
                 bind(statement, context.pollAckStatementParams());
+            }
+            statement.execute();
+            close(statement);
+            try {
+                if (!connection.getAutoCommit()) {
+                    connection.commit();
+                }
+            } catch (SQLException e) {
+                //  Can't call commit when autocommit=true
+            }
+            closeWriting();
+        }
+    }
+
+    /**
+     * Send initiate SQL command if exists.
+     *
+     * @throws SQLException
+     */
+    public void initiate() throws SQLException {
+        // send initiate statement if defined
+        if (context.pollPreStatement() != null) {
+            Connection connection = connectionForWriting();
+            PreparedStatement statement = prepareUpdate(context.pollPreStatement());
+            if (context.pollPreStatementParams() != null) {
+                bind(statement, context.pollPreStatementParams());
             }
             statement.execute();
             close(statement);

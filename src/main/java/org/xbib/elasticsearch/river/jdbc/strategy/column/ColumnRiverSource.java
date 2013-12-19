@@ -105,6 +105,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
     }
 
     private void fetch(Connection connection, String sql, OpInfo opInfo, Timestamp lastRunTimestamp) throws IOException, SQLException {
+
         String fullSql = addWhereClauseToSqlQuery(sql, opInfo.where);
 
         PreparedStatement stmt = connection.prepareStatement(fullSql);
@@ -115,6 +116,9 @@ public class ColumnRiverSource extends SimpleRiverSource {
         ResultSet result = null;
 
         try {
+
+            initiate();
+
             bind(stmt, params);
 
             result = executeQuery(stmt);
@@ -125,6 +129,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
                         .digest(context.digesting());
 
                 merge(result, listener);
+                acknowledge();
             } catch (Exception e) {
                 throw new IOException(e);
             }
@@ -133,7 +138,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
             close(stmt);
         }
 
-        acknowledge();
+
     }
 
     private String addWhereClauseToSqlQuery(String sql, String whereClauseToAppend) {
