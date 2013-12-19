@@ -61,11 +61,11 @@ public class RiverContext {
     private boolean callable;
 
     /**
-     * The  PRE SQL statement
+     * The  initiate SQL statement
      */
     private String presql;
     /**
-     * Parameters for the PRE SQL statement
+     * Parameters for the initiate SQL statement
      */
     private List<? extends Object> presqlparams;
 

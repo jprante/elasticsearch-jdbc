@@ -229,8 +229,8 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public String fetch() throws SQLException, IOException {
         String mergeDigest = null;
-        preInit();
 
+        initiate();
         if (context.pollStatementParams().isEmpty()) {
             Statement statement = null;
             ResultSet results = null;
@@ -250,7 +250,6 @@ public class SimpleRiverSource implements RiverSource {
             } finally {
                 close(results);
                 close(statement);
-
                 closeReading();
                 closeWriting();
             }
@@ -272,7 +271,6 @@ public class SimpleRiverSource implements RiverSource {
             } finally {
                 close(results);
                 close(statement);
-
                 closeReading();
                 closeWriting();
             }
@@ -354,8 +352,13 @@ public class SimpleRiverSource implements RiverSource {
         }
     }
 
-    public void preInit() throws SQLException {
-        // send acknowledge statement if defined
+    /**
+     * Send initiate SQL command if exists.
+     *
+     * @throws SQLException
+     */
+    public void initiate() throws SQLException {
+        // send initiate statement if defined
         if (context.pollPreStatement() != null) {
             Connection connection = connectionForWriting();
             PreparedStatement statement = prepareUpdate(context.pollPreStatement());
