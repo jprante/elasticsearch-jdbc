@@ -61,6 +61,15 @@ public class RiverContext {
     private boolean callable;
 
     /**
+     * The  PRE SQL statement
+     */
+    private String presql;
+    /**
+     * Parameters for the PRE SQL statement
+     */
+    private List<? extends Object> presqlparams;
+
+    /**
      * The acknowledge SQL statement
      */
     private String acksql;
@@ -218,6 +227,15 @@ public class RiverContext {
         return acksql;
     }
 
+    public RiverContext pollPreStatement(String presql) {
+        this.presql = presql;
+        return this;
+    }
+
+    public String pollPreStatement() {
+        return presql;
+    }
+
     public RiverContext pollAckStatementParams(List<? extends Object> params) {
         this.acksqlparams = params;
         return this;
@@ -225,6 +243,15 @@ public class RiverContext {
 
     public List<? extends Object> pollAckStatementParams() {
         return acksqlparams;
+    }
+
+    public RiverContext pollPreStatementParams(List<? extends Object> params) {
+        this.presqlparams = params;
+        return this;
+    }
+
+    public List<? extends Object> pollPreStatementParams() {
+        return presqlparams;
     }
 
     public RiverContext autocommit(boolean enabled) {

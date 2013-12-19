@@ -105,6 +105,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
     }
 
     private void fetch(Connection connection, String sql, OpInfo opInfo, Timestamp lastRunTimestamp) throws IOException, SQLException {
+        preInit();
         String fullSql = addWhereClauseToSqlQuery(sql, opInfo.where);
 
         PreparedStatement stmt = connection.prepareStatement(fullSql);

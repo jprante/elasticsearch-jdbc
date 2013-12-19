@@ -99,6 +99,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         boolean digesting = XContentMapValues.nodeBooleanValue(mySettings.get("digesting"), Boolean.TRUE);
         String acksql = XContentMapValues.nodeStringValue(mySettings.get("acksql"), null);
         List<? super Object> acksqlparams = XContentMapValues.extractRawValues("acksqlparams", mySettings);
+        String presql = XContentMapValues.nodeStringValue(mySettings.get("presql"), null);
+        List<? super Object> presqlparams = XContentMapValues.extractRawValues("presqlparams", mySettings);
         indexName = XContentMapValues.nodeStringValue(mySettings.get("index"), TYPE);
         typeName = XContentMapValues.nodeStringValue(mySettings.get("type"), TYPE);
         int bulkSize = XContentMapValues.nodeIntegerValue(mySettings.get("bulk_size"), 100);
@@ -134,6 +136,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .pollInterval(poll)
                 .pollStatement(sql)
                 .pollStatementParams(sqlparams)
+                .pollPreStatement(presql)
+                .pollPreStatementParams(presqlparams)
                 .callable(callable)
                 .pollAckStatement(acksql)
                 .pollAckStatementParams(acksqlparams)
