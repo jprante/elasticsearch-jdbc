@@ -30,6 +30,7 @@ import java.util.Map;
 public class ColumnRiverSource extends SimpleRiverSource {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSource.class.getSimpleName());
+    private static final String WHERE_CLAUSE_PLACEHOLDER = "%%WHERE%%";
 
     protected ESLogger logger() {
         return logger;

@@ -77,7 +77,7 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
     
     @Test()
-    @Parameters({"river1", "sql1"})
+    @Parameters({"river-existedWhereClause", "sqlInsert"})
     public void testColumnRiver_createSomeObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {        
         verifyCreateSomeObjects(riverResource, sql);
     }
@@ -102,13 +102,13 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
     
     @Test()
-    @Parameters({"river-sqlparams", "sql1"})
+    @Parameters({"river-sqlparams", "sqlInsert"})
     public void testColumnRiver_createSomeObjects_configurationWithSqlParams(String riverResource, String sql)  throws SQLException, IOException, InterruptedException {
         verifyCreateSomeObjects(riverResource, sql);
     }
     
     @Test()
-    @Parameters({"river2", "sql1", "sql2"})
+    @Parameters({"river-sqlForTestDeletions", "sqlInsert", "sqlUpdate"})
     public void testColumnRiver_removeObjects(String riverResource, String insertSql, String updateSql) throws SQLException, IOException, InterruptedException {
         
         MockRiverMouth riverMouth = new MockRiverMouth();

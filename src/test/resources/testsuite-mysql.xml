@@ -72,12 +72,12 @@
     <test name="Column JDBC River Target Tests">
         <parameter name="create" value="mysql/create-producttables.sql"/>
         <parameter name="delete" value="mysql/delete-producttables.sql"/>
-        <parameter name="river1" value="mysql/river-1.json"/>
-        <parameter name="river2" value="mysql/river-2.json"/>
+        <parameter name="river-existedWhereClause" value="mysql/river-existedWhereClause.json"/>
+        <parameter name="river-sqlForTestDeletions" value="mysql/river-sqlForTestDeletions.json"/>
         <parameter name="river-sqlparams" value="mysql/river-sqlparams.json"/>
-        <parameter name="sql1"
+        <parameter name="sqlInsert"
                     value="insert into products (id, name, amount, price, created_at, updated_at, deleted_at) VALUES(?,?,?,?,?,?,?)" />
-        <parameter name="sql2"
+        <parameter name="sqlUpdate"
                     value="update products set deleted_at=? where id=?" />
         <classes>
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
