@@ -30,7 +30,7 @@ import java.util.Map;
 public class ColumnRiverSource extends SimpleRiverSource {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSource.class.getSimpleName());
-    private static final String WHERE_CLAUSE_PLACEHOLDER = "%%WHERE%%";
+    private static final String WHERE_CLAUSE_PLACEHOLDER = "$where";
 
     protected ESLogger logger() {
         return logger;
@@ -138,12 +138,17 @@ public class ColumnRiverSource extends SimpleRiverSource {
     }
 
     private String addWhereClauseToSqlQuery(String sql, String whereClauseToAppend) {
+        int wherePlaceholderIndex = sql.indexOf(WHERE_CLAUSE_PLACEHOLDER);
         final String whereKeyword = "where ";
         int whereIndex = sql.toLowerCase().indexOf(whereKeyword);
 
-        return whereIndex > 0 ?
-                sql.substring(0, whereIndex + whereKeyword.length()) + whereClauseToAppend + " AND " + sql.substring(whereIndex + whereKeyword.length())
-                : sql + " WHERE " + whereClauseToAppend;
+        if(wherePlaceholderIndex >= 0) {
+            return sql.replace(WHERE_CLAUSE_PLACEHOLDER, whereClauseToAppend);
+        } else if (whereIndex >= 0) {
+            return sql.substring(0, whereIndex + whereKeyword.length()) + whereClauseToAppend + " AND " + sql.substring(whereIndex + whereKeyword.length());
+        } else {
+            return sql + " WHERE " + whereClauseToAppend;
+        }
     }
 
     private List<Object> createQueryParams(Timestamp lastRunTimestamp, int lastRunTimestampParamsCount) {
@@ -167,6 +172,11 @@ public class ColumnRiverSource extends SimpleRiverSource {
         final int paramsInWhere;
 
         public OpInfo(String opType, String where, int paramsInWhere) {
+            
+            if(where != null && !where.equals("")) {
+                where = "("+where+")";
+            }
+            
             this.opType = opType;
             this.where = where;
             this.paramsInWhere = paramsInWhere;
