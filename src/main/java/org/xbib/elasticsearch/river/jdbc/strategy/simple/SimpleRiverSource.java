@@ -42,9 +42,13 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A river source implementation for the 'simple' strategy.
@@ -79,6 +83,8 @@ public class SimpleRiverSource implements RiverSource {
     private int rounding;
 
     private int scale = -1;
+
+    private HashMap<String, Object> lastRow;
 
     public SimpleRiverSource() {
     }
@@ -322,7 +328,6 @@ public class SimpleRiverSource implements RiverSource {
                 ? Base64.encodeBytes(listener.digest().digest()) : null;
     }
 
-
     /**
      * Send acknowledge SQL command if exists.
      *
@@ -333,8 +338,29 @@ public class SimpleRiverSource implements RiverSource {
         if (context.pollAckStatement() != null) {
             Connection connection = connectionForWriting();
             PreparedStatement statement = prepareUpdate(context.pollAckStatement());
-            if (context.pollAckStatementParams() != null) {
-                bind(statement, context.pollAckStatementParams());
+            List params = context.pollAckStatementParams();
+
+            if (params != null) {
+                if (lastRow != null) {
+                    params = new ArrayList(params); //makes a copy
+                    
+                    for (int i=0; i<params.size(); i++) {
+                        Object value = params.get(i);
+                        
+                        if (value instanceof CharSequence) {
+                            Matcher m = Pattern.compile("^\\$\\{(.*?)\\}$").matcher((CharSequence) value);
+                            
+                            if (m.matches()) {
+                                String key = m.group(1);
+                                value = lastRow.get(key);
+                                params.set(i, value);
+                                logger().info("Using placeholder '{}' value: {}", key, value);
+                            }
+                        }
+                    }
+                }
+                
+                bind(statement, params);
             }
             statement.execute();
             close(statement);
@@ -474,8 +500,11 @@ public class SimpleRiverSource implements RiverSource {
         ResultSetMetaData metadata = result.getMetaData();
         int columns = metadata.getColumnCount();
         List<String> keys = new LinkedList();
+        lastRow = new HashMap<String, Object>();
         for (int i = 1; i <= columns; i++) {
-            keys.add(metadata.getColumnLabel(i));
+            String key = metadata.getColumnLabel(i);
+            keys.add(key);
+            lastRow.put(key, null);
         }
         if (listener != null) {
             listener.keys(keys);
@@ -514,6 +543,7 @@ public class SimpleRiverSource implements RiverSource {
                 logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
             }
             values.add(value);
+            lastRow.put(metadata.getColumnLabel(i), result.getObject(i));
         }
         if (listener != null) {
             listener.values(values);
