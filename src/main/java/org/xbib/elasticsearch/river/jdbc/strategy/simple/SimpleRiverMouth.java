@@ -1,7 +1,7 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import org.elasticsearch.ElasticSearchTimeoutException;
+import org.elasticsearch.ElasticsearchTimeoutException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -227,9 +227,6 @@ public class SimpleRiverMouth implements RiverMouth {
         if (object.meta(StructuredObject.ROUTING) != null) {
             request.routing(object.meta(StructuredObject.ROUTING));
         }
-        if (object.meta(StructuredObject.PERCOLATE) != null) {
-            request.percolate(object.meta(StructuredObject.PERCOLATE));
-        }
         if (object.meta(StructuredObject.PARENT) != null) {
             request.parent(object.meta(StructuredObject.PARENT));
         }
@@ -323,7 +320,7 @@ public class SimpleRiverMouth implements RiverMouth {
             } else {
                 logger().info("... cluster state ok");
             }
-        } catch (ElasticSearchTimeoutException e) {
+        } catch (ElasticsearchTimeoutException e) {
             throw new IOException("timeout, cluster does not respond to health request, cowardly refusing to continue with operations");
         }
     }

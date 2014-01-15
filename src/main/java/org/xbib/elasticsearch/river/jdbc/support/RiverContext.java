@@ -13,7 +13,6 @@ import java.util.Map;
  * The river context consists of the parameters that span over source and target, and the source and target.
  * It represents the river state, for supporting the river task, and river scripting.
  *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public class RiverContext {
 

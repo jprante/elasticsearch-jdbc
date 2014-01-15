@@ -1,3 +1,4 @@
+
 package org.xbib.elasticsearch.river.jdbc.support;
 
 import org.elasticsearch.common.base.Objects;

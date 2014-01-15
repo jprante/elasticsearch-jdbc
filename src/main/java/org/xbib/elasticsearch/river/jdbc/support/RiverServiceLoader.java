@@ -15,7 +15,6 @@ import java.util.ServiceLoader;
 /**
  * The river service loader looks up sources
  *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public class RiverServiceLoader {
 

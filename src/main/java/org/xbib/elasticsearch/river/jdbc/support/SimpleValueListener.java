@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
  * The SimpleValueListener class consumes values from a database and transports
  * them to the river target.
  *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public class SimpleValueListener<O extends Object> implements ValueListener {
 

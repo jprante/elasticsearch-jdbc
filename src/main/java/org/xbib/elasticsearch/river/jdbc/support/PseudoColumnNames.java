@@ -7,7 +7,6 @@ package org.xbib.elasticsearch.river.jdbc.support;
  * Mostly, they map to the Elasticsearch bulk item. The _job column denotes
  * an ID for the event of a fetch execution.
  *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public interface PseudoColumnNames {
 
