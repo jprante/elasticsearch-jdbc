@@ -1,19 +1,6 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,13 +29,23 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.format.DateTimeFormat;
+import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
+import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 
 /**
  * A river source implementation for the 'simple' strategy.
@@ -65,6 +62,8 @@ import java.util.regex.Pattern;
 public class SimpleRiverSource implements RiverSource {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getSimpleName());
+    
+    private final Map<String, Object> lastRow = new HashMap<String, Object>();
 
     protected RiverContext context;
 
@@ -83,8 +82,6 @@ public class SimpleRiverSource implements RiverSource {
     private int rounding;
 
     private int scale = -1;
-
-    private HashMap<String, Object> lastRow;
 
     public SimpleRiverSource() {
     }
@@ -328,6 +325,7 @@ public class SimpleRiverSource implements RiverSource {
                 ? Base64.encodeBytes(listener.digest().digest()) : null;
     }
 
+
     /**
      * Send acknowledge SQL command if exists.
      *
@@ -338,29 +336,8 @@ public class SimpleRiverSource implements RiverSource {
         if (context.pollAckStatement() != null) {
             Connection connection = connectionForWriting();
             PreparedStatement statement = prepareUpdate(context.pollAckStatement());
-            List params = context.pollAckStatementParams();
-
-            if (params != null) {
-                if (lastRow != null) {
-                    params = new ArrayList(params); //makes a copy
-                    
-                    for (int i=0; i<params.size(); i++) {
-                        Object value = params.get(i);
-                        
-                        if (value instanceof CharSequence) {
-                            Matcher m = Pattern.compile("^\\$\\{(.*?)\\}$").matcher((CharSequence) value);
-                            
-                            if (m.matches()) {
-                                String key = m.group(1);
-                                value = lastRow.get(key);
-                                params.set(i, value);
-                                logger().info("Using placeholder '{}' value: {}", key, value);
-                            }
-                        }
-                    }
-                }
-                
-                bind(statement, params);
+            if (context.pollAckStatementParams() != null) {
+                bind(statement, context.pollAckStatementParams());
             }
             statement.execute();
             close(statement);
@@ -500,11 +477,8 @@ public class SimpleRiverSource implements RiverSource {
         ResultSetMetaData metadata = result.getMetaData();
         int columns = metadata.getColumnCount();
         List<String> keys = new LinkedList();
-        lastRow = new HashMap<String, Object>();
         for (int i = 1; i <= columns; i++) {
-            String key = metadata.getColumnLabel(i);
-            keys.add(key);
-            lastRow.put(key, null);
+            keys.add(metadata.getColumnLabel(i));
         }
         if (listener != null) {
             listener.keys(keys);
@@ -537,13 +511,14 @@ public class SimpleRiverSource implements RiverSource {
         List<Object> values = new LinkedList();
         ResultSetMetaData metadata = result.getMetaData();
         int columns = metadata.getColumnCount();
+        lastRow.clear();
         for (int i = 1; i <= columns; i++) {
             Object value = parseType(result, i, metadata.getColumnType(i), locale);
             if (logger().isTraceEnabled()) {
                 logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
             }
             values.add(value);
-            lastRow.put(metadata.getColumnLabel(i), result.getObject(i));
+            lastRow.put("$row." + metadata.getColumnLabel(i), result.getObject(i));
         }
         if (listener != null) {
             listener.values(values);
@@ -728,7 +703,13 @@ public class SimpleRiverSource implements RiverSource {
                 logger().debug("job = {}", context.job());
                 pstmt.setString(i, context.job());
             } else {
-                pstmt.setString(i, (String) value);
+                Object rowValue = lastRow.get(s);
+                if (rowValue != null) {
+                    logger().debug("{} = {}", s, rowValue);
+                    pstmt.setObject(i, rowValue);
+                } else {
+                    pstmt.setString(i, (String) value);
+                }
             }
         } else if (value instanceof Integer) {
             pstmt.setInt(i, (Integer) value);
