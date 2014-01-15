@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -13,6 +12,7 @@ import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
 import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
