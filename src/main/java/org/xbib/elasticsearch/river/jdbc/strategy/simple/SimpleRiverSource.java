@@ -1,6 +1,18 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.format.DateTimeFormat;
+import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
+import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -34,18 +46,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
 
 /**
  * A river source implementation for the 'simple' strategy.
