@@ -9,7 +9,7 @@
 <pre><span class="sourceLineNo">001</span><a name="line.1"></a>
 <span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.strategy.simple;<a name="line.2"></a>
 <span class="sourceLineNo">003</span><a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.elasticsearch.ElasticSearchTimeoutException;<a name="line.4"></a>
+<span class="sourceLineNo">004</span>import org.elasticsearch.ElasticsearchTimeoutException;<a name="line.4"></a>
 <span class="sourceLineNo">005</span>import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;<a name="line.5"></a>
 <span class="sourceLineNo">006</span>import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;<a name="line.6"></a>
 <span class="sourceLineNo">007</span>import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;<a name="line.7"></a>
@@ -235,107 +235,104 @@
 <span class="sourceLineNo">227</span>        if (object.meta(StructuredObject.ROUTING) != null) {<a name="line.227"></a>
 <span class="sourceLineNo">228</span>            request.routing(object.meta(StructuredObject.ROUTING));<a name="line.228"></a>
 <span class="sourceLineNo">229</span>        }<a name="line.229"></a>
-<span class="sourceLineNo">230</span>        if (object.meta(StructuredObject.PERCOLATE) != null) {<a name="line.230"></a>
-<span class="sourceLineNo">231</span>            request.percolate(object.meta(StructuredObject.PERCOLATE));<a name="line.231"></a>
+<span class="sourceLineNo">230</span>        if (object.meta(StructuredObject.PARENT) != null) {<a name="line.230"></a>
+<span class="sourceLineNo">231</span>            request.parent(object.meta(StructuredObject.PARENT));<a name="line.231"></a>
 <span class="sourceLineNo">232</span>        }<a name="line.232"></a>
-<span class="sourceLineNo">233</span>        if (object.meta(StructuredObject.PARENT) != null) {<a name="line.233"></a>
-<span class="sourceLineNo">234</span>            request.parent(object.meta(StructuredObject.PARENT));<a name="line.234"></a>
+<span class="sourceLineNo">233</span>        if (object.meta(StructuredObject.TIMESTAMP) != null) {<a name="line.233"></a>
+<span class="sourceLineNo">234</span>            request.timestamp(object.meta(StructuredObject.TIMESTAMP));<a name="line.234"></a>
 <span class="sourceLineNo">235</span>        }<a name="line.235"></a>
-<span class="sourceLineNo">236</span>        if (object.meta(StructuredObject.TIMESTAMP) != null) {<a name="line.236"></a>
-<span class="sourceLineNo">237</span>            request.timestamp(object.meta(StructuredObject.TIMESTAMP));<a name="line.237"></a>
+<span class="sourceLineNo">236</span>        if (object.meta(StructuredObject.TTL) != null) {<a name="line.236"></a>
+<span class="sourceLineNo">237</span>            request.ttl(Long.parseLong(object.meta(StructuredObject.TTL)));<a name="line.237"></a>
 <span class="sourceLineNo">238</span>        }<a name="line.238"></a>
-<span class="sourceLineNo">239</span>        if (object.meta(StructuredObject.TTL) != null) {<a name="line.239"></a>
-<span class="sourceLineNo">240</span>            request.ttl(Long.parseLong(object.meta(StructuredObject.TTL)));<a name="line.240"></a>
-<span class="sourceLineNo">241</span>        }<a name="line.241"></a>
-<span class="sourceLineNo">242</span>        bulk.add(request);<a name="line.242"></a>
-<span class="sourceLineNo">243</span>    }<a name="line.243"></a>
-<span class="sourceLineNo">244</span><a name="line.244"></a>
-<span class="sourceLineNo">245</span><a name="line.245"></a>
-<span class="sourceLineNo">246</span>    @Override<a name="line.246"></a>
-<span class="sourceLineNo">247</span>    public void delete(StructuredObject object) {<a name="line.247"></a>
-<span class="sourceLineNo">248</span>        if (Strings.hasLength(object.index())) {<a name="line.248"></a>
-<span class="sourceLineNo">249</span>            index(object.index());<a name="line.249"></a>
+<span class="sourceLineNo">239</span>        bulk.add(request);<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    }<a name="line.240"></a>
+<span class="sourceLineNo">241</span><a name="line.241"></a>
+<span class="sourceLineNo">242</span><a name="line.242"></a>
+<span class="sourceLineNo">243</span>    @Override<a name="line.243"></a>
+<span class="sourceLineNo">244</span>    public void delete(StructuredObject object) {<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        if (Strings.hasLength(object.index())) {<a name="line.245"></a>
+<span class="sourceLineNo">246</span>            index(object.index());<a name="line.246"></a>
+<span class="sourceLineNo">247</span>        }<a name="line.247"></a>
+<span class="sourceLineNo">248</span>        if (Strings.hasLength(object.type())) {<a name="line.248"></a>
+<span class="sourceLineNo">249</span>            type(object.type());<a name="line.249"></a>
 <span class="sourceLineNo">250</span>        }<a name="line.250"></a>
-<span class="sourceLineNo">251</span>        if (Strings.hasLength(object.type())) {<a name="line.251"></a>
-<span class="sourceLineNo">252</span>            type(object.type());<a name="line.252"></a>
+<span class="sourceLineNo">251</span>        if (Strings.hasLength(object.id())) {<a name="line.251"></a>
+<span class="sourceLineNo">252</span>            id(object.id());<a name="line.252"></a>
 <span class="sourceLineNo">253</span>        }<a name="line.253"></a>
-<span class="sourceLineNo">254</span>        if (Strings.hasLength(object.id())) {<a name="line.254"></a>
-<span class="sourceLineNo">255</span>            id(object.id());<a name="line.255"></a>
+<span class="sourceLineNo">254</span>        if (id == null) {<a name="line.254"></a>
+<span class="sourceLineNo">255</span>            return; // skip if no doc is specified to delete<a name="line.255"></a>
 <span class="sourceLineNo">256</span>        }<a name="line.256"></a>
-<span class="sourceLineNo">257</span>        if (id == null) {<a name="line.257"></a>
-<span class="sourceLineNo">258</span>            return; // skip if no doc is specified to delete<a name="line.258"></a>
-<span class="sourceLineNo">259</span>        }<a name="line.259"></a>
-<span class="sourceLineNo">260</span>        DeleteRequest request = Requests.deleteRequest(index()).type(type()).id(id());<a name="line.260"></a>
-<span class="sourceLineNo">261</span>        if (object.meta(StructuredObject.ROUTING) != null) {<a name="line.261"></a>
-<span class="sourceLineNo">262</span>            request.routing(object.meta(StructuredObject.ROUTING));<a name="line.262"></a>
+<span class="sourceLineNo">257</span>        DeleteRequest request = Requests.deleteRequest(index()).type(type()).id(id());<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        if (object.meta(StructuredObject.ROUTING) != null) {<a name="line.258"></a>
+<span class="sourceLineNo">259</span>            request.routing(object.meta(StructuredObject.ROUTING));<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        }<a name="line.260"></a>
+<span class="sourceLineNo">261</span>        if (object.meta(StructuredObject.PARENT) != null) {<a name="line.261"></a>
+<span class="sourceLineNo">262</span>            request.parent(object.meta(StructuredObject.PARENT));<a name="line.262"></a>
 <span class="sourceLineNo">263</span>        }<a name="line.263"></a>
-<span class="sourceLineNo">264</span>        if (object.meta(StructuredObject.PARENT) != null) {<a name="line.264"></a>
-<span class="sourceLineNo">265</span>            request.parent(object.meta(StructuredObject.PARENT));<a name="line.265"></a>
-<span class="sourceLineNo">266</span>        }<a name="line.266"></a>
-<span class="sourceLineNo">267</span>        if (object.meta(StructuredObject.VERSION) != null) {<a name="line.267"></a>
-<span class="sourceLineNo">268</span>            request.versionType(VersionType.EXTERNAL)<a name="line.268"></a>
-<span class="sourceLineNo">269</span>                    .version(Long.parseLong(object.meta(StructuredObject.VERSION)));<a name="line.269"></a>
-<span class="sourceLineNo">270</span>        }<a name="line.270"></a>
-<span class="sourceLineNo">271</span>        bulk.add(request);<a name="line.271"></a>
-<span class="sourceLineNo">272</span>    }<a name="line.272"></a>
-<span class="sourceLineNo">273</span><a name="line.273"></a>
-<span class="sourceLineNo">274</span>    @Override<a name="line.274"></a>
-<span class="sourceLineNo">275</span>    public void flush() throws IOException {<a name="line.275"></a>
-<span class="sourceLineNo">276</span>        if (error) {<a name="line.276"></a>
-<span class="sourceLineNo">277</span>            return;<a name="line.277"></a>
-<span class="sourceLineNo">278</span>        }<a name="line.278"></a>
-<span class="sourceLineNo">279</span>        //bulk.flush();<a name="line.279"></a>
-<span class="sourceLineNo">280</span>    }<a name="line.280"></a>
-<span class="sourceLineNo">281</span><a name="line.281"></a>
-<span class="sourceLineNo">282</span>    @Override<a name="line.282"></a>
-<span class="sourceLineNo">283</span>    public void close() {<a name="line.283"></a>
-<span class="sourceLineNo">284</span>        bulk.close();<a name="line.284"></a>
-<span class="sourceLineNo">285</span>    }<a name="line.285"></a>
+<span class="sourceLineNo">264</span>        if (object.meta(StructuredObject.VERSION) != null) {<a name="line.264"></a>
+<span class="sourceLineNo">265</span>            request.versionType(VersionType.EXTERNAL)<a name="line.265"></a>
+<span class="sourceLineNo">266</span>                    .version(Long.parseLong(object.meta(StructuredObject.VERSION)));<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        }<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        bulk.add(request);<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    }<a name="line.269"></a>
+<span class="sourceLineNo">270</span><a name="line.270"></a>
+<span class="sourceLineNo">271</span>    @Override<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    public void flush() throws IOException {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        if (error) {<a name="line.273"></a>
+<span class="sourceLineNo">274</span>            return;<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        }<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        //bulk.flush();<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    }<a name="line.277"></a>
+<span class="sourceLineNo">278</span><a name="line.278"></a>
+<span class="sourceLineNo">279</span>    @Override<a name="line.279"></a>
+<span class="sourceLineNo">280</span>    public void close() {<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        bulk.close();<a name="line.281"></a>
+<span class="sourceLineNo">282</span>    }<a name="line.282"></a>
+<span class="sourceLineNo">283</span><a name="line.283"></a>
+<span class="sourceLineNo">284</span>    @Override<a name="line.284"></a>
+<span class="sourceLineNo">285</span>    public void createIndexIfNotExists(String settings, String mapping) {<a name="line.285"></a>
 <span class="sourceLineNo">286</span><a name="line.286"></a>
-<span class="sourceLineNo">287</span>    @Override<a name="line.287"></a>
-<span class="sourceLineNo">288</span>    public void createIndexIfNotExists(String settings, String mapping) {<a name="line.288"></a>
-<span class="sourceLineNo">289</span><a name="line.289"></a>
-<span class="sourceLineNo">290</span>        if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {<a name="line.290"></a>
-<span class="sourceLineNo">291</span>            if (Strings.hasLength(settings)) {<a name="line.291"></a>
-<span class="sourceLineNo">292</span>                client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();<a name="line.292"></a>
+<span class="sourceLineNo">287</span>        if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {<a name="line.287"></a>
+<span class="sourceLineNo">288</span>            if (Strings.hasLength(settings)) {<a name="line.288"></a>
+<span class="sourceLineNo">289</span>                client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();<a name="line.289"></a>
+<span class="sourceLineNo">290</span>            }<a name="line.290"></a>
+<span class="sourceLineNo">291</span>            if (Strings.hasLength(mapping)) {<a name="line.291"></a>
+<span class="sourceLineNo">292</span>                client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();<a name="line.292"></a>
 <span class="sourceLineNo">293</span>            }<a name="line.293"></a>
-<span class="sourceLineNo">294</span>            if (Strings.hasLength(mapping)) {<a name="line.294"></a>
-<span class="sourceLineNo">295</span>                client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();<a name="line.295"></a>
-<span class="sourceLineNo">296</span>            }<a name="line.296"></a>
-<span class="sourceLineNo">297</span>            return;<a name="line.297"></a>
-<span class="sourceLineNo">298</span>        }<a name="line.298"></a>
-<span class="sourceLineNo">299</span>        CreateIndexRequestBuilder builder = client.admin().indices().prepareCreate(index);<a name="line.299"></a>
-<span class="sourceLineNo">300</span>        if (Strings.hasLength(settings)) {<a name="line.300"></a>
-<span class="sourceLineNo">301</span>            builder.setSettings(settings);<a name="line.301"></a>
-<span class="sourceLineNo">302</span>        }<a name="line.302"></a>
-<span class="sourceLineNo">303</span>        builder.execute().actionGet();<a name="line.303"></a>
-<span class="sourceLineNo">304</span>        if (Strings.hasLength(mapping)) {<a name="line.304"></a>
-<span class="sourceLineNo">305</span>            client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();<a name="line.305"></a>
-<span class="sourceLineNo">306</span>        }<a name="line.306"></a>
-<span class="sourceLineNo">307</span>    }<a name="line.307"></a>
-<span class="sourceLineNo">308</span><a name="line.308"></a>
-<span class="sourceLineNo">309</span>    @Override<a name="line.309"></a>
-<span class="sourceLineNo">310</span>    public void waitForCluster() throws IOException {<a name="line.310"></a>
-<span class="sourceLineNo">311</span>        waitForCluster(ClusterHealthStatus.YELLOW, TimeValue.timeValueSeconds(30));<a name="line.311"></a>
-<span class="sourceLineNo">312</span>    }<a name="line.312"></a>
-<span class="sourceLineNo">313</span><a name="line.313"></a>
-<span class="sourceLineNo">314</span>    public void waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {<a name="line.314"></a>
-<span class="sourceLineNo">315</span>        try {<a name="line.315"></a>
-<span class="sourceLineNo">316</span>            logger().info("waiting for cluster state {}", status.name());<a name="line.316"></a>
-<span class="sourceLineNo">317</span>            ClusterHealthResponse healthResponse =<a name="line.317"></a>
-<span class="sourceLineNo">318</span>                    client.admin().cluster().prepareHealth().setWaitForStatus(status).setTimeout(timeout).execute().actionGet();<a name="line.318"></a>
-<span class="sourceLineNo">319</span>            if (healthResponse.isTimedOut()) {<a name="line.319"></a>
-<span class="sourceLineNo">320</span>                throw new IOException("cluster state is " + healthResponse.getStatus().name()<a name="line.320"></a>
-<span class="sourceLineNo">321</span>                        + " and not " + status.name()<a name="line.321"></a>
-<span class="sourceLineNo">322</span>                        + ", cowardly refusing to continue with operations");<a name="line.322"></a>
-<span class="sourceLineNo">323</span>            } else {<a name="line.323"></a>
-<span class="sourceLineNo">324</span>                logger().info("... cluster state ok");<a name="line.324"></a>
-<span class="sourceLineNo">325</span>            }<a name="line.325"></a>
-<span class="sourceLineNo">326</span>        } catch (ElasticSearchTimeoutException e) {<a name="line.326"></a>
-<span class="sourceLineNo">327</span>            throw new IOException("timeout, cluster does not respond to health request, cowardly refusing to continue with operations");<a name="line.327"></a>
-<span class="sourceLineNo">328</span>        }<a name="line.328"></a>
-<span class="sourceLineNo">329</span>    }<a name="line.329"></a>
-<span class="sourceLineNo">330</span>}<a name="line.330"></a>
+<span class="sourceLineNo">294</span>            return;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>        }<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        CreateIndexRequestBuilder builder = client.admin().indices().prepareCreate(index);<a name="line.296"></a>
+<span class="sourceLineNo">297</span>        if (Strings.hasLength(settings)) {<a name="line.297"></a>
+<span class="sourceLineNo">298</span>            builder.setSettings(settings);<a name="line.298"></a>
+<span class="sourceLineNo">299</span>        }<a name="line.299"></a>
+<span class="sourceLineNo">300</span>        builder.execute().actionGet();<a name="line.300"></a>
+<span class="sourceLineNo">301</span>        if (Strings.hasLength(mapping)) {<a name="line.301"></a>
+<span class="sourceLineNo">302</span>            client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        }<a name="line.303"></a>
+<span class="sourceLineNo">304</span>    }<a name="line.304"></a>
+<span class="sourceLineNo">305</span><a name="line.305"></a>
+<span class="sourceLineNo">306</span>    @Override<a name="line.306"></a>
+<span class="sourceLineNo">307</span>    public void waitForCluster() throws IOException {<a name="line.307"></a>
+<span class="sourceLineNo">308</span>        waitForCluster(ClusterHealthStatus.YELLOW, TimeValue.timeValueSeconds(30));<a name="line.308"></a>
+<span class="sourceLineNo">309</span>    }<a name="line.309"></a>
+<span class="sourceLineNo">310</span><a name="line.310"></a>
+<span class="sourceLineNo">311</span>    public void waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {<a name="line.311"></a>
+<span class="sourceLineNo">312</span>        try {<a name="line.312"></a>
+<span class="sourceLineNo">313</span>            logger().info("waiting for cluster state {}", status.name());<a name="line.313"></a>
+<span class="sourceLineNo">314</span>            ClusterHealthResponse healthResponse =<a name="line.314"></a>
+<span class="sourceLineNo">315</span>                    client.admin().cluster().prepareHealth().setWaitForStatus(status).setTimeout(timeout).execute().actionGet();<a name="line.315"></a>
+<span class="sourceLineNo">316</span>            if (healthResponse.isTimedOut()) {<a name="line.316"></a>
+<span class="sourceLineNo">317</span>                throw new IOException("cluster state is " + healthResponse.getStatus().name()<a name="line.317"></a>
+<span class="sourceLineNo">318</span>                        + " and not " + status.name()<a name="line.318"></a>
+<span class="sourceLineNo">319</span>                        + ", cowardly refusing to continue with operations");<a name="line.319"></a>
+<span class="sourceLineNo">320</span>            } else {<a name="line.320"></a>
+<span class="sourceLineNo">321</span>                logger().info("... cluster state ok");<a name="line.321"></a>
+<span class="sourceLineNo">322</span>            }<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        } catch (ElasticsearchTimeoutException e) {<a name="line.323"></a>
+<span class="sourceLineNo">324</span>            throw new IOException("timeout, cluster does not respond to health request, cowardly refusing to continue with operations");<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        }<a name="line.325"></a>
+<span class="sourceLineNo">326</span>    }<a name="line.326"></a>
+<span class="sourceLineNo">327</span>}<a name="line.327"></a>
 
 
 
