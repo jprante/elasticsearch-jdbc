@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -42,9 +41,11 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * A river source implementation for the 'simple' strategy.
@@ -61,6 +62,8 @@ import java.util.Locale;
 public class SimpleRiverSource implements RiverSource {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getSimpleName());
+    
+    private final Map<String, Object> lastRow = new HashMap<String, Object>();
 
     protected RiverContext context;
 
@@ -508,12 +511,14 @@ public class SimpleRiverSource implements RiverSource {
         List<Object> values = new LinkedList();
         ResultSetMetaData metadata = result.getMetaData();
         int columns = metadata.getColumnCount();
+        lastRow.clear();
         for (int i = 1; i <= columns; i++) {
             Object value = parseType(result, i, metadata.getColumnType(i), locale);
             if (logger().isTraceEnabled()) {
                 logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
             }
             values.add(value);
+            lastRow.put("$row." + metadata.getColumnLabel(i), result.getObject(i));
         }
         if (listener != null) {
             listener.values(values);
@@ -698,7 +703,13 @@ public class SimpleRiverSource implements RiverSource {
                 logger().debug("job = {}", context.job());
                 pstmt.setString(i, context.job());
             } else {
-                pstmt.setString(i, (String) value);
+                Object rowValue = lastRow.get(s);
+                if (rowValue != null) {
+                    logger().debug("{} = {}", s, rowValue);
+                    pstmt.setObject(i, rowValue);
+                } else {
+                    pstmt.setString(i, (String) value);
+                }
             }
         } else if (value instanceof Integer) {
             pstmt.setInt(i, (Integer) value);
