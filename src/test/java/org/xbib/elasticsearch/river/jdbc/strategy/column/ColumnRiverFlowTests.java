@@ -61,7 +61,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
     }
     
     @Test()
-    @Parameters({"river1"})
+    @Parameters({"river-existedWhereClause"})
     public void testWriteLastRiverRunTimeToCustomRiverInfo(String riverResource) throws IOException {
 
         final Client client = client("1");
@@ -81,7 +81,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
     }
     
     @Test()
-    @Parameters({"river1"})
+    @Parameters({"river-existedWhereClause"})
     public void testReadLastRiverRunTimeFromCustomRiverInfo(String riverResource) throws IOException {
         final Client client = client("1");
         

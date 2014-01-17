@@ -19,36 +19,25 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
-import org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlow;
-import org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.logging.Logger;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;
 import org.xbib.elasticsearch.river.jdbc.support.Operations;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
 import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
@@ -77,12 +66,18 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
     
     @Test()
-    @Parameters({"river1", "sql1"})
-    public void testColumnRiver_createSomeObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {        
-        verifyCreateSomeObjects(riverResource, sql);
+    @Parameters({"river-existedWhereClause", "sqlInsert"})
+    public void testCreateObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {        
+        verifyCreateObjects(riverResource, sql);
     }
     
-    private void verifyCreateSomeObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {
+    @Test
+    @Parameters({"river-whereClausePlaceholder", "sqlInsert"})
+    public void testCreateObjects_configurationWithWherePlaceholder(String riverResource, String sql) throws SQLException, IOException, InterruptedException {
+        verifyCreateObjects(riverResource, sql);
+    }
+    
+    private void verifyCreateObjects(String riverResource, String sql) throws SQLException, IOException, InterruptedException {
         final int newRecordsOutOfTimeRange = 3;
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
@@ -102,15 +97,18 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
     
     @Test()
-    @Parameters({"river-sqlparams", "sql1"})
-    public void testColumnRiver_createSomeObjects_configurationWithSqlParams(String riverResource, String sql)  throws SQLException, IOException, InterruptedException {
-        verifyCreateSomeObjects(riverResource, sql);
+    @Parameters({"river-sqlparams", "sqlInsert"})
+    public void testCreateObjects_configurationWithSqlParams(String riverResource, String sql)  throws SQLException, IOException, InterruptedException {
+        verifyCreateObjects(riverResource, sql);
     }
     
     @Test()
-    @Parameters({"river2", "sql1", "sql2"})
-    public void testColumnRiver_removeObjects(String riverResource, String insertSql, String updateSql) throws SQLException, IOException, InterruptedException {
-        
+    @Parameters({"river-sqlForTestDeletions", "sqlInsert"})
+    public void testRemoveObjects(String riverResource, String insertSql) throws SQLException, IOException, InterruptedException {
+        verifyDeleteObjects(riverResource, insertSql);
+    }
+    
+    private void verifyDeleteObjects(String riverResource, String insertSql) throws IOException, SQLException, InterruptedException {        
         MockRiverMouth riverMouth = new MockRiverMouth();
 
         boolean[] shouldProductsBeDeleted = new boolean[] { true, true, false };
@@ -118,6 +116,12 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         ProductFixtures productFixtures = createFixturesAndPopulateMouth(shouldProductsBeDeleted, riverMouth);
         
         testColumnRiver(riverMouth, riverResource, insertSql, productFixtures.fixtures, productFixtures.expectedCount);
+    }
+    
+    @Test()
+    @Parameters({"river-sqlForTestDeletionsAndWherePlaceholder", "sqlInsert"})
+    public void testRemoveObjects_configurationWithWherePlaceholder(String riverResource, String insertSql) throws SQLException, IOException, InterruptedException {
+        verifyDeleteObjects(riverResource, insertSql);
     }
 
     private ProductFixtures createFixturesAndPopulateMouth(boolean[] shouldProductsBeDeleted, MockRiverMouth riverMouth) throws IOException {

@@ -1,15 +1,15 @@
 {
     "jdbc" :{
         "strategy" : "column",
-        "driver" : "com.mysql.jdbc.Driver",
-        "url" : "jdbc:mysql://localhost:3306/test",
+        "driver" : "org.apache.derby.jdbc.EmbeddedDriver",
+        "url" : "jdbc:derby:memory:myDB",
         "user" : "",
         "password" : "",
-        "sql": "SELECT id AS _id, id, name FROM products WHERE 1=1",
+        "sql": "SELECT \"id\", \"name\" FROM \"products\" WHERE 1=1 AND $where",
         "poll": "1h",
         "column_updated_at": "updated_at",
         "column_created_at": "created_at",
-        "column_deleted_at": "deleted_at"
+        "column_deleted_at": "deleted_at",
         "index" : "my_jdbc_river",
         "type" : "my_jdbc_river"
     }
