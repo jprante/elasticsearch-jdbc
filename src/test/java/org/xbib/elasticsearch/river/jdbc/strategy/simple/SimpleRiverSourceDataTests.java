@@ -1,37 +1,5 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
-
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
-
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
-import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverTest;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -39,9 +7,26 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
+import org.xbib.elasticsearch.river.jdbc.RiverMouth;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
+import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverTest;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.StructuredObjectKeyValueStreamListener;
+import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
+import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+
+import static org.elasticsearch.common.collect.Lists.newLinkedList;
+
 public class SimpleRiverSourceDataTests extends AbstractRiverTest {
 
-    private static final ESLogger logger = Loggers.getLogger(SimpleRiverSourceDataTests.class);
+    private static final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSourceDataTests.class.getName());
 
     @Override
     public RiverSource getRiverSource() {
@@ -50,60 +35,56 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
 
     @Override
     public RiverContext getRiverContext() {
-        RiverContext context = new RiverContext();
-        context.digesting(true);
-        return context;
+        return new RiverContext();
     }
 
     @Test
     @Parameters({"sql1"})
     public void testBill(String sql) throws Exception {
-        try {
-            List<Object> params = new ArrayList();
-            RiverMouth target = new MockRiverMouth() {
-                @Override
-                public void index(StructuredObject object) throws IOException {
-                    logger.debug("sql1 object={}", object);
-                }
-            };
-            PreparedStatement statement = source.prepareQuery(sql);
-            source.bind(statement, params);
-            ResultSet results = source.executeQuery(statement);
-            SimpleValueListener listener = new SimpleValueListener().target(target);
-            long rows = 0L;
-            source.beforeFirstRow(results, listener);
-            while (source.nextRow(results, listener)) {
-                rows++;
+        List<Object> params = new ArrayList();
+        RiverMouth output = new MockRiverMouth() {
+            @Override
+            public void index(StructuredObject object, boolean create) throws IOException {
+                logger.debug("sql1 object={}", object);
             }
-            listener.reset();
-            assertEquals(rows, 5);
-            source.close(results);
-            source.close(statement);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+        };
+        PreparedStatement statement = source.prepareQuery(sql);
+        source.bind(statement, params);
+        ResultSet results = source.executeQuery(statement);
+        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                .output(output);
+        long rows = 0L;
+        source.beforeRows(results, listener);
+        while (source.nextRow(results, listener)) {
+            rows++;
         }
+        source.afterRows(results, listener);
+        assertEquals(rows, 5);
+        source.close(results);
+        source.close(statement);
     }
 
     @Test
     @Parameters({"sql2"})
     public void testDepartments(String sql) throws Exception {
-        List<Object> params = new ArrayList();
-        RiverMouth target = new MockRiverMouth() {
+        List<Object> params = newLinkedList();
+        RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object) throws IOException {
+            public void index(StructuredObject object, boolean create) throws IOException {
                 logger.debug("sql2 object={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        SimpleValueListener listener = new SimpleValueListener().target(target);
+        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                .output(output);
+        source.beforeRows(results, listener);
         long rows = 0L;
-        source.beforeFirstRow(results, listener);
         while (source.nextRow(results, listener)) {
             rows++;
         }
-        listener.reset();
+        source.afterRows(results, listener);
         assertEquals(rows, 11);
         source.close(results);
         source.close(statement);
@@ -114,22 +95,23 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
     public void testHighBills(String sql) throws Exception {
         List<Object> params = new ArrayList();
         params.add(2.00);
-        RiverMouth target = new MockRiverMouth() {
+        RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object) throws IOException {
+            public void index(StructuredObject object, boolean create) throws IOException {
                 logger.debug("sql3={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        ValueListener listener = new SimpleValueListener().target(target);
+        KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                .output(output);
+        source.beforeRows(results, listener);
         long rows = 0L;
-        source.beforeFirstRow(results, listener);
         while (source.nextRow(results, listener)) {
             rows++;
         }
-        listener.reset();
+        source.afterRows(results, listener);
         assertEquals(rows, 2);
         source.close(results);
         source.close(statement);
@@ -140,22 +122,23 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
     public void testTimePeriod(String sql) throws Exception {
         List<Object> params = new ArrayList();
         params.add("2012-06-10 00:00:00");
-        RiverMouth target = new MockRiverMouth() {
+        RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object) throws IOException {
+            public void index(StructuredObject object, boolean create) throws IOException {
                 logger.debug("object={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        SimpleValueListener listener = new SimpleValueListener().target(target);
+        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                .output(output);
+        source.beforeRows(results, listener);
         long rows = 0L;
-        source.beforeFirstRow(results, listener);
         while (source.nextRow(results, listener)) {
             rows++;
         }
-        listener.reset();
+        source.afterRows(results, listener);
         assertEquals(rows, 3);
         source.close(results);
         source.close(statement);
@@ -164,24 +147,23 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
     @Test
     @Parameters({"sql5"})
     public void testIndexId(String sql) throws Exception {
-        MockRiverMouth target = new MockRiverMouth() {
+        MockRiverMouth mock = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object) throws IOException {
-                super.index(object);
+            public void index(StructuredObject object, boolean create) throws IOException {
+                super.index(object, create);
                 logger.debug("products={}", object);
             }
         };
-        target.index("products").type("products");
+        mock.setIndex("products").setType("products");
         PreparedStatement statement = source.prepareQuery(sql);
         ResultSet results = source.executeQuery(statement);
-        SimpleValueListener listener = new SimpleValueListener().target(target);
-        long rows = 0L;
-        source.beforeFirstRow(results, listener);
+        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                .output(mock);
+        source.beforeRows(results, listener);
         while (source.nextRow(results, listener)) {
-            rows++;
         }
-        listener.reset();
-        assertEquals(target.getCounter(), 3);
+        source.afterRows(results, listener);
+        assertEquals(mock.getCounter(), 3);
         source.close(results);
         source.close(statement);
     }

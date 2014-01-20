@@ -1,17 +1,16 @@
 
 package org.xbib.elasticsearch.river.jdbc;
 
+import java.io.IOException;
+
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-
-import java.io.IOException;
 
 /**
  * The river mouth is the abstraction of the destination where all the data
  * is flowing from the river source.
- *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public interface RiverMouth {
 
@@ -45,20 +44,24 @@ public interface RiverMouth {
      */
     Client client();
 
+    RiverMouth setSettings(String settings);
+
+    RiverMouth setMapping(String mapping);
+
     /**
      * Set index
      *
      * @param index the index
      * @return this river mouth
      */
-    RiverMouth index(String index);
+    RiverMouth setIndex(String index);
 
     /**
      * Return index
      *
      * @return the index
      */
-    String index();
+    String getIndex();
 
     /**
      * Set type
@@ -66,14 +69,14 @@ public interface RiverMouth {
      * @param type the type
      * @return this river mouth
      */
-    RiverMouth type(String type);
+    RiverMouth setType(String type);
 
     /**
      * Return type
      *
      * @return the type
      */
-    String type();
+    String getType();
 
     /**
      * Set ID
@@ -81,7 +84,9 @@ public interface RiverMouth {
      * @param id the id
      * @return this river mouth
      */
-    RiverMouth id(String id);
+    RiverMouth setId(String id);
+
+    String getId();
 
     /**
      * Set maximum number of bulk actions
@@ -89,14 +94,7 @@ public interface RiverMouth {
      * @param actions the number of bulk actions
      * @return this river mouth
      */
-    RiverMouth maxBulkActions(int actions);
-
-    /**
-     * Get maximum number of bulk actions
-     *
-     * @return max bulk actions
-     */
-    int maxBulkActions();
+    RiverMouth setMaxBulkActions(int actions);
 
     /**
      * Set maximum number of concurrent bulk requests
@@ -104,48 +102,24 @@ public interface RiverMouth {
      * @param max the  maximum number of concurrent bulk requests
      * @return this river mouth
      */
-    RiverMouth maxConcurrentBulkRequests(int max);
+    RiverMouth setMaxConcurrentBulkRequests(int max);
 
     /**
-     * Get maximum concurrent bulk requests
-     *
-     * @return maximum concurrent requests
-     */
-    int maxConcurrentBulkRequests();
-
-    /**
-     * Set acknowledge
-     *
-     * @param enable true for enable
+     * Set flish interval
+     * @param flushInterval flush interval
      * @return this river mouth
      */
-    RiverMouth acknowledge(boolean enable);
-
-    /**
-     * Get acknowledge
-     *
-     * @return true if the acknowledge is enabled
-     */
-    boolean acknowledge();
-
-    /**
-     * Create.  Indicating that an object has been built and is ready to be indexed.
-     * The source of the document is held by the XContentBuilder.
-     * The document is only indexed if no document with that index/type/id exists.
-     *
-     * @param object the structured object
-     * @throws IOException
-     */
-    void create(StructuredObject object) throws IOException;
+    RiverMouth setFlushInterval(TimeValue flushInterval);
 
     /**
      * Index. Indicating that an object has been built and is ready to be indexed.
      * The source of the document is held by the XContentBuilder.
      *
      * @param object the indexable object
+     * @param create true if the document should be created
      * @throws IOException
      */
-    void index(StructuredObject object) throws IOException;
+    void index(StructuredObject object, boolean create) throws IOException;
 
     /**
      * Delete. Indicating that an object should be deleted from the index.
@@ -166,14 +140,6 @@ public interface RiverMouth {
      * Close this river mouth
      */
     void close();
-
-    /**
-     * Create index with optional settings and mapping
-     *
-     * @param settings the settings
-     * @param mapping  the mapping
-     */
-    void createIndexIfNotExists(String settings, String mapping);
 
     void waitForCluster() throws IOException;
 

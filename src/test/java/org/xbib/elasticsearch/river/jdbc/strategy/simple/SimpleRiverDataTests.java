@@ -1,32 +1,17 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
+
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
 import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
+public class SimpleRiverDataTests extends AbstractRiverNodeTest {
 
     private Client client;
 
@@ -46,9 +31,7 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
 
     @Override
     public RiverContext getRiverContext() {
-        RiverContext context = new RiverContext();
-        context.digesting(true);
-        return context;
+        return new RiverContext();
     }
 
     /**
@@ -65,9 +48,9 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
         source.closeWriting();
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
-        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
+        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);
         river.start();
-        Thread.sleep(3000L); // let the good things happen
+        Thread.sleep(10000L); // let the river run
         assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 104);
         river.close();
     }
@@ -75,7 +58,8 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
     /**
      * Product table
      *
-     * @param riverResource
+     * @param riverResource the river
+     * @param sql the SQL statement
      * @throws Exception
      */
     @Test
@@ -86,11 +70,11 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
         source.closeWriting();
         client = client("1");
         RiverSettings settings = riverSettings(riverResource);
-        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
+        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);
         river.start();
-        Thread.sleep(3000L); // let some good things happen
+        Thread.sleep(5000L); // let the river flow...
         river.once();
-        Thread.sleep(3000L); // let other good things happen
+        Thread.sleep(5000L); // let the river flow...
         assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 208);
         river.close();
     }
@@ -110,7 +94,7 @@ public class SimpleRiverMouthDataTests extends AbstractRiverNodeTest {
     private void addData(Connection connection, String sql, final String name, final long amount, final double price)
             throws SQLException {
         PreparedStatement stmt = connection.prepareStatement(sql);
-        List<Object> params = new ArrayList() {{
+        List<Object> params = new ArrayList<Object>() {{
             add(name);
             add(amount);
             add(price);

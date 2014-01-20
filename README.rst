@@ -12,12 +12,11 @@ It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guid
 The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch.
 
 Creating a JDBC river is easy. Install the plugin. Download a JDBC driver jar from your vendor's site (here MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
-Then issue this command::
+Then issue this simple command::
 
     curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
         "type" : "jdbc",
         "jdbc" : {
-            "driver" : "com.mysql.jdbc.Driver",
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
@@ -39,8 +38,8 @@ Prerequisites
 =============  ===========  =================  ===========================================================
 ES version     Plugin       Release date       Command
 -------------  -----------  -----------------  -----------------------------------------------------------
-0.90.7         **2.3.1**    Dec 14, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1ctvKka
-1.0.0.RC1      1.0.0.RC1.1  Jan 16, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1fzvNCy
+0.90.7         2.3.1        Dec 14, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1ctvKka
+1.0.0.RC1      1.0.0.RC1.2  Jan 20, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1dKqNJy
 =============  ===========  =================  ===========================================================
 
 Do not forget to restart the node after installing.
@@ -59,6 +58,8 @@ Binaries are available at `Bintray <https://bintray.com/pkg/show/general/jprante
 Documentation
 -------------
 
+Attention: working on the documentation for 1.0.0.RC1.2 is still in progress!
+
 `Quickstart <../../../elasticsearch-river-jdbc/wiki/Quickstart>`_
 
 `JDBC river parameters <../../../elasticsearch-river-jdbc/wiki/JDBC-River-parameters>`_
@@ -76,8 +77,6 @@ Documentation
 `Bulk indexing <../../../elasticsearch-river-jdbc/wiki/Bulk-indexing>`_
 
 `Setting up the river with PostgreSQL <../../../elasticsearch-river-jdbc/wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
-
-`Loading from CSV <../../../elasticsearch-river-jdbc/wiki/Loading-CSV>`_
 
 License
 =======

@@ -1,7 +1,6 @@
 {
-    "jdbc" :{
+    "jdbc" : {
         "strategy" : "column",
-        "driver" : "org.apache.derby.jdbc.EmbeddedDriver",
         "url" : "jdbc:derby:memory:myDB",
         "user" : "",
         "password" : "",

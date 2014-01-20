@@ -1,51 +1,31 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
 
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
-import org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlow;
-import org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSource;
 import java.io.IOException;
 import java.util.Map;
+
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
+
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
-import static org.xbib.elasticsearch.river.jdbc.RiverFlow.ID_INFO_RIVER_INDEX;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import static org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlow.LAST_RUN_TIME;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
+
+import static org.xbib.elasticsearch.river.jdbc.RiverFlow.ID_INFO_RIVER_INDEX;
+import static org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlow.LAST_RUN_TIME;
 
 public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
 
@@ -56,8 +36,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
 
     @Override
     public RiverContext getRiverContext() {
-        RiverContext context = new RiverContext();
-        return context;
+        return new RiverContext();
     }
     
     @Test()
@@ -67,8 +46,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
         final Client client = client("1");
         setupContext(new MockRiverSource(){
             @Override
-            public String fetch() {
-                return null;
+            public void fetch() {
             }
         }, riverResource, client);
         
@@ -89,9 +67,8 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
         
         setupContext(new MockRiverSource(){
             @Override
-            public String fetch() {
+            public void fetch() {
                 assertLastRunDateEquals(lastRunAt);
-                return null;
             }
         }, riverResource, client);
         
@@ -115,7 +92,6 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
             }            
         });
         context.riverSource(riverSource);
-        context.riverIndexName("_river");
         context.riverName(new RiverName(INDEX, TYPE).getName());
         context.riverSettings(riverSettings.settings());
         context.columnEscape(true);
@@ -123,7 +99,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
     
     private void assertLastRiverRunTimeExists(Client client) {
         try {
-            GetResponse get = client.prepareGet(context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX).execute().actionGet();
+            GetResponse get = client.prepareGet("_river", context.riverName(), ID_INFO_RIVER_INDEX).execute().actionGet();
             Map map = (Map) get.getSourceAsMap().get("jdbc");
 
             assertNotNull(map, "jdbc key not exists in custom info");        
@@ -150,7 +126,7 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
                 .endObject();
 
         client.prepareBulk()
-                .add(Requests.indexRequest(context.riverIndexName())
+                .add(Requests.indexRequest("_river")
                     .type(context.riverName())
                     .id(ID_INFO_RIVER_INDEX)
                     .source(builder)

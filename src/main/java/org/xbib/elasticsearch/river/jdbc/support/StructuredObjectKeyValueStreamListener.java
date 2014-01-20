@@ -1,24 +1,25 @@
 
 package org.xbib.elasticsearch.river.jdbc.support;
 
-import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.elasticsearch.common.xcontent.json.JsonXContent;
+
+import org.xbib.elasticsearch.river.jdbc.RiverMouth;
+
 /**
- * The SimpleValueListener class consumes values from a database and transports
- * them to the river target.
- *
+ * The SimpleValueListener class consumes values from a tabular source and transports
+ * them to the river indexer.
  */
-public class SimpleValueListener<O extends Object> implements ValueListener {
+public class StructuredObjectKeyValueStreamListener<O extends Object> implements KeyValueStreamListener {
 
     /**
      * The current structured object
@@ -31,49 +32,16 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
     /**
      * The river target where the structured objects will be moved
      */
-    private RiverMouth target;
+    private RiverMouth output;
     /**
      * The keys of the values. They are examined for the Elasticsearch index
      * attributes.
      */
     private List<String> keys;
-    /**
-     * The delimiter between the key names in the path, used for string split.
-     * Should not be modified.
-     */
-    private char delimiter = '.';
-    /**
-     * If digesting is enabled. This is the default.
-     */
-    private boolean digesting = true;
 
-    private MessageDigest digest;
-
-    public SimpleValueListener target(RiverMouth target) {
-        this.target = target;
+    public StructuredObjectKeyValueStreamListener output(RiverMouth output) {
+        this.output = output;
         return this;
-    }
-
-    public SimpleValueListener delimiter(char delimiter) {
-        this.delimiter = delimiter;
-        return this;
-    }
-
-    public SimpleValueListener digest(boolean digesting) {
-        this.digesting = digesting;
-        if (digesting) {
-            try {
-                digest = MessageDigest.getInstance("SHA-256");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return this;
-    }
-
-    @Override
-    public MessageDigest digest() {
-        return digest;
     }
 
     /**
@@ -82,31 +50,32 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      * @return this value listener
      * @throws IOException
      */
-    public SimpleValueListener begin() throws IOException {
+    @Override
+    public StructuredObjectKeyValueStreamListener begin() throws IOException {
         return this;
     }
 
     /**
      * Set the keys.
      *
-     * @param keys
+     * @param keys the keys
      * @return this value listener
      */
     @Override
-    public SimpleValueListener keys(List<String> keys) {
-        this.keys = keys;
+    public StructuredObjectKeyValueStreamListener keys(Collection<String> keys) throws IOException {
+        this.keys = new LinkedList<String>(keys);
         return this;
     }
 
     /**
      * Receive values.
      *
-     * @param values
+     * @param values the values
      * @return this value listener
      * @throws IOException
      */
     @Override
-    public SimpleValueListener values(List<? extends Object> values) throws IOException {
+    public StructuredObjectKeyValueStreamListener values(Collection<? extends Object> values) throws IOException {
         boolean hasSource = false;
         if (current == null) {
             current = newObject();
@@ -115,19 +84,18 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
             prev = newObject();
         }
         // execute meta operations on pseudo columns
-        for (int i = 0; i < values.size(); i++) {
-            // v may be null
-            Object o = values.get(i);
+        int i = 0;
+        for (Object o : values) {
             if (o == null) {
                 continue;
             }
             String v = o.toString();
-            // JAVA7: string switch
             String k = keys.get(i);
             map(k, v, current);
             if (StructuredObject.SOURCE.equals(k)) {
                 hasSource = true;
             }
+            i++;
         }
         if (hasSource) {
             end(current);
@@ -142,16 +110,37 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
             current = newObject();
         }
         // create current object from values by sequentially merging the values
-        for (int i = 0; i < keys.size(); i++) {
+        i = 0;
+        for (Object o : values) {
             Map map = null;
             try {
-                map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
+                map = JsonXContent.jsonXContent.createParser(o.toString()).mapAndClose();
             } catch (Exception e) {
+                // ignore
             }
-
-            Map m = merge(current.source(), keys.get(i), map != null && map.size() > 0 ? map : values.get(i));
+            Map m = merge(current.source(),
+                    keys.get(i),
+                    map != null && map.size() > 0 ? map : o);
             current.source(m);
+            i++;
         }
+        return this;
+    }
+
+    /**
+     * End of value sequence
+     *
+     * @return this value listener
+     * @throws IOException
+     */
+    @Override
+    public StructuredObjectKeyValueStreamListener end() throws IOException {
+        if (prev != null) {
+            prev.source(current.source());
+            end(prev);
+        }
+        prev = newObject();
+        current = newObject();
         return this;
     }
 
@@ -183,21 +172,6 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
         }
     }
 
-    /**
-     * End of values.
-     *
-     * @return this value listener
-     * @throws IOException
-     */
-    public SimpleValueListener end() throws IOException {
-        if (prev != null) {
-            prev.source(current.source());
-            end(prev);
-        }
-        prev = newObject();
-        current = newObject();
-        return this;
-    }
 
     /**
      * The object is complete. Push it to the river target.
@@ -206,34 +180,23 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      * @return this value listener
      * @throws IOException
      */
-    public SimpleValueListener end(StructuredObject object) throws IOException {
+    public StructuredObjectKeyValueStreamListener end(StructuredObject object) throws IOException {
         if (object.source().isEmpty()) {
             return this;
         }
-        if (target != null) {
+        if (output != null) {
             if (object.optype() == null) {
-                target.index(object);
+                output.index(object, false);
             } else if (Operations.OP_INDEX.equals(object.optype())) {
-                target.index(object);
+                output.index(object, false);
             } else if (Operations.OP_CREATE.equals(object.optype())) {
-                target.create(object);
+                output.index(object, true);
             } else if (Operations.OP_DELETE.equals(object.optype())) {
-                target.delete(object);
+                output.delete(object);
             } else {
                 throw new IllegalArgumentException("unknown optype: " + object.optype());
             }
         }
-        return this;
-    }
-
-    /**
-     * Reset this listener
-     *
-     * @throws IOException
-     */
-    @Override
-    public SimpleValueListener reset() throws IOException {
-        end();
         return this;
     }
 
@@ -259,7 +222,7 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
                 || PseudoColumnNames.PARENT.equals(key)) {
             return map;
         }
-        int i = key.indexOf(delimiter);
+        int i = key.indexOf('.');
         String index = null;
         if (i <= 0) {
             Matcher matcher = p.matcher(key);
@@ -322,10 +285,8 @@ public class SimpleValueListener<O extends Object> implements ValueListener {
      *
      * @return a new structured object
      */
-    private StructuredObject newObject() {
-        return digesting ?
-                new DigestStructuredObject().digest(digest) :
-                new PlainStructuredObject();
+    protected StructuredObject newObject() {
+        return new PlainStructuredObject();
     }
 
 }

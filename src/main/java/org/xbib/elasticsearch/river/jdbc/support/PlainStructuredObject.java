@@ -1,15 +1,14 @@
 
 package org.xbib.elasticsearch.river.jdbc.support;
 
-import org.elasticsearch.common.base.Objects;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.common.base.Objects;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
+import static org.elasticsearch.common.collect.Maps.newHashMap;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class PlainStructuredObject implements StructuredObject {
@@ -19,8 +18,8 @@ public class PlainStructuredObject implements StructuredObject {
     private Map<String, ? super Object> source;
 
     public PlainStructuredObject() {
-        this.meta = new HashMap();
-        this.source = new HashMap();
+        this.meta = newHashMap();
+        this.source = newHashMap();
     }
 
     public StructuredObject optype(String optype) {
@@ -138,15 +137,6 @@ public class PlainStructuredObject implements StructuredObject {
      * @throws java.io.IOException
      */
     public String build() throws IOException {
-        if (index() != null) {
-            checksum(index());
-        }
-        if (type() != null) {
-            checksum(type());
-        }
-        if (id() != null) {
-            checksum(id());
-        }
         XContentBuilder builder = jsonBuilder();
         build(builder, source);
         return builder.string();
@@ -163,16 +153,10 @@ public class PlainStructuredObject implements StructuredObject {
         builder.startObject();
         for (String k : map.keySet()) {
             builder.field(k);
-            checksum(k);
             Object o = map.get(k);
             if (o instanceof Values) {
                 Values v = (Values) o;
                 v.build(builder);
-                for (Object vv : v.getValues()) {
-                    if (vv != null) {
-                        checksum(vv.toString());
-                    }
-                }
             } else if (o instanceof Map) {
                 build(builder, (Map<String, ? super Object>) o);
             } else if (o instanceof List) {
@@ -194,11 +178,6 @@ public class PlainStructuredObject implements StructuredObject {
             if (o instanceof Values) {
                 Values v = (Values) o;
                 v.build(builder);
-                for (Object vv : v.getValues()) {
-                    if (vv != null) {
-                        checksum(vv.toString());
-                    }
-                }
             } else if (o instanceof Map) {
                 build(builder, (Map<String, ? super Object>) o);
             } else if (o instanceof List) {
@@ -216,27 +195,6 @@ public class PlainStructuredObject implements StructuredObject {
 
     public boolean isEmpty() {
         return index() == null && type() == null && id() == null && source.isEmpty();
-    }
-
-    public void clear() {
-        this.meta = null;
-        this.source = null;
-    }
-
-    public StructuredObject digest(MessageDigest digest) {
-        return this;
-    }
-
-    public MessageDigest digest() {
-        return null;
-    }
-
-    public void checksum(String data) throws IOException {
-        // skip checksum
-    }
-
-    public String checksum() {
-        return null;
     }
 
     @Override

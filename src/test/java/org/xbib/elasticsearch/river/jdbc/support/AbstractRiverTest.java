@@ -40,14 +40,13 @@ public abstract class AbstractRiverTest extends Assert {
     public void createClient(String driver, String starturl, String user, String password)
             throws Exception {
         source = getRiverSource()
-                .driver(driver)
                 .url(starturl)
                 .user(user)
                 .password(password);
         context = getRiverContext()
                 .riverSource(source)
-                .retries(1)
-                .maxRetryWait(TimeValue.timeValueSeconds(5))
+                .setRetries(1)
+                .setMaxRetryWait(TimeValue.timeValueSeconds(5))
                 .locale("en");
         context.contextualize();
     }
@@ -92,9 +91,8 @@ public abstract class AbstractRiverTest extends Assert {
     @Parameters({"driver", "starturl", "stopurl", "user", "password"})
     public void removeClient(String driver, String starturl, String stopurl, String user, String password)
             throws Exception {
-        // some driver can drop database by magic URL
+        // some driver can drop database by a magic 'stop' URL
         source = getRiverSource()
-                .driver(driver)
                 .url(stopurl)
                 .user(user)
                 .password(password);

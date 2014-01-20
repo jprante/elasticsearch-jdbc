@@ -1,15 +1,6 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.Operations;
-import org.xbib.elasticsearch.river.jdbc.support.SimpleValueListener;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,6 +13,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.unit.TimeValue;
+
+import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.Operations;
+import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
+import org.xbib.elasticsearch.river.jdbc.support.StructuredObjectKeyValueStreamListener;
+import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
+import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+
 /**
  * River source implementation for the 'column' strategy
  *
@@ -29,7 +31,8 @@ import java.util.Map;
  */
 public class ColumnRiverSource extends SimpleRiverSource {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSource.class.getSimpleName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSource.class.getName());
+
     private static final String WHERE_CLAUSE_PLACEHOLDER = "$where";
 
     protected ESLogger logger() {
@@ -42,34 +45,24 @@ public class ColumnRiverSource extends SimpleRiverSource {
     }
 
     @Override
-    public String fetch() throws SQLException, IOException {
-
-        String sql = context.pollStatement();
-
-        Connection connection = connectionForReading();
-
-        List<OpInfo> opInfos = getOpInfos(connection);
-
-        Timestamp lastRunTimestamp = getLastRunTimestamp();
-
-        for (OpInfo opInfo : opInfos) {
-            fetch(connection, sql, opInfo, lastRunTimestamp);
+    public void fetch() throws SQLException, IOException {
+        for (SQLCommand command : context.getStatements()) {
+            Connection connection = connectionForReading();
+            List<OpInfo> opInfos = getOpInfos(connection);
+            Timestamp lastRunTimestamp = getLastRunTimestamp();
+            for (OpInfo opInfo : opInfos) {
+                fetch(connection, command, opInfo, lastRunTimestamp);
+            }
         }
-
-        return null;
     }
 
     private List<OpInfo> getOpInfos(Connection connection) throws SQLException {
-
         String quoteString = getIdentifierQuoteString(connection);
-
         List<OpInfo> opInfos = new LinkedList<OpInfo>();
-
-        String noDeletedWhereClause = context.columnDeletedAt() != null ? " AND " + quoteColumn(context.columnDeletedAt(), quoteString) + " IS NULL" : "";
-
+        String noDeletedWhereClause = context.columnDeletedAt() != null ?
+                " AND " + quoteColumn(context.columnDeletedAt(), quoteString) + " IS NULL" : "";
         opInfos.add(new OpInfo(Operations.OP_CREATE, quoteColumn(context.columnCreatedAt(), quoteString) + " >= ?" + noDeletedWhereClause));
         opInfos.add(new OpInfo(Operations.OP_INDEX, quoteColumn(context.columnUpdatedAt(), quoteString) + " >= ? AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR " + quoteColumn(context.columnCreatedAt(), quoteString) + " < ?)" + noDeletedWhereClause, 2));
-
         if (context.columnDeletedAt() != null) {
             opInfos.add(new OpInfo(Operations.OP_DELETE, quoteColumn(context.columnDeletedAt(), quoteString) + " >= ?"));
         }
@@ -105,26 +98,20 @@ public class ColumnRiverSource extends SimpleRiverSource {
         return new Timestamp(lastRunTime.millis());
     }
 
-    private void fetch(Connection connection, String sql, OpInfo opInfo, Timestamp lastRunTimestamp) throws IOException, SQLException {
-        String fullSql = addWhereClauseToSqlQuery(sql, opInfo.where);
-
+    private void fetch(Connection connection, SQLCommand command, OpInfo opInfo, Timestamp lastRunTimestamp) throws IOException, SQLException {
+        String fullSql = addWhereClauseToSqlQuery(command.getSQL(), opInfo.where);
         PreparedStatement stmt = connection.prepareStatement(fullSql);
-        List<Object> params = createQueryParams(lastRunTimestamp, opInfo.paramsInWhere);
-
-        logger.debug("sql: {}, params {}", fullSql, params);
-
+        List<Object> params = createQueryParams(command, lastRunTimestamp, opInfo.paramsInWhere);
+        if (logger.isDebugEnabled()) {
+            logger.debug("sql: {}, params {}", fullSql, params);
+        }
         ResultSet result = null;
-
         try {
             bind(stmt, params);
-
             result = executeQuery(stmt);
-
             try {
-                ValueListener listener = new ColumnValueListener(opInfo.opType)
-                        .target(context.riverMouth())
-                        .digest(context.digesting());
-
+                KeyValueStreamListener listener = new ColumnKeyValueStreamListener(opInfo.opType)
+                        .output(context.riverMouth());
                 merge(result, listener);
             } catch (Exception e) {
                 throw new IOException(e);
@@ -133,8 +120,6 @@ public class ColumnRiverSource extends SimpleRiverSource {
             close(result);
             close(stmt);
         }
-
-        acknowledge();
     }
 
     private String addWhereClauseToSqlQuery(String sql, String whereClauseToAppend) {
@@ -151,8 +136,9 @@ public class ColumnRiverSource extends SimpleRiverSource {
         }
     }
 
-    private List<Object> createQueryParams(Timestamp lastRunTimestamp, int lastRunTimestampParamsCount) {
-        List<? extends Object> statementParams = context.pollStatementParams() != null ? context.pollStatementParams() : Collections.emptyList();
+    private List<Object> createQueryParams(SQLCommand command, Timestamp lastRunTimestamp, int lastRunTimestampParamsCount) {
+        List<? extends Object> statementParams = command.getParameters() != null ?
+                command.getParameters() : Collections.emptyList();
         List<Object> params = new ArrayList<Object>(statementParams.size() + lastRunTimestampParamsCount);
 
         for (int i = 0; i < lastRunTimestampParamsCount; i++) {
@@ -187,16 +173,16 @@ public class ColumnRiverSource extends SimpleRiverSource {
         }
     }
 
-    private static class ColumnValueListener extends SimpleValueListener<Object> {
+    private static class ColumnKeyValueStreamListener extends StructuredObjectKeyValueStreamListener<Object> {
 
         private String opType;
 
-        public ColumnValueListener(String opType) {
+        public ColumnKeyValueStreamListener(String opType) {
             this.opType = opType;
         }
 
         @Override
-        public SimpleValueListener end(StructuredObject object) throws IOException {
+        public StructuredObjectKeyValueStreamListener end(StructuredObject object) throws IOException {
 
             if (!object.source().isEmpty()) {
                 object.optype(opType);

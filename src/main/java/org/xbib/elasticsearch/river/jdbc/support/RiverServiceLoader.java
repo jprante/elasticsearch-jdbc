@@ -1,6 +1,7 @@
 
-
 package org.xbib.elasticsearch.river.jdbc.support;
+
+import java.util.ServiceLoader;
 
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
@@ -9,12 +10,8 @@ import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
-
 /**
  * The river service loader looks up sources
- *
  */
 public class RiverServiceLoader {
 
@@ -26,9 +23,7 @@ public class RiverServiceLoader {
      */
     public static RiverSource findRiverSource(String strategy) {
         ServiceLoader<RiverSource> sourceLoader = ServiceLoader.load(RiverSource.class);
-        Iterator<RiverSource> riverSourceIterator = sourceLoader.iterator();
-        while (riverSourceIterator.hasNext()) {
-            RiverSource rs = riverSourceIterator.next();
+        for (RiverSource rs : sourceLoader) {
             if (strategy.equals(rs.strategy())) {
                 return rs;
             }
@@ -44,9 +39,7 @@ public class RiverServiceLoader {
      */
     public static RiverMouth findRiverMouth(String strategy) {
         ServiceLoader<RiverMouth> riverMouthLoader = ServiceLoader.load(RiverMouth.class);
-        Iterator<RiverMouth> riverMouthIterator = riverMouthLoader.iterator();
-        while (riverMouthIterator.hasNext()) {
-            RiverMouth rt = riverMouthIterator.next();
+        for (RiverMouth rt : riverMouthLoader) {
             if (strategy.equals(rt.strategy())) {
                 return rt;
             }
@@ -62,9 +55,7 @@ public class RiverServiceLoader {
      */
     public static RiverFlow findRiverFlow(String strategy) {
         ServiceLoader<RiverFlow> riverFlowServiceLoader = ServiceLoader.load(RiverFlow.class);
-        Iterator<RiverFlow> riverFlowIterator = riverFlowServiceLoader.iterator();
-        while (riverFlowIterator.hasNext()) {
-            RiverFlow rc = riverFlowIterator.next();
+        for (RiverFlow rc : riverFlowServiceLoader) {
             if (strategy.equals(rc.strategy())) {
                 return rc;
             }

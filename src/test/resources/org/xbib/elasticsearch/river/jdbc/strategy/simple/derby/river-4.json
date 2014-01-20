@@ -1,12 +1,11 @@
 {
-    "jdbc" :{
-        "driver" : "org.apache.derby.jdbc.EmbeddedDriver",
+    "jdbc" : {
         "url" : "jdbc:derby:memory:myDB",
         "user" : "",
         "password" : "",
         "sql" : "select * from \"products\"",
         "script" : "",
-        "index" : "my_jdbc_river",
-        "type" : "my_jdbc_river"
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
     }
 }

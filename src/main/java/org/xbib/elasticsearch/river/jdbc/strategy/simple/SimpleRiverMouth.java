@@ -1,7 +1,11 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.elasticsearch.ElasticsearchTimeoutException;
+import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -17,34 +21,26 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
+
+import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
- * A river mouth implementation for the 'simple' strategy.
- * <p/>
- * This mouth receives StructuredObjects in the
- * create(), index(), or delete() methods and passes them to the bulk indexing client.
- * <p/>
- * Bulk indexing is implemented concurrently. Therefore, many JDBC rivers can pass their
- * data through this river target to ElasticSearch, without having to take precaution
- * of overwhelming the index.
- * <p/>
- * The default size of a bulk request is 100 documents, the maximum number of concurrent requests is 30.
- *
- * @author Jörg Prante <joergprante@gmail.com>
+ * Simple river mouth
  */
 public class SimpleRiverMouth implements RiverMouth {
 
-    private static final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getSimpleName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
 
     private static final AtomicInteger outstandingBulkRequests = new AtomicInteger(0);
 
     protected RiverContext context;
+
+    protected String settings;
+
+    protected String mapping;
 
     protected String index;
 
@@ -54,18 +50,25 @@ public class SimpleRiverMouth implements RiverMouth {
 
     protected Client client;
 
+    private BulkProcessor bulk;
+
     private int maxBulkActions = 100;
 
     private int maxConcurrentBulkRequests = 30;
 
-    private boolean acknowledge = false;
+    private TimeValue flushInterval = TimeValue.timeValueSeconds(5);
 
     private volatile boolean error;
 
-    private BulkProcessor bulk;
+    private boolean started;
 
     protected ESLogger logger() {
         return logger;
+    }
+
+    @Override
+    public String strategy() {
+        return "simple";
     }
 
     private final BulkProcessor.Listener listener = new BulkProcessor.Listener() {
@@ -79,13 +82,6 @@ public class SimpleRiverMouth implements RiverMouth {
 
         @Override
         public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-            if (acknowledge()) {
-                try {
-                    context.riverSource().acknowledge(response);
-                } catch (IOException e) {
-                    logger().error("bulk [" + executionId + "] acknowledge error", e);
-                }
-            }
             outstandingBulkRequests.decrementAndGet();
             logger().info("bulk [{}] success [{} items] [{}ms]",
                     executionId, response.getItems().length, response.getTookInMillis());
@@ -101,11 +97,6 @@ public class SimpleRiverMouth implements RiverMouth {
     };
 
     @Override
-    public String strategy() {
-        return "simple";
-    }
-
-    @Override
     public SimpleRiverMouth riverContext(RiverContext context) {
         this.context = context;
         return this;
@@ -115,11 +106,10 @@ public class SimpleRiverMouth implements RiverMouth {
     public SimpleRiverMouth client(Client client) {
         this.client = client;
         this.bulk = BulkProcessor.builder(client, listener)
-                .setBulkActions(maxBulkActions - 1)
+                .setBulkActions(maxBulkActions - 1) // yes, offset by one!
                 .setConcurrentRequests(maxConcurrentBulkRequests)
-                .setFlushInterval(TimeValue.timeValueSeconds(1))
+                .setFlushInterval(flushInterval)
                 .build();
-
         return this;
     }
 
@@ -129,97 +119,91 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth index(String index) {
+    public SimpleRiverMouth setSettings(String settings) {
+        this.settings = settings;
+        return this;
+    }
+
+    @Override
+    public SimpleRiverMouth setMapping(String mapping) {
+        this.mapping = mapping;
+        return this;
+    }
+
+    @Override
+    public SimpleRiverMouth setIndex(String index) {
         this.index = index;
         return this;
     }
 
     @Override
-    public String index() {
+    public String getIndex() {
         return index;
     }
 
     @Override
-    public SimpleRiverMouth type(String type) {
+    public SimpleRiverMouth setType(String type) {
         this.type = type;
         return this;
     }
 
     @Override
-    public String type() {
+    public String getType() {
         return type;
     }
 
     @Override
-    public SimpleRiverMouth id(String id) {
+    public SimpleRiverMouth setId(String id) {
         this.id = id;
         return this;
     }
 
-    public String id() {
+    @Override
+    public String getId() {
         return id;
     }
 
     @Override
-    public SimpleRiverMouth maxBulkActions(int bulkSize) {
+    public SimpleRiverMouth setMaxBulkActions(int bulkSize) {
         this.maxBulkActions = bulkSize;
         return this;
     }
 
     @Override
-    public int maxBulkActions() {
-        return maxBulkActions;
-    }
-
-    @Override
-    public SimpleRiverMouth maxConcurrentBulkRequests(int max) {
+    public SimpleRiverMouth setMaxConcurrentBulkRequests(int max) {
         this.maxConcurrentBulkRequests = max;
         return this;
     }
 
     @Override
-    public int maxConcurrentBulkRequests() {
-        return maxConcurrentBulkRequests;
-    }
-
-    @Override
-    public SimpleRiverMouth acknowledge(boolean enable) {
-        this.acknowledge = enable;
+    public SimpleRiverMouth setFlushInterval(TimeValue flushInterval) {
+        this.flushInterval = flushInterval;
         return this;
     }
 
     @Override
-    public boolean acknowledge() {
-        return acknowledge;
-    }
-
-    @Override
-    public void create(StructuredObject object) throws IOException {
-        index(object, true);
-    }
-
-    @Override
-    public void index(StructuredObject object) throws IOException {
-        index(object, false);
-    }
-
     public void index(StructuredObject object, boolean create) throws IOException {
+        if (error) {
+            logger().error("error, not indexing");
+            return;
+        }
+        if (!started) {
+            started = true;
+            startup();
+        }
         if (Strings.hasLength(object.index())) {
-            index(object.index());
+            setIndex(object.index());
         }
         if (Strings.hasLength(object.type())) {
-            type(object.type());
+            setType(object.type());
         }
         if (Strings.hasLength(object.id())) {
-            id(object.id());
+            setId(object.id());
         }
-        IndexRequest request = Requests.indexRequest(index())
-                .type(type())
-                .id(id())
+        IndexRequest request = Requests.indexRequest(getIndex())
+                .type(getType())
+                .id(getId())
                 .source(object.build());
-        if (create) {
-            request.create(create);
-        }
         if (object.meta(StructuredObject.VERSION) != null) {
             request.versionType(VersionType.EXTERNAL)
                     .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
@@ -239,22 +223,29 @@ public class SimpleRiverMouth implements RiverMouth {
         bulk.add(request);
     }
 
-
     @Override
     public void delete(StructuredObject object) {
+        if (error) {
+            logger().error("error, not indexing");
+            return;
+        }
+        if (!started) {
+            started = true;
+            startup();
+        }
         if (Strings.hasLength(object.index())) {
-            index(object.index());
+            setIndex(object.index());
         }
         if (Strings.hasLength(object.type())) {
-            type(object.type());
+            setType(object.type());
         }
         if (Strings.hasLength(object.id())) {
-            id(object.id());
+            setId(object.id());
         }
-        if (id == null) {
+        if (getId() == null) {
             return; // skip if no doc is specified to delete
         }
-        DeleteRequest request = Requests.deleteRequest(index()).type(type()).id(id());
+        DeleteRequest request = Requests.deleteRequest(getIndex()).type(getType()).id(getId());
         if (object.meta(StructuredObject.ROUTING) != null) {
             request.routing(object.meta(StructuredObject.ROUTING));
         }
@@ -270,10 +261,13 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void flush() throws IOException {
-        if (error) {
-            return;
+        try {
+            // we must wait for flush interval... not really cool
+            Thread.sleep(flushInterval.millis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("interrupted (maybe harmless)");
         }
-        //bulk.flush();
     }
 
     @Override
@@ -281,9 +275,25 @@ public class SimpleRiverMouth implements RiverMouth {
         bulk.close();
     }
 
-    @Override
-    public void createIndexIfNotExists(String settings, String mapping) {
+    private RiverMouth startup() {
+        try {
+            createIndexIfNotExists();
+        } catch (Exception e) {
+            if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
+                logger().warn("index already exists");
+            } else {
+                logger().warn("failed to create index", e);
+                error = true;
+            }
+        }
+        return this;
+    }
 
+    private void createIndexIfNotExists() {
+        if (error) {
+            logger().error("error, not create index");
+            return;
+        }
         if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             if (Strings.hasLength(settings)) {
                 client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();
@@ -324,4 +334,6 @@ public class SimpleRiverMouth implements RiverMouth {
             throw new IOException("timeout, cluster does not respond to health request, cowardly refusing to continue with operations");
         }
     }
+
+
 }

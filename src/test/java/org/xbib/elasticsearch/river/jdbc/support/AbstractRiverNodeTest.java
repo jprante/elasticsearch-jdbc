@@ -25,9 +25,9 @@ public abstract class AbstractRiverNodeTest extends AbstractRiverTest {
 
     private static final ESLogger logger = Loggers.getLogger(AbstractRiverNodeTest.class.getSimpleName());
 
-    public final String INDEX = "my_jdbc_river";
+    public final String INDEX = "my_jdbc_river_index";
 
-    public final String TYPE = "my_jdbc_river";
+    public final String TYPE = "my_jdbc_river_type";
 
     private final static AtomicLong counter = new AtomicLong();
 

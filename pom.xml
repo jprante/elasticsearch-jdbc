@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.0.0.RC1.1</version>
+    <version>1.0.0.RC1.2</version>
 
     <packaging>jar</packaging>
 
@@ -64,11 +64,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!-- for modified CSV JDBC driver -->
-        <repository>
-            <id>github-release-repo</id>
-            <url>https://github.com/xbib/maven-repo/raw/master/releases</url>
-        </repository>
     </repositories>
 
     <properties>
@@ -96,7 +91,7 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
+            <version>1.1</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
@@ -144,14 +139,22 @@
                     <skip>false</skip>
                     <forkMode>once</forkMode>
                     <useSystemClassLoader>false</useSystemClassLoader>
+<!--
                     <systemPropertyVariables>
                         <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
                         <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
                         <log4j.configuration>file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
                     </systemPropertyVariables>
+-->
                     <includes>
                         <include>**/*Tests.java</include>
                     </includes>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.xbib.elasticsearch.river.jdbc.Listener</value>
+                        </property>
+                    </properties>
                 </configuration>
             </plugin>
             <plugin>

@@ -43,7 +43,7 @@
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="river1" value="mysql/river-1.json"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverTests"/>
         </classes>
     </test>
 
@@ -54,7 +54,7 @@
         <parameter name="river3" value="mysql/river-3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverDataTests"/>
         </classes>
     </test>
 
@@ -65,7 +65,7 @@
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTests"/>
         </classes>
     </test>
     

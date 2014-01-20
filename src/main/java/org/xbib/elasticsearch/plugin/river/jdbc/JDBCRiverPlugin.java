@@ -5,7 +5,10 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.plugins.AbstractPlugin;
 import org.elasticsearch.rest.RestModule;
 import org.elasticsearch.river.RiversModule;
+
+import org.xbib.elasticsearch.rest.action.RestJDBCRiverCreateAction;
 import org.xbib.elasticsearch.rest.action.RestJDBCRiverInduceAction;
+import org.xbib.elasticsearch.rest.action.RestJDBCRiverStateAction;
 import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
 import org.xbib.elasticsearch.river.jdbc.JDBCRiverModule;
 
@@ -16,8 +19,6 @@ import org.xbib.elasticsearch.river.jdbc.JDBCRiverModule;
  * binds a JDBCRiver instance to a River interface - and the
  * REST move is configured. Also, a concurrent bulk move
  * is registered.
- *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public class JDBCRiverPlugin extends AbstractPlugin {
 
@@ -36,21 +37,23 @@ public class JDBCRiverPlugin extends AbstractPlugin {
     }
 
     /**
-     * Register the JDBC river to Elasticsearch node
+     * Register the river to Elasticsearch
      *
-     * @param module
+     * @param module the rivers module
      */
     public void onModule(RiversModule module) {
         module.registerRiver(JDBCRiver.TYPE, JDBCRiverModule.class);
     }
 
     /**
-     * Register the REST move to Elasticsearch node
+     * Register the REST actions of this river
      *
-     * @param module
+     * @param module the REST module
      */
     public void onModule(RestModule module) {
+        module.addRestAction(RestJDBCRiverCreateAction.class);
         module.addRestAction(RestJDBCRiverInduceAction.class);
+        module.addRestAction(RestJDBCRiverStateAction.class);
     }
 
 }

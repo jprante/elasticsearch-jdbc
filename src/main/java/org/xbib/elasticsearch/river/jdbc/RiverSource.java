@@ -1,11 +1,8 @@
 
 package org.xbib.elasticsearch.river.jdbc;
 
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-
 import java.io.IOException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,11 +11,13 @@ import java.sql.Statement;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
 
 /**
  * The river source models the data producing side
- *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public interface RiverSource {
 
@@ -41,24 +40,15 @@ public interface RiverSource {
      * Fetch a data portion from the database and pass it to the river task
      * for firther processing.
      *
-     * @return a checksum of the fetched data or null
      * @throws SQLException
      * @throws IOException
      */
-    String fetch() throws SQLException, IOException;
-
-    /**
-     * Set the driver for the JDBC source
-     *
-     * @param driver
-     * @return this river source
-     */
-    RiverSource driver(String driver);
+    void fetch() throws SQLException, IOException;
 
     /**
      * Set the driver URL
      *
-     * @param url
+     * @param url the JDBC URL
      * @return this river source
      */
     RiverSource url(String url);
@@ -66,7 +56,7 @@ public interface RiverSource {
     /**
      * Set the user authentication
      *
-     * @param user
+     * @param user the user
      * @return this river source
      */
     RiverSource user(String user);
@@ -74,7 +64,7 @@ public interface RiverSource {
     /**
      * Set the password authentication
      *
-     * @param password
+     * @param password the password
      * @return this river source
      */
     RiverSource password(String password);
@@ -82,7 +72,7 @@ public interface RiverSource {
     /**
      * Set rounding for transporting java.math.BigDecimal
      *
-     * @param rounding
+     * @param rounding rounding
      * @return this river source
      */
     RiverSource rounding(String rounding);
@@ -90,7 +80,7 @@ public interface RiverSource {
     /**
      * Set scale precision for transporting java.math.BigDecimal
      *
-     * @param scale
+     * @param scale scale
      * @return this river source
      */
     RiverSource precision(int scale);
@@ -114,7 +104,7 @@ public interface RiverSource {
     /**
      * Prepare query statement
      *
-     * @param sql
+     * @param sql SQL statement
      * @return a prepared statement
      * @throws SQLException
      */
@@ -123,7 +113,7 @@ public interface RiverSource {
     /**
      * Prepare insert/update statement
      *
-     * @param sql
+     * @param sql SQL statement
      * @return a prepared statement
      * @throws SQLException
      */
@@ -132,17 +122,27 @@ public interface RiverSource {
     /**
      * Bind query variables
      *
-     * @param pstmt
-     * @param values
+     * @param statement prepared statement
+     * @param values values
      * @return this river source
      * @throws SQLException
      */
-    RiverSource bind(PreparedStatement pstmt, List<? extends Object> values) throws SQLException;
+    RiverSource bind(PreparedStatement statement, List<? extends Object> values) throws SQLException;
+
+    /**
+     * Register output variables for callable statement
+     *
+     * @param statement callable statement
+     * @param values values
+     * @return this river source
+     * @throws SQLException
+     */
+    RiverSource register(CallableStatement statement, Map<String, Object> values) throws SQLException;
 
     /**
      * Execute query
      *
-     * @param statement
+     * @param statement prepared statement
      * @return the result set
      * @throws SQLException
      */
@@ -161,62 +161,48 @@ public interface RiverSource {
     /**
      * Execute insert/update
      *
-     * @param statement
+     * @param statement statement
      * @return this river source
      * @throws SQLException
      */
     RiverSource executeUpdate(PreparedStatement statement) throws SQLException;
 
-    /**
-     * Action before the first row of the result set is processed
-     *
-     * @param result
-     * @param listener
-     * @throws SQLException
-     * @throws IOException
-     * @throws ParseException
-     */
-    void beforeFirstRow(ResultSet result, ValueListener listener) throws SQLException, IOException, ParseException;
+    RiverSource executeUpdate(Statement statement, String sql) throws SQLException;
+
+    void beforeRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
     /**
-     * Action while next row of the result set is processed
+     * Action for the next row of the result set to be processed
      *
-     * @param result
-     * @param listener
+     * @param results result
+     * @param listener listener
      * @return true if next row exists
      * @throws SQLException
      * @throws IOException
      * @throws ParseException
      */
-    boolean nextRow(ResultSet result, ValueListener listener) throws SQLException, IOException, ParseException;
+    boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException, ParseException;
+
+    void afterRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
     /**
      * Parse a value in a row column
      *
-     * @param result
-     * @param num
-     * @param type
-     * @param locale
+     * @param results result set
+     * @param num position
+     * @param type type
+     * @param locale locale
      * @return object
      * @throws SQLException
      * @throws IOException
      * @throws ParseException
      */
-    Object parseType(ResultSet result, Integer num, int type, Locale locale) throws SQLException, IOException, ParseException;
-
-    /**
-     * Acknowledge a bulk response
-     *
-     * @param response
-     * @return this river source
-     * @throws IOException
-     */
-    RiverSource acknowledge(BulkResponse response) throws IOException;
+    Object parseType(ResultSet results, Integer num, int type, Locale locale) throws SQLException, IOException, ParseException;
 
     /**
      * Close result set
      *
-     * @param result
+     * @param result result set
      * @return this river source
      * @throws SQLException
      */
@@ -225,7 +211,7 @@ public interface RiverSource {
     /**
      * Close statement
      *
-     * @param statement
+     * @param statement statement
      * @return this river source
      * @throws SQLException
      */

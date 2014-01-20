@@ -11,23 +11,9 @@
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>false</unpack>
             <scope>compile</scope>
-            <excludes>
-                <exclude>org.elasticsearch</exclude>
-                <exclude>org.apache.lucene</exclude>
-                <exclude>com.spatial4j</exclude>
-            </excludes>
+            <includes>
+                <include>org.xbib.elasticsearch.plugin</include>
+            </includes>
         </dependencySet>
     </dependencySets>
-    <fileSets>
-        <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-            <excludes>
-                <exclude>*sources*.jar</exclude>
-            </excludes>
-        </fileSet>
-    </fileSets>
 </assembly>

@@ -7,8 +7,6 @@ import java.util.Map;
 /**
  * A structured object is composed by an object data source together with
  * meta data about the object.
- *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public interface StructuredObject extends PseudoColumnNames, Comparable<StructuredObject> {
 

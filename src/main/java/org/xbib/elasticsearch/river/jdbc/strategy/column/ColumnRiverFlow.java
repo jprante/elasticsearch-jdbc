@@ -1,6 +1,9 @@
 
-
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
@@ -11,12 +14,9 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.indices.IndexMissingException;
+
 import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * River flow implementation for the 'column' strategy
@@ -25,15 +25,16 @@ import java.util.Map;
  */
 public class ColumnRiverFlow extends SimpleRiverFlow {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFlow.class.getSimpleName());
-
-    protected ESLogger logger() {
-        return logger;
-    }
+    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFlow.class.getName());
 
     protected static final String LAST_RUN_TIME = "last_run_time";
 
     protected static final String CURRENT_RUN_STARTED_TIME = "current_run_started_time";
+
+
+    protected ESLogger logger() {
+        return logger;
+    }
 
     @Override
     public String strategy() {
@@ -59,8 +60,7 @@ public class ColumnRiverFlow extends SimpleRiverFlow {
 
     private TimeValue readLastRunTimeFromCustomInfo() throws IOException {
         try {
-            GetResponse response = client().prepareGet(context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX).execute().actionGet();
-
+            GetResponse response = client().prepareGet("_river", context.riverName(), ID_INFO_RIVER_INDEX).execute().actionGet();
             if (response != null && response.isExists()) {
                 Map jdbcState = (Map) response.getSourceAsMap().get("jdbc");
 
@@ -71,11 +71,11 @@ public class ColumnRiverFlow extends SimpleRiverFlow {
                         return new TimeValue(lastRunTime.longValue());
                     }
                 } else {
-                    throw new IOException("can't retrieve previously persisted state from " + context.riverIndexName() + "/" + context.riverName());
+                    throw new IOException("can't retrieve previously persisted state from _river/" + context.riverName());
                 }
             }
         } catch (IndexMissingException e) {
-            logger.warn("river state missing: {}/{}/{}", context.riverIndexName(), context.riverName(), ID_INFO_RIVER_INDEX);
+            logger.warn("river state missing: _river/{}/{}", context.riverName(), ID_INFO_RIVER_INDEX);
         }
 
         return null;
@@ -96,7 +96,7 @@ public class ColumnRiverFlow extends SimpleRiverFlow {
                 .endObject();
 
         client().prepareBulk()
-                .add(Requests.indexRequest(context.riverIndexName())
+                .add(Requests.indexRequest("_river")
                         .type(context.riverName())
                         .id(ID_INFO_RIVER_INDEX)
                         .source(builder)

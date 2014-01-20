@@ -6,11 +6,9 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import java.io.IOException;
 
 /**
- * A ValueSet represents one or many values. Each value is represented at most
- * once. New values are appended. The ValueSet is the base for building arrays
+ * Values represents one or many values. Each value is represented at most
+ * once. New values are appended. Values is the base for building arrays
  * in JSON.
- *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public class Values<O extends Object> {
 

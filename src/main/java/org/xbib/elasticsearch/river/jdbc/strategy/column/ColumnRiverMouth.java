@@ -3,6 +3,7 @@ package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouth;
 
 /**
@@ -12,7 +13,7 @@ import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouth;
  */
 public class ColumnRiverMouth extends SimpleRiverMouth {
 
-    private static final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverMouth.class.getSimpleName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverMouth.class.getName());
 
     protected ESLogger logger() {
         return logger;

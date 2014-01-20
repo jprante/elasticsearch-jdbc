@@ -3,10 +3,11 @@ package org.xbib.elasticsearch.river.jdbc.support;
 
 /**
  * The names of the column names with a special meaning for the river execution.
- * <p/>
- * Mostly, they map to the Elasticsearch bulk item. The _job column denotes
- * an ID for the event of a fetch execution.
  *
+ * Mostly, they map to the Elasticsearch bulk item.
+ *
+ * The _job column denotes
+ * an ID for the event of a fetch execution.
  */
 public interface PseudoColumnNames {
 
