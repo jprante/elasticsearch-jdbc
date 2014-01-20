@@ -15,40 +15,38 @@
 <span class="sourceLineNo">007</span>/**<a name="line.7"></a>
 <span class="sourceLineNo">008</span> * A structured object is composed by an object data source together with<a name="line.8"></a>
 <span class="sourceLineNo">009</span> * meta data about the object.<a name="line.9"></a>
-<span class="sourceLineNo">010</span> *<a name="line.10"></a>
-<span class="sourceLineNo">011</span> * @author J?rg Prante &lt;joergprante@gmail.com&gt;<a name="line.11"></a>
-<span class="sourceLineNo">012</span> */<a name="line.12"></a>
-<span class="sourceLineNo">013</span>public interface StructuredObject extends PseudoColumnNames, Comparable&lt;StructuredObject&gt; {<a name="line.13"></a>
+<span class="sourceLineNo">010</span> */<a name="line.10"></a>
+<span class="sourceLineNo">011</span>public interface StructuredObject extends PseudoColumnNames, Comparable&lt;StructuredObject&gt; {<a name="line.11"></a>
+<span class="sourceLineNo">012</span><a name="line.12"></a>
+<span class="sourceLineNo">013</span>    StructuredObject optype(String optype);<a name="line.13"></a>
 <span class="sourceLineNo">014</span><a name="line.14"></a>
-<span class="sourceLineNo">015</span>    StructuredObject optype(String optype);<a name="line.15"></a>
+<span class="sourceLineNo">015</span>    String optype();<a name="line.15"></a>
 <span class="sourceLineNo">016</span><a name="line.16"></a>
-<span class="sourceLineNo">017</span>    String optype();<a name="line.17"></a>
+<span class="sourceLineNo">017</span>    StructuredObject index(String index);<a name="line.17"></a>
 <span class="sourceLineNo">018</span><a name="line.18"></a>
-<span class="sourceLineNo">019</span>    StructuredObject index(String index);<a name="line.19"></a>
+<span class="sourceLineNo">019</span>    String index();<a name="line.19"></a>
 <span class="sourceLineNo">020</span><a name="line.20"></a>
-<span class="sourceLineNo">021</span>    String index();<a name="line.21"></a>
+<span class="sourceLineNo">021</span>    StructuredObject type(String type);<a name="line.21"></a>
 <span class="sourceLineNo">022</span><a name="line.22"></a>
-<span class="sourceLineNo">023</span>    StructuredObject type(String type);<a name="line.23"></a>
+<span class="sourceLineNo">023</span>    String type();<a name="line.23"></a>
 <span class="sourceLineNo">024</span><a name="line.24"></a>
-<span class="sourceLineNo">025</span>    String type();<a name="line.25"></a>
+<span class="sourceLineNo">025</span>    StructuredObject id(String id);<a name="line.25"></a>
 <span class="sourceLineNo">026</span><a name="line.26"></a>
-<span class="sourceLineNo">027</span>    StructuredObject id(String id);<a name="line.27"></a>
+<span class="sourceLineNo">027</span>    String id();<a name="line.27"></a>
 <span class="sourceLineNo">028</span><a name="line.28"></a>
-<span class="sourceLineNo">029</span>    String id();<a name="line.29"></a>
+<span class="sourceLineNo">029</span>    StructuredObject meta(String key, String value);<a name="line.29"></a>
 <span class="sourceLineNo">030</span><a name="line.30"></a>
-<span class="sourceLineNo">031</span>    StructuredObject meta(String key, String value);<a name="line.31"></a>
+<span class="sourceLineNo">031</span>    String meta(String key);<a name="line.31"></a>
 <span class="sourceLineNo">032</span><a name="line.32"></a>
-<span class="sourceLineNo">033</span>    String meta(String key);<a name="line.33"></a>
+<span class="sourceLineNo">033</span>    StructuredObject source(Map&lt;String, ? super Object&gt; source);<a name="line.33"></a>
 <span class="sourceLineNo">034</span><a name="line.34"></a>
-<span class="sourceLineNo">035</span>    StructuredObject source(Map&lt;String, ? super Object&gt; source);<a name="line.35"></a>
+<span class="sourceLineNo">035</span>    Map source();<a name="line.35"></a>
 <span class="sourceLineNo">036</span><a name="line.36"></a>
-<span class="sourceLineNo">037</span>    Map source();<a name="line.37"></a>
+<span class="sourceLineNo">037</span>    String build() throws IOException;<a name="line.37"></a>
 <span class="sourceLineNo">038</span><a name="line.38"></a>
-<span class="sourceLineNo">039</span>    String build() throws IOException;<a name="line.39"></a>
+<span class="sourceLineNo">039</span>    boolean isEmpty();<a name="line.39"></a>
 <span class="sourceLineNo">040</span><a name="line.40"></a>
-<span class="sourceLineNo">041</span>    boolean isEmpty();<a name="line.41"></a>
-<span class="sourceLineNo">042</span><a name="line.42"></a>
-<span class="sourceLineNo">043</span>}<a name="line.43"></a>
+<span class="sourceLineNo">041</span>}<a name="line.41"></a>
 
 
 
