@@ -1,14 +1,19 @@
 
 package org.xbib.elasticsearch.river.jdbc;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.River;
@@ -91,7 +96,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("column_deleted_at"), null);
         boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);
 
-        // set up bulk indeser
+        // set up bulk indexer. If no _index or _type pseudo columns are set in SQL statements, this index is used.
         indexName = XContentMapValues.nodeStringValue(mySettings.get("index"), TYPE);
         typeName = XContentMapValues.nodeStringValue(mySettings.get("type"), TYPE);
         int bulkSize = XContentMapValues.nodeIntegerValue(mySettings.get("bulk_size"), 100);
@@ -99,8 +104,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         // flush interval for bulk indexer
         TimeValue flushInterval = XContentMapValues.nodeTimeValue(mySettings.get("bulk_flush_interval"),
                 TimeValue.timeValueSeconds(5));
-        String indexSettings = XContentMapValues.nodeStringValue(mySettings.get("index_settings"), null);
-        String typeMapping = XContentMapValues.nodeStringValue(mySettings.get("type_mapping"), null);
+        // get two maps from the river settings to improve index creation
+        Map<String,Object> indexSettings = mySettings.containsKey("index_settings") ?
+                XContentMapValues.nodeMapValue(mySettings.get("index_settings"), null) : null;
+        Map<String,Object> typeMapping = mySettings.containsKey("type_mapping") ?
+                XContentMapValues.nodeMapValue(mySettings.get("type_mapping"), null) : null;
 
         riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);

@@ -2,6 +2,7 @@
 package org.xbib.elasticsearch.river.jdbc;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
@@ -44,9 +45,19 @@ public interface RiverMouth {
      */
     Client client();
 
-    RiverMouth setSettings(String settings);
+    /**
+     * Set settings for Elasticsearch to be used in index creation
+     * @param settings
+     * @return
+     */
+    RiverMouth setSettings(Map<String,Object> settings);
 
-    RiverMouth setMapping(String mapping);
+    /**
+     * Set mapping for Elasticsearch to be used in mapping creation
+     * @param mapping
+     * @return
+     */
+    RiverMouth setMapping(Map<String,Object>  mapping);
 
     /**
      * Set index

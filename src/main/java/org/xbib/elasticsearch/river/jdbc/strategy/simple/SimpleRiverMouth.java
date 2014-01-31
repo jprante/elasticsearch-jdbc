@@ -2,6 +2,7 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.elasticsearch.ElasticsearchTimeoutException;
@@ -38,9 +39,9 @@ public class SimpleRiverMouth implements RiverMouth {
 
     protected RiverContext context;
 
-    protected String settings;
+    protected Map<String,Object> settings;
 
-    protected String mapping;
+    protected Map<String,Object> mapping;
 
     protected String index;
 
@@ -119,13 +120,13 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setSettings(String settings) {
+    public SimpleRiverMouth setSettings(Map<String,Object> settings) {
         this.settings = settings;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth setMapping(String mapping) {
+    public SimpleRiverMouth setMapping(Map<String,Object> mapping) {
         this.mapping = mapping;
         return this;
     }
@@ -277,10 +278,12 @@ public class SimpleRiverMouth implements RiverMouth {
 
     private RiverMouth startup() {
         try {
+            //updateSettings();
+            //updateMapping();
             createIndexIfNotExists();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
-                logger().warn("index already exists");
+                logger().warn("index {} already exists", index);
             } else {
                 logger().warn("failed to create index", e);
                 error = true;
@@ -289,28 +292,49 @@ public class SimpleRiverMouth implements RiverMouth {
         return this;
     }
 
+    private void updateSettings() {
+        if (error) {
+            logger().error("error, not updating settings");
+            return;
+        }
+        if (settings != null) {
+            client.admin().indices().prepareUpdateSettings(index)
+                    .setSettings(settings)
+                    .execute().actionGet();
+        }
+    }
+
+    private void updateMapping() {
+        if (error) {
+            logger().error("error, not updating mapping");
+            return;
+        }
+        if (mapping != null) {
+            client.admin().indices().preparePutMapping(index)
+                    .setType(type)
+                    .setSource(mapping)
+                    .execute().actionGet();
+        }
+    }
+
     private void createIndexIfNotExists() {
         if (error) {
-            logger().error("error, not create index");
+            logger().error("error, not creating index");
             return;
         }
         if (client.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
-            if (Strings.hasLength(settings)) {
-                client.admin().indices().prepareUpdateSettings(index).setSettings(settings).execute().actionGet();
-            }
-            if (Strings.hasLength(mapping)) {
-                client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();
-            }
+            logger().warn("index {} already exists, ignoring index creation", index);
             return;
         }
-        CreateIndexRequestBuilder builder = client.admin().indices().prepareCreate(index);
-        if (Strings.hasLength(settings)) {
-            builder.setSettings(settings);
+        CreateIndexRequestBuilder createIndexRequestBuilder =
+                client.admin().indices().prepareCreate(index);
+        if (settings != null) {
+            createIndexRequestBuilder.setSettings(settings);
         }
-        builder.execute().actionGet();
-        if (Strings.hasLength(mapping)) {
-            client.admin().indices().preparePutMapping(index).setType(type).setSource(mapping).execute().actionGet();
+        if (mapping != null) {
+            createIndexRequestBuilder.addMapping(type, mapping);
         }
+        createIndexRequestBuilder.execute().actionGet();
     }
 
     @Override
