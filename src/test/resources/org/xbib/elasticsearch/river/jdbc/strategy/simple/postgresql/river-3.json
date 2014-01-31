@@ -1,15 +1,12 @@
 {
-    "jdbc" :{
-        "driver" : "org.postgresql.Driver",
+    "jdbc" : {
         "url" : "jdbc:postgresql://localhost:5432/test",
         "user" : "test",
         "password" : "test",
         "sql" : "select * from \"products\"",
         "maxrows" : 50,
-        "autocommit" : true
-    },
-    "index" : {
-        "index" : "my_jdbc_river",
-        "type" : "my_jdbc_river"
+        "autocommit" : true,
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
     }
 }

@@ -2,15 +2,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.xbib.elasticsearch.plugin</groupId>
+    <artifactId>elasticsearch-river-jdbc</artifactId>
+    <version>1.0.0.RC1.3</version>
+
+    <packaging>jar</packaging>
 
     <name>elasticsearch-river-jdbc</name>
     <description>JDBC River for ElasticSearch</description>
 
-    <groupId>org.xbib.elasticsearch</groupId>
-    <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>2.2.2</version>
-    <packaging>jar</packaging>
+    <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
 
     <inceptionYear>2012</inceptionYear>
 
@@ -22,11 +26,24 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <id>jprante</id>
+            <name>Jörg Prante</name>
+            <url>https://github.com/jprante</url>
+        </developer>
+    </developers>
+
     <scm>
         <connection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</connection>
         <developerConnection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</developerConnection>
         <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
     </scm>
+
+    <issueManagement>
+        <system>Github Issue Tracker</system>
+        <url>https://github.com/jprante/elasticsearch-river-jdbc/issues</url>
+    </issueManagement>
 
     <distributionManagement>
         <repository>
@@ -37,17 +54,22 @@
     </distributionManagement>
 
     <repositories>
-        <!-- for modified CSV JDBC driver -->
         <repository>
-            <id>github-release-repo</id>
-            <url>https://github.com/xbib/maven-repo/raw/master/releases</url>
+            <id>bintray-elasticsearch-plugins</id>
+            <url>http://dl.bintray.com/jprante/elasticsearch-plugins</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
     <properties>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <elasticsearch.version>0.90.5</elasticsearch.version>
+        <elasticsearch.version>1.0.0.RC1</elasticsearch.version>
     </properties>
 
     <dependencies>
@@ -55,30 +77,22 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
+            <type>jar</type>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.8.5</version>
+            <version>6.8.7</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.hamcrest</groupId>
-                    <artifactId>hamcrest-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
+            <version>1.1</version>
+            <type>jar</type>
             <scope>test</scope>
         </dependency>
 
@@ -86,6 +100,7 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
+            <type>jar</type>
             <scope>test</scope>
         </dependency>
 
@@ -124,14 +139,22 @@
                     <skip>false</skip>
                     <forkMode>once</forkMode>
                     <useSystemClassLoader>false</useSystemClassLoader>
+<!--
                     <systemPropertyVariables>
                         <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
                         <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
                         <log4j.configuration>file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
                     </systemPropertyVariables>
+-->
                     <includes>
                         <include>**/*Tests.java</include>
                     </includes>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.xbib.elasticsearch.river.jdbc.Listener</value>
+                        </property>
+                    </properties>
                 </configuration>
             </plugin>
             <plugin>
@@ -140,12 +163,6 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>attach-javadoc</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -172,8 +189,19 @@
                 </executions>
             </plugin>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
+            <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9</version>
+                <version>2.9.1</version>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <locale>en</locale>
@@ -191,7 +219,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.2</version>
+                <version>3.3</version>
                 <configuration>
                     <locales>en</locales>
                     <inputEncoding>UTF-8</inputEncoding>
@@ -201,7 +229,7 @@
             <plugin>
                 <groupId>com.github.github</groupId>
                 <artifactId>site-maven-plugin</artifactId>
-                <version>0.7</version>
+                <version>0.9</version>
                 <configuration>
                     <message>Building site for ${project.version}</message>
                 </configuration>
@@ -217,8 +245,26 @@
         </plugins>
     </build>
 
-    <profiles>
+    <reporting>
+        <plugins>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <locale>en</locale>
+                    <linksource>true</linksource>
+                    <validateLinks>true</validateLinks>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>2.15</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
+    <profiles>
         <profile>
             <id>derby</id>
             <activation>
@@ -363,6 +409,34 @@
                         <configuration>
                             <suiteXmlFiles>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite-oracle.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>column-strategy</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.derby</groupId>
+                    <artifactId>derby</artifactId>
+                    <version>10.9.1.0</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <derby.system.home>${project.build.directory}/derby</derby.system.home>
+                                <derby.stream.error.file>${project.build.directory}/derby.log</derby.stream.error.file>
+                            </systemPropertyVariables>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>${basedir}/src/test/resources/column-testsuite-derby.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>

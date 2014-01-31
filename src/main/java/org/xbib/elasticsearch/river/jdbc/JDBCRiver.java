@@ -1,207 +1,173 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc;
 
-import org.elasticsearch.ExceptionsHelper;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.cluster.block.ClusterBlockException;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.util.concurrent.EsExecutors;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.river.AbstractRiverComponent;
-import org.elasticsearch.river.River;
-import org.elasticsearch.river.RiverIndexName;
-import org.elasticsearch.river.RiverName;
-import org.elasticsearch.river.RiverSettings;
-import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.RiverServiceLoader;
-import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-
-import java.util.Date;
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.util.concurrent.EsExecutors;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import org.elasticsearch.river.AbstractRiverComponent;
+import org.elasticsearch.river.River;
+import org.elasticsearch.river.RiverName;
+import org.elasticsearch.river.RiverSettings;
+
+import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.RiverServiceLoader;
+import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
+
+import static org.elasticsearch.common.collect.Maps.newHashMap;
+
 /**
  * The JDBC river
- *
- * @author Jörg Prante <joergprante@gmail.com>
  */
 public class JDBCRiver extends AbstractRiverComponent implements River {
 
-    public final static String NAME = "jdbc-river";
+    public final static String NAME = "river-jdbc";
+
     public final static String TYPE = "jdbc";
 
     private final String strategy;
-    private final TimeValue poll;
+
     private final String url;
-    private final String driver;
-    private final String user;
-    private final String password;
-    private final String rounding;
-    private final int scale;
-    private final String sql;
-    private final List<? super Object> sqlparams;
-    private final String acksql;
-    private final List<? super Object> acksqlparams;
-    private final boolean autocommit;
-    private final int fetchsize;
-    private final int maxrows;
-    private final int maxretries;
-    private final TimeValue maxretrywait;
-    private final String locale;
+
     private final String indexName;
+
     private final String typeName;
-    private final int bulkSize;
-    private final int maxBulkRequests;
-    private final String indexSettings;
-    private final String typeMapping;
-    private final boolean versioning;
-    private final boolean digesting;
-    private final boolean acknowledgeBulk;
+
     private final RiverSource riverSource;
+
     private final RiverMouth riverMouth;
-    private final RiverContext riverContext;
+
     private final RiverFlow riverFlow;
-    private volatile Thread thread;
+
+    private final RiverContext riverContext;
+
     private volatile boolean closed;
 
     @Inject
-    public JDBCRiver(RiverName riverName, RiverSettings riverSettings,
-                     @RiverIndexName String riverIndexName,
+    public JDBCRiver(RiverName riverName,
+                     RiverSettings riverSettings,
                      Client client) {
         super(riverName, riverSettings);
-        // riverIndexName = _river
+        logger.debug("JDBC river initializing");
 
-        Map<String, Object> sourceSettings =
-                riverSettings.settings().containsKey(TYPE)
-                        ? (Map<String, Object>) riverSettings.settings().get(TYPE)
-                        : new HashMap<String, Object>();
-        // default is a single run
-        strategy = XContentMapValues.nodeStringValue(sourceSettings.get("strategy"), "oneshot");
-        url = XContentMapValues.nodeStringValue(sourceSettings.get("url"), null);
-        driver = XContentMapValues.nodeStringValue(sourceSettings.get("driver"), null);
-        user = XContentMapValues.nodeStringValue(sourceSettings.get("user"), null);
-        password = XContentMapValues.nodeStringValue(sourceSettings.get("password"), null);
-        poll = XContentMapValues.nodeTimeValue(sourceSettings.get("poll"), TimeValue.timeValueMinutes(60));
-        sql = XContentMapValues.nodeStringValue(sourceSettings.get("sql"), null);
-        sqlparams = XContentMapValues.extractRawValues("sqlparams", sourceSettings);
-        rounding = XContentMapValues.nodeStringValue(sourceSettings.get("rounding"), null);
-        scale = XContentMapValues.nodeIntegerValue(sourceSettings.get("scale"), 2);
-        autocommit = XContentMapValues.nodeBooleanValue(sourceSettings.get("autocommit"), Boolean.FALSE);
-        fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
-                XContentMapValues.nodeIntegerValue(sourceSettings.get("fetchsize"), 10);
-        maxrows = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_rows"), 0);
-        maxretries = XContentMapValues.nodeIntegerValue(sourceSettings.get("max_retries"), 3);
-        maxretrywait = TimeValue.parseTimeValue(XContentMapValues.nodeStringValue(sourceSettings.get("max_retries_wait"), "10s"), TimeValue.timeValueMillis(30000));
-        locale = XContentMapValues.nodeStringValue(sourceSettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
-        digesting = XContentMapValues.nodeBooleanValue(sourceSettings.get("digesting"), Boolean.TRUE);
-        acksql = XContentMapValues.nodeStringValue(sourceSettings.get("acksql"), null);
-        acksqlparams = XContentMapValues.extractRawValues("acksqlparams", sourceSettings);
+        Map<String, Object> mySettings = newHashMap();
+        if (riverSettings.settings().containsKey(TYPE)) {
+            mySettings = (Map<String, Object>) riverSettings.settings().get(TYPE);
+        }
+        strategy = XContentMapValues.nodeStringValue(mySettings.get("strategy"), "simple");
+        String schedule = mySettings.containsKey("schedule") ?
+            XContentMapValues.nodeStringValue(mySettings.get("schedule"), null) :
+            null;
+        Integer poolsize = XContentMapValues.nodeIntegerValue(mySettings.get("poolsize"), 1);
+        // disable interval
+        TimeValue interval = XContentMapValues.nodeTimeValue(mySettings.get("interval"), TimeValue.timeValueMinutes(-1));
 
-        Map<String, Object> targetSettings =
-                riverSettings.settings().containsKey("index")
-                        ? (Map<String, Object>) riverSettings.settings().get("index")
-                        : new HashMap<String, Object>();
-        indexName = XContentMapValues.nodeStringValue(targetSettings.get("index"), TYPE);
-        typeName = XContentMapValues.nodeStringValue(targetSettings.get("type"), TYPE);
-        bulkSize = XContentMapValues.nodeIntegerValue(targetSettings.get("bulk_size"), 100);
-        maxBulkRequests = XContentMapValues.nodeIntegerValue(targetSettings.get("max_bulk_requests"), 30);
-        indexSettings = XContentMapValues.nodeStringValue(targetSettings.get("index_settings"), null);
-        typeMapping = XContentMapValues.nodeStringValue(targetSettings.get("type_mapping"), null);
-        versioning = XContentMapValues.nodeBooleanValue(sourceSettings.get("versioning"), Boolean.FALSE);
-        acknowledgeBulk = XContentMapValues.nodeBooleanValue(sourceSettings.get("acknowledge"), Boolean.FALSE);
+        // JDBC
+        url = XContentMapValues.nodeStringValue(mySettings.get("url"), null);
+        String user = XContentMapValues.nodeStringValue(mySettings.get("user"), null);
+        String password = XContentMapValues.nodeStringValue(mySettings.get("password"), null);
+        List<SQLCommand> sql = SQLCommand.parse(mySettings);
+        String rounding = XContentMapValues.nodeStringValue(mySettings.get("rounding"), null);
+        int scale = XContentMapValues.nodeIntegerValue(mySettings.get("scale"), 2);
+        boolean autocommit = XContentMapValues.nodeBooleanValue(mySettings.get("autocommit"), Boolean.FALSE);
+
+        int fetchsize = url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
+                XContentMapValues.nodeIntegerValue(mySettings.get("fetchsize"), 10);
+        int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
+        int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
+        TimeValue maxretrywait =
+                XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"), TimeValue.timeValueSeconds(30));
+        String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
+
+        // defaults for column strategy
+        String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("column_created_at"), "created_at");
+        String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("column_updated_at"), "updated_at");
+        String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("column_deleted_at"), null);
+        boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);
+
+        // set up bulk indexer. If no _index or _type pseudo columns are set in SQL statements, this index is used.
+        indexName = XContentMapValues.nodeStringValue(mySettings.get("index"), TYPE);
+        typeName = XContentMapValues.nodeStringValue(mySettings.get("type"), TYPE);
+        int bulkSize = XContentMapValues.nodeIntegerValue(mySettings.get("bulk_size"), 100);
+        int maxBulkRequests = XContentMapValues.nodeIntegerValue(mySettings.get("max_bulk_requests"), 30);
+        // flush interval for bulk indexer
+        TimeValue flushInterval = XContentMapValues.nodeTimeValue(mySettings.get("bulk_flush_interval"),
+                TimeValue.timeValueSeconds(5));
+        // get two maps from the river settings to improve index creation
+        Map<String,Object> indexSettings = mySettings.containsKey("index_settings") ?
+                XContentMapValues.nodeMapValue(mySettings.get("index_settings"), null) : null;
+        Map<String,Object> typeMapping = mySettings.containsKey("type_mapping") ?
+                XContentMapValues.nodeMapValue(mySettings.get("type_mapping"), null) : null;
 
         riverSource = RiverServiceLoader.findRiverSource(strategy);
-        logger.debug("found river source {} for strategy {}", riverSource.getClass().getName(), strategy);
-        riverSource.driver(driver)
-                .url(url)
+        logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
+        riverSource.url(url)
                 .user(user)
                 .password(password)
                 .rounding(rounding)
                 .precision(scale);
 
         riverMouth = RiverServiceLoader.findRiverMouth(strategy);
-        logger.debug("found river mouth {} for strategy {}", riverMouth.getClass().getName(), strategy);
-        riverMouth.index(indexName)
-                .type(typeName)
-                .maxBulkActions(bulkSize)
-                .maxConcurrentBulkRequests(maxBulkRequests)
-                .acknowledge(acknowledgeBulk)
-                .versioning(versioning)
+        logger.debug("found river mouth class {} for strategy {}", riverMouth.getClass().getName(), strategy);
+        riverMouth.setSettings(indexSettings)
+                .setMapping(typeMapping)
+                .setIndex(indexName)
+                .setType(typeName)
+                .setMaxBulkActions(bulkSize)
+                .setMaxConcurrentBulkRequests(maxBulkRequests)
+                .setFlushInterval(flushInterval)
                 .client(client);
-
-        // scripting ...
 
         riverContext = new RiverContext()
                 .riverName(riverName.getName())
-                .riverIndexName(riverIndexName)
                 .riverSettings(riverSettings.settings())
                 .riverSource(riverSource)
                 .riverMouth(riverMouth)
-                .pollInterval(poll)
-                .pollStatement(sql)
-                .pollStatementParams(sqlparams)
-                .pollAckStatement(acksql)
-                .pollAckStatementParams(acksqlparams)
-                .autocommit(autocommit)
-                .maxRows(maxrows)
-                .fetchSize(fetchsize)
-                .retries(maxretries)
-                .maxRetryWait(maxretrywait)
                 .locale(locale)
-                .digesting(digesting)
+                .setSchedule(schedule)
+                .setPoolSize(poolsize)
+                .setInterval(interval)
+                .setStatements(sql)
+                .setAutoCommit(autocommit)
+                .setMaxRows(maxrows)
+                .setFetchSize(fetchsize)
+                .setRetries(maxretries)
+                .setMaxRetryWait(maxretrywait)
+                .columnCreatedAt(columnCreatedAt)
+                .columnUpdatedAt(columnUpdatedAt)
+                .columnDeletedAt(columnDeletedAt)
+                .columnEscape(columnEscape)
                 .contextualize();
 
         riverFlow = RiverServiceLoader.findRiverFlow(strategy);
+
         // prepare task for run
         riverFlow.riverContext(riverContext);
+        logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
 
-        logger.debug("found river flow {} for strategy {}", riverFlow.getClass().getName(), strategy);
+        logger.debug("JDBC river initialized");
+
     }
 
     @Override
     public void start() {
-        logger.info("starting JDBC river: URL [{}], driver [{}], strategy [{}], index [{}]/[{}]",
-                url, driver, strategy, indexName, typeName);
-        try {
-            riverFlow.startDate(new Date());
-            riverMouth.createIndexIfNotExists(indexSettings, typeMapping);
-        } catch (Exception e) {
-            if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
-                riverFlow.startDate(null);
-                // that's fine, continue.
-            } else if (ExceptionsHelper.unwrapCause(e) instanceof ClusterBlockException) {
-                // ok, not recovered yet..., lets start indexing and hope we recover by the first bulk
-            } else {
-                logger.warn("failed to create index [{}], disabling JDBC river...", e, indexName);
-                return;
-            }
-        }
-        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC river [" + riverName.name() + '/' + strategy + ']')
+        logger.info("starting JDBC river: URL [{}], strategy [{}], index/type [{}/{}]",
+                url, strategy, indexName, typeName);
+        Thread thread = EsExecutors.daemonThreadFactory(settings.globalSettings(),
+                "jdbc-river-[" + riverName.name() + '/' + strategy + ']')
                 .newThread(riverFlow);
-        thread.start();
+        riverFlow.schedule(thread);
     }
 
     @Override
@@ -209,10 +175,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         if (closed) {
             return;
         }
-        logger.info("closing JDBC river [" + riverName.name() + '/' + strategy + ']');
-        if (thread != null) {
-            thread.interrupt();
-        }
+        closed = true;
+        logger.info("closing JDBC river: URL [{}], strategy [{}], index/type [{}/{}]",
+                url, strategy, indexName, typeName);
         if (riverFlow != null) {
             riverFlow.abort();
         }
@@ -223,11 +188,10 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         if (riverMouth != null) {
             riverMouth.close();
         }
-        closed = true; // abort only once
     }
 
     /**
-     * Induce a river run once, but in a synchronous manner.
+     * Induce a river run once, but in a synchronous manner. Mainly used for tests.
      */
     public void once() {
         if (riverFlow != null) {
@@ -239,13 +203,17 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
      * Induce a river run once, but in an asynchronous manner.
      */
     public void induce() {
-        RiverFlow riverTask = RiverServiceLoader.findRiverFlow(strategy);
+        RiverFlow riverFlow = RiverServiceLoader.findRiverFlow(strategy);
         // prepare task for run
-        riverTask.riverContext(riverContext);
-        thread = EsExecutors.daemonThreadFactory(settings.globalSettings(), "JDBC river (fired) [" + riverName.name() + '/' + strategy + ')')
-                .newThread(riverTask);
-        riverTask.abort();
-        thread.start(); // once
+        riverFlow.riverContext(riverContext);
+        Thread thread = EsExecutors.daemonThreadFactory(settings.globalSettings(),
+                "JDBC river: [" + riverName.name() + '/' + strategy + ')')
+                .newThread(riverFlow);
+        riverFlow.once(thread);
+    }
+
+    public RiverFlow riverFlow() {
+        return riverFlow;
     }
 
 }

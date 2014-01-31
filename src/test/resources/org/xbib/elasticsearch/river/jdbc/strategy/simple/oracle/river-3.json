@@ -1,15 +1,12 @@
 {
-    "jdbc" :{
-        "driver" : "oracle.jdbc.driver.OracleDriver",
+    "jdbc" : {
         "url" : "jdbc:oracle:thin:@//localhost:1521/test?autoReconnect=true",
         "user" : "test",
         "password" : "test",
         "sql" : "select * from \"products\"",
         "maxrows" : 50,
-        "autocommit" : true
-    },
-    "index" : {
-        "index" : "my_jdbc_river",
-        "type" : "my_jdbc_river"
+        "autocommit" : true,
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
     }
 }

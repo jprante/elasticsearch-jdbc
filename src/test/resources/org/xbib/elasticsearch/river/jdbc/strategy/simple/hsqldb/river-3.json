@@ -1,14 +1,11 @@
 {
-    "jdbc" :{
-        "driver" : "org.hsqldb.jdbcDriver",
+    "jdbc" : {
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
         "password" : "",
         "sql" : "select * from products",
-        "maxrows" : 50
-    },
-    "index" : {
-        "index" : "my_jdbc_river",
-        "type" : "my_jdbc_river"
+        "maxrows" : 50,
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
     }
 }

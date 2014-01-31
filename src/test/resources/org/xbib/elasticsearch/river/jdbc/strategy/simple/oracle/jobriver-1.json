@@ -1,15 +1,18 @@
 {
     "jdbc" :{
-        "driver" : "oracle.jdbc.driver.OracleDriver",
         "url" : "jdbc:oracle:thin:@//localhost:1521/test?autoReconnect=true",
         "user" : "test",
         "password" : "test",
-        "sql" : "select * from \"products\"",
-        "acksql" : "delete from \"products\" where \"_job\" = ?",
-        "acksqlparams" : [ "$job" ]
-    },
-    "index" : {
-        "index" : "my_jdbc_river",
-        "type" : "my_jdbc_river"
+        "sql" : [
+            {
+                "statement" : "select * from \"products\""
+            },
+            {
+                "statement" : "delete from \"products\" where \"_job\" = ?",
+                "parameter" : [ "$job" ]
+            }
+        ],
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
     }
 }

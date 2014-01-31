@@ -1,20 +1,21 @@
+
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
+
+import java.io.IOException;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
+
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
 import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
-
-import java.io.IOException;
 
 public class SimpleRiverScriptTests extends AbstractRiverNodeTest {
-
-    private Client client;
 
     @Override
     public RiverSource getRiverSource() {
@@ -23,9 +24,7 @@ public class SimpleRiverScriptTests extends AbstractRiverNodeTest {
 
     @Override
     public RiverContext getRiverContext() {
-        RiverContext context = new RiverContext();
-        context.digesting(true);
-        return context;
+        return new RiverContext();
     }
 
     /**
@@ -38,9 +37,9 @@ public class SimpleRiverScriptTests extends AbstractRiverNodeTest {
     @Test
     @Parameters({"river1"})
     public void testSimpleRiverOnce(String riverResource) throws IOException, InterruptedException {
-        client = client("1");
+        Client client = client("1");
         RiverSettings settings = riverSettings(riverResource);
-        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, "_river", client);
+        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);
         river.once();
         Thread.sleep(3000L); // let the good things happen
         river.close();

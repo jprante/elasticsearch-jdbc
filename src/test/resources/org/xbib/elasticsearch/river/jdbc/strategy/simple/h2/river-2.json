@@ -1,13 +1,10 @@
 {
-    "jdbc" :{
-        "driver" : "org.h2.Driver",
+    "jdbc" : {
         "url" : "jdbc:h2:target/test?TRACE_LEVEL_FILE=target/trace",
         "user" : "",
         "password" : "",
-        "sql" : "select * from \"products\""        
-    },
-    "index" : {
-        "index" : "my_jdbc_river",
-        "type" : "my_jdbc_river"
+        "sql" : "select * from \"products\"",
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
     }
 }

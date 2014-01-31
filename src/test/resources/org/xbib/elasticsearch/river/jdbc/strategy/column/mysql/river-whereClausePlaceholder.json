@@ -1,0 +1,14 @@
+{
+    "jdbc" : {
+        "strategy" : "column",
+        "url" : "jdbc:mysql://localhost:3306/test",
+        "user" : "",
+        "password" : "",
+        "sql": "SELECT id, name FROM products WHERE 1=1 AND $where",
+        "column_updated_at": "updated_at",
+        "column_created_at": "created_at",
+        "column_deleted_at": "deleted_at",
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
+    }
+}

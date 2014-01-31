@@ -1,46 +1,14 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.ValueListener;
+package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Date;
@@ -49,6 +17,7 @@ import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
@@ -59,39 +28,51 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
+import org.xbib.elasticsearch.river.jdbc.support.StructuredObjectKeyValueStreamListener;
+import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+
+import static org.elasticsearch.common.collect.Lists.newLinkedList;
+import static org.elasticsearch.common.collect.Maps.newHashMap;
 
 /**
- * A river source implementation for the 'simple' strategy.
- * <p/>
- * It connects to a JDCC database, fetches from it by using a merge method
- * provided by the river task. It does not process acknowledgements from the
- * river target side.
- * <p/>
- * The river source understands all the JDBC column types and parses them to an
- * appropriate Java object.
- *
- * @author Jörg Prante <joergprante@gmail.com>
+ * Simple river source
  */
 public class SimpleRiverSource implements RiverSource {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getName());
-    /**
-     * The river context
-     */
+
     protected RiverContext context;
+
     protected String url;
-    protected String driver;
+
     protected String user;
+
     protected String password;
+
     protected Connection readConnection;
+
     protected Connection writeConnection;
+
     private int rounding;
+
     private int scale = -1;
 
-    public SimpleRiverSource() {
+    private final Map<String, Object> lastRow = newHashMap();
+
+    protected ESLogger logger() {
+        return logger;
     }
 
     @Override
@@ -103,21 +84,6 @@ public class SimpleRiverSource implements RiverSource {
     public SimpleRiverSource riverContext(RiverContext context) {
         this.context = context;
         return this;
-    }
-
-    @Override
-    public SimpleRiverSource driver(String driver) {
-        this.driver = driver;
-        try {
-            Class.forName(driver);
-        } catch (ClassNotFoundException ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-        return this;
-    }
-
-    public String driver() {
-        return driver;
     }
 
     @Override
@@ -146,7 +112,7 @@ public class SimpleRiverSource implements RiverSource {
      * Get JDBC connection for reading
      *
      * @return the connection
-     * @throws SQLException
+     * @throws java.sql.SQLException
      */
     @Override
     public Connection connectionForReading() throws SQLException {
@@ -155,13 +121,13 @@ public class SimpleRiverSource implements RiverSource {
             cond = cond || !readConnection.isValid(5);
         } catch (AbstractMethodError e) {
             // old/buggy JDBC driver
-            logger.debug(e.getMessage());
+            logger().debug(e.getMessage());
         } catch (SQLFeatureNotSupportedException e) {
             // postgresql does not support isValid()
-            logger.debug(e.getMessage());
+            logger().debug(e.getMessage());
         }
         if (cond) {
-            int retries = context != null ? context.retries() : 1;
+            int retries = context != null ? context.getRetries() : 1;
             while (retries > 0) {
                 retries--;
                 try {
@@ -174,13 +140,13 @@ public class SimpleRiverSource implements RiverSource {
                     //readConnection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
                     if (context != null) {
                         // many drivers don't like autocommit=true
-                        readConnection.setAutoCommit(context.autocommit());
+                        readConnection.setAutoCommit(context.getAutoCommit());
                     }
                     return readConnection;
                 } catch (SQLException e) {
-                    logger.error("while opening read connection: " + url + " " + e.getMessage(), e);
+                    logger().error("while opening read connection: " + url + " " + e.getMessage(), e);
                     try {
-                        Thread.sleep(context != null ? context.maxRetryWait().millis() : 1000L);
+                        Thread.sleep(context != null ? context.getMaxRetryWait().millis() : 1000L);
                     } catch (InterruptedException ex) {
                         // do nothing
                     }
@@ -202,118 +168,168 @@ public class SimpleRiverSource implements RiverSource {
         try {
             cond = cond || !writeConnection.isValid(5);
         } catch (AbstractMethodError e) {
-            // old JDBC driver
+            // old/buggy JDBC driver
         } catch (SQLFeatureNotSupportedException e) {
             // postgresql does not support isValid()
         }
         if (cond) {
-            int retries = context != null ? context.retries() : 1;
+            int retries = context != null ? context.getRetries() : 1;
             while (retries > 0) {
                 retries--;
                 try {
                     writeConnection = DriverManager.getConnection(url, user, password);
                     if (context != null) {
                         // many drivers don't like autocommit=true
-                        writeConnection.setAutoCommit(context.autocommit());
+                        writeConnection.setAutoCommit(context.getAutoCommit());
                     }
                     return writeConnection;
                 } catch (SQLNonTransientConnectionException e) {
-                    // ignore derby drop=true
+                    // ignore derby drop=true silently
                 } catch (SQLException e) {
-                    logger.error("while opening write connection: " + url + " " + e.getMessage(), e);
-                        try {
-                            Thread.sleep(context != null ? context.maxRetryWait().millis() : 1000L);
-                        } catch (InterruptedException ex) {
-                            // do nothing
-                        }
+                    logger().error("while opening write connection: " + url + " " + e.getMessage(), e);
+                    try {
+                        Thread.sleep(context != null ? context.getMaxRetryWait().millis() : 1000L);
+                    } catch (InterruptedException ex) {
+                        // do nothing
+                    }
                 }
             }
         }
         return writeConnection;
     }
 
+    /**
+     * River cycle fetch. Issue a series of SQL statements.
+     *
+     * @throws SQLException
+     * @throws IOException
+     */
     @Override
-    public String fetch() throws SQLException, IOException {
-        PreparedStatement statement = null;
-        ResultSet results;
-        if (context.pollStatementParams().isEmpty()) {
-            // Postgresql requires executeQuery(sql) for cursor with fetchsize
-            results = executeQuery(getSql());
-        } else {
-            statement = prepareQuery(getSql());
-            bind(statement, context.pollStatementParams());
-            results = executeQuery(statement);
+    public void fetch() throws SQLException, IOException {
+        if (logger().isDebugEnabled()) {
+            logger().debug("fetching, {} SQL commands", context.getStatements().size());
         }
-        String mergeDigest;
         try {
-            ValueListener listener = new SimpleValueListener()
-                    .target(context.riverMouth())
-                    .digest(context.digesting());
-            mergeDigest = merge(results, listener);
+            for (SQLCommand command : context.getStatements()) {
+                if (command.isCallable()) {
+                    if (logger().isDebugEnabled()) {
+                        logger().debug("executing callable SQL: {}", command);
+                    }
+                    executeCallable(command);
+                } else if (!command.getParameters().isEmpty()) {
+                    if (logger().isDebugEnabled()) {
+                        logger().debug("executing SQL with params: {}", command);
+                    }
+                    executeWithParameter(command);
+                } else {
+                    if (logger().isDebugEnabled()) {
+                        logger().debug("executing SQL without params: {}", command);
+                    }
+                    execute(command);
+                }
+            }
         } catch (Exception e) {
             throw new IOException(e);
-        }
-        close(results);
-        close(statement);
-        acknowledge();
-        return mergeDigest;
-    }
-
-    /**
-     * Merge rows.
-     *
-     * @param results  the ResultSet
-     * @param listener
-     * @return a digest of the merged row content
-     * @throws IOException
-     * @throws java.security.NoSuchAlgorithmException
-     *
-     * @throws SQLException
-     */
-    public String merge(ResultSet results, ValueListener listener)
-            throws SQLException, IOException, ParseException, NoSuchAlgorithmException {
-        long rows = 0L;
-        beforeFirstRow(results, listener);
-        while (nextRow(results, listener)) {
-            rows++;
-        }
-        if (rows > 0) {
-            logger.info("merged {} rows", rows);
-        }
-        listener.reset();
-        return context.digesting() && listener.digest() != null
-                ? Base64.encodeBytes(listener.digest().digest()) : null;
-    }
-
-
-    /**
-     * Send acknowledge SQL command if exists.
-     *
-     * @throws SQLException
-     */
-    public void acknowledge() throws SQLException {
-        // send acknowledge statement if defined
-        if (context.pollAckStatement() != null) {
-            Connection connection = connectionForWriting();
-            PreparedStatement statement = prepareUpdate(context.pollAckStatement());
-            if (context.pollAckStatementParams() != null) {
-                bind(statement, context.pollAckStatementParams());
-            }
-            statement.execute();
-            close(statement);
-            try {
-                if (!connection.getAutoCommit()) {
-                    connection.commit();
-                }
-            } catch (SQLException e) {
-                //  Can't call commit when autocommit=true
-            }
+        } finally {
+            closeReading();
             closeWriting();
         }
     }
 
-    private String getSql() throws IOException {
-        String sql = context.pollStatement();
+    /**
+     * Execute SQL query command without parameter binding.
+     * @param command the SQL command
+     * @throws SQLException
+     * @throws IOException
+     */
+    private void execute(SQLCommand command) throws Exception {
+        Statement statement = null;
+        ResultSet results = null;
+        try {
+            if (command.isQuery()) {
+                // use read connection
+                // we must not use prepareStatement for Postgresql!
+                // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize set.
+                statement = connectionForReading().createStatement();
+                results = executeQuery(statement, expandSQL(command.getSQL()));
+                KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                        .output(context.riverMouth());
+                merge(results, listener);
+            } else {
+                // use write connection
+                statement = connectionForWriting().createStatement();
+                executeUpdate(statement, expandSQL(command.getSQL()));
+            }
+        } finally {
+            close(results);
+            close(statement);
+        }
+    }
+
+    /**
+     * Execute SQL query command with parameter binding.
+     * @param command the SQL command
+     * @throws SQLException
+     * @throws IOException
+     */
+    private void executeWithParameter(SQLCommand command) throws Exception {
+        PreparedStatement statement = null;
+        ResultSet results = null;
+        try {
+            if (command.isQuery()) {
+                statement = prepareQuery(expandSQL(command.getSQL()));
+                bind(statement, command.getParameters());
+                results = executeQuery(statement);
+                KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                        .output(context.riverMouth());
+                merge(results, listener);
+            } else {
+                statement = prepareUpdate(expandSQL(command.getSQL()));
+                bind(statement, command.getParameters());
+                executeUpdate(statement);
+            }
+        } finally {
+            close(results);
+            close(statement);
+        }
+    }
+
+    /**
+     * Execute callable SQL command
+     * @param command the SQL command
+     * @throws SQLException
+     * @throws IOException
+     */
+    private void executeCallable(SQLCommand command) throws Exception {
+        // call stored procedure
+        CallableStatement statement = null;
+        try {
+            // we do not make a difference betwwen read/write and we assume
+            // it is safe to use the read connection and query the DB
+            statement = connectionForWriting().prepareCall(expandSQL(command.getSQL()));
+            if (!command.getParameters().isEmpty()) {
+                bind(statement, command.getParameters());
+            }
+            if (!command.getResults().isEmpty()) {
+                register(statement, command.getResults());
+            }
+            boolean hasRows = statement.execute();
+            KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                    .output(context.riverMouth());
+            if (!hasRows) {
+                // merge from registered params
+                merge(statement, command, listener);
+            } else while (hasRows) {
+                // merge result set
+                merge(statement.getResultSet(), listener);
+                hasRows = statement.getMoreResults();
+            }
+        } finally {
+            close(statement);
+        }
+    }
+
+    private String expandSQL(String sql) throws IOException {
         if (sql.endsWith(".sql")) {
             Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
             sql = Streams.copyToString(r);
@@ -323,9 +339,63 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     /**
+     * Merge key/values from JDBC result set
+     *
+     * @param results result set
+     * @param listener the value listener
+     * @throws IOException
+     * @throws SQLException
+     */
+    public void merge(ResultSet results, KeyValueStreamListener listener)
+            throws SQLException, IOException, ParseException {
+        if (listener == null) {
+            return;
+        }
+        beforeRows(results, listener);
+        long rows = 0L;
+        while (nextRow(results, listener)) {
+            rows++;
+        }
+        if (logger().isDebugEnabled()) {
+            if (rows > 0) {
+                logger().debug("merged {} rows", rows);
+            } else {
+                logger().debug("no rows merged ");
+            }
+        }
+        afterRows(results, listener);
+    }
+
+    /**
+     * Merge key/values from registered params of a callable statement
+     *
+     * @param statement callable statement
+     * @param listener the value listener
+     * @throws SQLException
+     * @throws IOException
+     */
+    public void merge(CallableStatement statement, SQLCommand command, KeyValueStreamListener listener)
+        throws SQLException, IOException {
+        Map<String,Object> map = command.getResults();
+        if (map.isEmpty()) {
+            return;
+        }
+        List<String> keys = newLinkedList();
+        List<Object> values = newLinkedList();
+        for (String key : map.keySet()) {
+            keys.add(key);
+            Map<String,Object> m = (Map<String,Object>)map.get(key);
+            values.add(statement.getObject((Integer) m.get("pos")));
+        }
+        listener.keys(keys);
+        listener.values(values);
+        listener.end();
+    }
+
+    /**
      * Prepare a query statement
      *
-     * @param sql
+     * @param sql the SQL statement
      * @return a prepared statement
      * @throws SQLException
      */
@@ -335,52 +405,71 @@ public class SimpleRiverSource implements RiverSource {
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
         }
-        logger.debug("preparing statement with SQL {}", sql);
+        logger().debug("preparing statement with SQL {}", sql);
         return connection.prepareStatement(sql,
                 ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
     }
 
     /**
-     * Prepare a query statement
+     * Prepare an update statement
      *
-     * @param sql
+     * @param sql the SQL statement
      * @return a prepared statement
      * @throws SQLException
      */
     @Override
     public PreparedStatement prepareUpdate(String sql) throws SQLException {
-        if (sql.endsWith(".sql")) {
-            try {
-                Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
-                sql = Streams.copyToString(r);
-                r.close();
-            } catch (IOException e) {
-                throw new SQLException("file not found: " + sql);
+        try {
+            Connection connection = connectionForWriting();
+            if (connection == null) {
+                throw new SQLException("can't connect to source " + url);
             }
+            return connection.prepareStatement(expandSQL(sql));
+        } catch (IOException e) {
+            throw new SQLException("file not found: " + sql);
         }
-        Connection connection = connectionForWriting();
-        if (connection == null) {
-            throw new SQLException("can't connect to source " + url);
-        }
-        return connection.prepareStatement(sql);
     }
 
     /**
      * Bind values to prepared statement
      *
-     * @param pstmt
-     * @param values
+     * @param statement the prepared statement
+     * @param values the values to bind
      * @throws SQLException
      */
     @Override
-    public SimpleRiverSource bind(PreparedStatement pstmt, List<? extends Object> values) throws SQLException {
+    public SimpleRiverSource bind(PreparedStatement statement, List<? extends Object> values) throws SQLException {
         if (values == null) {
-            logger.warn("no values given for bind");
+            logger().warn("no values given for bind");
             return this;
         }
         for (int i = 1; i <= values.size(); i++) {
-            bind(pstmt, i, values.get(i - 1));
+            bind(statement, i, values.get(i - 1));
+        }
+        return this;
+    }
+
+    /**
+     * Register variables in callable statement
+     *
+     * @param statement callable statement
+     * @param values values
+     * @return
+     * @throws SQLException
+     */
+    @Override
+    public SimpleRiverSource register(CallableStatement statement, Map<String,Object> values) throws SQLException {
+        if (values == null) {
+            return this;
+        }
+        for (Map.Entry<String,Object> me : values.entrySet()) {
+            // { "fieldname" : { "pos": n, "type" : "VARCHAR" }, ... }
+            //String fieldname = me.getKey();
+            Map<String,Object> m = (Map<String,Object>)me.getValue();
+            Integer n = (Integer)m.get("pos");
+            String type = (String)m.get("type");
+            register(statement, n, type);
         }
         return this;
     }
@@ -388,41 +477,36 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * Execute prepared query statement
      *
-     * @param statement
+     * @param statement the prepared statement
      * @return the result set
      * @throws SQLException
      */
     @Override
     public ResultSet executeQuery(PreparedStatement statement) throws SQLException {
-        statement.setMaxRows(context.maxRows());
-        statement.setFetchSize(context.fetchSize());
-        logger.debug("executing prepared statement");
-        ResultSet set = statement.executeQuery();
-        return set;
+        statement.setMaxRows(context.getMaxRows());
+        statement.setFetchSize(context.getFetchSize());
+        return statement.executeQuery();
     }
 
     /**
      * Execute query statement
      *
-     * @param sql
+     * @param statement the statement
+     * @param sql the SQL
      * @return the result set
      * @throws SQLException
      */
     @Override
-    public ResultSet executeQuery(String sql) throws SQLException {
-        Statement statement = connectionForReading().createStatement();
-        statement.setMaxRows(context.maxRows());
-        statement.setFetchSize(context.fetchSize());
-        logger.debug("executing SQL {}", sql);
-        ResultSet set = statement.executeQuery(sql);
-        return set;
+    public ResultSet executeQuery(Statement statement, String sql) throws SQLException {
+        statement.setMaxRows(context.getMaxRows());
+        statement.setFetchSize(context.getFetchSize());
+        return statement.executeQuery(sql);
     }
-
 
     /**
      * Execute prepared update statement
      *
-     * @param statement
+     * @param statement the prepared statement
      * @return the result set
      * @throws SQLException
      */
@@ -435,51 +519,75 @@ public class SimpleRiverSource implements RiverSource {
         return this;
     }
 
-    public void beforeFirstRow(ResultSet result, ValueListener listener)
-            throws SQLException, IOException, ParseException {
-        ResultSetMetaData metadata = result.getMetaData();
+    /**
+     * Execute prepared update statement
+     *
+     * @param statement the prepared statement
+     * @return the result set
+     * @throws SQLException
+     */
+    @Override
+    public RiverSource executeUpdate(Statement statement, String sql) throws SQLException {
+        statement.executeUpdate(sql);
+        if (!writeConnection.getAutoCommit()) {
+            writeConnection.commit();
+        }
+        return this;
+    }
+
+    @Override
+    public void beforeRows(ResultSet results, KeyValueStreamListener listener)
+            throws SQLException, IOException {
+        ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
-        List<String> keys = new LinkedList();
+        List<String> keys = newLinkedList();
         for (int i = 1; i <= columns; i++) {
             keys.add(metadata.getColumnLabel(i));
         }
-        if (listener != null) {
-            listener.keys(keys);
-        }
+        listener.begin();
+        listener.keys(keys);
     }
 
     /**
      * Get next row and prepare the values for processing. The labels of each
      * columns are used for the ValueListener as paths for JSON object merging.
      *
-     * @param result   the result set
+     * @param results   the result set
      * @param listener the listener
      * @return true if row exists and was processed, false otherwise
      * @throws SQLException
      * @throws IOException
      */
     @Override
-    public boolean nextRow(ResultSet result, ValueListener listener)
+    public boolean nextRow(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
-        if (result.next()) {
-            processRow(result, listener);
+        if (results.next()) {
+            processRow(results, listener);
             return true;
         }
         return false;
     }
 
-    private void processRow(ResultSet result, ValueListener listener)
+    @Override
+    public void afterRows(ResultSet results, KeyValueStreamListener listener)
+            throws SQLException, IOException {
+        listener.end();
+    }
+
+    private void processRow(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
         Locale locale = context != null ? context.locale() != null ? context.locale() : Locale.getDefault() : Locale.getDefault();
-        List<Object> values = new LinkedList();
-        ResultSetMetaData metadata = result.getMetaData();
+        List<Object> values = newLinkedList();
+        ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
+        lastRow.clear();
         for (int i = 1; i <= columns; i++) {
-            Object value = parseType(result, i, metadata.getColumnType(i), locale);
-            if (logger.isTraceEnabled()) {
-                logger.trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+            Object value = parseType(results, i, metadata.getColumnType(i), locale);
+            if (logger().isTraceEnabled()) {
+                logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
             }
             values.add(value);
+            lastRow.put("$row." + metadata.getColumnLabel(i), results.getObject(i));
         }
         if (listener != null) {
             listener.values(values);
@@ -489,7 +597,7 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * Close result set
      *
-     * @param result
+     * @param result the result set to be closed or null
      * @throws SQLException
      */
     @Override
@@ -503,11 +611,11 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * Close statement
      *
-     * @param statement
+     * @param statement the statement to be closed or null
      * @throws SQLException
      */
     @Override
-    public SimpleRiverSource close(PreparedStatement statement) throws SQLException {
+    public SimpleRiverSource close(Statement statement) throws SQLException {
         if (statement != null) {
             statement.close();
         }
@@ -516,8 +624,6 @@ public class SimpleRiverSource implements RiverSource {
 
     /**
      * Close read connection
-     *
-     * @throws SQLException
      */
     @Override
     public SimpleRiverSource closeReading() {
@@ -532,15 +638,13 @@ public class SimpleRiverSource implements RiverSource {
                 }
             }
         } catch (SQLException e) {
-            logger.warn("while closing read connection: " + e.getMessage());
+            logger().warn("while closing read connection: " + e.getMessage());
         }
         return this;
     }
 
     /**
      * Close read connection
-     *
-     * @throws SQLException
      */
     @Override
     public SimpleRiverSource closeWriting() {
@@ -555,14 +659,8 @@ public class SimpleRiverSource implements RiverSource {
                 }
             }
         } catch (SQLException e) {
-            logger.warn("while closing write connection: " + e.getMessage());
+            logger().warn("while closing write connection: " + e.getMessage());
         }
-        return this;
-    }
-
-    @Override
-    public SimpleRiverSource acknowledge(BulkResponse response) throws IOException {
-        // no, we do not acknowledge bulk in this strategy
         return this;
     }
 
@@ -595,103 +693,71 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private static final String FORMAT_SECONDS = "yyyy-MM-dd HH:mm:ss";
-    private final static DateTimeFormatter df = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-
-    public static String formatNow() {
-        return formatDateISO(new java.util.Date());
-    }
 
     public static String formatDateISO(long millis) {
         return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
     }
 
-    public static String formatDateStandard(java.util.Date date) {
-        if (date == null) {
-            return null;
-        }
-        return new DateTime(date).toString(FORMAT_SECONDS);
-    }
-
-    public synchronized static String formatDateISO(java.util.Date date) {
-        if (date == null) {
-            return null;
-        }
-        return new DateTime(date).toString(ISO_FORMAT_SECONDS);
-    }
-
-    public synchronized static java.util.Date parseDateISO(String value) {
+    private void bind(PreparedStatement statement, int i, Object value) throws SQLException {
         if (value == null) {
-            return null;
-        }
-        try {
-            return df.parseDateTime(value).toDate();
-        } catch (Exception e) {
-            // ignore
-        }
-
-        try {
-            return DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(value).toDate();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public synchronized static java.util.Date parseDate(String value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            return DateTimeFormat.forPattern(FORMAT_SECONDS).parseDateTime(value).toDate();
-        } catch (Exception e) {
-        }
-
-        try {
-            return DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(value).toDate();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private void bind(PreparedStatement pstmt, int i, Object value) throws SQLException {
-        if (value == null) {
-            pstmt.setNull(i, Types.VARCHAR);
+            statement.setNull(i, Types.VARCHAR);
         } else if (value instanceof String) {
             String s = (String) value;
+            if (logger().isDebugEnabled()) {
+                logger().debug("bind: value = {}", s);
+            }
             if ("$now".equals(s)) {
-                pstmt.setDate(i, new Date(new java.util.Date().getTime()));
+                Date d = new Date(new java.util.Date().getTime());
+                if (logger().isDebugEnabled()) {
+                    logger().debug("setting $now to {}", d);
+                }
+                statement.setDate(i, d);
             } else if ("$job".equals(s)) {
-                logger.debug("job = {}", context.job());
-                pstmt.setString(i, context.job());
+                if (logger().isDebugEnabled()) {
+                    logger().debug("setting $job to {}", context.job());
+                }
+                statement.setString(i, context.job());
             } else {
-                pstmt.setString(i, (String) value);
+                Object rowValue = lastRow.get(s);
+                if (rowValue != null) {
+                    if (logger().isDebugEnabled()) {
+                        logger().debug("setting ${} to {}", s, rowValue);
+                    }
+                    statement.setObject(i, rowValue);
+                } else {
+                    statement.setString(i, (String) value);
+                }
             }
         } else if (value instanceof Integer) {
-            pstmt.setInt(i, (Integer) value);
+            statement.setInt(i, (Integer) value);
         } else if (value instanceof Long) {
-            pstmt.setLong(i, (Long) value);
+            statement.setLong(i, (Long) value);
         } else if (value instanceof BigDecimal) {
-            pstmt.setBigDecimal(i, (BigDecimal) value);
+            statement.setBigDecimal(i, (BigDecimal) value);
         } else if (value instanceof Date) {
-            pstmt.setDate(i, (Date) value);
+            statement.setDate(i, (Date) value);
         } else if (value instanceof Timestamp) {
-            pstmt.setTimestamp(i, (Timestamp) value);
+            statement.setTimestamp(i, (Timestamp) value);
         } else if (value instanceof Float) {
-            pstmt.setFloat(i, (Float) value);
+            statement.setFloat(i, (Float) value);
         } else if (value instanceof Double) {
-            pstmt.setDouble(i, (Double) value);
+            statement.setDouble(i, (Double) value);
         } else {
-            pstmt.setObject(i, value);
+            statement.setObject(i, value);
         }
+    }
+
+    private void register(CallableStatement statement, Integer pos, String type) throws SQLException {
+        statement.registerOutParameter(pos, toJDBCType(type));
     }
 
     /**
-     * Parse of value of resultset with the good type
+     * Parse of value of result set
      *
-     * @param result
-     * @param i
-     * @param type
-     * @param locale
+     * @param result the result set
+     * @param i the offset in the result set
+     * @param type the JDBC type
+     * @param locale the locale to use for parsing
      * @return The parse value
      * @throws SQLException
      * @throws IOException
@@ -699,10 +765,9 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public Object parseType(ResultSet result, Integer i, int type, Locale locale)
             throws SQLException, IOException, ParseException {
-        if (logger.isTraceEnabled()) {
-            logger.trace("{} {} {}", i, type, result.getString(i));
+        if (logger().isTraceEnabled()) {
+            logger().trace("{} {} {}", i, type, result.getString(i));
         }
-
         switch (type) {
             /**
              * The JDBC types CHAR, VARCHAR, and LONGVARCHAR are closely
@@ -963,7 +1028,7 @@ public class SimpleRiverSource implements RiverSource {
                     bd = result.getBigDecimal(i);
                 } catch (NullPointerException e) {
                     // getBigDecimal() should get obsolete. Most seem to use getString/getObject anyway...
-                    // But is it true? JDBC NPE exists since 13 years? 
+                    // But is it true? JDBC NPE exists since 13 years?
                     // http://forums.codeguru.com/archive/index.php/t-32443.html
                     // Null values are driving us nuts in JDBC:
                     // http://stackoverflow.com/questions/2777214/when-accessing-resultsets-in-jdbc-is-there-an-elegant-way-to-distinguish-betwee
@@ -975,10 +1040,11 @@ public class SimpleRiverSource implements RiverSource {
                     bd = bd.setScale(scale, rounding);
                     try {
                         long l = bd.longValueExact();
-                        // TODO argh
-                        if (Long.toString(l).equals(result.getString(i) )) {
+                        if (Long.toString(l).equals(result.getString(i))) {
+                            // convert to long if possible
                             return l;
                         } else {
+                            // convert to double (with precision loss)
                             return bd.doubleValue();
                         }
                     } catch (ArithmeticException e) {
@@ -1039,22 +1105,6 @@ public class SimpleRiverSource implements RiverSource {
                 return number.doubleValue();
             }
             /**
-             * The JDBC type INTEGER represents a 32-bit signed integer value
-             * ranging between -2147483648 and 2147483647.
-             *
-             * The corresponding SQL type, INTEGER, is defined in SQL-92 and is
-             * widely supported by all the major databases. The SQL-92 standard
-             * leaves the precision of INTEGER up to the implementation, but in
-             * practice all the major databases support at least 32 bits.
-             *
-             * The recommended Java mapping for the INTEGER type is as a Java
-             * int.
-             */
-            case Types.INTEGER: {
-                Object o = result.getInt(i);
-                return result.wasNull() ? null : o;
-            }
-            /**
              * The JDBC type JAVA_OBJECT, added in the JDBC 2.0 core API, makes
              * it easier to use objects in the Java programming language as
              * values in a database. JAVA_OBJECT is simply a type code for an
@@ -1102,26 +1152,6 @@ public class SimpleRiverSource implements RiverSource {
                 return number.doubleValue();
             }
             /**
-             * The JDBC type SMALLINT represents a 16-bit signed integer value
-             * between -32768 and 32767.
-             *
-             * The corresponding SQL type, SMALLINT, is defined in SQL-92 and is
-             * supported by all the major databases. The SQL-92 standard leaves
-             * the precision of SMALLINT up to the implementation, but in
-             * practice, all the major databases support at least 16 bits.
-             *
-             * The recommended Java mapping for the JDBC SMALLINT type is as a
-             * Java short.
-             */
-            case Types.SMALLINT: {
-                Object o = result.getInt(i);
-                return result.wasNull() ? null : o;
-            }
-            case Types.SQLXML: {
-                SQLXML xml = result.getSQLXML(i);
-                return xml != null ? xml.getString() : null;
-            }
-            /**
              * The JDBC type TINYINT represents an 8-bit integer value between 0
              * and 255 that may be signed or unsigned.
              *
@@ -1135,10 +1165,47 @@ public class SimpleRiverSource implements RiverSource {
              * be appropriate for larger TINYINT values, whereas the 16-bit Java
              * short will always be able to hold all TINYINT values.
              */
-            case Types.TINYINT: {
-                Object o = result.getInt(i);
-                return result.wasNull() ? null : o;
+            /**
+             * The JDBC type SMALLINT represents a 16-bit signed integer value
+             * between -32768 and 32767.
+             *
+             * The corresponding SQL type, SMALLINT, is defined in SQL-92 and is
+             * supported by all the major databases. The SQL-92 standard leaves
+             * the precision of SMALLINT up to the implementation, but in
+             * practice, all the major databases support at least 16 bits.
+             *
+             * The recommended Java mapping for the JDBC SMALLINT type is as a
+             * Java short.
+             */
+            /**
+             * The JDBC type INTEGER represents a 32-bit signed integer value
+             * ranging between -2147483648 and 2147483647.
+             *
+             * The corresponding SQL type, INTEGER, is defined in SQL-92 and is
+             * widely supported by all the major databases. The SQL-92 standard
+             * leaves the precision of INTEGER up to the implementation, but in
+             * practice all the major databases support at least 32 bits.
+             *
+             * The recommended Java mapping for the INTEGER type is as a Java
+             * int.
+             */
+            case Types.TINYINT:
+            case Types.SMALLINT:
+            case Types.INTEGER: {
+                try {
+                    Integer integer = result.getInt(i);
+                    return result.wasNull() ? null : integer;
+                } catch (SQLDataException e) {
+                    Long l = result.getLong(i);
+                    return result.wasNull() ? null : l;
+                }
             }
+
+            case Types.SQLXML: {
+                SQLXML xml = result.getSQLXML(i);
+                return xml != null ? xml.getString() : null;
+            }
+
             case Types.NULL: {
                 return null;
             }
@@ -1158,7 +1225,7 @@ public class SimpleRiverSource implements RiverSource {
              * java.util.Map object.
              */
             case Types.DISTINCT: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             /**
@@ -1180,22 +1247,91 @@ public class SimpleRiverSource implements RiverSource {
              *
              */
             case Types.STRUCT: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.REF: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.ROWID: {
-                logger.warn("JDBC type not implemented: {}", type);
+                logger().warn("JDBC type not implemented: {}", type);
                 return null;
             }
             default: {
-                logger.warn("unknown JDBC type ignored: {}", type);
+                logger().warn("unknown JDBC type ignored: {}", type);
                 return null;
             }
         }
         return null;
+    }
+
+    private int toJDBCType(String type) {
+        if (type == null) {
+            return Types.NULL;
+        } else if (type.equalsIgnoreCase("NULL")) {
+            return Types.NULL;
+        } else if (type.equalsIgnoreCase("TINYINT")) {
+            return Types.TINYINT;
+        } else if (type.equalsIgnoreCase("SMALLINT")) {
+            return Types.SMALLINT;
+        } else if (type.equalsIgnoreCase("INTEGER")) {
+            return Types.INTEGER;
+        } else if (type.equalsIgnoreCase("BIGINT")) {
+            return Types.BIGINT;
+        } else if (type.equalsIgnoreCase("REAL")) {
+            return Types.REAL;
+        } else if (type.equalsIgnoreCase("FLOAT")) {
+            return Types.FLOAT;
+        } else if (type.equalsIgnoreCase("DOUBLE")) {
+            return Types.DOUBLE;
+        } else if (type.equalsIgnoreCase("DECIMAL")) {
+            return Types.DECIMAL;
+        } else if (type.equalsIgnoreCase("NUMERIC")) {
+            return Types.NUMERIC;
+        } else if (type.equalsIgnoreCase("BIT")) {
+            return Types.BIT;
+        } else if (type.equalsIgnoreCase("BOOLEAN")) {
+            return Types.BOOLEAN;
+        } else if (type.equalsIgnoreCase("BINARY")) {
+            return Types.BINARY;
+        } else if (type.equalsIgnoreCase("VARBINARY")) {
+            return Types.VARBINARY;
+        } else if (type.equalsIgnoreCase("LONGVARBINARY")) {
+            return Types.LONGVARBINARY;
+        } else if (type.equalsIgnoreCase("CHAR")) {
+            return Types.CHAR;
+        } else if (type.equalsIgnoreCase("VARCHAR")) {
+            return Types.VARCHAR;
+        } else if (type.equalsIgnoreCase("LONGVARCHAR")) {
+            return Types.LONGVARCHAR;
+        } else if (type.equalsIgnoreCase("DATE")) {
+            return Types.DATE;
+        } else if (type.equalsIgnoreCase("TIME")) {
+            return Types.TIME;
+        } else if (type.equalsIgnoreCase("TIMESTAMP")) {
+            return Types.TIMESTAMP;
+        } else if (type.equalsIgnoreCase("CLOB")) {
+            return Types.CLOB;
+        } else if (type.equalsIgnoreCase("BLOB")) {
+            return Types.BLOB;
+        } else if (type.equalsIgnoreCase("ARRAY")) {
+            return Types.ARRAY;
+        } else if (type.equalsIgnoreCase("STRUCT")) {
+            return Types.STRUCT;
+        } else if (type.equalsIgnoreCase("REF")) {
+            return Types.REF;
+        } else if (type.equalsIgnoreCase("DATALINK")) {
+            return Types.DATALINK;
+        } else if (type.equalsIgnoreCase("DISTINCT")) {
+            return Types.DISTINCT;
+        } else if (type.equalsIgnoreCase("JAVA_OBJECT")) {
+            return Types.JAVA_OBJECT;
+        } else if (type.equalsIgnoreCase("SQLXML")) {
+            return Types.SQLXML;
+        } else if (type.equalsIgnoreCase("ROWID")) {
+            return Types.ROWID;
+        }
+        return Types.OTHER;
     }
 }

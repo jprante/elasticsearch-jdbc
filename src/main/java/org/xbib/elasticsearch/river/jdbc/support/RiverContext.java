@@ -1,38 +1,26 @@
-/*
- * Licensed to ElasticSearch and Shay Banon under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. ElasticSearch licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+
 package org.xbib.elasticsearch.river.jdbc.support;
 
-import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.unit.TimeValue;
+
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.xbib.elasticsearch.river.jdbc.RiverMouth;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+
+import static org.elasticsearch.common.collect.Maps.newHashMap;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
 /**
- * The river context consists of the parameters that span over source and target, and the source and target.
- * It represents the river state, for supporting the river task, and river scripting.
- *
- * @author Jörg Prante <joergprante@gmail.com>
+ * The river context consists of the parameters that span source and mouth settings.
+ * It represents the river state, for supporting the river task execution, and river scripting.
  */
 public class RiverContext {
 
@@ -40,10 +28,6 @@ public class RiverContext {
      * The name of the river.
      */
     private String name;
-    /**
-     * The river index name
-     */
-    private String riverIndexName;
     /**
      * The settings of the river
      */
@@ -56,31 +40,23 @@ public class RiverContext {
      * The target of the river
      */
     private RiverMouth mouth;
+
+    private String schedule;
+
+    private Integer poolsize;
     /**
      * The polling interval
      */
-    private TimeValue poll;
-
+    private TimeValue interval;
     /**
      * The job name of the current river task
      */
     private String job;
     /**
-     * The SQL statement
+     * The SQL commands
      */
-    private String sql;
-    /**
-     * Parameters for the SQL statement
-     */
-    private List<? extends Object> sqlparams;
-    /**
-     * The acknowledge SQL statement
-     */
-    private String acksql;
-    /**
-     * Parameters for the acknowledge SQL statement
-     */
-    private List<? extends Object> acksqlparams;
+    private List<SQLCommand> sql;
+
     /**
      * Autocomit enabled or not
      */
@@ -108,9 +84,24 @@ public class RiverContext {
     private Locale locale;
 
     /**
-     * If digesting should be used or not
+     * Column name that contains creation time (for column strategy)
      */
-    private boolean digesting;
+    private String columnCreatedAt;
+
+    /**
+     * Column name that contains last update time (for column strategy)
+     */
+    private String columnUpdatedAt;
+
+    /**
+     * Column name that contains deletion time (for column strategy)
+     */
+    private String columnDeletedAt;
+
+    /**
+     * Columns name should be automatically escaped by proper db quote mark or not (for column strategy)
+     */
+    private boolean columnEscape;
 
     public RiverContext riverSettings(Map<String, Object> settings) {
         this.settings = settings;
@@ -119,15 +110,6 @@ public class RiverContext {
 
     public Map<String, Object> riverSettings() {
         return settings;
-    }
-
-    public RiverContext riverIndexName(String name) {
-        this.riverIndexName = name;
-        return this;
-    }
-
-    public String riverIndexName() {
-        return riverIndexName;
     }
 
     public RiverContext riverName(String name) {
@@ -157,105 +139,6 @@ public class RiverContext {
         return mouth;
     }
 
-    public RiverContext job(String job) {
-        this.job = job;
-        return this;
-    }
-
-    public String job() {
-        return job;
-    }
-
-    public RiverContext pollInterval(TimeValue poll) {
-        this.poll = poll;
-        return this;
-    }
-
-    public TimeValue pollingInterval() {
-        return poll;
-    }
-
-    public RiverContext pollStatement(String sql) {
-        this.sql = sql;
-        return this;
-    }
-
-    public String pollStatement() {
-        return sql;
-    }
-
-    public RiverContext pollStatementParams(List<? extends Object> params) {
-        this.sqlparams = params;
-        return this;
-    }
-
-    public List<? extends Object> pollStatementParams() {
-        return sqlparams;
-    }
-
-    public RiverContext pollAckStatement(String acksql) {
-        this.acksql = acksql;
-        return this;
-    }
-
-    public String pollAckStatement() {
-        return acksql;
-    }
-
-    public RiverContext pollAckStatementParams(List<? extends Object> params) {
-        this.acksqlparams = params;
-        return this;
-    }
-
-    public List<? extends Object> pollAckStatementParams() {
-        return acksqlparams;
-    }
-
-    public RiverContext autocommit(boolean enabled) {
-        this.autocommit = enabled;
-        return this;
-    }
-
-    public boolean autocommit() {
-        return autocommit;
-    }
-
-    public RiverContext fetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
-        return this;
-    }
-
-    public int fetchSize() {
-        return fetchSize;
-    }
-
-    public RiverContext maxRows(int maxRows) {
-        this.maxRows = maxRows;
-        return this;
-    }
-
-    public int maxRows() {
-        return maxRows;
-    }
-
-    public RiverContext retries(int retries) {
-        this.retries = retries;
-        return this;
-    }
-
-    public int retries() {
-        return retries;
-    }
-
-    public RiverContext maxRetryWait(TimeValue maxretrywait) {
-        this.maxretrywait = maxretrywait;
-        return this;
-    }
-
-    public TimeValue maxRetryWait() {
-        return maxretrywait;
-    }
-
     public RiverContext locale(String languageTag) {
         this.locale = LocaleUtil.toLocale(languageTag);
         Locale.setDefault(locale); // for JDBC drivers internals
@@ -266,13 +149,130 @@ public class RiverContext {
         return locale;
     }
 
-    public RiverContext digesting(boolean digesting) {
-        this.digesting = digesting;
+    public RiverContext job(String job) {
+        this.job = job;
         return this;
     }
 
-    public boolean digesting() {
-        return digesting;
+    public String job() {
+        return job;
+    }
+
+    public RiverContext setInterval(TimeValue interval) {
+        this.interval = interval;
+        return this;
+    }
+
+    public TimeValue getInterval() {
+        return interval;
+    }
+
+    public RiverContext setSchedule(String schedule) {
+        this.schedule = schedule;
+        return this;
+    }
+
+    public String getSchedule() {
+        return schedule;
+    }
+
+    public RiverContext setPoolSize(Integer poolsize) {
+        this.poolsize = poolsize;
+        return this;
+    }
+
+    public Integer getPoolSize() {
+        return poolsize;
+    }
+
+    public RiverContext setStatements(List<SQLCommand> sql) {
+        this.sql = sql;
+        return this;
+    }
+
+    public List<SQLCommand> getStatements() {
+        return sql;
+    }
+
+    public RiverContext setAutoCommit(boolean autocommit) {
+        this.autocommit = autocommit;
+        return this;
+    }
+
+    public boolean getAutoCommit() {
+        return autocommit;
+    }
+
+    public RiverContext setFetchSize(int fetchSize) {
+        this.fetchSize = fetchSize;
+        return this;
+    }
+
+    public int getFetchSize() {
+        return fetchSize;
+    }
+
+    public RiverContext setMaxRows(int maxRows) {
+        this.maxRows = maxRows;
+        return this;
+    }
+
+    public int getMaxRows() {
+        return maxRows;
+    }
+
+    public RiverContext setRetries(int retries) {
+        this.retries = retries;
+        return this;
+    }
+
+    public int getRetries() {
+        return retries;
+    }
+
+    public RiverContext setMaxRetryWait(TimeValue maxretrywait) {
+        this.maxretrywait = maxretrywait;
+        return this;
+    }
+
+    public TimeValue getMaxRetryWait() {
+        return maxretrywait;
+    }
+
+    public RiverContext columnUpdatedAt(String updatedAt) {
+        this.columnUpdatedAt = updatedAt;
+        return this;
+    }
+
+    public String columnUpdatedAt() {
+        return columnUpdatedAt;
+    }
+
+    public RiverContext columnCreatedAt(String createdAt) {
+        this.columnCreatedAt = createdAt;
+        return this;
+    }
+
+    public String columnCreatedAt() {
+        return columnCreatedAt;
+    }
+
+    public RiverContext columnDeletedAt(String deletedAt) {
+        this.columnDeletedAt = deletedAt;
+        return this;
+    }
+
+    public String columnDeletedAt() {
+        return columnDeletedAt;
+    }
+
+    public RiverContext columnEscape(boolean escape) {
+        this.columnEscape = escape;
+        return this;
+    }
+
+    public boolean columnEscape() {
+        return this.columnEscape;
     }
 
     public RiverContext contextualize() {
@@ -283,5 +283,34 @@ public class RiverContext {
             mouth.riverContext(this);
         }
         return this;
+    }
+
+    public Map<String,Object> asMap() {
+        try {
+           XContentBuilder builder = jsonBuilder();
+           builder.startObject()
+                .field("riverName", name)
+                .field("settings", settings)
+                .field("locale", LocaleUtil.fromLocale(locale))
+                .field("job", job)
+                .field("schedule", schedule)
+                .field("interval", interval)
+                .field("sql", sql)
+                .field("autocommit", autocommit)
+                .field("fetchsize", fetchSize)
+                .field("maxrows", maxRows)
+                .field("retries", retries)
+                .field("maxretrywait", maxretrywait)
+                .field("columnCreatedAt", columnCreatedAt)
+                .field("columnUpdatedAt", columnUpdatedAt)
+                .field("columnDeletedAt", columnDeletedAt)
+                .field("columnEscape", columnEscape)
+                .endObject();
+            Tuple<XContentType,Map<String,Object>> tuple =XContentHelper.convertToMap(builder.bytes(), true);
+            return tuple.v2();
+        } catch (IOException e) {
+            // does not happen
+            return newHashMap();
+        }
     }
 }

@@ -43,7 +43,7 @@
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
         <parameter name="river1" value="oracle/river-1.json"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverTests"/>
         </classes>
     </test>
 
@@ -55,7 +55,7 @@
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverDataTests"/>
         </classes>
     </test>
 
@@ -67,18 +67,7 @@
         <parameter name="sql2"
                    value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
-        </classes>
-    </test>
-
-    <test name="Table JDBC River Target Tests">
-        <parameter name="create" value="oracle/create-rivertables.sql"/>
-        <parameter name="delete" value="oracle/delete-rivertables.sql"/>
-        <parameter name="river1" value="oracle/river-1.json"/>
-        <parameter name="sql1"
-                   value="insert into &quot;my_jdbc_river&quot; (&quot;_index&quot;,&quot;_type&quot;,&quot;_id&quot;, &quot;source_operation&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?,?,?,?)"/>
-        <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTests"/>
         </classes>
     </test>
 

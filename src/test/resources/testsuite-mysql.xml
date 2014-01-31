@@ -43,7 +43,7 @@
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="river1" value="mysql/river-1.json"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverTests"/>
         </classes>
     </test>
 
@@ -54,7 +54,7 @@
         <parameter name="river3" value="mysql/river-3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouthDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverDataTests"/>
         </classes>
     </test>
 
@@ -65,18 +65,25 @@
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTargetTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTests"/>
         </classes>
     </test>
-
-    <test name="Table JDBC River Target Tests">
-        <parameter name="create" value="mysql/create-rivertables.sql"/>
-        <parameter name="delete" value="mysql/delete-rivertables.sql"/>
-        <parameter name="river1" value="mysql/river-1.json"/>
-        <parameter name="sql1"
-                   value="insert into my_jdbc_river (`_index`,`_type`,`_id`, `source_operation`, `name`, `amount`, `price`) values(?,?,?,?,?,?,?)"/>
+    
+    <test name="Column JDBC River Target Tests">
+        <parameter name="create" value="mysql/create-producttables.sql"/>
+        <parameter name="delete" value="mysql/delete-producttables.sql"/>
+        <parameter name="river-existedWhereClause" value="mysql/river-existedWhereClause.json"/>
+        <parameter name="river-sqlForTestDeletions" value="mysql/river-sqlForTestDeletions.json"/>
+        <parameter name="river-sqlForTestDeletionsAndWherePlaceholder" value="mysql/river-sqlForTestDeletionsAndWherePlaceholder.json"/>
+        <parameter name="river-whereClausePlaceholder" value="mysql/river-whereClausePlaceholder.json"/>
+        <parameter name="river-sqlparams" value="mysql/river-sqlparams.json"/>
+        <parameter name="sqlInsert"
+                    value="insert into products (id, name, amount, price, created_at, updated_at, deleted_at) VALUES(?,?,?,?,?,?,?)" />
+        <parameter name="sqlUpdate"
+                    value="update products set deleted_at=? where id=?" />
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.table.TableRiverMouthTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
         </classes>
     </test>
 
