@@ -87,9 +87,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
 
         // defaults for column strategy
-        String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("column_created_at"), "created_at");
-        String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("column_updated_at"), "updated_at");
-        String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("column_deleted_at"), null);
+        String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("created_at"), "created_at");
+        String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("updated_at"), "updated_at");
+        String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("deleted_at"), null);
         boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);
 
         // set up bulk indexer. If no _index or _type pseudo columns are set in SQL statements, this index is used.
