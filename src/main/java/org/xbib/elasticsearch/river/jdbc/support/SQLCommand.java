@@ -88,7 +88,7 @@ public class SQLCommand {
                     command.setCallable(XContentMapValues.nodeBooleanValue(m.get("callable")));
                 }
                 if (m.containsKey("register")) {
-                    command.setResults(XContentMapValues.nodeMapValue(m.get("register"), null));
+                    command.setResults(CompatUtil.nodeMapValue(m.get("register"), null));
                 }
             } else if (entry instanceof String) {
                 command.setSQL((String)entry);

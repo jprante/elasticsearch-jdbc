@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.elasticsearch.ElasticsearchTimeoutException;
+import org.elasticsearch.ElasticSearchTimeoutException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
@@ -354,7 +354,7 @@ public class SimpleRiverMouth implements RiverMouth {
             } else {
                 logger().info("... cluster state ok");
             }
-        } catch (ElasticsearchTimeoutException e) {
+        } catch (ElasticSearchTimeoutException e) {
             throw new IOException("timeout, cluster does not respond to health request, cowardly refusing to continue with operations");
         }
     }

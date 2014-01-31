@@ -1,14 +1,13 @@
 
 package org.xbib.elasticsearch.river.jdbc.support;
 
-import org.elasticsearch.common.base.Strings;
 
 import java.util.Locale;
 
 public class LocaleUtil {
 
     public static Locale toLocale(String localeString) {
-        if (Strings.isNullOrEmpty(localeString)) {
+        if (localeString == null || "".equals(localeString)) {
             return Locale.getDefault();
         }
         int separatorCountry = localeString.indexOf('_');
@@ -42,6 +41,6 @@ public class LocaleUtil {
 
     public static String fromLocale(Locale locale) {
         return locale.getLanguage() +
-                (Strings.isNullOrEmpty(locale.getCountry()) ? "_" + locale.getCountry() : "");
+                (locale == null || "".equals(locale.getCountry()) ? "_" + locale.getCountry() : "");
     }
 }

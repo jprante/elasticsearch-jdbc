@@ -1,25 +1,21 @@
 
 package org.xbib.elasticsearch.river.jdbc;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.River;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 
+import org.xbib.elasticsearch.river.jdbc.support.CompatUtil;
 import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.RiverServiceLoader;
@@ -106,9 +102,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 TimeValue.timeValueSeconds(5));
         // get two maps from the river settings to improve index creation
         Map<String,Object> indexSettings = mySettings.containsKey("index_settings") ?
-                XContentMapValues.nodeMapValue(mySettings.get("index_settings"), null) : null;
+                CompatUtil.nodeMapValue(mySettings.get("index_settings"), null) : null;
         Map<String,Object> typeMapping = mySettings.containsKey("type_mapping") ?
-                XContentMapValues.nodeMapValue(mySettings.get("type_mapping"), null) : null;
+                CompatUtil.nodeMapValue(mySettings.get("type_mapping"), null) : null;
 
         riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
