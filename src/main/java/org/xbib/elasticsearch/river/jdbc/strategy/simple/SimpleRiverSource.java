@@ -71,6 +71,8 @@ public class SimpleRiverSource implements RiverSource {
 
     private final Map<String, Object> lastRow = newHashMap();
 
+    private long lastRowCount;
+
     protected ESLogger logger() {
         return logger;
     }
@@ -356,6 +358,7 @@ public class SimpleRiverSource implements RiverSource {
         while (nextRow(results, listener)) {
             rows++;
         }
+        this.lastRowCount = rows;
         if (logger().isDebugEnabled()) {
             if (rows > 0) {
                 logger().debug("merged {} rows", rows);
@@ -707,16 +710,21 @@ public class SimpleRiverSource implements RiverSource {
                 logger().debug("bind: value = {}", s);
             }
             if ("$now".equals(s)) {
-                Date d = new Date(new java.util.Date().getTime());
+                Timestamp t = new Timestamp(new java.util.Date().getTime());
                 if (logger().isDebugEnabled()) {
-                    logger().debug("setting $now to {}", d);
+                    logger().debug("setting $now to {}", t);
                 }
-                statement.setDate(i, d);
+                statement.setTimestamp(i, t);
             } else if ("$job".equals(s)) {
                 if (logger().isDebugEnabled()) {
                     logger().debug("setting $job to {}", context.job());
                 }
                 statement.setString(i, context.job());
+            } else if ("$count".equals(s)) {
+                if (logger().isDebugEnabled()) {
+                    logger().debug("setting $count to {}", lastRowCount);
+                }
+                statement.setLong(i, lastRowCount);
             } else {
                 Object rowValue = lastRow.get(s);
                 if (rowValue != null) {
