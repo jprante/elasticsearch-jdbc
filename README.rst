@@ -38,7 +38,8 @@ Prerequisites
 =============  ===========  =================  ===========================================================
 ES version     Plugin       Release date       Command
 -------------  -----------  -----------------  -----------------------------------------------------------
-0.90.7         2.3.1        Dec 14, 2013       ./bin/plugin -install river-jdbc -url http://bit.ly/1ctvKka
+0.90.3         0.90.3.1     Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1emqDH9
+0.90.10        0.90.10.1    Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1fsLKal
 1.0.0.RC1      1.0.0.RC1.2  Jan 20, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1dKqNJy
 =============  ===========  =================  ===========================================================
 

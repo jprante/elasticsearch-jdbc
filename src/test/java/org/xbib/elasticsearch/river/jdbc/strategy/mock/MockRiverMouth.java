@@ -63,12 +63,12 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     @Override
-    public RiverMouth setSettings(String settings) {
+    public RiverMouth setSettings(Map<String,Object> settings) {
         return this;
     }
 
     @Override
-    public RiverMouth setMapping(String mapping) {
+    public RiverMouth setMapping(Map<String,Object> mapping) {
         return this;
     }
 
