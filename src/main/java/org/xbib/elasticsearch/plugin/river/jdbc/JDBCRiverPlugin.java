@@ -28,7 +28,7 @@ public class JDBCRiverPlugin extends AbstractPlugin {
 
     @Override
     public String name() {
-        return JDBCRiver.NAME;
+        return JDBCRiver.NAME + "-" + Build.getInstance().getVersion();
     }
 
     @Override
