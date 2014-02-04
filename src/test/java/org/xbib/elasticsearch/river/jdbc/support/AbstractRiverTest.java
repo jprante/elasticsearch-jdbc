@@ -3,7 +3,7 @@ package org.xbib.elasticsearch.river.jdbc.support;
 
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -25,7 +25,7 @@ import java.sql.Statement;
 
 public abstract class AbstractRiverTest extends Assert {
 
-    private static final ESLogger logger = Loggers.getLogger(AbstractRiverTest.class.getSimpleName());
+    private static final ESLogger logger = ESLoggerFactory.getLogger(AbstractRiverTest.class.getName());
 
     protected static RiverSource source;
 
@@ -120,14 +120,17 @@ public abstract class AbstractRiverTest extends Assert {
         BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         String sql;
         while ((sql = br.readLine()) != null) {
+
             try {
-                logger.debug("executing {}", sql);
+                logger.trace("executing {}", sql);
                 Statement p = connection.createStatement();
                 p.execute(sql);
                 p.close();
             } catch (SQLException e) {
                 // ignore
                 logger.error(sql + " failed. Reason: " + e.getMessage());
+            } finally {
+                connection.commit();
             }
         }
         br.close();

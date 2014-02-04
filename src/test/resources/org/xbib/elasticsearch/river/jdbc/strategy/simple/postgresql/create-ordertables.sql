@@ -27,3 +27,6 @@ insert into "orders" ("customer", "department", "product", "quantity", "created"
 insert into "orders" ("customer", "department", "product", "quantity", "created") values('Huge', 'German Fruits', 'Oranges', 2, current_timestamp)
 insert into "orders" ("customer", "department", "product", "quantity", "created") values('Good', 'German Fruits', 'Apples', 2, {ts '2012-06-01 15:52:25'})
 insert into "orders" ("customer", "department", "product", "quantity", "created") values('Bad', 'English Fruits', 'Oranges', 3, {ts '2012-06-01 16:31:24'})
+create table "sal_emp" ("name" text, "pay_by_quarter" integer[])
+INSERT INTO "sal_emp" VALUES ('Bill', ARRAY[10000, 10000, 10000, 10000])
+INSERT INTO "sal_emp" VALUES ('Carol', ARRAY[20000, 25000, 25000, 25000])

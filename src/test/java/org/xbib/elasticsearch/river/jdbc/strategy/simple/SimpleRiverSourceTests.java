@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Iterator;
 import java.util.List;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
@@ -121,4 +122,48 @@ public class SimpleRiverSourceTests extends AbstractRiverTest {
         source.close(results);
         source.close(statement);
     }
+
+
+    /**
+     * Test JDBC Array to structured object array
+     *
+     * @param sql the array select statement
+     * @throws Exception
+     */
+    @Test
+    @Parameters({"sql4", "res1", "res2"})
+    public void testArray(@Optional String sql, @Optional String res1, @Optional String res2) throws Exception {
+        if (sql == null) {
+            return;
+        }
+        List<? extends Object> params = newLinkedList();
+        final List<StructuredObject> result = newLinkedList();
+        RiverMouth mouth = new MockRiverMouth() {
+            @Override
+            public void index(StructuredObject object, boolean create) throws IOException {
+                if (object == null || object.source() == null) {
+                    throw new IllegalArgumentException("object missing");
+                }
+                result.add(object);
+            }
+        };
+        PreparedStatement statement = source.prepareQuery(sql);
+        source.bind(statement, params);
+        ResultSet results = source.executeQuery(statement);
+        KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                .output(mouth);
+        long rows = 0L;
+        source.beforeRows(results, listener);
+        while (source.nextRow(results, listener)) {
+            rows++;
+        }
+        source.afterRows(results, listener);
+        assertEquals(rows, 2);
+        source.close(results);
+        source.close(statement);
+        Iterator<StructuredObject> it = result.iterator();
+        assertEquals(it.next().source().toString(), res1);
+        assertEquals(it.next().source().toString(), res2);
+    }
+
 }

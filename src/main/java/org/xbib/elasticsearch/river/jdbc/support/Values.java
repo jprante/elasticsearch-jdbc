@@ -29,9 +29,14 @@ public class Values<O extends Object> {
                 this.value = vals;
             }
         }
-        O[] newValues = sequence && value != null ?
-                (O[]) value.toString().split(",") :
-                (O[]) new Object[]{value};
+        O[] newValues = null;
+        if (sequence && value != null) {
+            newValues = (O[]) value.toString().split(",");
+        } else if (value instanceof Object[]) {
+            newValues = (O[]) value;
+        } else {
+            newValues = (O[]) new Object[]{value};
+        }
         for (O v : newValues) {
             addValue(v);
         }

@@ -47,17 +47,17 @@ public interface RiverMouth {
 
     /**
      * Set settings for Elasticsearch to be used in index creation
-     * @param settings
-     * @return
+     * @param settings the settings
+     * @return this river mouth
      */
     RiverMouth setSettings(Map<String,Object> settings);
 
     /**
      * Set mapping for Elasticsearch to be used in mapping creation
-     * @param mapping
-     * @return
+     * @param mapping the mapping
+     * @return this river mouth
      */
-    RiverMouth setMapping(Map<String,Object>  mapping);
+    RiverMouth setMapping(Map<String,Object> mapping);
 
     /**
      * Set index

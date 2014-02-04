@@ -38,9 +38,9 @@ Prerequisites
 =============  ===========  =================  ===========================================================
 ES version     Plugin       Release date       Command
 -------------  -----------  -----------------  -----------------------------------------------------------
-0.90.3         0.90.3.3     Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/MnkNuK
+0.90.3         0.90.3.4     Feb 3, 2014        ./bin/plugin -install river-jdbc -url http://bit.ly/1k6BCs5
 0.90.10        0.90.10.2    Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1a8Mcve
-1.0.0.RC1      1.0.0.RC1.4  Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1emNr9I
+1.0.0.RC2      1.0.0.RC2.1  Feb 3, 2014        ./bin/plugin -install river-jdbc -url http://bit.ly/1bWPLzS
 =============  ===========  =================  ===========================================================
 
 Do not forget to restart the node after installing.
@@ -59,7 +59,7 @@ Binaries are available at `Bintray <https://bintray.com/pkg/show/general/jprante
 Documentation
 -------------
 
-Attention: working on the documentation for 1.0.0.RC1.2 is still in progress!
+Attention: working on the documentation for 1.0.0.RC1.x is still in progress!
 
 `Quickstart <../../../elasticsearch-river-jdbc/wiki/Quickstart>`_
 

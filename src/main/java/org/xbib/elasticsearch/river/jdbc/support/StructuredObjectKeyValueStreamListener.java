@@ -113,6 +113,7 @@ public class StructuredObjectKeyValueStreamListener<O extends Object> implements
         i = 0;
         for (Object o : values) {
             Map map = null;
+            // JSON?
             try {
                 map = JsonXContent.jsonXContent.createParser(o.toString()).mapAndClose();
             } catch (Exception e) {
