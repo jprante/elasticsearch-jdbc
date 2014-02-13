@@ -19,7 +19,7 @@ public class ValueListenerTests extends Assert {
         List<String> row3 = Arrays.asList("index", "3", "label3");
         List<String> row4 = Arrays.asList("index", "4", "label4");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -39,7 +39,7 @@ public class ValueListenerTests extends Assert {
         List<String> row3 = Arrays.asList("delete", "3", "label3");
         List<String> row4 = Arrays.asList("index", "4", "label4");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -59,7 +59,7 @@ public class ValueListenerTests extends Assert {
         List<String> row3 = Arrays.asList("delete", "2", "label3");
         List<String> row4 = Arrays.asList("index", "2", "label4");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -77,7 +77,7 @@ public class ValueListenerTests extends Assert {
         List<String> row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");
         List<String> row2 = Arrays.asList("2", "$2000", "Bill Smith", "Boss", "2012-06-13");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -86,7 +86,7 @@ public class ValueListenerTests extends Assert {
                 .end();
         assertEquals(output.data().size(), 2, "Number of inserted objects");
         assertEquals(output.data().toString(),
-                "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-12\"}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}, null/null/null/2 {person={position={name=\"Boss\", since=\"2012-06-13\"}, name=\"Bill Smith\", salary=\"$2000\"}}={\"person\":{\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"},\"name\":\"Bill Smith\",\"salary\":\"$2000\"}}}");
+                "{[null/null/null/1]->{person={position={name=\"Worker\", since=\"2012-06-12\"}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}, [null/null/null/2]->{person={position={name=\"Boss\", since=\"2012-06-13\"}, name=\"Bill Smith\", salary=\"$2000\"}}={\"person\":{\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"},\"name\":\"Bill Smith\",\"salary\":\"$2000\"}}}");
     }
 
     @Test
@@ -95,7 +95,7 @@ public class ValueListenerTests extends Assert {
         List<String> row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");
         List<String> row2 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-13");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
             .output(output)
             .begin()
             .keys(columns)
@@ -104,7 +104,7 @@ public class ValueListenerTests extends Assert {
             .end();
         assertEquals(output.data().size(), 1, "Number of inserted objects");
         assertEquals(output.data().toString(),
-            "{null/null/null/1 {person={position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}}");
+            "{[null/null/null/1]->{person={position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}}");
     }
 
     @Test
@@ -113,7 +113,7 @@ public class ValueListenerTests extends Assert {
         List<String> row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", null);
         List<String> row2 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-13");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
             .output(output)
             .begin()
             .keys(columns)
@@ -122,7 +122,7 @@ public class ValueListenerTests extends Assert {
             .end();
         assertEquals(output.data().size(), 1, "Number of inserted objects");
         assertEquals(output.data().toString(),
-            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}}");
+            "{[null/null/null/1]->{person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Joe Doe\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Joe Doe\",\"salary\":\"$1000\"}}}");
     }
 
     @Test
@@ -132,7 +132,7 @@ public class ValueListenerTests extends Assert {
         List<String> row2 = Arrays.asList("1", "$1000", "Mark", "Worker", "2012-06-13");
         List<String> row3 = Arrays.asList("2", "$1000", "Mark", "Worker", "2012-06-13");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
             .output(output)
             .begin()
             .keys(columns)
@@ -142,7 +142,7 @@ public class ValueListenerTests extends Assert {
             .end();
         assertEquals(output.data().size(), 2, "Number of inserted objects");
         assertEquals(output.data().toString(),
-            "{null/null/null/1 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=[\"Joe\",\"John\",\"Mark\"], salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":[\"Joe\",\"John\",\"Mark\"],\"salary\":\"$1000\"}}, null/null/null/2 {person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Mark\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Mark\",\"salary\":\"$1000\"}}}"
+            "{[null/null/null/1]->{person={position={name=\"Worker\", since=\"2012-06-13\"}, name=[\"Joe\",\"John\",\"Mark\"], salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":[\"Joe\",\"John\",\"Mark\"],\"salary\":\"$1000\"}}, [null/null/null/2]->{person={position={name=\"Worker\", since=\"2012-06-13\"}, name=\"Mark\", salary=\"$1000\"}}={\"person\":{\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"name\":\"Mark\",\"salary\":\"$1000\"}}}"
         );
     }
 
@@ -156,7 +156,7 @@ public class ValueListenerTests extends Assert {
         List<String> row5 = Arrays.asList("2", "Doug Cutting", "Advanced Lucene", "5");
         List<String> row6 = Arrays.asList("2", "Doug Cutting", "Introduction to Apache Avro", "5");
         MockRiverMouth output = new MockRiverMouth();
-        new StructuredObjectKeyValueStreamListener()
+        new RiverKeyValueStreamListener()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -168,7 +168,39 @@ public class ValueListenerTests extends Assert {
                 .values(row6)
                 .end();
         assertEquals(output.data().toString(),
-            "{null/null/null/1 {person={name=\"Andrew Ng\", coursename=[{count=\"5\", name=\"Machine Learning\"}, {count=\"5\", name=\"Recommender Systems\"}]}}={\"person\":{\"name\":\"Andrew Ng\",\"coursename\":[{\"count\":\"5\",\"name\":\"Machine Learning\"},{\"count\":\"5\",\"name\":\"Recommender Systems\"}]}}, null/null/null/2 {person={name=\"Doug Cutting\", coursename=[{count=\"12\", name=\"Hadoop Internals\"}, {count=\"25\", name=\"Basic of Lucene\"}, {count=\"5\", name=\"Advanced Lucene\"}, {count=\"5\", name=\"Introduction to Apache Avro\"}]}}={\"person\":{\"name\":\"Doug Cutting\",\"coursename\":[{\"count\":\"12\",\"name\":\"Hadoop Internals\"},{\"count\":\"25\",\"name\":\"Basic of Lucene\"},{\"count\":\"5\",\"name\":\"Advanced Lucene\"},{\"count\":\"5\",\"name\":\"Introduction to Apache Avro\"}]}}}"
+            "{[null/null/null/1]->{person={name=\"Andrew Ng\", coursename=[{count=\"5\", name=\"Machine Learning\"}, {count=\"5\", name=\"Recommender Systems\"}]}}={\"person\":{\"name\":\"Andrew Ng\",\"coursename\":[{\"count\":\"5\",\"name\":\"Machine Learning\"},{\"count\":\"5\",\"name\":\"Recommender Systems\"}]}}, [null/null/null/2]->{person={name=\"Doug Cutting\", coursename=[{count=\"12\", name=\"Hadoop Internals\"}, {count=\"25\", name=\"Basic of Lucene\"}, {count=\"5\", name=\"Advanced Lucene\"}, {count=\"5\", name=\"Introduction to Apache Avro\"}]}}={\"person\":{\"name\":\"Doug Cutting\",\"coursename\":[{\"count\":\"12\",\"name\":\"Hadoop Internals\"},{\"count\":\"25\",\"name\":\"Basic of Lucene\"},{\"count\":\"5\",\"name\":\"Advanced Lucene\"},{\"count\":\"5\",\"name\":\"Introduction to Apache Avro\"}]}}}"
+        );
+    }
+
+    @Test
+    public void testJSONSource() throws Exception {
+        List<String> columns = Arrays.asList("_optype", "_id", "_source");
+        List<String> row1 = Arrays.asList("index", "1", "{\"Hello\":\"World\"}");
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverKeyValueStreamListener()
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .end();
+        assertEquals(output.data().toString(),
+                "{[index/null/null/1]->{Hello=World}={\"Hello\":\"World\"}}"
+        );
+    }
+
+    @Test
+    public void testJSON() throws Exception {
+        List<String> columns = Arrays.asList("_optype", "_id", "message", "person", "person.attributes");
+        List<String> row1 = Arrays.asList("index", "1", "{\"Hello\":\"World\"}", "{\"name\":[\"Joe\",\"John\"]}", "{\"haircolor\":\"blue\"}");
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverKeyValueStreamListener()
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .end();
+        assertEquals(output.data().toString(),
+                "{[index/null/null/1]->{message=\"{Hello=World}\", person=\"{name=[Joe, John], attributes=\"{haircolor=blue}\"}\"}={\"message\":{\"Hello\":\"World\"},\"person\":{\"name\":[\"Joe\",\"John\"],\"attributes\":{\"haircolor\":\"blue\"}}}}"
         );
     }
 

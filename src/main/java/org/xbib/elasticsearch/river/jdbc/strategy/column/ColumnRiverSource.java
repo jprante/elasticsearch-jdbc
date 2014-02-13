@@ -18,11 +18,10 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.Operations;
+import org.xbib.elasticsearch.river.jdbc.support.RiverKeyValueStreamListener;
 import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObjectKeyValueStreamListener;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+import org.xbib.elasticsearch.gatherer.IndexableObject;
+import org.xbib.io.keyvalue.KeyValueStreamListener;
 
 /**
  * River source implementation for the 'column' strategy
@@ -61,10 +60,10 @@ public class ColumnRiverSource extends SimpleRiverSource {
         List<OpInfo> opInfos = new LinkedList<OpInfo>();
         String noDeletedWhereClause = context.columnDeletedAt() != null ?
                 " AND " + quoteColumn(context.columnDeletedAt(), quoteString) + " IS NULL" : "";
-        opInfos.add(new OpInfo(Operations.OP_CREATE, quoteColumn(context.columnCreatedAt(), quoteString) + " >= ?" + noDeletedWhereClause));
-        opInfos.add(new OpInfo(Operations.OP_INDEX, quoteColumn(context.columnUpdatedAt(), quoteString) + " >= ? AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR " + quoteColumn(context.columnCreatedAt(), quoteString) + " < ?)" + noDeletedWhereClause, 2));
+        opInfos.add(new OpInfo("create", quoteColumn(context.columnCreatedAt(), quoteString) + " >= ?" + noDeletedWhereClause));
+        opInfos.add(new OpInfo("index", quoteColumn(context.columnUpdatedAt(), quoteString) + " >= ? AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR " + quoteColumn(context.columnCreatedAt(), quoteString) + " < ?)" + noDeletedWhereClause, 2));
         if (context.columnDeletedAt() != null) {
-            opInfos.add(new OpInfo(Operations.OP_DELETE, quoteColumn(context.columnDeletedAt(), quoteString) + " >= ?"));
+            opInfos.add(new OpInfo("delete", quoteColumn(context.columnDeletedAt(), quoteString) + " >= ?"));
         }
 
         return opInfos;
@@ -173,7 +172,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
         }
     }
 
-    private static class ColumnKeyValueStreamListener extends StructuredObjectKeyValueStreamListener<Object> {
+    private static class ColumnKeyValueStreamListener extends RiverKeyValueStreamListener {
 
         private String opType;
 
@@ -182,7 +181,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
         }
 
         @Override
-        public StructuredObjectKeyValueStreamListener end(StructuredObject object) throws IOException {
+        public RiverKeyValueStreamListener end(IndexableObject object) throws IOException {
 
             if (!object.source().isEmpty()) {
                 object.optype(opType);

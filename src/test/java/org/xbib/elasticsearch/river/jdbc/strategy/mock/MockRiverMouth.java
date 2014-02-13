@@ -6,14 +6,18 @@ import java.util.Map;
 
 import org.elasticsearch.client.Client;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
+import org.xbib.elasticsearch.gatherer.IndexableObject;
 
 import static org.elasticsearch.common.collect.Maps.newTreeMap;
 
 public class MockRiverMouth implements RiverMouth {
+
+    private static final ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
 
     private Map<String, String> data;
 
@@ -30,16 +34,14 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     @Override
-    public void index(StructuredObject object, boolean create) throws IOException {
+    public void index(IndexableObject object, boolean create) throws IOException {
         data.put(object.toString(), object.build());
-        //logger.debug("got data for index: {}", data);
         counter++;
     }
 
     @Override
-    public void delete(StructuredObject object) throws IOException {
+    public void delete(IndexableObject object) throws IOException {
         data.remove(object.toString());
-        //logger.debug("got data for delete: {}", data);
         counter--;
     }
 

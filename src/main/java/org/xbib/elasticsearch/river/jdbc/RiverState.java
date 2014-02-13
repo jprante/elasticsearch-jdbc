@@ -43,7 +43,7 @@ public class RiverState implements ToXContent {
 
     private boolean active;
 
-    private Map<String,Object> info;
+    private Map<String,Object> custom;
 
     private String index;
 
@@ -71,6 +71,10 @@ public class RiverState implements ToXContent {
         return this;
     }
 
+    public String name() {
+        return name;
+    }
+
     public RiverState counter(Long counter) {
         this.counter = counter;
         return this;
@@ -85,9 +89,17 @@ public class RiverState implements ToXContent {
         return this;
     }
 
+    public Long started() {
+        return started;
+    }
+
     public RiverState timestamp(Long timestamp) {
         this.timestamp = timestamp;
         return this;
+    }
+
+    public Long timestamp() {
+        return timestamp;
     }
 
     public RiverState active(boolean active) {
@@ -95,9 +107,17 @@ public class RiverState implements ToXContent {
         return this;
     }
 
-    public RiverState info(Map<String,Object> info) {
-        this.info = info;
+    public boolean active() {
+        return active;
+    }
+
+    public RiverState custom(Map<String,Object> custom) {
+        this.custom = custom;
         return this;
+    }
+
+    public Map<String,Object> custom() {
+        return custom;
     }
 
     public void save(Client client) throws IOException {
@@ -150,8 +170,8 @@ public class RiverState implements ToXContent {
                     active(parser.booleanValue());
                 }
             } else if (token == START_OBJECT) {
-                if ("info".equals(currentFieldName)) {
-                    info(parser.map());
+                if ("custom".equals(currentFieldName)) {
+                    custom(parser.map());
                 } // else skip
             }
         }
@@ -165,7 +185,7 @@ public class RiverState implements ToXContent {
                 .field("timestamp", new Date(timestamp))
                 .field("counter", counter)
                 .field("active", active)
-                .field("info", info)
+                .field("custom", custom)
             .endObject();
         return builder;
     }

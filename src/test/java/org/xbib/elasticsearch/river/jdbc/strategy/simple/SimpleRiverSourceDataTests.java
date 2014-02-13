@@ -18,9 +18,9 @@ import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverTest;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObjectKeyValueStreamListener;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
-import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+import org.xbib.elasticsearch.river.jdbc.support.RiverKeyValueStreamListener;
+import org.xbib.elasticsearch.gatherer.IndexableObject;
+import org.xbib.io.keyvalue.KeyValueStreamListener;
 
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 
@@ -44,14 +44,14 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         List<Object> params = new ArrayList();
         RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object, boolean create) throws IOException {
+            public void index(IndexableObject object, boolean create) throws IOException {
                 logger.debug("sql1 object={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+        RiverKeyValueStreamListener listener = new RiverKeyValueStreamListener()
                 .output(output);
         long rows = 0L;
         source.beforeRows(results, listener);
@@ -70,14 +70,14 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         List<Object> params = newLinkedList();
         RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object, boolean create) throws IOException {
+            public void index(IndexableObject object, boolean create) throws IOException {
                 logger.debug("sql2 object={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+        RiverKeyValueStreamListener listener = new RiverKeyValueStreamListener()
                 .output(output);
         source.beforeRows(results, listener);
         long rows = 0L;
@@ -97,14 +97,14 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         params.add(2.00);
         RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object, boolean create) throws IOException {
+            public void index(IndexableObject object, boolean create) throws IOException {
                 logger.debug("sql3={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+        KeyValueStreamListener listener = new RiverKeyValueStreamListener()
                 .output(output);
         source.beforeRows(results, listener);
         long rows = 0L;
@@ -124,14 +124,14 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         params.add("2012-06-10 00:00:00");
         RiverMouth output = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object, boolean create) throws IOException {
+            public void index(IndexableObject object, boolean create) throws IOException {
                 logger.debug("object={}", object);
             }
         };
         PreparedStatement statement = source.prepareQuery(sql);
         source.bind(statement, params);
         ResultSet results = source.executeQuery(statement);
-        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+        RiverKeyValueStreamListener listener = new RiverKeyValueStreamListener()
                 .output(output);
         source.beforeRows(results, listener);
         long rows = 0L;
@@ -149,7 +149,7 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
     public void testIndexId(String sql) throws Exception {
         MockRiverMouth mock = new MockRiverMouth() {
             @Override
-            public void index(StructuredObject object, boolean create) throws IOException {
+            public void index(IndexableObject object, boolean create) throws IOException {
                 super.index(object, create);
                 logger.debug("products={}", object);
             }
@@ -157,10 +157,11 @@ public class SimpleRiverSourceDataTests extends AbstractRiverTest {
         mock.setIndex("products").setType("products");
         PreparedStatement statement = source.prepareQuery(sql);
         ResultSet results = source.executeQuery(statement);
-        StructuredObjectKeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+        RiverKeyValueStreamListener listener = new RiverKeyValueStreamListener()
                 .output(mock);
         source.beforeRows(results, listener);
         while (source.nextRow(results, listener)) {
+            // ignore
         }
         source.afterRows(results, listener);
         assertEquals(mock.getCounter(), 3);

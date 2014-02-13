@@ -15,7 +15,7 @@ import java.util.Map;
 
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+import org.xbib.io.keyvalue.KeyValueStreamListener;
 
 /**
  *

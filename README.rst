@@ -35,13 +35,13 @@ Prerequisites
 
   - a JDBC driver jar for your database (download from vendor site and put into JDBC river plugin folder)
 
-=============  ===========  =================  ===========================================================
+=============  ===========  =================  =============================================================
 ES version     Plugin       Release date       Command
--------------  -----------  -----------------  -----------------------------------------------------------
+-------------  -----------  -----------------  -------------------------------------------------------------
 0.90.3         0.90.3.1     Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1emqDH9
 0.90.10        0.90.10.2    Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1a8Mcve
-1.0.0.RC2      1.0.0.RC2.1  Feb 3, 2014        ./bin/plugin -install river-jdbc -url http://bit.ly/1bWPLzS
-=============  ===========  =================  ===========================================================
+1.0.0          1.0.0.1      Feb 13, 2014       ./bin/plugin --install river-jdbc --url http://bit.ly/1jyXrR9
+=============  ===========  =================  =============================================================
 
 Do not forget to restart the node after installing.
 
@@ -59,7 +59,7 @@ Binaries are available at `Bintray <https://bintray.com/pkg/show/general/jprante
 Documentation
 -------------
 
-Attention: working on the documentation for 1.0.0.RC1.2 is still in progress!
+Attention: working on the documentation for 1.0.0.x is still in progress!
 
 `Quickstart <../../../elasticsearch-river-jdbc/wiki/Quickstart>`_
 

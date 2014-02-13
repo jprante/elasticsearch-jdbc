@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+import org.xbib.io.keyvalue.KeyValueStreamListener;
 
 /**
  * The river source models the data producing side

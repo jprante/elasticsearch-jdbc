@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
@@ -26,6 +28,8 @@ import static org.elasticsearch.common.collect.Maps.newHashMap;
  * The JDBC river
  */
 public class JDBCRiver extends AbstractRiverComponent implements River {
+
+    private final ESLogger logger = ESLoggerFactory.getLogger(JDBCRiver.class.getName());
 
     public final static String NAME = "river-jdbc";
 
@@ -54,7 +58,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                      RiverSettings riverSettings,
                      Client client) {
         super(riverName, riverSettings);
-        logger.debug("JDBC river initializing");
+        logger.debug("JDBC river initializing...");
 
         Map<String, Object> mySettings = newHashMap();
         if (riverSettings.settings().containsKey(TYPE)) {
@@ -107,14 +111,19 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
         riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
+
+        riverMouth = RiverServiceLoader.findRiverMouth(strategy);
+        logger.debug("found river mouth class {} for strategy {}", riverMouth.getClass().getName(), strategy);
+
+        riverFlow = RiverServiceLoader.findRiverFlow(strategy);
+        logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
+
         riverSource.url(url)
                 .user(user)
                 .password(password)
                 .rounding(rounding)
                 .precision(scale);
 
-        riverMouth = RiverServiceLoader.findRiverMouth(strategy);
-        logger.debug("found river mouth class {} for strategy {}", riverMouth.getClass().getName(), strategy);
         riverMouth.setSettings(indexSettings)
                 .setMapping(typeMapping)
                 .setIndex(indexName)
@@ -129,6 +138,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .riverSettings(riverSettings.settings())
                 .riverSource(riverSource)
                 .riverMouth(riverMouth)
+                .riverFlow(riverFlow)
                 .locale(locale)
                 .setSchedule(schedule)
                 .setPoolSize(poolsize)
@@ -145,13 +155,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .columnEscape(columnEscape)
                 .contextualize();
 
-        riverFlow = RiverServiceLoader.findRiverFlow(strategy);
-
-        // prepare task for run
-        riverFlow.riverContext(riverContext);
-        logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
-
-        logger.debug("JDBC river initialized");
+        logger.debug("JDBC river initialized, ready to start");
 
     }
 

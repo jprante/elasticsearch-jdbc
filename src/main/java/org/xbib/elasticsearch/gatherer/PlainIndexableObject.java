@@ -1,64 +1,68 @@
 
-package org.xbib.elasticsearch.river.jdbc.support;
+package org.xbib.elasticsearch.gatherer;
+
+import org.elasticsearch.common.base.Objects;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.common.base.Objects;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-
 import static org.elasticsearch.common.collect.Maps.newHashMap;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class PlainStructuredObject implements StructuredObject {
+/**
+ * A basic indexable object. The indexable object can store meta data and core data.
+ */
+public class PlainIndexableObject implements IndexableObject, ToXContent {
 
     private Map<String, String> meta;
 
-    private Map<String, ? super Object> source;
+    private Map<String, Object> core;
 
-    public PlainStructuredObject() {
+    public PlainIndexableObject() {
         this.meta = newHashMap();
-        this.source = newHashMap();
+        this.core = newHashMap();
     }
 
-    public StructuredObject optype(String optype) {
-        meta.put(OPTYPE, optype);
+    public IndexableObject optype(String optype) {
+        meta.put(ControlKeys._optype.name(), optype);
         return this;
     }
 
     public String optype() {
-        return meta.get(OPTYPE);
+        return meta.get(ControlKeys._optype.name());
     }
 
-    public StructuredObject index(String index) {
-        meta.put(INDEX, index);
+    public IndexableObject index(String index) {
+        meta.put(ControlKeys._index.name(), index);
         return this;
     }
 
     public String index() {
-        return meta.get(INDEX);
+        return meta.get(ControlKeys._index.name());
     }
 
-    public StructuredObject type(String type) {
-        meta.put(TYPE, type);
+    public IndexableObject type(String type) {
+        meta.put(ControlKeys._type.name(), type);
         return this;
     }
 
     public String type() {
-        return meta.get(TYPE);
+        return meta.get(ControlKeys._type.name());
     }
 
-    public StructuredObject id(String id) {
-        meta.put(ID, id);
+    public IndexableObject id(String id) {
+        meta.put(ControlKeys._id.name(), id);
         return this;
     }
 
     public String id() {
-        return meta.get(ID);
+        return meta.get(ControlKeys._id.name());
     }
 
-    public StructuredObject meta(String key, String value) {
+    public IndexableObject meta(String key, String value) {
         meta.put(key, value);
         return this;
     }
@@ -67,13 +71,13 @@ public class PlainStructuredObject implements StructuredObject {
         return meta.get(key);
     }
 
-    public StructuredObject source(Map<String, ? super Object> source) {
-        this.source = source;
+    public IndexableObject source(Map<String, Object> source) {
+        this.core = source;
         return this;
     }
 
     public Map source() {
-        return source;
+        return core;
     }
 
     @Override
@@ -81,10 +85,10 @@ public class PlainStructuredObject implements StructuredObject {
         if (o == null) {
             return false;
         }
-        if (!(o instanceof StructuredObject)) {
+        if (!(o instanceof IndexableObject)) {
             return false;
         }
-        StructuredObject c = (StructuredObject) o;
+        IndexableObject c = (IndexableObject) o;
         return Objects.equal(optype(), c.optype()) &&
                 Objects.equal(index(), c.index()) &&
                 Objects.equal(type(), c.type()) &&
@@ -102,65 +106,71 @@ public class PlainStructuredObject implements StructuredObject {
     }
 
     @Override
-    public int compareTo(StructuredObject o) {
+    public int compareTo(IndexableObject o) {
         int i = 0;
         if (o == null) {
             return -1;
         }
-        if (optype() != null && o.optype() != null) {
+        if (optype() != null) {
             i = optype().compareTo(o.optype());
         }
         if (i != 0) {
             return i;
         }
-        if (index() != null && o.index() != null) {
+        if (index() != null) {
             i = index().compareTo(o.index());
         }
         if (i != 0) {
             return i;
         }
-        if (type() != null && o.type() != null) {
+        if (type() != null) {
             i = type().compareTo(o.type());
         }
         if (i != 0) {
             return i;
         }
-        if (id() != null && o.id() != null) {
+        if (id() != null) {
             i = id().compareTo(o.id());
         }
         return i;
     }
 
     /**
-     * Build JSON with the help of XContentBuilder.
+     * Build a string that can be used for indexing.
      *
      * @throws java.io.IOException
      */
     public String build() throws IOException {
         XContentBuilder builder = jsonBuilder();
-        build(builder, source);
+        toXContent(builder, ToXContent.EMPTY_PARAMS);
         return builder.string();
     }
 
+    @Override
+    public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
+        toXContent(builder, params, core);
+        return builder;
+    }
+
     /**
-     * Recursive method to build XContent from a map of ValueSets
+     * Recursive method to build XContent from a key/value map of Values
      *
      * @param builder the builder
      * @param map     the map
-     * @throws IOException
+     * @throws java.io.IOException
      */
-    protected void build(XContentBuilder builder, Map<String, ? super Object> map) throws IOException {
+    protected XContentBuilder toXContent(XContentBuilder builder, Params params, Map<String, Object> map) throws IOException {
         builder.startObject();
         for (String k : map.keySet()) {
             builder.field(k);
             Object o = map.get(k);
             if (o instanceof Values) {
                 Values v = (Values) o;
-                v.build(builder);
+                v.toXContent(builder, params);
             } else if (o instanceof Map) {
-                build(builder, (Map<String, ? super Object>) o);
+                toXContent(builder, params, (Map<String, Object>) o);
             } else if (o instanceof List) {
-                build(builder, (List) o);
+                toXContent(builder, params, (List) o);
             } else {
                 try {
                     builder.value(o);
@@ -170,18 +180,19 @@ public class PlainStructuredObject implements StructuredObject {
             }
         }
         builder.endObject();
+        return builder;
     }
 
-    protected void build(XContentBuilder builder, List list) throws IOException {
+    protected XContentBuilder toXContent(XContentBuilder builder, Params params, List list) throws IOException {
         builder.startArray();
         for (Object o : list) {
             if (o instanceof Values) {
                 Values v = (Values) o;
-                v.build(builder);
+                v.toXContent(builder, ToXContent.EMPTY_PARAMS);
             } else if (o instanceof Map) {
-                build(builder, (Map<String, ? super Object>) o);
+                toXContent(builder, params, (Map<String, Object>) o);
             } else if (o instanceof List) {
-                build(builder, (List) o);
+                toXContent(builder, params, (List) o);
             } else {
                 try {
                     builder.value(o);
@@ -191,14 +202,21 @@ public class PlainStructuredObject implements StructuredObject {
             }
         }
         builder.endArray();
+        return builder;
     }
 
     public boolean isEmpty() {
-        return index() == null && type() == null && id() == null && source.isEmpty();
+        return optype() == null && index() == null && type() == null && id() == null && core.isEmpty();
+    }
+
+    public void clear() {
+        this.meta = null;
+        this.core = null;
     }
 
     @Override
     public String toString() {
-        return optype() + "/" + index() + "/" + type() + "/" + id() + " " + source;
+        return "[" + optype() + "/" + index() + "/" + type() + "/" + id() + "]->" + core;
     }
+
 }

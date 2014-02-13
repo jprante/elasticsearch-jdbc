@@ -12,6 +12,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 
@@ -32,6 +33,11 @@ public class RiverContext {
      * The settings of the river
      */
     private Map<String, Object> settings;
+
+    /**
+     * The flow of the river
+     */
+    private RiverFlow flow;
     /**
      * The source of the river
      */
@@ -61,18 +67,22 @@ public class RiverContext {
      * Autocomit enabled or not
      */
     private boolean autocommit;
+
     /**
      * The fetch size
      */
     private int fetchSize;
+
     /**
      * The maximum numbe rof rows per statement execution
      */
     private int maxRows;
+
     /**
      * The number of retries
      */
     private int retries;
+
     /**
      * The time to wait between retries
      */
@@ -119,6 +129,15 @@ public class RiverContext {
 
     public String riverName() {
         return name;
+    }
+
+    public RiverContext riverFlow(RiverFlow flow) {
+        this.flow = flow;
+        return this;
+    }
+
+    public RiverFlow riverFlow() {
+        return flow;
     }
 
     public RiverContext riverSource(RiverSource source) {
@@ -281,6 +300,9 @@ public class RiverContext {
         }
         if (mouth != null) {
             mouth.riverContext(this);
+        }
+        if (flow != null) {
+            flow.riverContext(this);
         }
         return this;
     }

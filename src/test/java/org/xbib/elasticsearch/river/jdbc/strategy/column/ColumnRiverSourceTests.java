@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.RiverSettings;
@@ -23,14 +23,13 @@ import org.testng.annotations.Test;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;
-import org.xbib.elasticsearch.river.jdbc.support.Operations;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.PlainStructuredObject;
 import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
+import org.xbib.elasticsearch.gatherer.PlainIndexableObject;
 
 public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
 
-    private final ESLogger logger = Loggers.getLogger(ColumnRiverSourceTests.class.getName());
+    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSourceTests.class.getName());
     
     private Random random = new Random();    
 
@@ -119,10 +118,10 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         ProductFixture[] fixtures = new ProductFixture[shouldProductsBeDeleted.length];
         int expectedExistsCountAfterRiverRun = 0;
         for(int i=0; i<shouldProductsBeDeleted.length; i++) {           
-            riverMouth.index(new PlainStructuredObject() {}
+            riverMouth.index(new PlainIndexableObject() {}
                     .id(Integer.toString(i))
-                    .source(createStructuredObjectSource(i))
-                    .optype(Operations.OP_DELETE), false);
+                    .source(createSource(i))
+                    .optype("delete"), false);
             
             Timestamp deletedAt;
             
@@ -142,8 +141,8 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         return new ProductFixtures(fixtures, expectedExistsCountAfterRiverRun);
     }
     
-    private Map<String, ? super Object> createStructuredObjectSource(int id) {
-        Map<String, ? super Object> map = new HashMap<String, Object>();
+    private Map<String,Object> createSource(int id) {
+        Map<String, Object> map = new HashMap<String, Object>();
         map.put("id", id);
         map.put("name", null);
         return map;

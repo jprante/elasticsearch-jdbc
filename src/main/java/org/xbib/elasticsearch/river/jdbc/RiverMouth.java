@@ -7,7 +7,7 @@ import java.util.Map;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
+import org.xbib.elasticsearch.gatherer.IndexableObject;
 
 /**
  * The river mouth is the abstraction of the destination where all the data
@@ -130,7 +130,7 @@ public interface RiverMouth {
      * @param create true if the document should be created
      * @throws IOException
      */
-    void index(StructuredObject object, boolean create) throws IOException;
+    void index(IndexableObject object, boolean create) throws IOException;
 
     /**
      * Delete. Indicating that an object should be deleted from the index.
@@ -138,7 +138,7 @@ public interface RiverMouth {
      * @param object the structured object
      * @throws IOException
      */
-    void delete(StructuredObject object) throws IOException;
+    void delete(IndexableObject object) throws IOException;
 
     /**
      * Flush data to the river mouth

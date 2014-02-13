@@ -22,11 +22,12 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
-
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObject;
+import org.xbib.elasticsearch.gatherer.ControlKeys;
+import org.xbib.elasticsearch.gatherer.IndexableObject;
 
 /**
  * Simple river mouth
@@ -183,7 +184,7 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public void index(StructuredObject object, boolean create) throws IOException {
+    public void index(IndexableObject object, boolean create) throws IOException {
         if (error) {
             logger().error("error, not indexing");
             return;
@@ -205,27 +206,27 @@ public class SimpleRiverMouth implements RiverMouth {
                 .type(getType())
                 .id(getId())
                 .source(object.build());
-        if (object.meta(StructuredObject.VERSION) != null) {
+        if (object.meta(ControlKeys._version.name()) != null) {
             request.versionType(VersionType.EXTERNAL)
-                    .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
+                    .version(Long.parseLong(object.meta(ControlKeys._version.name())));
         }
-        if (object.meta(StructuredObject.ROUTING) != null) {
-            request.routing(object.meta(StructuredObject.ROUTING));
+        if (object.meta(ControlKeys._routing.name()) != null) {
+            request.routing(object.meta(ControlKeys._routing.name()));
         }
-        if (object.meta(StructuredObject.PARENT) != null) {
-            request.parent(object.meta(StructuredObject.PARENT));
+        if (object.meta(ControlKeys._parent.name()) != null) {
+            request.parent(object.meta(ControlKeys._parent.name()));
         }
-        if (object.meta(StructuredObject.TIMESTAMP) != null) {
-            request.timestamp(object.meta(StructuredObject.TIMESTAMP));
+        if (object.meta(ControlKeys._timestamp.name()) != null) {
+            request.timestamp(object.meta(ControlKeys._timestamp.name()));
         }
-        if (object.meta(StructuredObject.TTL) != null) {
-            request.ttl(Long.parseLong(object.meta(StructuredObject.TTL)));
+        if (object.meta(ControlKeys._ttl.name()) != null) {
+            request.ttl(Long.parseLong(object.meta(ControlKeys._ttl.name())));
         }
         bulk.add(request);
     }
 
     @Override
-    public void delete(StructuredObject object) {
+    public void delete(IndexableObject object) {
         if (error) {
             logger().error("error, not indexing");
             return;
@@ -247,15 +248,15 @@ public class SimpleRiverMouth implements RiverMouth {
             return; // skip if no doc is specified to delete
         }
         DeleteRequest request = Requests.deleteRequest(getIndex()).type(getType()).id(getId());
-        if (object.meta(StructuredObject.ROUTING) != null) {
-            request.routing(object.meta(StructuredObject.ROUTING));
-        }
-        if (object.meta(StructuredObject.PARENT) != null) {
-            request.parent(object.meta(StructuredObject.PARENT));
-        }
-        if (object.meta(StructuredObject.VERSION) != null) {
+        if (object.meta(ControlKeys._version.name()) != null) {
             request.versionType(VersionType.EXTERNAL)
-                    .version(Long.parseLong(object.meta(StructuredObject.VERSION)));
+                    .version(Long.parseLong(object.meta(ControlKeys._version.name())));
+        }
+        if (object.meta(ControlKeys._routing.name()) != null) {
+            request.routing(object.meta(ControlKeys._routing.name()));
+        }
+        if (object.meta(ControlKeys._parent.name()) != null) {
+            request.parent(object.meta(ControlKeys._parent.name()));
         }
         bulk.add(request);
     }

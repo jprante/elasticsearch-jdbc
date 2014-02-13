@@ -2,10 +2,10 @@
 package org.xbib.elasticsearch.plugin.river.jdbc;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.StringReader;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Properties;
 
 public class Build {
@@ -20,34 +20,35 @@ public class Build {
         String date = "NA";
 
         try {
-            InputStream in = Build.class.getResourceAsStream("/es-plugin.properties");
-            if (in == null) {
-                System.err.println("no es-plugin.properties in class path");
-            } else {
+            String pluginName = JDBCRiverPlugin.class.getName();
+            Enumeration<URL> e = JDBCRiverPlugin.class.getClassLoader().getResources("es-plugin.properties");
+            while (e.hasMoreElements()) {
+                URL url = e.nextElement();
+                InputStream in = url.openStream();
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                copy(in, out);
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, len);
+                }
+                in.close();
                 Properties props = new Properties();
                 props.load(new StringReader(new String(out.toByteArray())));
-                version = props.getProperty("version");
-                hash = props.getProperty("hash");
-                if (!"NA".equals(hash)) {
-                    hashShort = hash.substring(0, 7);
+                String plugin = props.getProperty("plugin");
+                if (pluginName.equals(plugin)) {
+                    version = props.getProperty("version");
+                    hash = props.getProperty("hash");
+                    if (!"NA".equals(hash)) {
+                        hashShort = hash.substring(0, 7);
+                    }
+                    timestamp = props.getProperty("timestamp");
+                    date = props.getProperty("date");
                 }
-                timestamp = props.getProperty("timestamp");
-                date = props.getProperty("date");
             }
         } catch (Throwable e) {
             // just ignore...
         }
         INSTANCE = new Build(version, hash, hashShort, timestamp, date);
-    }
-
-    public static void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = in.read(buffer)) != -1) {
-            out.write(buffer, 0, len);
-        }
     }
 
     private String version;

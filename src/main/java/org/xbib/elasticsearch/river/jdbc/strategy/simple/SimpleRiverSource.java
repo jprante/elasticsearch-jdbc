@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
-import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -39,15 +38,21 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.support.RiverKeyValueStreamListener;
 import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
-import org.xbib.elasticsearch.river.jdbc.support.StructuredObjectKeyValueStreamListener;
-import org.xbib.elasticsearch.river.jdbc.support.KeyValueStreamListener;
+import org.xbib.io.keyvalue.KeyValueStreamListener;
 
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 import static org.elasticsearch.common.collect.Maps.newHashMap;
 
 /**
- * Simple river source
+ * Simple river source.
+ *
+ * The simple river source iterates through a JDBC result set,
+ * merges the rows into Elasticsearch documents, and passes them to
+ * a bulk indexer.
+ *
+ * There are two channels open, one for reading the database, one for writing.
  */
 public class SimpleRiverSource implements RiverSource {
 
@@ -254,7 +259,7 @@ public class SimpleRiverSource implements RiverSource {
                 // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize set.
                 statement = connectionForReading().createStatement();
                 results = executeQuery(statement, expandSQL(command.getSQL()));
-                KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                KeyValueStreamListener listener = new RiverKeyValueStreamListener()
                         .output(context.riverMouth());
                 merge(results, listener);
             } else {
@@ -282,7 +287,7 @@ public class SimpleRiverSource implements RiverSource {
                 statement = prepareQuery(expandSQL(command.getSQL()));
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
-                KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+                KeyValueStreamListener listener = new RiverKeyValueStreamListener()
                         .output(context.riverMouth());
                 merge(results, listener);
             } else {
@@ -316,7 +321,7 @@ public class SimpleRiverSource implements RiverSource {
                 register(statement, command.getResults());
             }
             boolean hasRows = statement.execute();
-            KeyValueStreamListener listener = new StructuredObjectKeyValueStreamListener()
+            KeyValueStreamListener listener = new RiverKeyValueStreamListener()
                     .output(context.riverMouth());
             if (!hasRows) {
                 // merge from registered params
@@ -458,7 +463,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param statement callable statement
      * @param values values
-     * @return
+     * @return this river source
      * @throws SQLException
      */
     @Override
@@ -468,7 +473,6 @@ public class SimpleRiverSource implements RiverSource {
         }
         for (Map.Entry<String,Object> me : values.entrySet()) {
             // { "fieldname" : { "pos": n, "type" : "VARCHAR" }, ... }
-            //String fieldname = me.getKey();
             Map<String,Object> m = (Map<String,Object>)me.getValue();
             Integer n = (Integer)m.get("pos");
             String type = (String)m.get("type");
@@ -538,6 +542,14 @@ public class SimpleRiverSource implements RiverSource {
         return this;
     }
 
+    /**
+     * Before rows are read, let the KeyValueStreamListener know about the keys.
+     *
+     * @param results the result set
+     * @param listener the key/value stream listener
+     * @throws SQLException
+     * @throws IOException
+     */
     @Override
     public void beforeRows(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
@@ -571,6 +583,14 @@ public class SimpleRiverSource implements RiverSource {
         return false;
     }
 
+    /**
+     * After the rows keys and values, let the listener know about the end of
+     * the result set.
+     * @param results the result set
+     * @param listener the key/value stream listener
+     * @throws SQLException
+     * @throws IOException
+     */
     @Override
     public void afterRows(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
@@ -725,6 +745,18 @@ public class SimpleRiverSource implements RiverSource {
                     logger().debug("setting $count to {}", lastRowCount);
                 }
                 statement.setLong(i, lastRowCount);
+            } else if ("$river.name".equals(s)) {
+                String name = context.riverName();
+                statement.setString(i, name);
+            } else if ("$river.state.timestamp".equals(s)) {
+                Long timestamp = context.riverFlow().riverState().timestamp();
+                statement.setTimestamp(i, new Timestamp(timestamp));
+            } else if ("$river.state.started".equals(s)) {
+                Long started = context.riverFlow().riverState().started();
+                statement.setTimestamp(i, new Timestamp(started));
+            } else if ("$river.state.counter".equals(s)) {
+                Long counter = context.riverFlow().riverState().counter();
+                statement.setLong(i, counter);
             } else {
                 Object rowValue = lastRow.get(s);
                 if (rowValue != null) {

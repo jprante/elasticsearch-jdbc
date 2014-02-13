@@ -106,10 +106,10 @@ public class SimpleRiverFlow implements RiverFlow {
                 this.state = new RiverState()
                         .name("jdbc")
                         .setIndex("_river")
-                        .setType(riverContext().riverName())
+                        .setType(context.riverName())
                         .setId(ID_INFO_RIVER_INDEX)
                         .started(new Date().getTime())
-                        .info(context.asMap());
+                        .custom(context.asMap());
             }
             state.load(client);
             // increment state counter
