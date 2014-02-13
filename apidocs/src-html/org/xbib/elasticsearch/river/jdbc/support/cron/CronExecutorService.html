@@ -1,28 +1,23 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-<head>
-<title>Source code</title>
-<link rel="stylesheet" type="text/css" href="../../../../../../../../stylesheet.css" title="Style">
-</head>
-<body>
-<div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span><a name="line.1"></a>
-<span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.support.cron;<a name="line.2"></a>
-<span class="sourceLineNo">003</span><a name="line.3"></a>
-<span class="sourceLineNo">004</span>import java.util.concurrent.ExecutorService;<a name="line.4"></a>
-<span class="sourceLineNo">005</span><a name="line.5"></a>
-<span class="sourceLineNo">006</span>/**<a name="line.6"></a>
-<span class="sourceLineNo">007</span> * Executor service that schedules a task for execution via a cron expression.<a name="line.7"></a>
-<span class="sourceLineNo">008</span> */<a name="line.8"></a>
-<span class="sourceLineNo">009</span>public interface CronExecutorService extends ExecutorService {<a name="line.9"></a>
-<span class="sourceLineNo">010</span>    /**<a name="line.10"></a>
-<span class="sourceLineNo">011</span>     * Schedules the specified task to execute according to the specified cron expression.<a name="line.11"></a>
-<span class="sourceLineNo">012</span>     *<a name="line.12"></a>
-<span class="sourceLineNo">013</span>     * @param task       the Runnable task to schedule<a name="line.13"></a>
-<span class="sourceLineNo">014</span>     * @param expression a cron expression<a name="line.14"></a>
-<span class="sourceLineNo">015</span>     */<a name="line.15"></a>
-<span class="sourceLineNo">016</span>    void schedule(Runnable task, CronExpression expression);<a name="line.16"></a>
-<span class="sourceLineNo">017</span>}<a name="line.17"></a>
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    <a name="line.1"></a>
+<FONT color="green">002</FONT>    package org.xbib.elasticsearch.river.jdbc.support.cron;<a name="line.2"></a>
+<FONT color="green">003</FONT>    <a name="line.3"></a>
+<FONT color="green">004</FONT>    import java.util.concurrent.ExecutorService;<a name="line.4"></a>
+<FONT color="green">005</FONT>    <a name="line.5"></a>
+<FONT color="green">006</FONT>    /**<a name="line.6"></a>
+<FONT color="green">007</FONT>     * Executor service that schedules a task for execution via a cron expression.<a name="line.7"></a>
+<FONT color="green">008</FONT>     */<a name="line.8"></a>
+<FONT color="green">009</FONT>    public interface CronExecutorService extends ExecutorService {<a name="line.9"></a>
+<FONT color="green">010</FONT>        /**<a name="line.10"></a>
+<FONT color="green">011</FONT>         * Schedules the specified task to execute according to the specified cron expression.<a name="line.11"></a>
+<FONT color="green">012</FONT>         *<a name="line.12"></a>
+<FONT color="green">013</FONT>         * @param task       the Runnable task to schedule<a name="line.13"></a>
+<FONT color="green">014</FONT>         * @param expression a cron expression<a name="line.14"></a>
+<FONT color="green">015</FONT>         */<a name="line.15"></a>
+<FONT color="green">016</FONT>        void schedule(Runnable task, CronExpression expression);<a name="line.16"></a>
+<FONT color="green">017</FONT>    }<a name="line.17"></a>
 
 
 
@@ -83,7 +78,6 @@
 
 
 
-</pre>
-</div>
-</body>
-</html>
+</PRE>
+</BODY>
+</HTML>

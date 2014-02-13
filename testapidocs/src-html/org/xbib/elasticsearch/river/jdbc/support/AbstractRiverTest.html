@@ -1,147 +1,145 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-<head>
-<title>Source code</title>
-<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
-</head>
-<body>
-<div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span><a name="line.1"></a>
-<span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.support;<a name="line.2"></a>
-<span class="sourceLineNo">003</span><a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.elasticsearch.common.io.Streams;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.elasticsearch.common.logging.Loggers;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.elasticsearch.common.settings.ImmutableSettings;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import org.elasticsearch.common.unit.TimeValue;<a name="line.8"></a>
-<span class="sourceLineNo">009</span>import org.elasticsearch.common.xcontent.XContentHelper;<a name="line.9"></a>
-<span class="sourceLineNo">010</span>import org.elasticsearch.river.RiverSettings;<a name="line.10"></a>
-<span class="sourceLineNo">011</span>import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.11"></a>
-<span class="sourceLineNo">012</span>import org.testng.Assert;<a name="line.12"></a>
-<span class="sourceLineNo">013</span>import org.testng.annotations.AfterMethod;<a name="line.13"></a>
-<span class="sourceLineNo">014</span>import org.testng.annotations.BeforeMethod;<a name="line.14"></a>
-<span class="sourceLineNo">015</span>import org.testng.annotations.Optional;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import org.testng.annotations.Parameters;<a name="line.16"></a>
-<span class="sourceLineNo">017</span><a name="line.17"></a>
-<span class="sourceLineNo">018</span>import java.io.BufferedReader;<a name="line.18"></a>
-<span class="sourceLineNo">019</span>import java.io.IOException;<a name="line.19"></a>
-<span class="sourceLineNo">020</span>import java.io.InputStream;<a name="line.20"></a>
-<span class="sourceLineNo">021</span>import java.io.InputStreamReader;<a name="line.21"></a>
-<span class="sourceLineNo">022</span>import java.sql.Connection;<a name="line.22"></a>
-<span class="sourceLineNo">023</span>import java.sql.SQLException;<a name="line.23"></a>
-<span class="sourceLineNo">024</span>import java.sql.Statement;<a name="line.24"></a>
-<span class="sourceLineNo">025</span><a name="line.25"></a>
-<span class="sourceLineNo">026</span>public abstract class AbstractRiverTest extends Assert {<a name="line.26"></a>
-<span class="sourceLineNo">027</span><a name="line.27"></a>
-<span class="sourceLineNo">028</span>    private static final ESLogger logger = Loggers.getLogger(AbstractRiverTest.class.getSimpleName());<a name="line.28"></a>
-<span class="sourceLineNo">029</span><a name="line.29"></a>
-<span class="sourceLineNo">030</span>    protected static RiverSource source;<a name="line.30"></a>
-<span class="sourceLineNo">031</span><a name="line.31"></a>
-<span class="sourceLineNo">032</span>    protected static RiverContext context;<a name="line.32"></a>
-<span class="sourceLineNo">033</span><a name="line.33"></a>
-<span class="sourceLineNo">034</span>    public abstract RiverSource getRiverSource();<a name="line.34"></a>
-<span class="sourceLineNo">035</span><a name="line.35"></a>
-<span class="sourceLineNo">036</span>    public abstract RiverContext getRiverContext();<a name="line.36"></a>
-<span class="sourceLineNo">037</span><a name="line.37"></a>
-<span class="sourceLineNo">038</span>    @BeforeMethod<a name="line.38"></a>
-<span class="sourceLineNo">039</span>    @Parameters({"driver", "starturl", "user", "password"})<a name="line.39"></a>
-<span class="sourceLineNo">040</span>    public void createClient(String driver, String starturl, String user, String password)<a name="line.40"></a>
-<span class="sourceLineNo">041</span>            throws Exception {<a name="line.41"></a>
-<span class="sourceLineNo">042</span>        source = getRiverSource()<a name="line.42"></a>
-<span class="sourceLineNo">043</span>                .url(starturl)<a name="line.43"></a>
-<span class="sourceLineNo">044</span>                .user(user)<a name="line.44"></a>
-<span class="sourceLineNo">045</span>                .password(password);<a name="line.45"></a>
-<span class="sourceLineNo">046</span>        context = getRiverContext()<a name="line.46"></a>
-<span class="sourceLineNo">047</span>                .riverSource(source)<a name="line.47"></a>
-<span class="sourceLineNo">048</span>                .setRetries(1)<a name="line.48"></a>
-<span class="sourceLineNo">049</span>                .setMaxRetryWait(TimeValue.timeValueSeconds(5))<a name="line.49"></a>
-<span class="sourceLineNo">050</span>                .locale("en");<a name="line.50"></a>
-<span class="sourceLineNo">051</span>        context.contextualize();<a name="line.51"></a>
-<span class="sourceLineNo">052</span>    }<a name="line.52"></a>
-<span class="sourceLineNo">053</span><a name="line.53"></a>
-<span class="sourceLineNo">054</span>    @BeforeMethod(dependsOnMethods = {"createClient"})<a name="line.54"></a>
-<span class="sourceLineNo">055</span>    @Parameters({"create"})<a name="line.55"></a>
-<span class="sourceLineNo">056</span>    public void createTable(@Optional String resourceName) throws Exception {<a name="line.56"></a>
-<span class="sourceLineNo">057</span>        if (resourceName == null || "".equals(resourceName)) {<a name="line.57"></a>
-<span class="sourceLineNo">058</span>            return;<a name="line.58"></a>
-<span class="sourceLineNo">059</span>        }<a name="line.59"></a>
-<span class="sourceLineNo">060</span>        Connection connection = source.connectionForWriting();<a name="line.60"></a>
-<span class="sourceLineNo">061</span>        if (connection == null) {<a name="line.61"></a>
-<span class="sourceLineNo">062</span>            throw new IOException("no connection");<a name="line.62"></a>
-<span class="sourceLineNo">063</span>        }<a name="line.63"></a>
-<span class="sourceLineNo">064</span>        sqlScript(connection, resourceName);<a name="line.64"></a>
-<span class="sourceLineNo">065</span>        source.closeWriting();<a name="line.65"></a>
-<span class="sourceLineNo">066</span>    }<a name="line.66"></a>
-<span class="sourceLineNo">067</span><a name="line.67"></a>
-<span class="sourceLineNo">068</span>    @AfterMethod<a name="line.68"></a>
-<span class="sourceLineNo">069</span>    @Parameters({"delete"})<a name="line.69"></a>
-<span class="sourceLineNo">070</span>    public void removeTable(@Optional String resourceName) throws Exception {<a name="line.70"></a>
-<span class="sourceLineNo">071</span>        if (resourceName == null || "".equals(resourceName)) {<a name="line.71"></a>
-<span class="sourceLineNo">072</span>            return;<a name="line.72"></a>
-<span class="sourceLineNo">073</span>        }<a name="line.73"></a>
-<span class="sourceLineNo">074</span>        // before dropping tables, open read connection must be closed to avoid hangs in mysql/postgresql<a name="line.74"></a>
-<span class="sourceLineNo">075</span>        logger.debug("closing reads...");<a name="line.75"></a>
-<span class="sourceLineNo">076</span>        source.closeReading();<a name="line.76"></a>
-<span class="sourceLineNo">077</span><a name="line.77"></a>
-<span class="sourceLineNo">078</span>        logger.debug("connecting for close...");<a name="line.78"></a>
-<span class="sourceLineNo">079</span>        Connection connection = source.connectionForWriting();<a name="line.79"></a>
-<span class="sourceLineNo">080</span>        if (connection == null) {<a name="line.80"></a>
-<span class="sourceLineNo">081</span>            throw new IOException("no connection");<a name="line.81"></a>
-<span class="sourceLineNo">082</span>        }<a name="line.82"></a>
-<span class="sourceLineNo">083</span>        logger.debug("cleaning...");<a name="line.83"></a>
-<span class="sourceLineNo">084</span>        // clean up tables<a name="line.84"></a>
-<span class="sourceLineNo">085</span>        sqlScript(connection, resourceName);<a name="line.85"></a>
-<span class="sourceLineNo">086</span>        logger.debug("closing writes...");<a name="line.86"></a>
-<span class="sourceLineNo">087</span>        source.closeWriting();<a name="line.87"></a>
-<span class="sourceLineNo">088</span>    }<a name="line.88"></a>
-<span class="sourceLineNo">089</span><a name="line.89"></a>
-<span class="sourceLineNo">090</span>    @AfterMethod(dependsOnMethods = {"removeTable"})<a name="line.90"></a>
-<span class="sourceLineNo">091</span>    @Parameters({"driver", "starturl", "stopurl", "user", "password"})<a name="line.91"></a>
-<span class="sourceLineNo">092</span>    public void removeClient(String driver, String starturl, String stopurl, String user, String password)<a name="line.92"></a>
-<span class="sourceLineNo">093</span>            throws Exception {<a name="line.93"></a>
-<span class="sourceLineNo">094</span>        // some driver can drop database by a magic 'stop' URL<a name="line.94"></a>
-<span class="sourceLineNo">095</span>        source = getRiverSource()<a name="line.95"></a>
-<span class="sourceLineNo">096</span>                .url(stopurl)<a name="line.96"></a>
-<span class="sourceLineNo">097</span>                .user(user)<a name="line.97"></a>
-<span class="sourceLineNo">098</span>                .password(password);<a name="line.98"></a>
-<span class="sourceLineNo">099</span>        try {<a name="line.99"></a>
-<span class="sourceLineNo">100</span>            logger.debug("connecting to stop URL...");<a name="line.100"></a>
-<span class="sourceLineNo">101</span>            // activate stop URL<a name="line.101"></a>
-<span class="sourceLineNo">102</span>            source.connectionForWriting();<a name="line.102"></a>
-<span class="sourceLineNo">103</span>        } catch (Exception e) {<a name="line.103"></a>
-<span class="sourceLineNo">104</span>            // exception is expected, ignore<a name="line.104"></a>
-<span class="sourceLineNo">105</span>        }<a name="line.105"></a>
-<span class="sourceLineNo">106</span>        // close open write connection<a name="line.106"></a>
-<span class="sourceLineNo">107</span>        source.closeWriting();<a name="line.107"></a>
-<span class="sourceLineNo">108</span>        logger.debug("stopped");<a name="line.108"></a>
-<span class="sourceLineNo">109</span>    }<a name="line.109"></a>
-<span class="sourceLineNo">110</span><a name="line.110"></a>
-<span class="sourceLineNo">111</span>    protected RiverSettings riverSettings(String resource)<a name="line.111"></a>
-<span class="sourceLineNo">112</span>            throws IOException {<a name="line.112"></a>
-<span class="sourceLineNo">113</span>        InputStream in = getClass().getResourceAsStream(resource);<a name="line.113"></a>
-<span class="sourceLineNo">114</span>        return new RiverSettings(ImmutableSettings.settingsBuilder()<a name="line.114"></a>
-<span class="sourceLineNo">115</span>                .build(), XContentHelper.convertToMap(Streams.copyToByteArray(in), false).v2());<a name="line.115"></a>
-<span class="sourceLineNo">116</span>    }<a name="line.116"></a>
-<span class="sourceLineNo">117</span><a name="line.117"></a>
-<span class="sourceLineNo">118</span>    private void sqlScript(Connection connection, String resourceName) throws Exception {<a name="line.118"></a>
-<span class="sourceLineNo">119</span>        InputStream in = getClass().getResourceAsStream(resourceName);<a name="line.119"></a>
-<span class="sourceLineNo">120</span>        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));<a name="line.120"></a>
-<span class="sourceLineNo">121</span>        String sql;<a name="line.121"></a>
-<span class="sourceLineNo">122</span>        while ((sql = br.readLine()) != null) {<a name="line.122"></a>
-<span class="sourceLineNo">123</span>            try {<a name="line.123"></a>
-<span class="sourceLineNo">124</span>                logger.debug("executing {}", sql);<a name="line.124"></a>
-<span class="sourceLineNo">125</span>                Statement p = connection.createStatement();<a name="line.125"></a>
-<span class="sourceLineNo">126</span>                p.execute(sql);<a name="line.126"></a>
-<span class="sourceLineNo">127</span>                p.close();<a name="line.127"></a>
-<span class="sourceLineNo">128</span>            } catch (SQLException e) {<a name="line.128"></a>
-<span class="sourceLineNo">129</span>                // ignore<a name="line.129"></a>
-<span class="sourceLineNo">130</span>                logger.error(sql + " failed. Reason: " + e.getMessage());<a name="line.130"></a>
-<span class="sourceLineNo">131</span>            }<a name="line.131"></a>
-<span class="sourceLineNo">132</span>        }<a name="line.132"></a>
-<span class="sourceLineNo">133</span>        br.close();<a name="line.133"></a>
-<span class="sourceLineNo">134</span>    }<a name="line.134"></a>
-<span class="sourceLineNo">135</span><a name="line.135"></a>
-<span class="sourceLineNo">136</span>}<a name="line.136"></a>
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    <a name="line.1"></a>
+<FONT color="green">002</FONT>    package org.xbib.elasticsearch.river.jdbc.support;<a name="line.2"></a>
+<FONT color="green">003</FONT>    <a name="line.3"></a>
+<FONT color="green">004</FONT>    import org.elasticsearch.common.io.Streams;<a name="line.4"></a>
+<FONT color="green">005</FONT>    import org.elasticsearch.common.logging.ESLogger;<a name="line.5"></a>
+<FONT color="green">006</FONT>    import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.6"></a>
+<FONT color="green">007</FONT>    import org.elasticsearch.common.settings.ImmutableSettings;<a name="line.7"></a>
+<FONT color="green">008</FONT>    import org.elasticsearch.common.unit.TimeValue;<a name="line.8"></a>
+<FONT color="green">009</FONT>    import org.elasticsearch.common.xcontent.XContentHelper;<a name="line.9"></a>
+<FONT color="green">010</FONT>    import org.elasticsearch.river.RiverSettings;<a name="line.10"></a>
+<FONT color="green">011</FONT>    import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.11"></a>
+<FONT color="green">012</FONT>    import org.testng.Assert;<a name="line.12"></a>
+<FONT color="green">013</FONT>    import org.testng.annotations.AfterMethod;<a name="line.13"></a>
+<FONT color="green">014</FONT>    import org.testng.annotations.BeforeMethod;<a name="line.14"></a>
+<FONT color="green">015</FONT>    import org.testng.annotations.Optional;<a name="line.15"></a>
+<FONT color="green">016</FONT>    import org.testng.annotations.Parameters;<a name="line.16"></a>
+<FONT color="green">017</FONT>    <a name="line.17"></a>
+<FONT color="green">018</FONT>    import java.io.BufferedReader;<a name="line.18"></a>
+<FONT color="green">019</FONT>    import java.io.IOException;<a name="line.19"></a>
+<FONT color="green">020</FONT>    import java.io.InputStream;<a name="line.20"></a>
+<FONT color="green">021</FONT>    import java.io.InputStreamReader;<a name="line.21"></a>
+<FONT color="green">022</FONT>    import java.sql.Connection;<a name="line.22"></a>
+<FONT color="green">023</FONT>    import java.sql.SQLException;<a name="line.23"></a>
+<FONT color="green">024</FONT>    import java.sql.Statement;<a name="line.24"></a>
+<FONT color="green">025</FONT>    <a name="line.25"></a>
+<FONT color="green">026</FONT>    public abstract class AbstractRiverTest extends Assert {<a name="line.26"></a>
+<FONT color="green">027</FONT>    <a name="line.27"></a>
+<FONT color="green">028</FONT>        private static final ESLogger logger = ESLoggerFactory.getLogger(AbstractRiverTest.class.getName());<a name="line.28"></a>
+<FONT color="green">029</FONT>    <a name="line.29"></a>
+<FONT color="green">030</FONT>        protected static RiverSource source;<a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>        protected static RiverContext context;<a name="line.32"></a>
+<FONT color="green">033</FONT>    <a name="line.33"></a>
+<FONT color="green">034</FONT>        public abstract RiverSource getRiverSource();<a name="line.34"></a>
+<FONT color="green">035</FONT>    <a name="line.35"></a>
+<FONT color="green">036</FONT>        public abstract RiverContext getRiverContext();<a name="line.36"></a>
+<FONT color="green">037</FONT>    <a name="line.37"></a>
+<FONT color="green">038</FONT>        @BeforeMethod<a name="line.38"></a>
+<FONT color="green">039</FONT>        @Parameters({"driver", "starturl", "user", "password"})<a name="line.39"></a>
+<FONT color="green">040</FONT>        public void createClient(String driver, String starturl, String user, String password)<a name="line.40"></a>
+<FONT color="green">041</FONT>                throws Exception {<a name="line.41"></a>
+<FONT color="green">042</FONT>            source = getRiverSource()<a name="line.42"></a>
+<FONT color="green">043</FONT>                    .url(starturl)<a name="line.43"></a>
+<FONT color="green">044</FONT>                    .user(user)<a name="line.44"></a>
+<FONT color="green">045</FONT>                    .password(password);<a name="line.45"></a>
+<FONT color="green">046</FONT>            context = getRiverContext()<a name="line.46"></a>
+<FONT color="green">047</FONT>                    .riverSource(source)<a name="line.47"></a>
+<FONT color="green">048</FONT>                    .setRetries(1)<a name="line.48"></a>
+<FONT color="green">049</FONT>                    .setMaxRetryWait(TimeValue.timeValueSeconds(5))<a name="line.49"></a>
+<FONT color="green">050</FONT>                    .locale("en");<a name="line.50"></a>
+<FONT color="green">051</FONT>            context.contextualize();<a name="line.51"></a>
+<FONT color="green">052</FONT>        }<a name="line.52"></a>
+<FONT color="green">053</FONT>    <a name="line.53"></a>
+<FONT color="green">054</FONT>        @BeforeMethod(dependsOnMethods = {"createClient"})<a name="line.54"></a>
+<FONT color="green">055</FONT>        @Parameters({"create"})<a name="line.55"></a>
+<FONT color="green">056</FONT>        public void createTable(@Optional String resourceName) throws Exception {<a name="line.56"></a>
+<FONT color="green">057</FONT>            if (resourceName == null || "".equals(resourceName)) {<a name="line.57"></a>
+<FONT color="green">058</FONT>                return;<a name="line.58"></a>
+<FONT color="green">059</FONT>            }<a name="line.59"></a>
+<FONT color="green">060</FONT>            Connection connection = source.connectionForWriting();<a name="line.60"></a>
+<FONT color="green">061</FONT>            if (connection == null) {<a name="line.61"></a>
+<FONT color="green">062</FONT>                throw new IOException("no connection");<a name="line.62"></a>
+<FONT color="green">063</FONT>            }<a name="line.63"></a>
+<FONT color="green">064</FONT>            sqlScript(connection, resourceName);<a name="line.64"></a>
+<FONT color="green">065</FONT>            source.closeWriting();<a name="line.65"></a>
+<FONT color="green">066</FONT>        }<a name="line.66"></a>
+<FONT color="green">067</FONT>    <a name="line.67"></a>
+<FONT color="green">068</FONT>        @AfterMethod<a name="line.68"></a>
+<FONT color="green">069</FONT>        @Parameters({"delete"})<a name="line.69"></a>
+<FONT color="green">070</FONT>        public void removeTable(@Optional String resourceName) throws Exception {<a name="line.70"></a>
+<FONT color="green">071</FONT>            if (resourceName == null || "".equals(resourceName)) {<a name="line.71"></a>
+<FONT color="green">072</FONT>                return;<a name="line.72"></a>
+<FONT color="green">073</FONT>            }<a name="line.73"></a>
+<FONT color="green">074</FONT>            // before dropping tables, open read connection must be closed to avoid hangs in mysql/postgresql<a name="line.74"></a>
+<FONT color="green">075</FONT>            logger.debug("closing reads...");<a name="line.75"></a>
+<FONT color="green">076</FONT>            source.closeReading();<a name="line.76"></a>
+<FONT color="green">077</FONT>    <a name="line.77"></a>
+<FONT color="green">078</FONT>            logger.debug("connecting for close...");<a name="line.78"></a>
+<FONT color="green">079</FONT>            Connection connection = source.connectionForWriting();<a name="line.79"></a>
+<FONT color="green">080</FONT>            if (connection == null) {<a name="line.80"></a>
+<FONT color="green">081</FONT>                throw new IOException("no connection");<a name="line.81"></a>
+<FONT color="green">082</FONT>            }<a name="line.82"></a>
+<FONT color="green">083</FONT>            logger.debug("cleaning...");<a name="line.83"></a>
+<FONT color="green">084</FONT>            // clean up tables<a name="line.84"></a>
+<FONT color="green">085</FONT>            sqlScript(connection, resourceName);<a name="line.85"></a>
+<FONT color="green">086</FONT>            logger.debug("closing writes...");<a name="line.86"></a>
+<FONT color="green">087</FONT>            source.closeWriting();<a name="line.87"></a>
+<FONT color="green">088</FONT>        }<a name="line.88"></a>
+<FONT color="green">089</FONT>    <a name="line.89"></a>
+<FONT color="green">090</FONT>        @AfterMethod(dependsOnMethods = {"removeTable"})<a name="line.90"></a>
+<FONT color="green">091</FONT>        @Parameters({"driver", "starturl", "stopurl", "user", "password"})<a name="line.91"></a>
+<FONT color="green">092</FONT>        public void removeClient(String driver, String starturl, String stopurl, String user, String password)<a name="line.92"></a>
+<FONT color="green">093</FONT>                throws Exception {<a name="line.93"></a>
+<FONT color="green">094</FONT>            // some driver can drop database by a magic 'stop' URL<a name="line.94"></a>
+<FONT color="green">095</FONT>            source = getRiverSource()<a name="line.95"></a>
+<FONT color="green">096</FONT>                    .url(stopurl)<a name="line.96"></a>
+<FONT color="green">097</FONT>                    .user(user)<a name="line.97"></a>
+<FONT color="green">098</FONT>                    .password(password);<a name="line.98"></a>
+<FONT color="green">099</FONT>            try {<a name="line.99"></a>
+<FONT color="green">100</FONT>                logger.debug("connecting to stop URL...");<a name="line.100"></a>
+<FONT color="green">101</FONT>                // activate stop URL<a name="line.101"></a>
+<FONT color="green">102</FONT>                source.connectionForWriting();<a name="line.102"></a>
+<FONT color="green">103</FONT>            } catch (Exception e) {<a name="line.103"></a>
+<FONT color="green">104</FONT>                // exception is expected, ignore<a name="line.104"></a>
+<FONT color="green">105</FONT>            }<a name="line.105"></a>
+<FONT color="green">106</FONT>            // close open write connection<a name="line.106"></a>
+<FONT color="green">107</FONT>            source.closeWriting();<a name="line.107"></a>
+<FONT color="green">108</FONT>            logger.debug("stopped");<a name="line.108"></a>
+<FONT color="green">109</FONT>        }<a name="line.109"></a>
+<FONT color="green">110</FONT>    <a name="line.110"></a>
+<FONT color="green">111</FONT>        protected RiverSettings riverSettings(String resource)<a name="line.111"></a>
+<FONT color="green">112</FONT>                throws IOException {<a name="line.112"></a>
+<FONT color="green">113</FONT>            InputStream in = getClass().getResourceAsStream(resource);<a name="line.113"></a>
+<FONT color="green">114</FONT>            return new RiverSettings(ImmutableSettings.settingsBuilder()<a name="line.114"></a>
+<FONT color="green">115</FONT>                    .build(), XContentHelper.convertToMap(Streams.copyToByteArray(in), false).v2());<a name="line.115"></a>
+<FONT color="green">116</FONT>        }<a name="line.116"></a>
+<FONT color="green">117</FONT>    <a name="line.117"></a>
+<FONT color="green">118</FONT>        private void sqlScript(Connection connection, String resourceName) throws Exception {<a name="line.118"></a>
+<FONT color="green">119</FONT>            InputStream in = getClass().getResourceAsStream(resourceName);<a name="line.119"></a>
+<FONT color="green">120</FONT>            BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));<a name="line.120"></a>
+<FONT color="green">121</FONT>            String sql;<a name="line.121"></a>
+<FONT color="green">122</FONT>            while ((sql = br.readLine()) != null) {<a name="line.122"></a>
+<FONT color="green">123</FONT>    <a name="line.123"></a>
+<FONT color="green">124</FONT>                try {<a name="line.124"></a>
+<FONT color="green">125</FONT>                    logger.trace("executing {}", sql);<a name="line.125"></a>
+<FONT color="green">126</FONT>                    Statement p = connection.createStatement();<a name="line.126"></a>
+<FONT color="green">127</FONT>                    p.execute(sql);<a name="line.127"></a>
+<FONT color="green">128</FONT>                    p.close();<a name="line.128"></a>
+<FONT color="green">129</FONT>                } catch (SQLException e) {<a name="line.129"></a>
+<FONT color="green">130</FONT>                    // ignore<a name="line.130"></a>
+<FONT color="green">131</FONT>                    logger.error(sql + " failed. Reason: " + e.getMessage());<a name="line.131"></a>
+<FONT color="green">132</FONT>                } finally {<a name="line.132"></a>
+<FONT color="green">133</FONT>                    connection.commit();<a name="line.133"></a>
+<FONT color="green">134</FONT>                }<a name="line.134"></a>
+<FONT color="green">135</FONT>            }<a name="line.135"></a>
+<FONT color="green">136</FONT>            br.close();<a name="line.136"></a>
+<FONT color="green">137</FONT>        }<a name="line.137"></a>
+<FONT color="green">138</FONT>    <a name="line.138"></a>
+<FONT color="green">139</FONT>    }<a name="line.139"></a>
 
 
 
@@ -202,7 +200,6 @@
 
 
 
-</pre>
-</div>
-</body>
-</html>
+</PRE>
+</BODY>
+</HTML>

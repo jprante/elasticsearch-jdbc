@@ -1,90 +1,85 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-<head>
-<title>Source code</title>
-<link rel="stylesheet" type="text/css" href="../../../../../../../../stylesheet.css" title="Style">
-</head>
-<body>
-<div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span><a name="line.1"></a>
-<span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.strategy.simple;<a name="line.2"></a>
-<span class="sourceLineNo">003</span><a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.elasticsearch.client.Client;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.elasticsearch.river.RiverName;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.elasticsearch.river.RiverSettings;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.testng.annotations.Parameters;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import org.testng.annotations.Test;<a name="line.8"></a>
-<span class="sourceLineNo">009</span>import org.xbib.elasticsearch.river.jdbc.JDBCRiver;<a name="line.9"></a>
-<span class="sourceLineNo">010</span>import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.10"></a>
-<span class="sourceLineNo">011</span>import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;<a name="line.11"></a>
-<span class="sourceLineNo">012</span>import org.xbib.elasticsearch.river.jdbc.support.RiverContext;<a name="line.12"></a>
-<span class="sourceLineNo">013</span><a name="line.13"></a>
-<span class="sourceLineNo">014</span>import java.sql.Connection;<a name="line.14"></a>
-<span class="sourceLineNo">015</span>import java.sql.PreparedStatement;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import java.sql.SQLException;<a name="line.16"></a>
-<span class="sourceLineNo">017</span>import java.util.ArrayList;<a name="line.17"></a>
-<span class="sourceLineNo">018</span>import java.util.List;<a name="line.18"></a>
-<span class="sourceLineNo">019</span>import java.util.UUID;<a name="line.19"></a>
-<span class="sourceLineNo">020</span><a name="line.20"></a>
-<span class="sourceLineNo">021</span>import static org.hamcrest.MatcherAssert.assertThat;<a name="line.21"></a>
-<span class="sourceLineNo">022</span>import static org.hamcrest.Matchers.greaterThan;<a name="line.22"></a>
-<span class="sourceLineNo">023</span><a name="line.23"></a>
-<span class="sourceLineNo">024</span>public class SimpleRiverScheduleTests extends AbstractRiverNodeTest {<a name="line.24"></a>
-<span class="sourceLineNo">025</span><a name="line.25"></a>
-<span class="sourceLineNo">026</span>    @Override<a name="line.26"></a>
-<span class="sourceLineNo">027</span>    public RiverSource getRiverSource() {<a name="line.27"></a>
-<span class="sourceLineNo">028</span>        return new SimpleRiverSource();<a name="line.28"></a>
-<span class="sourceLineNo">029</span>    }<a name="line.29"></a>
-<span class="sourceLineNo">030</span><a name="line.30"></a>
-<span class="sourceLineNo">031</span>    @Override<a name="line.31"></a>
-<span class="sourceLineNo">032</span>    public RiverContext getRiverContext() {<a name="line.32"></a>
-<span class="sourceLineNo">033</span>        return new RiverContext();<a name="line.33"></a>
-<span class="sourceLineNo">034</span>    }<a name="line.34"></a>
-<span class="sourceLineNo">035</span><a name="line.35"></a>
-<span class="sourceLineNo">036</span>    /**<a name="line.36"></a>
-<span class="sourceLineNo">037</span>     * Product table star select, scheduled for more than one run<a name="line.37"></a>
-<span class="sourceLineNo">038</span>     */<a name="line.38"></a>
-<span class="sourceLineNo">039</span>    @Test<a name="line.39"></a>
-<span class="sourceLineNo">040</span>    @Parameters({"river6", "sql1"})<a name="line.40"></a>
-<span class="sourceLineNo">041</span>    public void testSchedule(String riverResource, String sql) throws Exception {<a name="line.41"></a>
-<span class="sourceLineNo">042</span>        Connection connection = source.connectionForWriting();<a name="line.42"></a>
-<span class="sourceLineNo">043</span>        createRandomProducts(connection, sql, 100);<a name="line.43"></a>
-<span class="sourceLineNo">044</span>        source.closeWriting();<a name="line.44"></a>
-<span class="sourceLineNo">045</span>        Client client = client("1");<a name="line.45"></a>
-<span class="sourceLineNo">046</span>        RiverSettings settings = riverSettings(riverResource);<a name="line.46"></a>
-<span class="sourceLineNo">047</span>        JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);<a name="line.47"></a>
-<span class="sourceLineNo">048</span>        river.start();<a name="line.48"></a>
-<span class="sourceLineNo">049</span>        Thread.sleep(12500L); // let the river run at least twice<a name="line.49"></a>
-<span class="sourceLineNo">050</span>        assertThat(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(),<a name="line.50"></a>
-<span class="sourceLineNo">051</span>            greaterThan(104L));<a name="line.51"></a>
-<span class="sourceLineNo">052</span>        river.close();<a name="line.52"></a>
-<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
-<span class="sourceLineNo">054</span><a name="line.54"></a>
-<span class="sourceLineNo">055</span>    private void createRandomProducts(Connection connection, String sql, int size)<a name="line.55"></a>
-<span class="sourceLineNo">056</span>            throws SQLException {<a name="line.56"></a>
-<span class="sourceLineNo">057</span>        for (int i = 0; i &lt; size; i++) {<a name="line.57"></a>
-<span class="sourceLineNo">058</span>            long amount = Math.round(Math.random() * 1000);<a name="line.58"></a>
-<span class="sourceLineNo">059</span>            double price = (Math.random() * 10000) / 100.00;<a name="line.59"></a>
-<span class="sourceLineNo">060</span>            addData(connection, sql, UUID.randomUUID().toString().substring(0, 32), amount, price);<a name="line.60"></a>
-<span class="sourceLineNo">061</span>        }<a name="line.61"></a>
-<span class="sourceLineNo">062</span>        if (!connection.getAutoCommit()) {<a name="line.62"></a>
-<span class="sourceLineNo">063</span>            connection.commit();<a name="line.63"></a>
-<span class="sourceLineNo">064</span>        }<a name="line.64"></a>
-<span class="sourceLineNo">065</span>    }<a name="line.65"></a>
-<span class="sourceLineNo">066</span><a name="line.66"></a>
-<span class="sourceLineNo">067</span>    private void addData(Connection connection, String sql, final String name, final long amount, final double price)<a name="line.67"></a>
-<span class="sourceLineNo">068</span>            throws SQLException {<a name="line.68"></a>
-<span class="sourceLineNo">069</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.69"></a>
-<span class="sourceLineNo">070</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {{<a name="line.70"></a>
-<span class="sourceLineNo">071</span>            add(name);<a name="line.71"></a>
-<span class="sourceLineNo">072</span>            add(amount);<a name="line.72"></a>
-<span class="sourceLineNo">073</span>            add(price);<a name="line.73"></a>
-<span class="sourceLineNo">074</span>        }};<a name="line.74"></a>
-<span class="sourceLineNo">075</span>        source.bind(stmt, params);<a name="line.75"></a>
-<span class="sourceLineNo">076</span>        stmt.execute();<a name="line.76"></a>
-<span class="sourceLineNo">077</span>    }<a name="line.77"></a>
-<span class="sourceLineNo">078</span><a name="line.78"></a>
-<span class="sourceLineNo">079</span>}<a name="line.79"></a>
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    <a name="line.1"></a>
+<FONT color="green">002</FONT>    package org.xbib.elasticsearch.river.jdbc.strategy.simple;<a name="line.2"></a>
+<FONT color="green">003</FONT>    <a name="line.3"></a>
+<FONT color="green">004</FONT>    import org.elasticsearch.client.Client;<a name="line.4"></a>
+<FONT color="green">005</FONT>    import org.elasticsearch.river.RiverName;<a name="line.5"></a>
+<FONT color="green">006</FONT>    import org.elasticsearch.river.RiverSettings;<a name="line.6"></a>
+<FONT color="green">007</FONT>    import org.testng.annotations.Parameters;<a name="line.7"></a>
+<FONT color="green">008</FONT>    import org.testng.annotations.Test;<a name="line.8"></a>
+<FONT color="green">009</FONT>    import org.xbib.elasticsearch.river.jdbc.JDBCRiver;<a name="line.9"></a>
+<FONT color="green">010</FONT>    import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.10"></a>
+<FONT color="green">011</FONT>    import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;<a name="line.11"></a>
+<FONT color="green">012</FONT>    import org.xbib.elasticsearch.river.jdbc.support.RiverContext;<a name="line.12"></a>
+<FONT color="green">013</FONT>    <a name="line.13"></a>
+<FONT color="green">014</FONT>    import java.sql.Connection;<a name="line.14"></a>
+<FONT color="green">015</FONT>    import java.sql.PreparedStatement;<a name="line.15"></a>
+<FONT color="green">016</FONT>    import java.sql.SQLException;<a name="line.16"></a>
+<FONT color="green">017</FONT>    import java.util.ArrayList;<a name="line.17"></a>
+<FONT color="green">018</FONT>    import java.util.List;<a name="line.18"></a>
+<FONT color="green">019</FONT>    import java.util.UUID;<a name="line.19"></a>
+<FONT color="green">020</FONT>    <a name="line.20"></a>
+<FONT color="green">021</FONT>    import static org.hamcrest.MatcherAssert.assertThat;<a name="line.21"></a>
+<FONT color="green">022</FONT>    import static org.hamcrest.Matchers.greaterThan;<a name="line.22"></a>
+<FONT color="green">023</FONT>    <a name="line.23"></a>
+<FONT color="green">024</FONT>    public class SimpleRiverScheduleTests extends AbstractRiverNodeTest {<a name="line.24"></a>
+<FONT color="green">025</FONT>    <a name="line.25"></a>
+<FONT color="green">026</FONT>        @Override<a name="line.26"></a>
+<FONT color="green">027</FONT>        public RiverSource getRiverSource() {<a name="line.27"></a>
+<FONT color="green">028</FONT>            return new SimpleRiverSource();<a name="line.28"></a>
+<FONT color="green">029</FONT>        }<a name="line.29"></a>
+<FONT color="green">030</FONT>    <a name="line.30"></a>
+<FONT color="green">031</FONT>        @Override<a name="line.31"></a>
+<FONT color="green">032</FONT>        public RiverContext getRiverContext() {<a name="line.32"></a>
+<FONT color="green">033</FONT>            return new RiverContext();<a name="line.33"></a>
+<FONT color="green">034</FONT>        }<a name="line.34"></a>
+<FONT color="green">035</FONT>    <a name="line.35"></a>
+<FONT color="green">036</FONT>        /**<a name="line.36"></a>
+<FONT color="green">037</FONT>         * Product table star select, scheduled for more than one run<a name="line.37"></a>
+<FONT color="green">038</FONT>         */<a name="line.38"></a>
+<FONT color="green">039</FONT>        @Test<a name="line.39"></a>
+<FONT color="green">040</FONT>        @Parameters({"river6", "sql1"})<a name="line.40"></a>
+<FONT color="green">041</FONT>        public void testSchedule(String riverResource, String sql) throws Exception {<a name="line.41"></a>
+<FONT color="green">042</FONT>            Connection connection = source.connectionForWriting();<a name="line.42"></a>
+<FONT color="green">043</FONT>            createRandomProducts(connection, sql, 100);<a name="line.43"></a>
+<FONT color="green">044</FONT>            source.closeWriting();<a name="line.44"></a>
+<FONT color="green">045</FONT>            Client client = client("1");<a name="line.45"></a>
+<FONT color="green">046</FONT>            RiverSettings settings = riverSettings(riverResource);<a name="line.46"></a>
+<FONT color="green">047</FONT>            JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);<a name="line.47"></a>
+<FONT color="green">048</FONT>            river.start();<a name="line.48"></a>
+<FONT color="green">049</FONT>            Thread.sleep(12500L); // let the river run at least twice<a name="line.49"></a>
+<FONT color="green">050</FONT>            assertThat(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(),<a name="line.50"></a>
+<FONT color="green">051</FONT>                greaterThan(104L));<a name="line.51"></a>
+<FONT color="green">052</FONT>            river.close();<a name="line.52"></a>
+<FONT color="green">053</FONT>        }<a name="line.53"></a>
+<FONT color="green">054</FONT>    <a name="line.54"></a>
+<FONT color="green">055</FONT>        private void createRandomProducts(Connection connection, String sql, int size)<a name="line.55"></a>
+<FONT color="green">056</FONT>                throws SQLException {<a name="line.56"></a>
+<FONT color="green">057</FONT>            for (int i = 0; i &lt; size; i++) {<a name="line.57"></a>
+<FONT color="green">058</FONT>                long amount = Math.round(Math.random() * 1000);<a name="line.58"></a>
+<FONT color="green">059</FONT>                double price = (Math.random() * 10000) / 100.00;<a name="line.59"></a>
+<FONT color="green">060</FONT>                addData(connection, sql, UUID.randomUUID().toString().substring(0, 32), amount, price);<a name="line.60"></a>
+<FONT color="green">061</FONT>            }<a name="line.61"></a>
+<FONT color="green">062</FONT>            if (!connection.getAutoCommit()) {<a name="line.62"></a>
+<FONT color="green">063</FONT>                connection.commit();<a name="line.63"></a>
+<FONT color="green">064</FONT>            }<a name="line.64"></a>
+<FONT color="green">065</FONT>        }<a name="line.65"></a>
+<FONT color="green">066</FONT>    <a name="line.66"></a>
+<FONT color="green">067</FONT>        private void addData(Connection connection, String sql, final String name, final long amount, final double price)<a name="line.67"></a>
+<FONT color="green">068</FONT>                throws SQLException {<a name="line.68"></a>
+<FONT color="green">069</FONT>            PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.69"></a>
+<FONT color="green">070</FONT>            List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {{<a name="line.70"></a>
+<FONT color="green">071</FONT>                add(name);<a name="line.71"></a>
+<FONT color="green">072</FONT>                add(amount);<a name="line.72"></a>
+<FONT color="green">073</FONT>                add(price);<a name="line.73"></a>
+<FONT color="green">074</FONT>            }};<a name="line.74"></a>
+<FONT color="green">075</FONT>            source.bind(stmt, params);<a name="line.75"></a>
+<FONT color="green">076</FONT>            stmt.execute();<a name="line.76"></a>
+<FONT color="green">077</FONT>        }<a name="line.77"></a>
+<FONT color="green">078</FONT>    <a name="line.78"></a>
+<FONT color="green">079</FONT>    }<a name="line.79"></a>
 
 
 
@@ -145,7 +140,6 @@
 
 
 
-</pre>
-</div>
-</body>
-</html>
+</PRE>
+</BODY>
+</HTML>
