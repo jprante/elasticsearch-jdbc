@@ -77,6 +77,73 @@ public class SimpleRiverSource implements RiverSource {
     private final Map<String, Object> lastRow = newHashMap();
 
     private long lastRowCount;
+    
+    /**
+     * Trinet: ssl support
+     */
+    protected boolean ssl;
+    
+    protected String keyStore;
+    
+    protected String keyStorePassword;
+    
+    protected String trustStore;
+    
+    protected String trustStorePassword;
+
+    public SimpleRiverSource() {
+    }
+    
+    @Override
+    public SimpleRiverSource ssl(boolean ssl) {
+        this.ssl = ssl;
+        return this;
+    }
+
+    public boolean ssl() {
+        return ssl;
+    }
+    
+    @Override
+    public SimpleRiverSource keyStore(String keyStore) {
+        this.keyStore = keyStore;
+        return this;
+    }
+
+    public String keyStore() {
+        return keyStore;
+    }
+    
+    @Override
+    public SimpleRiverSource keyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+        return this;
+    }
+
+    public String keyStorePassword() {
+        return keyStorePassword;
+    }
+    
+    @Override
+    public SimpleRiverSource trustStore(String trustStore) {
+        this.trustStore = trustStore;
+        return this;
+    }
+
+    public String trustStore() {
+        return trustStore;
+    }
+    
+    
+    @Override
+    public SimpleRiverSource trustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+        return this;
+    }
+
+    public String trustStorePassword() {
+        return trustStorePassword;
+    }
 
     protected ESLogger logger() {
         return logger;
@@ -138,6 +205,20 @@ public class SimpleRiverSource implements RiverSource {
             while (retries > 0) {
                 retries--;
                 try {
+                	/**
+                	 * Trinet: support ssl
+                	 */
+                	if (ssl) {
+                		if (keyStore != null) {
+                			System.setProperty("javax.net.ssl.keyStore", keyStore);
+                			System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
+                		}
+                		if (trustStore != null) {
+		                	System.setProperty("javax.net.ssl.trustStore", trustStore);
+		                	System.setProperty("javax.net.ssl.trustStorePassword", trustStorePassword);
+                		}
+                	}
+                	
                     readConnection = DriverManager.getConnection(url, user, password);
                     // required by MySQL for large result streaming
                     readConnection.setReadOnly(true);
@@ -184,6 +265,19 @@ public class SimpleRiverSource implements RiverSource {
             while (retries > 0) {
                 retries--;
                 try {
+                	/**
+                	 * Trinet: support ssl
+                	 */
+                	if (ssl) {
+                		if (keyStore != null) {
+                			System.setProperty("javax.net.ssl.keyStore", keyStore);
+                			System.setProperty("javax.net.ssl.keyStorePassword", keyStorePassword);
+                		}
+                		if (trustStore != null) {
+		                	System.setProperty("javax.net.ssl.trustStore", trustStore);
+		                	System.setProperty("javax.net.ssl.trustStorePassword", trustStorePassword);
+                		}
+                	}
                     writeConnection = DriverManager.getConnection(url, user, password);
                     if (context != null) {
                         // many drivers don't like autocommit=true

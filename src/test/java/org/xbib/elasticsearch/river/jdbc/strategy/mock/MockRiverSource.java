@@ -153,4 +153,34 @@ public class MockRiverSource implements RiverSource {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+	@Override
+	public RiverSource ssl(boolean ssl) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource keyStore(String keyStore) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource keyStorePassword(String keyStorePassword) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource trustStore(String strustStore) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource trustStorePassword(String trustStorePassword) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
 }

@@ -5,7 +5,10 @@ import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.xbib.io.keyvalue.KeyValue;
 import org.xbib.io.keyvalue.KeyValueStreamListener;
 
+import com.perform.utils.JsonHelper;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,16 +127,30 @@ public class PlainKeyValueStreamListener<K,V> implements KeyValueStreamListener<
         }
         // create current object from values by sequentially merging the values
         for (int i = 0; i < keys.size(); i++) {
-            Map map = null;
-            try {
-                // JSON content?
-                map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
-            } catch (Exception e) {
-                // ignore
-            }
-            Object v = map != null && map.size() > 0 ? map : values.get(i);
-            Map m = merge(current.source(), keys.get(i), v);
-            current.source(m);
+        	if(keys.get(i).toString().startsWith("_json.")) {
+        		//Trinet: support json columns
+        		Object o = values.get(i);
+        		String v = o.toString();
+        		List<HashMap> list = null;
+        		try {
+        			list = JsonHelper.getFromJSONCollection(v, HashMap.class);
+        		} catch(Exception e) {
+        			list = new ArrayList<HashMap>();
+        		}
+        		Map m = merge(current.source(), keys.get(i).toString().replace("_json.", ""), list);
+        		current.source(m);
+        	} else {
+        		Map map = null;
+        		try {
+        			// JSON content?
+        			map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
+        		} catch (Exception e) {
+        			// ignore
+        		}
+        		Object v = map != null && map.size() > 0 ? map : values.get(i);
+        		Map m = merge(current.source(), keys.get(i), v);
+        		current.source(m);
+        	}
         }
         return this;
     }

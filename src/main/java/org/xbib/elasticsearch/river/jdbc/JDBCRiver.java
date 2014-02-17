@@ -108,6 +108,15 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 XContentMapValues.nodeMapValue(mySettings.get("index_settings"), null) : null;
         Map<String,Object> typeMapping = mySettings.containsKey("type_mapping") ?
                 XContentMapValues.nodeMapValue(mySettings.get("type_mapping"), null) : null;
+                
+        /**
+         * Trinet: support ssl
+         */
+        boolean ssl = XContentMapValues.nodeBooleanValue(mySettings.get("ssl"), Boolean.FALSE);
+        String keyStore = XContentMapValues.nodeStringValue(mySettings.get("key_store"), null);
+        String keyStorePassword = XContentMapValues.nodeStringValue(mySettings.get("key_store_password"), null);        
+        String trustStore = XContentMapValues.nodeStringValue(mySettings.get("trust_store"), null);
+        String trustStorePassword = XContentMapValues.nodeStringValue(mySettings.get("trust_store_password"), null);                
 
         riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
@@ -121,6 +130,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         riverSource.url(url)
                 .user(user)
                 .password(password)
+                .ssl(ssl)
+                .keyStore(keyStore)
+                .keyStorePassword(keyStorePassword)
+                .trustStore(trustStore)
+                .trustStorePassword(trustStorePassword)                
                 .rounding(rounding)
                 .precision(scale);
 

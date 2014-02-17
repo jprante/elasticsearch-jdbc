@@ -68,6 +68,17 @@ public interface RiverSource {
      * @return this river source
      */
     RiverSource password(String password);
+    
+    /**
+     * Trinet: Ssl support
+     * @param ssl
+     * @return
+     */
+    RiverSource ssl(boolean ssl);
+    RiverSource keyStore(String keyStore);
+    RiverSource keyStorePassword(String keyStorePassword);
+    RiverSource trustStore(String strustStore);
+    RiverSource trustStorePassword(String trustStorePassword);
 
     /**
      * Set rounding for transporting java.math.BigDecimal
