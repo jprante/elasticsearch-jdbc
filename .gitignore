@@ -5,3 +5,4 @@
 target
 *.db
 data
+*.settings
