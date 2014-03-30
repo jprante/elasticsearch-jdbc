@@ -69,21 +69,6 @@ public interface RiverSource {
      */
     RiverSource password(String password);
 
-    /**
-     * Set rounding for transporting java.math.BigDecimal
-     *
-     * @param rounding rounding
-     * @return this river source
-     */
-    RiverSource rounding(String rounding);
-
-    /**
-     * Set scale precision for transporting java.math.BigDecimal
-     *
-     * @param scale scale
-     * @return this river source
-     */
-    RiverSource precision(int scale);
 
     /**
      * Get a connection for reading data

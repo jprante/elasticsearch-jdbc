@@ -204,5 +204,22 @@ public class ValueListenerTests extends Assert {
         );
     }
 
+    @Test
+    public void testJSONWithNull() throws Exception {
+        List<String> columns = Arrays.asList("_optype", "_id", "message", "person", "person.attributes");
+        List<String> row1 = Arrays.asList("index", "1", "{\"Hello\":\"World\"}", "{\"name\":[\"Joe\",\"John\"]}", "{\"haircolor\":\"blue\"}");
+        List<String> row2 = Arrays.asList("index", "1", null, "{\"name\":[\"Joe\",\"John\"]}", "{\"haircolor\":\"blue\"}");
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverKeyValueStreamListener()
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .values(row2)
+                .end();
+        //assertEquals(output.data().toString(),
+        //        "{[index/null/null/1]->{message=\"{Hello=World}\", person=\"{name=[Joe, John], attributes=\"{haircolor=blue}\"}\"}={\"message\":{\"Hello\":\"World\"},\"person\":{\"name\":[\"Joe\",\"John\"],\"attributes\":{\"haircolor\":\"blue\"}}}}"
+        //);
+    }
 
 }

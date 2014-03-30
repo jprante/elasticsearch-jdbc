@@ -8,6 +8,7 @@ import org.elasticsearch.client.Client;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
@@ -111,6 +112,11 @@ public class MockRiverMouth implements RiverMouth {
 
     @Override
     public RiverMouth setMaxConcurrentBulkRequests(int max) {
+        return this;
+    }
+
+    @Override
+    public RiverMouth setMaxVolumePerBulkRequest(ByteSizeValue maxVolumePerBulkRequest) {
         return this;
     }
 

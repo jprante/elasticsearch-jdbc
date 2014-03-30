@@ -2,6 +2,7 @@
 package org.xbib.elasticsearch.river.jdbc.support;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -93,6 +94,14 @@ public class RiverContext {
      */
     private Locale locale;
 
+    private int rounding;
+
+    private int scale = -1;
+
+    private String resultSetType = "TYPE_FORWARD_ONLY";
+
+    private String resultSetConcurrency = "CONCUR_UPDATABLE";
+
     /**
      * Column name that contains creation time (for column strategy)
      */
@@ -158,13 +167,13 @@ public class RiverContext {
         return mouth;
     }
 
-    public RiverContext locale(String languageTag) {
+    public RiverContext setLocale(String languageTag) {
         this.locale = LocaleUtil.toLocale(languageTag);
         Locale.setDefault(locale); // for JDBC drivers internals
         return this;
     }
 
-    public Locale locale() {
+    public Locale getLocale() {
         return locale;
     }
 
@@ -261,6 +270,58 @@ public class RiverContext {
     public RiverContext columnUpdatedAt(String updatedAt) {
         this.columnUpdatedAt = updatedAt;
         return this;
+    }
+
+    public RiverContext setRounding(String rounding) {
+        if ("ceiling".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_CEILING;
+        } else if ("down".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_DOWN;
+        } else if ("floor".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_FLOOR;
+        } else if ("halfdown".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_DOWN;
+        } else if ("halfeven".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_EVEN;
+        } else if ("halfup".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_UP;
+        } else if ("unnecessary".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_UNNECESSARY;
+        } else if ("up".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_UP;
+        }
+        return this;
+    }
+
+    public int getRounding() {
+        return rounding;
+    }
+
+    public RiverContext setScale(int scale) {
+        this.scale = scale;
+        return this;
+    }
+
+    public int getScale() {
+        return scale;
+    }
+
+    public RiverContext setResultSetType(String resultSetType) {
+        this.resultSetType = resultSetType;
+        return this;
+    }
+
+    public String getResultSetType() {
+        return resultSetType;
+    }
+
+    public RiverContext setResultSetConcurrency(String resultSetConcurrency) {
+        this.resultSetConcurrency = resultSetConcurrency;
+        return this;
+    }
+
+    public String getResultSetConcurrency() {
+        return resultSetConcurrency;
     }
 
     public String columnUpdatedAt() {

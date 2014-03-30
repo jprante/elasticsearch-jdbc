@@ -54,16 +54,6 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public RiverSource rounding(String rounding) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public RiverSource precision(int scale) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public Connection connectionForReading() throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }

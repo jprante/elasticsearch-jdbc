@@ -1,0 +1,17 @@
+{
+    "jdbc" : {
+        "strategy" : "ingest",
+        "url" : "jdbc:derby:memory:myDB",
+        "user" : "",
+        "password" : "",
+        "sql" : [
+            {
+                "statement : "{call count_products(?)}",
+                "parameter" : [ 1 ],
+                "callable" : true
+            }
+        ],
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
+    }
+}

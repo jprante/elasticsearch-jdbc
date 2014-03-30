@@ -1,18 +1,11 @@
 
-package org.xbib.elasticsearch.river.jdbc.strategy.simple;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+package org.xbib.elasticsearch.river.jdbc.strategy.ingest;
 
 import org.elasticsearch.ElasticsearchTimeoutException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
@@ -20,24 +13,29 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.action.ingest.IngestProcessor;
+import org.xbib.elasticsearch.action.ingest.IngestRequest;
+import org.xbib.elasticsearch.action.ingest.IngestResponse;
 import org.xbib.elasticsearch.gatherer.ControlKeys;
 import org.xbib.elasticsearch.gatherer.IndexableObject;
+import org.xbib.elasticsearch.river.jdbc.RiverMouth;
+import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+
+import java.io.IOException;
+import java.util.Map;
 
 /**
- * Simple river mouth
+ * Ingest processor based river mouth
  */
-public class SimpleRiverMouth implements RiverMouth {
+public class IngestRiverMouth implements RiverMouth {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
-
-    private static final AtomicInteger outstandingBulkRequests = new AtomicInteger(0);
+    private final ESLogger logger = ESLoggerFactory.getLogger(IngestRiverMouth.class.getName());
 
     protected RiverContext context;
 
@@ -53,15 +51,15 @@ public class SimpleRiverMouth implements RiverMouth {
 
     protected Client client;
 
-    private BulkProcessor bulk;
+    private IngestProcessor bulk;
 
     private int maxBulkActions = 100;
 
-    private int maxConcurrentBulkRequests = 30;
+    private int maxConcurrentBulkRequests = Runtime.getRuntime().availableProcessors() * 4;
 
-    private ByteSizeValue maxVolumePerBulkRequest = ByteSizeValue.parseBytesSizeValue("10mb");
+    private ByteSizeValue maxVolumePerBulkRequest = new ByteSizeValue(10, ByteSizeUnit.MB);
 
-    private TimeValue flushInterval = TimeValue.timeValueSeconds(5);
+    private TimeValue maxWait = TimeValue.timeValueSeconds(60);
 
     private volatile boolean error;
 
@@ -76,45 +74,42 @@ public class SimpleRiverMouth implements RiverMouth {
         return "simple";
     }
 
-    private final BulkProcessor.Listener listener = new BulkProcessor.Listener() {
+    private final IngestProcessor.Listener listener = new IngestProcessor.Listener() {
 
         @Override
-        public void beforeBulk(long executionId, BulkRequest request) {
-            long l = outstandingBulkRequests.incrementAndGet();
+        public void beforeBulk(long bulkId, int concurrency, IngestRequest request) {
             logger().info("new bulk [{}] of [{} items], {} outstanding bulk requests",
-                    executionId, request.numberOfActions(), l);
+                    bulkId, request.numberOfActions(), concurrency);
         }
 
         @Override
-        public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-            outstandingBulkRequests.decrementAndGet();
+        public void afterBulk(long bulkId, int concurrency, IngestResponse response) {
             logger().info("bulk [{}] success [{} items] [{}ms]",
-                    executionId, response.getItems().length, response.getTookInMillis());
+                    bulkId, response.successSize(), response.getTookInMillis());
         }
 
         @Override
-        public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
-            outstandingBulkRequests.decrementAndGet();
-            logger().error("bulk [" + executionId + "] error", failure);
+        public void afterBulk(long bulkId, int concurrency, Throwable failure) {
+            logger().error("bulk [" + bulkId + "] error", failure);
             error = true;
         }
     };
 
     @Override
-    public SimpleRiverMouth riverContext(RiverContext context) {
+    public IngestRiverMouth riverContext(RiverContext context) {
         this.context = context;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth client(Client client) {
+    public IngestRiverMouth client(Client client) {
         this.client = client;
-        this.bulk = BulkProcessor.builder(client, listener)
-                .setBulkActions(maxBulkActions - 1) // yes, offset by one (fixed in 1.1.0)
-                .setConcurrentRequests(maxConcurrentBulkRequests)
-                .setBulkSize(maxVolumePerBulkRequest)
-                .setFlushInterval(flushInterval)
-                .build();
+        this.bulk = new IngestProcessor(client,
+                maxBulkActions,
+                maxConcurrentBulkRequests,
+                maxVolumePerBulkRequest,
+                maxWait
+        );
         return this;
     }
 
@@ -124,19 +119,19 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setSettings(Map<String,Object> settings) {
+    public IngestRiverMouth setSettings(Map<String,Object> settings) {
         this.settings = settings;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth setMapping(Map<String,Object> mapping) {
+    public IngestRiverMouth setMapping(Map<String,Object> mapping) {
         this.mapping = mapping;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth setIndex(String index) {
+    public IngestRiverMouth setIndex(String index) {
         this.index = index;
         return this;
     }
@@ -147,7 +142,7 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setType(String type) {
+    public IngestRiverMouth setType(String type) {
         this.type = type;
         return this;
     }
@@ -158,7 +153,7 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setId(String id) {
+    public IngestRiverMouth setId(String id) {
         this.id = id;
         return this;
     }
@@ -169,26 +164,26 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setMaxBulkActions(int bulkSize) {
+    public IngestRiverMouth setMaxBulkActions(int bulkSize) {
         this.maxBulkActions = bulkSize;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth setMaxConcurrentBulkRequests(int max) {
+    public IngestRiverMouth setMaxConcurrentBulkRequests(int max) {
         this.maxConcurrentBulkRequests = max;
         return this;
     }
 
     @Override
-    public RiverMouth setMaxVolumePerBulkRequest(ByteSizeValue maxVolumePerBulkRequest) {
+    public IngestRiverMouth setMaxVolumePerBulkRequest(ByteSizeValue maxVolumePerBulkRequest) {
         this.maxVolumePerBulkRequest = maxVolumePerBulkRequest;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth setFlushInterval(TimeValue flushInterval) {
-        this.flushInterval = flushInterval;
+    public IngestRiverMouth setFlushInterval(TimeValue flushInterval) {
+        // ignore
         return this;
     }
 
@@ -272,24 +267,21 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void flush() throws IOException {
-        try {
-            // we must wait for flush interval... not really cool
-            Thread.sleep(flushInterval.millis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("interrupted (maybe harmless)");
-        }
+        bulk.flush();
     }
 
     @Override
     public void close() {
-        bulk.close();
+        try {
+            bulk.close();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private RiverMouth startup() {
         try {
-            //updateSettings();
-            //updateMapping();
             createIndexIfNotExists();
         } catch (Exception e) {
             if (ExceptionsHelper.unwrapCause(e) instanceof IndexAlreadyExistsException) {
@@ -302,30 +294,6 @@ public class SimpleRiverMouth implements RiverMouth {
         return this;
     }
 
-    private void updateSettings() {
-        if (error) {
-            logger().error("error, not updating settings");
-            return;
-        }
-        if (settings != null) {
-            client.admin().indices().prepareUpdateSettings(index)
-                    .setSettings(settings)
-                    .execute().actionGet();
-        }
-    }
-
-    private void updateMapping() {
-        if (error) {
-            logger().error("error, not updating mapping");
-            return;
-        }
-        if (mapping != null) {
-            client.admin().indices().preparePutMapping(index)
-                    .setType(type)
-                    .setSource(mapping)
-                    .execute().actionGet();
-        }
-    }
 
     private void createIndexIfNotExists() {
         if (error) {
@@ -344,6 +312,7 @@ public class SimpleRiverMouth implements RiverMouth {
         if (mapping != null) {
             createIndexRequestBuilder.addMapping(type, mapping);
         }
+        logger().debug("creating index with request {}", createIndexRequestBuilder.toString());
         createIndexRequestBuilder.execute().actionGet();
     }
 

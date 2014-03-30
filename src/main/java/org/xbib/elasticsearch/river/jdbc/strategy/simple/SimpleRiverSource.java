@@ -70,10 +70,6 @@ public class SimpleRiverSource implements RiverSource {
 
     protected Connection writeConnection;
 
-    private int rounding;
-
-    private int scale = -1;
-
     private final Map<String, Object> lastRow = newHashMap();
 
     private long lastRowCount;
@@ -414,9 +410,14 @@ public class SimpleRiverSource implements RiverSource {
             throw new SQLException("can't connect to source " + url);
         }
         logger().debug("preparing statement with SQL {}", sql);
-        return connection.prepareStatement(sql,
-                ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY);
+        int type =
+            "TYPE_FORWARD_ONLY".equals(context.getResultSetType()) ? ResultSet.TYPE_FORWARD_ONLY :
+            "TYPE_SCROLL_SENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_SENSITIVE :
+            "TYPE_SCROLL_INSENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_INSENSITIVE :
+                ResultSet.TYPE_FORWARD_ONLY;
+        int concurrency = "CONCUR_READ_ONLY".equals(context.getResultSetConcurrency()) ?
+                ResultSet.CONCUR_READ_ONLY : ResultSet.CONCUR_UPDATABLE;
+        return connection.prepareStatement(sql, type, concurrency);
     }
 
     /**
@@ -599,7 +600,7 @@ public class SimpleRiverSource implements RiverSource {
 
     private void processRow(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
-        Locale locale = context != null ? context.locale() != null ? context.locale() : Locale.getDefault() : Locale.getDefault();
+        Locale locale = context != null ? context.getLocale() != null ? context.getLocale() : Locale.getDefault() : Locale.getDefault();
         List<Object> values = newLinkedList();
         ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
@@ -687,33 +688,6 @@ public class SimpleRiverSource implements RiverSource {
         return this;
     }
 
-    @Override
-    public SimpleRiverSource rounding(String rounding) {
-        if ("ceiling".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_CEILING;
-        } else if ("down".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_DOWN;
-        } else if ("floor".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_FLOOR;
-        } else if ("halfdown".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_HALF_DOWN;
-        } else if ("halfeven".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_HALF_EVEN;
-        } else if ("halfup".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_HALF_UP;
-        } else if ("unnecessary".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_UNNECESSARY;
-        } else if ("up".equalsIgnoreCase(rounding)) {
-            this.rounding = BigDecimal.ROUND_UP;
-        }
-        return this;
-    }
-
-    @Override
-    public SimpleRiverSource precision(int scale) {
-        this.scale = scale;
-        return this;
-    }
 
     private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -1075,8 +1049,8 @@ public class SimpleRiverSource implements RiverSource {
                 if (bd == null || result.wasNull()) {
                     return null;
                 }
-                if (scale >= 0) {
-                    bd = bd.setScale(scale, rounding);
+                if (context.getScale() >= 0) {
+                    bd = bd.setScale(context.getScale(), context.getRounding());
                     try {
                         long l = bd.longValueExact();
                         if (Long.toString(l).equals(result.getString(i))) {

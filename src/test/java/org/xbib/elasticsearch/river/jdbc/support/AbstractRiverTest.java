@@ -47,7 +47,7 @@ public abstract class AbstractRiverTest extends Assert {
                 .riverSource(source)
                 .setRetries(1)
                 .setMaxRetryWait(TimeValue.timeValueSeconds(5))
-                .locale("en");
+                .setLocale("en");
         context.contextualize();
     }
 

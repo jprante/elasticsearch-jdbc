@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.gatherer.IndexableObject;
@@ -116,7 +117,14 @@ public interface RiverMouth {
     RiverMouth setMaxConcurrentBulkRequests(int max);
 
     /**
-     * Set flish interval
+     * Set maximum volume of a bulk request
+     * @param maxVolumePerBulkRequest the maxiumum byte size of a buk request
+     * @return this river mouth
+     */
+    RiverMouth setMaxVolumePerBulkRequest(ByteSizeValue maxVolumePerBulkRequest);
+
+    /**
+     * Set flush interval
      * @param flushInterval flush interval
      * @return this river mouth
      */

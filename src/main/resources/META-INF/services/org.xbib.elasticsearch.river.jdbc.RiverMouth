@@ -1,2 +1,3 @@
 org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouth
+org.xbib.elasticsearch.river.jdbc.strategy.ingest.IngestRiverMouth
 org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverMouth

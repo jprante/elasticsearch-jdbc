@@ -1,0 +1,12 @@
+{
+    "jdbc" : {
+        "strategy" : "ingest",
+        "url" : "jdbc:derby:memory:myDB",
+        "user" : "",
+        "password" : "",
+        "sql" : "select * from \"products\"",
+        "script" : "",
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
+    }
+}

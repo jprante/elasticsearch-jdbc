@@ -76,6 +76,107 @@
         </classes>
     </test>
 
+
+    <!--
+    <test name="Stored Procedure River Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="river5" value="derby/river-5.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <parameter name="sql2"
+                   value="create procedure count_products(IN n INTEGER, OUT result INTEGER) BEGIN select count(*) into result from &quot;products&quot; END"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverStoredProcedureTests"/>
+        </classes>
+    </test>
+    -->
+
+    <test name="Simple Scheduled River Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="river6" value="derby/river-6.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverScheduleTests"/>
+        </classes>
+    </test>
+
+
+    <test name="Ingest JDBC River Source Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="sql1" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql2" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql3" value="select * from &quot;products&quot; where &quot;amount&quot; is NULL"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.ingest.RiverSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="Ingest JDBC River Source Data Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="sql1"
+                   value="select &quot;products&quot;.&quot;name&quot; as &quot;product.name&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;product.customer.name&quot;, &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; as &quot;product.customer.bill&quot; from &quot;products&quot;, &quot;orders&quot; where &quot;products&quot;.&quot;name&quot; = &quot;orders&quot;.&quot;product&quot;"/>
+        <parameter name="sql2"
+                   value="select &quot;orders&quot;.&quot;department&quot; as &quot;_index&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;_id&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;contact.customer&quot;, &quot;employees&quot;.&quot;name&quot; as &quot;contact.employee&quot; from &quot;orders&quot; left join &quot;employees&quot; on &quot;orders&quot;.&quot;department&quot; = &quot;employees&quot;.&quot;department&quot;"/>
+        <parameter name="sql3"
+                   value="select &quot;products&quot;.&quot;name&quot; as &quot;product.name&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;product.customer.name&quot;, &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; as &quot;product.customer.bill&quot; from &quot;products&quot;, &quot;orders&quot; where &quot;products&quot;.&quot;name&quot; = &quot;orders&quot;.&quot;product&quot; and &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; > ?"/>
+        <parameter name="sql4"
+                   value="select &quot;products&quot;.&quot;name&quot; as &quot;product.name&quot;, &quot;orders&quot;.&quot;customer&quot; as &quot;product.customer.name&quot;, &quot;orders&quot;.&quot;quantity&quot; * &quot;products&quot;.&quot;price&quot; as &quot;product.customer.bill&quot; from &quot;products&quot;, &quot;orders&quot; where &quot;products&quot;.&quot;name&quot; = &quot;orders&quot;.&quot;product&quot; and {fn timestampdiff(SQL_TSI_DAY, cast(? as timestamp), &quot;orders&quot;.&quot;created&quot;)} > 14"/>
+        <parameter name="sql5"
+                   value="select &apos;product&apos; as &quot;_index&quot;, &quot;orders&quot;.&quot;department&quot; as &quot;_id&quot;, &quot;orders&quot;.&quot;product&quot; as &quot;orders.product&quot; from &quot;orders&quot; "/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.ingest.RiverSourceDataTests"/>
+        </classes>
+    </test>
+
+    <test name="Ingest JDBC River Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="river1" value="derby/river-1.json"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.ingest.RiverTests"/>
+        </classes>
+    </test>
+
+    <test name="Ingest JDBC River Data Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="river2" value="derby/river-2.json"/>
+        <parameter name="river3" value="derby/river-3.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.ingest.RiverDataTests"/>
+        </classes>
+    </test>
+
+    <test name="Ingest JDBC River Job Tests">
+        <parameter name="create" value="derby/create-jobtables.sql"/>
+        <parameter name="delete" value="derby/delete-jobtables.sql"/>
+        <parameter name="river1" value="derby/jobriver-1.json"/>
+        <parameter name="sql1" value="select count(*) from &quot;products&quot;"/>
+        <parameter name="sql2"
+                   value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.ingest.RiverJobTests"/>
+        </classes>
+    </test>
+
+    <test name="Ingest Scheduled River Tests">
+        <parameter name="create" value="derby/create-ordertables.sql"/>
+        <parameter name="delete" value="derby/delete-ordertables.sql"/>
+        <parameter name="river6" value="derby/river-6.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.ingest.RiverScheduleTests"/>
+        </classes>
+    </test>
+
     
     <test name="Column JDBC River Tests">
         <parameter name="create" value="derby/create-producttables.sql"/>
@@ -95,30 +196,6 @@
         </classes>
     </test>
 
-    <!--
-    <test name="Stored Procedure River Tests">
-        <parameter name="create" value="derby/create-ordertables.sql"/>
-        <parameter name="delete" value="derby/delete-ordertables.sql"/>
-        <parameter name="river5" value="derby/river-5.json"/>
-        <parameter name="sql1"
-                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
-        <parameter name="sql2"
-                   value="create procedure count_products(IN n INTEGER, OUT result INTEGER) BEGIN select count(*) into result from &quot;products&quot; END"/>
-        <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverStoredProcedureTests"/>
-        </classes>
-    </test>
-    -->
 
-    <test name="Scheduled River Tests">
-        <parameter name="create" value="derby/create-ordertables.sql"/>
-        <parameter name="delete" value="derby/delete-ordertables.sql"/>
-        <parameter name="river6" value="derby/river-6.json"/>
-        <parameter name="sql1"
-                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
-        <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverScheduleTests"/>
-        </classes>
-    </test>
 
 </suite>

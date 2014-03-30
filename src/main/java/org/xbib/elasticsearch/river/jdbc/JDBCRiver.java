@@ -86,8 +86,14 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
         int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
         int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
         TimeValue maxretrywait =
-                XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"), TimeValue.timeValueSeconds(30));
-        String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"), LocaleUtil.fromLocale(Locale.getDefault()));
+                XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
+                        TimeValue.timeValueSeconds(30));
+        String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"),
+                LocaleUtil.fromLocale(Locale.getDefault()));
+        String resultSetType = XContentMapValues.nodeStringValue(mySettings.get("resultset_type"),
+                "TYPE_FORWARD_ONLY");
+        String resultSetConcurrency = XContentMapValues.nodeStringValue(mySettings.get("resultset_concurrency"),
+                "CONCUR_UPDATABLE");
 
         // defaults for column strategy
         String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("created_at"), "created_at");
@@ -120,9 +126,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
 
         riverSource.url(url)
                 .user(user)
-                .password(password)
-                .rounding(rounding)
-                .precision(scale);
+                .password(password);
 
         riverMouth.setSettings(indexSettings)
                 .setMapping(typeMapping)
@@ -139,7 +143,9 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .riverSource(riverSource)
                 .riverMouth(riverMouth)
                 .riverFlow(riverFlow)
-                .locale(locale)
+                .setLocale(locale)
+                .setRounding(rounding)
+                .setScale(scale)
                 .setSchedule(schedule)
                 .setPoolSize(poolsize)
                 .setInterval(interval)
@@ -149,6 +155,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                 .setFetchSize(fetchsize)
                 .setRetries(maxretries)
                 .setMaxRetryWait(maxretrywait)
+                .setResultSetType(resultSetType)
+                .setResultSetConcurrency(resultSetConcurrency)
                 .columnCreatedAt(columnCreatedAt)
                 .columnUpdatedAt(columnUpdatedAt)
                 .columnDeletedAt(columnDeletedAt)
