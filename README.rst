@@ -61,9 +61,13 @@ Documentation
 
 Attention: working on the documentation for 1.0.0.x is still in progress!
 
+`Overview <../../../elasticsearch-river-jdbc/wiki/_pages>`_
+
 `Quickstart <../../../elasticsearch-river-jdbc/wiki/Quickstart>`_
 
 `JDBC river parameters <../../../elasticsearch-river-jdbc/wiki/JDBC-River-parameters>`_
+
+`How to declare a sequence of SQL statements per river run <../../../elasticsearch-river-jdbc/wiki/Using-a-series-of-SQL-statements>`_
 
 `Strategies <../../../elasticsearch-river-jdbc/wiki/Strategies>`_
 
