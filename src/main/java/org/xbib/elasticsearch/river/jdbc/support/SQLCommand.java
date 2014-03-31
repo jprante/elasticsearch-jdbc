@@ -1,16 +1,25 @@
 
 package org.xbib.elasticsearch.river.jdbc.support;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 import static org.elasticsearch.common.collect.Maps.newHashMap;
 
 public class SQLCommand {
+
+    private final static ESLogger logger = ESLoggerFactory.getLogger(SQLCommand.class.getName());
 
     private String sql;
 
@@ -20,7 +29,12 @@ public class SQLCommand {
 
     private boolean callable;
 
-    public SQLCommand setSQL(String sql) {
+    public SQLCommand setSQL(String sql) throws IOException {
+        if (sql.endsWith(".sql")) {
+            Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
+            sql = Streams.copyToString(r);
+            r.close();
+        }
         this.sql = sql;
         return this;
     }
@@ -76,37 +90,34 @@ public class SQLCommand {
         List<? super Object> list = (List<? super Object>) settings.get("sql");
         for (Object entry : list) {
             SQLCommand command = new SQLCommand();
-            if (entry instanceof Map) {
-                Map<String,Object> m = (Map<String,Object>)entry;
-                if (m.containsKey("statement")) {
-                    command.setSQL((String)m.get("statement"));
+            try {
+                if (entry instanceof Map) {
+                    Map<String, Object> m = (Map<String, Object>) entry;
+                    if (m.containsKey("statement")) {
+                        command.setSQL((String) m.get("statement"));
+                    }
+                    if (m.containsKey("parameter")) {
+                        command.setParameters(XContentMapValues.extractRawValues("parameter", m));
+                    }
+                    if (m.containsKey("callable")) {
+                        command.setCallable(XContentMapValues.nodeBooleanValue(m.get("callable")));
+                    }
+                    if (m.containsKey("register")) {
+                        command.setResults(XContentMapValues.nodeMapValue(m.get("register"), null));
+                    }
+                } else if (entry instanceof String) {
+                    command.setSQL((String) entry);
                 }
-                if (m.containsKey("parameter")) {
-                    command.setParameters(XContentMapValues.extractRawValues("parameter", m));
-                }
-                if (m.containsKey("callable")) {
-                    command.setCallable(XContentMapValues.nodeBooleanValue(m.get("callable")));
-                }
-                if (m.containsKey("register")) {
-                    command.setResults(XContentMapValues.nodeMapValue(m.get("register"), null));
-                }
-            } else if (entry instanceof String) {
-                command.setSQL((String)entry);
+                sql.add(command);
+            } catch (IOException e) {
+                logger.warn("SQL command not found", e);
             }
-            sql.add(command);
         }
         return sql;
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("statement=")
-                .append(sql)
-                .append(" parameter=")
-                .append(params)
-                .append(" callable=")
-                .append(callable);
-        return sb.toString();
+        return "statement=" + sql + " parameter=" + params + " callable=" + callable;
     }
 
 }

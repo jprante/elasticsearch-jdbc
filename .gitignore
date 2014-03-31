@@ -1,7 +1,11 @@
-.idea
+/data
+/work
+/logs
+/.idea
+/target
+.DS_Store
 *.iml
-.classpath
-.project
-target
-*.db
-data
+/.settings
+/.classpath
+/.project
+*~

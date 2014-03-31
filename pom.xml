@@ -70,7 +70,7 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <elasticsearch.version>1.0.0</elasticsearch.version>
-        <xbib.elasticsearch.support.version>1.0.0.3</xbib.elasticsearch.support.version>
+        <xbib.elasticsearch.support.version>1.0.0.2</xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>

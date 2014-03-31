@@ -1,10 +1,7 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -31,7 +28,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
@@ -254,14 +250,14 @@ public class SimpleRiverSource implements RiverSource {
                 // we must not use prepareStatement for Postgresql!
                 // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize set.
                 statement = connectionForReading().createStatement();
-                results = executeQuery(statement, expandSQL(command.getSQL()));
+                results = executeQuery(statement, command.getSQL());
                 KeyValueStreamListener listener = new RiverKeyValueStreamListener()
                         .output(context.riverMouth());
                 merge(results, listener);
             } else {
                 // use write connection
                 statement = connectionForWriting().createStatement();
-                executeUpdate(statement, expandSQL(command.getSQL()));
+                executeUpdate(statement, command.getSQL());
             }
         } finally {
             close(results);
@@ -280,14 +276,14 @@ public class SimpleRiverSource implements RiverSource {
         ResultSet results = null;
         try {
             if (command.isQuery()) {
-                statement = prepareQuery(expandSQL(command.getSQL()));
+                statement = prepareQuery(command.getSQL());
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
                 KeyValueStreamListener listener = new RiverKeyValueStreamListener()
                         .output(context.riverMouth());
                 merge(results, listener);
             } else {
-                statement = prepareUpdate(expandSQL(command.getSQL()));
+                statement = prepareUpdate(command.getSQL());
                 bind(statement, command.getParameters());
                 executeUpdate(statement);
             }
@@ -309,7 +305,7 @@ public class SimpleRiverSource implements RiverSource {
         try {
             // we do not make a difference betwwen read/write and we assume
             // it is safe to use the read connection and query the DB
-            statement = connectionForWriting().prepareCall(expandSQL(command.getSQL()));
+            statement = connectionForWriting().prepareCall(command.getSQL());
             if (!command.getParameters().isEmpty()) {
                 bind(statement, command.getParameters());
             }
@@ -317,7 +313,7 @@ public class SimpleRiverSource implements RiverSource {
                 register(statement, command.getResults());
             }
             boolean hasRows = statement.execute();
-            KeyValueStreamListener listener = new RiverKeyValueStreamListener()
+            RiverKeyValueStreamListener listener = new RiverKeyValueStreamListener()
                     .output(context.riverMouth());
             if (!hasRows) {
                 // merge from registered params
@@ -330,15 +326,6 @@ public class SimpleRiverSource implements RiverSource {
         } finally {
             close(statement);
         }
-    }
-
-    private String expandSQL(String sql) throws IOException {
-        if (sql.endsWith(".sql")) {
-            Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
-            sql = Streams.copyToString(r);
-            r.close();
-        }
-        return sql;
     }
 
     /**
@@ -429,15 +416,11 @@ public class SimpleRiverSource implements RiverSource {
      */
     @Override
     public PreparedStatement prepareUpdate(String sql) throws SQLException {
-        try {
-            Connection connection = connectionForWriting();
-            if (connection == null) {
-                throw new SQLException("can't connect to source " + url);
-            }
-            return connection.prepareStatement(expandSQL(sql));
-        } catch (IOException e) {
-            throw new SQLException("file not found: " + sql);
+        Connection connection = connectionForWriting();
+        if (connection == null) {
+            throw new SQLException("can't connect to source " + url);
         }
+        return connection.prepareStatement(sql);
     }
 
     /**
@@ -611,7 +594,7 @@ public class SimpleRiverSource implements RiverSource {
                 logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
             }
             values.add(value);
-            lastRow.put("$row." + metadata.getColumnLabel(i), results.getObject(i));
+            lastRow.put("$row." + metadata.getColumnLabel(i), value);
         }
         if (listener != null) {
             listener.values(values);
@@ -687,7 +670,6 @@ public class SimpleRiverSource implements RiverSource {
         }
         return this;
     }
-
 
     private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -1038,9 +1020,9 @@ public class SimpleRiverSource implements RiverSource {
             case Types.NUMERIC: {
                 BigDecimal bd = null;
                 try {
+                    // getBigDecimal() should get obsolete. Most seem to use getString/getObject anyway...
                     bd = result.getBigDecimal(i);
                 } catch (NullPointerException e) {
-                    // getBigDecimal() should get obsolete. Most seem to use getString/getObject anyway...
                     // But is it true? JDBC NPE exists since 13 years?
                     // http://forums.codeguru.com/archive/index.php/t-32443.html
                     // Null values are driving us nuts in JDBC:
