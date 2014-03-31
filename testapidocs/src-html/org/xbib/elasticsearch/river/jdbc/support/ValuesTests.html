@@ -1,111 +1,116 @@
-<HTML>
-<BODY BGCOLOR="white">
-<PRE>
-<FONT color="green">001</FONT>    <a name="line.1"></a>
-<FONT color="green">002</FONT>    package org.xbib.elasticsearch.river.jdbc.support;<a name="line.2"></a>
-<FONT color="green">003</FONT>    <a name="line.3"></a>
-<FONT color="green">004</FONT>    import org.testng.Assert;<a name="line.4"></a>
-<FONT color="green">005</FONT>    import org.testng.annotations.Test;<a name="line.5"></a>
-<FONT color="green">006</FONT>    import org.xbib.elasticsearch.gatherer.Values;<a name="line.6"></a>
-<FONT color="green">007</FONT>    <a name="line.7"></a>
-<FONT color="green">008</FONT>    /**<a name="line.8"></a>
-<FONT color="green">009</FONT>     * Unit-test checking basic functionality of {@link Values}.<a name="line.9"></a>
-<FONT color="green">010</FONT>     * @author pdegeus<a name="line.10"></a>
-<FONT color="green">011</FONT>     */<a name="line.11"></a>
-<FONT color="green">012</FONT>    public class ValuesTests extends Assert {<a name="line.12"></a>
-<FONT color="green">013</FONT>    <a name="line.13"></a>
-<FONT color="green">014</FONT>        @Test<a name="line.14"></a>
-<FONT color="green">015</FONT>        public void testSingleValue() {<a name="line.15"></a>
-<FONT color="green">016</FONT>            Values&lt;String&gt; vs = new Values&lt;String&gt;(null, "TEST", false);<a name="line.16"></a>
-<FONT color="green">017</FONT>    <a name="line.17"></a>
-<FONT color="green">018</FONT>            Object[] values = vs.getValues();<a name="line.18"></a>
-<FONT color="green">019</FONT>            assertEquals(1, values.length);<a name="line.19"></a>
-<FONT color="green">020</FONT>            assertEquals("TEST", values[0]);<a name="line.20"></a>
-<FONT color="green">021</FONT>        }<a name="line.21"></a>
-<FONT color="green">022</FONT>    <a name="line.22"></a>
-<FONT color="green">023</FONT>        @Test<a name="line.23"></a>
-<FONT color="green">024</FONT>        public void testSingleNull() {<a name="line.24"></a>
-<FONT color="green">025</FONT>            Values&lt;String&gt; vs = new Values&lt;String&gt;(null, null, false);<a name="line.25"></a>
-<FONT color="green">026</FONT>    <a name="line.26"></a>
-<FONT color="green">027</FONT>            Object[] values = vs.getValues();<a name="line.27"></a>
-<FONT color="green">028</FONT>            assertEquals(values.length, 1);<a name="line.28"></a>
-<FONT color="green">029</FONT>            assertEquals(values[0], null);<a name="line.29"></a>
-<FONT color="green">030</FONT>        }<a name="line.30"></a>
-<FONT color="green">031</FONT>    <a name="line.31"></a>
-<FONT color="green">032</FONT>        @Test<a name="line.32"></a>
-<FONT color="green">033</FONT>        public void testMultipleValues() {<a name="line.33"></a>
-<FONT color="green">034</FONT>            Values&lt;String&gt; vs = null;<a name="line.34"></a>
-<FONT color="green">035</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.35"></a>
-<FONT color="green">036</FONT>            vs = new Values&lt;String&gt;(vs, "TEST2", false);<a name="line.36"></a>
-<FONT color="green">037</FONT>    <a name="line.37"></a>
-<FONT color="green">038</FONT>            Object[] values = vs.getValues();<a name="line.38"></a>
-<FONT color="green">039</FONT>            assertEquals(values.length, 2);<a name="line.39"></a>
-<FONT color="green">040</FONT>            assertEquals(values[0], "TEST");<a name="line.40"></a>
-<FONT color="green">041</FONT>            assertEquals(values[1], "TEST2");<a name="line.41"></a>
-<FONT color="green">042</FONT>        }<a name="line.42"></a>
-<FONT color="green">043</FONT>    <a name="line.43"></a>
-<FONT color="green">044</FONT>        @Test<a name="line.44"></a>
-<FONT color="green">045</FONT>        public void testMultipleValuesNullFirst() {<a name="line.45"></a>
-<FONT color="green">046</FONT>            Values&lt;String&gt; vs = null;<a name="line.46"></a>
-<FONT color="green">047</FONT>            vs = new Values&lt;String&gt;(vs, null, false);<a name="line.47"></a>
-<FONT color="green">048</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.48"></a>
-<FONT color="green">049</FONT>    <a name="line.49"></a>
-<FONT color="green">050</FONT>            Object[] values = vs.getValues();<a name="line.50"></a>
-<FONT color="green">051</FONT>            assertEquals(values.length, 1);<a name="line.51"></a>
-<FONT color="green">052</FONT>            assertEquals(values[0], "TEST");<a name="line.52"></a>
-<FONT color="green">053</FONT>        }<a name="line.53"></a>
-<FONT color="green">054</FONT>    <a name="line.54"></a>
-<FONT color="green">055</FONT>        @Test<a name="line.55"></a>
-<FONT color="green">056</FONT>        public void testMultipleValuesNullLast() {<a name="line.56"></a>
-<FONT color="green">057</FONT>            Values&lt;String&gt; vs = null;<a name="line.57"></a>
-<FONT color="green">058</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.58"></a>
-<FONT color="green">059</FONT>            vs = new Values&lt;String&gt;(vs, null, false);<a name="line.59"></a>
-<FONT color="green">060</FONT>    <a name="line.60"></a>
-<FONT color="green">061</FONT>            Object[] values = vs.getValues();<a name="line.61"></a>
-<FONT color="green">062</FONT>            assertEquals(values.length, 1);<a name="line.62"></a>
-<FONT color="green">063</FONT>            assertEquals(values[0], "TEST");<a name="line.63"></a>
-<FONT color="green">064</FONT>        }<a name="line.64"></a>
-<FONT color="green">065</FONT>    <a name="line.65"></a>
-<FONT color="green">066</FONT>        @Test<a name="line.66"></a>
-<FONT color="green">067</FONT>        public void testMultipleValuesWithDuplicates() {<a name="line.67"></a>
-<FONT color="green">068</FONT>            Values&lt;String&gt; vs = null;<a name="line.68"></a>
-<FONT color="green">069</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.69"></a>
-<FONT color="green">070</FONT>            vs = new Values&lt;String&gt;(vs, "TEST2", false);<a name="line.70"></a>
-<FONT color="green">071</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.71"></a>
-<FONT color="green">072</FONT>    <a name="line.72"></a>
-<FONT color="green">073</FONT>            Object[] values = vs.getValues();<a name="line.73"></a>
-<FONT color="green">074</FONT>            assertEquals(values.length, 2);<a name="line.74"></a>
-<FONT color="green">075</FONT>            assertEquals(values[0], "TEST");<a name="line.75"></a>
-<FONT color="green">076</FONT>            assertEquals(values[1], "TEST2");<a name="line.76"></a>
-<FONT color="green">077</FONT>        }<a name="line.77"></a>
-<FONT color="green">078</FONT>    <a name="line.78"></a>
-<FONT color="green">079</FONT>        @Test<a name="line.79"></a>
-<FONT color="green">080</FONT>        public void testMultipleValuesWithDuplicatesAndNull() {<a name="line.80"></a>
-<FONT color="green">081</FONT>            Values&lt;String&gt; vs = null;<a name="line.81"></a>
-<FONT color="green">082</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.82"></a>
-<FONT color="green">083</FONT>            vs = new Values&lt;String&gt;(vs, null, false);<a name="line.83"></a>
-<FONT color="green">084</FONT>            vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.84"></a>
-<FONT color="green">085</FONT>    <a name="line.85"></a>
-<FONT color="green">086</FONT>            Object[] values = vs.getValues();<a name="line.86"></a>
-<FONT color="green">087</FONT>            assertEquals(values.length, 1);<a name="line.87"></a>
-<FONT color="green">088</FONT>            assertEquals(values[0], "TEST");<a name="line.88"></a>
-<FONT color="green">089</FONT>        }<a name="line.89"></a>
-<FONT color="green">090</FONT>    <a name="line.90"></a>
-<FONT color="green">091</FONT>        @Test<a name="line.91"></a>
-<FONT color="green">092</FONT>        public void testExpandValue() {<a name="line.92"></a>
-<FONT color="green">093</FONT>            Values&lt;String&gt; vs = null;<a name="line.93"></a>
-<FONT color="green">094</FONT>            vs = new Values&lt;String&gt;(vs, "TEST,TEST2", true);<a name="line.94"></a>
-<FONT color="green">095</FONT>            vs = new Values&lt;String&gt;(vs, null, true);<a name="line.95"></a>
-<FONT color="green">096</FONT>            vs = new Values&lt;String&gt;(vs, "TEST3,TEST2", true);<a name="line.96"></a>
-<FONT color="green">097</FONT>    <a name="line.97"></a>
-<FONT color="green">098</FONT>            Object[] values = vs.getValues();<a name="line.98"></a>
-<FONT color="green">099</FONT>            assertEquals(values.length, 3);<a name="line.99"></a>
-<FONT color="green">100</FONT>            assertEquals(values[0], "TEST");<a name="line.100"></a>
-<FONT color="green">101</FONT>            assertEquals(values[1], "TEST2");<a name="line.101"></a>
-<FONT color="green">102</FONT>            assertEquals(values[2], "TEST3");<a name="line.102"></a>
-<FONT color="green">103</FONT>        }<a name="line.103"></a>
-<FONT color="green">104</FONT>    <a name="line.104"></a>
-<FONT color="green">105</FONT>    }<a name="line.105"></a>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span><a name="line.1"></a>
+<span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.support;<a name="line.2"></a>
+<span class="sourceLineNo">003</span><a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.testng.Assert;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.testng.annotations.Test;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.gatherer.Values;<a name="line.6"></a>
+<span class="sourceLineNo">007</span><a name="line.7"></a>
+<span class="sourceLineNo">008</span>/**<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Unit-test checking basic functionality of {@link Values}.<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * @author pdegeus<a name="line.10"></a>
+<span class="sourceLineNo">011</span> */<a name="line.11"></a>
+<span class="sourceLineNo">012</span>public class ValuesTests extends Assert {<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>    @Test<a name="line.14"></a>
+<span class="sourceLineNo">015</span>    public void testSingleValue() {<a name="line.15"></a>
+<span class="sourceLineNo">016</span>        Values&lt;String&gt; vs = new Values&lt;String&gt;(null, "TEST", false);<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>        Object[] values = vs.getValues();<a name="line.18"></a>
+<span class="sourceLineNo">019</span>        assertEquals(1, values.length);<a name="line.19"></a>
+<span class="sourceLineNo">020</span>        assertEquals("TEST", values[0]);<a name="line.20"></a>
+<span class="sourceLineNo">021</span>    }<a name="line.21"></a>
+<span class="sourceLineNo">022</span><a name="line.22"></a>
+<span class="sourceLineNo">023</span>    @Test<a name="line.23"></a>
+<span class="sourceLineNo">024</span>    public void testSingleNull() {<a name="line.24"></a>
+<span class="sourceLineNo">025</span>        Values&lt;String&gt; vs = new Values&lt;String&gt;(null, null, false);<a name="line.25"></a>
+<span class="sourceLineNo">026</span><a name="line.26"></a>
+<span class="sourceLineNo">027</span>        Object[] values = vs.getValues();<a name="line.27"></a>
+<span class="sourceLineNo">028</span>        assertEquals(values.length, 1);<a name="line.28"></a>
+<span class="sourceLineNo">029</span>        assertEquals(values[0], null);<a name="line.29"></a>
+<span class="sourceLineNo">030</span>    }<a name="line.30"></a>
+<span class="sourceLineNo">031</span><a name="line.31"></a>
+<span class="sourceLineNo">032</span>    @Test<a name="line.32"></a>
+<span class="sourceLineNo">033</span>    public void testMultipleValues() {<a name="line.33"></a>
+<span class="sourceLineNo">034</span>        Values&lt;String&gt; vs = null;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.35"></a>
+<span class="sourceLineNo">036</span>        vs = new Values&lt;String&gt;(vs, "TEST2", false);<a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>        Object[] values = vs.getValues();<a name="line.38"></a>
+<span class="sourceLineNo">039</span>        assertEquals(values.length, 2);<a name="line.39"></a>
+<span class="sourceLineNo">040</span>        assertEquals(values[0], "TEST");<a name="line.40"></a>
+<span class="sourceLineNo">041</span>        assertEquals(values[1], "TEST2");<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    }<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>    @Test<a name="line.44"></a>
+<span class="sourceLineNo">045</span>    public void testMultipleValuesNullFirst() {<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        Values&lt;String&gt; vs = null;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        vs = new Values&lt;String&gt;(vs, null, false);<a name="line.47"></a>
+<span class="sourceLineNo">048</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>        Object[] values = vs.getValues();<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        assertEquals(values.length, 1);<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        assertEquals(values[0], "TEST");<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    @Test<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public void testMultipleValuesNullLast() {<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        Values&lt;String&gt; vs = null;<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        vs = new Values&lt;String&gt;(vs, null, false);<a name="line.59"></a>
+<span class="sourceLineNo">060</span><a name="line.60"></a>
+<span class="sourceLineNo">061</span>        Object[] values = vs.getValues();<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        assertEquals(values.length, 1);<a name="line.62"></a>
+<span class="sourceLineNo">063</span>        assertEquals(values[0], "TEST");<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    }<a name="line.64"></a>
+<span class="sourceLineNo">065</span><a name="line.65"></a>
+<span class="sourceLineNo">066</span>    @Test<a name="line.66"></a>
+<span class="sourceLineNo">067</span>    public void testMultipleValuesWithDuplicates() {<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        Values&lt;String&gt; vs = null;<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        vs = new Values&lt;String&gt;(vs, "TEST2", false);<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>        Object[] values = vs.getValues();<a name="line.73"></a>
+<span class="sourceLineNo">074</span>        assertEquals(values.length, 2);<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        assertEquals(values[0], "TEST");<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        assertEquals(values[1], "TEST2");<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    }<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    @Test<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    public void testMultipleValuesWithDuplicatesAndNull() {<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        Values&lt;String&gt; vs = null;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        vs = new Values&lt;String&gt;(vs, null, false);<a name="line.83"></a>
+<span class="sourceLineNo">084</span>        vs = new Values&lt;String&gt;(vs, "TEST", false);<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>        Object[] values = vs.getValues();<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        assertEquals(values.length, 1);<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        assertEquals(values[0], "TEST");<a name="line.88"></a>
+<span class="sourceLineNo">089</span>    }<a name="line.89"></a>
+<span class="sourceLineNo">090</span><a name="line.90"></a>
+<span class="sourceLineNo">091</span>    @Test<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    public void testExpandValue() {<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        Values&lt;String&gt; vs = null;<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        vs = new Values&lt;String&gt;(vs, "TEST,TEST2", true);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        vs = new Values&lt;String&gt;(vs, null, true);<a name="line.95"></a>
+<span class="sourceLineNo">096</span>        vs = new Values&lt;String&gt;(vs, "TEST3,TEST2", true);<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>        Object[] values = vs.getValues();<a name="line.98"></a>
+<span class="sourceLineNo">099</span>        assertEquals(values.length, 3);<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        assertEquals(values[0], "TEST");<a name="line.100"></a>
+<span class="sourceLineNo">101</span>        assertEquals(values[1], "TEST2");<a name="line.101"></a>
+<span class="sourceLineNo">102</span>        assertEquals(values[2], "TEST3");<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    }<a name="line.103"></a>
+<span class="sourceLineNo">104</span><a name="line.104"></a>
+<span class="sourceLineNo">105</span>}<a name="line.105"></a>
 
 
 
@@ -166,6 +171,7 @@
 
 
 
-</PRE>
-</BODY>
-</HTML>
+</pre>
+</div>
+</body>
+</html>

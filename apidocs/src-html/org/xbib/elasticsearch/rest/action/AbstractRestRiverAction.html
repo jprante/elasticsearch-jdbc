@@ -1,78 +1,83 @@
-<HTML>
-<BODY BGCOLOR="white">
-<PRE>
-<FONT color="green">001</FONT>    package org.xbib.elasticsearch.rest.action;<a name="line.1"></a>
-<FONT color="green">002</FONT>    <a name="line.2"></a>
-<FONT color="green">003</FONT>    import java.io.IOException;<a name="line.3"></a>
-<FONT color="green">004</FONT>    import java.lang.reflect.Field;<a name="line.4"></a>
-<FONT color="green">005</FONT>    <a name="line.5"></a>
-<FONT color="green">006</FONT>    import org.elasticsearch.client.Client;<a name="line.6"></a>
-<FONT color="green">007</FONT>    import org.elasticsearch.common.collect.ImmutableMap;<a name="line.7"></a>
-<FONT color="green">008</FONT>    import org.elasticsearch.common.inject.Injector;<a name="line.8"></a>
-<FONT color="green">009</FONT>    import org.elasticsearch.common.settings.Settings;<a name="line.9"></a>
-<FONT color="green">010</FONT>    import org.elasticsearch.common.xcontent.XContentBuilder;<a name="line.10"></a>
-<FONT color="green">011</FONT>    import org.elasticsearch.rest.BaseRestHandler;<a name="line.11"></a>
-<FONT color="green">012</FONT>    import org.elasticsearch.rest.RestChannel;<a name="line.12"></a>
-<FONT color="green">013</FONT>    import org.elasticsearch.rest.RestRequest;<a name="line.13"></a>
-<FONT color="green">014</FONT>    import org.elasticsearch.rest.RestStatus;<a name="line.14"></a>
-<FONT color="green">015</FONT>    import org.elasticsearch.rest.XContentRestResponse;<a name="line.15"></a>
-<FONT color="green">016</FONT>    import org.elasticsearch.rest.XContentThrowableRestResponse;<a name="line.16"></a>
-<FONT color="green">017</FONT>    import org.elasticsearch.rest.action.support.RestXContentBuilder;<a name="line.17"></a>
-<FONT color="green">018</FONT>    import org.elasticsearch.river.River;<a name="line.18"></a>
-<FONT color="green">019</FONT>    import org.elasticsearch.river.RiverName;<a name="line.19"></a>
-<FONT color="green">020</FONT>    import org.elasticsearch.river.RiversService;<a name="line.20"></a>
-<FONT color="green">021</FONT>    <a name="line.21"></a>
-<FONT color="green">022</FONT>    public abstract class AbstractRestRiverAction extends BaseRestHandler {<a name="line.22"></a>
-<FONT color="green">023</FONT>    <a name="line.23"></a>
-<FONT color="green">024</FONT>        protected Injector injector;<a name="line.24"></a>
-<FONT color="green">025</FONT>    <a name="line.25"></a>
-<FONT color="green">026</FONT>        public AbstractRestRiverAction(Settings settings, Client client, Injector injector) {<a name="line.26"></a>
-<FONT color="green">027</FONT>            super(settings, client);<a name="line.27"></a>
-<FONT color="green">028</FONT>            this.injector = injector;<a name="line.28"></a>
-<FONT color="green">029</FONT>        }<a name="line.29"></a>
-<FONT color="green">030</FONT>    <a name="line.30"></a>
-<FONT color="green">031</FONT>        protected void respond(boolean success, RestRequest request, RestChannel channel, String error, RestStatus status) {<a name="line.31"></a>
-<FONT color="green">032</FONT>            try {<a name="line.32"></a>
-<FONT color="green">033</FONT>                XContentBuilder builder = RestXContentBuilder.restContentBuilder(request);<a name="line.33"></a>
-<FONT color="green">034</FONT>                builder.startObject();<a name="line.34"></a>
-<FONT color="green">035</FONT>                builder.field("success", success);<a name="line.35"></a>
-<FONT color="green">036</FONT>                if (error != null) {<a name="line.36"></a>
-<FONT color="green">037</FONT>                    builder.field("error", error);<a name="line.37"></a>
-<FONT color="green">038</FONT>                }<a name="line.38"></a>
-<FONT color="green">039</FONT>                builder.endObject();<a name="line.39"></a>
-<FONT color="green">040</FONT>                channel.sendResponse(new XContentRestResponse(request, status, builder));<a name="line.40"></a>
-<FONT color="green">041</FONT>            } catch (IOException e) {<a name="line.41"></a>
-<FONT color="green">042</FONT>                errorResponse(request, channel, e);<a name="line.42"></a>
-<FONT color="green">043</FONT>            }<a name="line.43"></a>
-<FONT color="green">044</FONT>        }<a name="line.44"></a>
-<FONT color="green">045</FONT>    <a name="line.45"></a>
-<FONT color="green">046</FONT>        protected void errorResponse(RestRequest request, RestChannel channel, Throwable e) {<a name="line.46"></a>
-<FONT color="green">047</FONT>            try {<a name="line.47"></a>
-<FONT color="green">048</FONT>                channel.sendResponse(new XContentThrowableRestResponse(request, e));<a name="line.48"></a>
-<FONT color="green">049</FONT>            } catch (IOException e1) {<a name="line.49"></a>
-<FONT color="green">050</FONT>                logger.error("Failed to send failure response", e1);<a name="line.50"></a>
-<FONT color="green">051</FONT>            }<a name="line.51"></a>
-<FONT color="green">052</FONT>        }<a name="line.52"></a>
-<FONT color="green">053</FONT>    <a name="line.53"></a>
-<FONT color="green">054</FONT>        /**<a name="line.54"></a>
-<FONT color="green">055</FONT>         * Retrieve the registered rivers using reflection (UGLY HACK!!)<a name="line.55"></a>
-<FONT color="green">056</FONT>         * TODO: Obtain the rivers using public API<a name="line.56"></a>
-<FONT color="green">057</FONT>         * @param injector injector<a name="line.57"></a>
-<FONT color="green">058</FONT>         * @return map of rivers or null if not possible<a name="line.58"></a>
-<FONT color="green">059</FONT>         */<a name="line.59"></a>
-<FONT color="green">060</FONT>        protected ImmutableMap&lt;RiverName, River&gt; rivers(Injector injector) {<a name="line.60"></a>
-<FONT color="green">061</FONT>            RiversService riversService = injector.getInstance(RiversService.class);<a name="line.61"></a>
-<FONT color="green">062</FONT>            try {<a name="line.62"></a>
-<FONT color="green">063</FONT>                Field field = RiversService.class.getDeclaredField("rivers");<a name="line.63"></a>
-<FONT color="green">064</FONT>                field.setAccessible(true);<a name="line.64"></a>
-<FONT color="green">065</FONT>                return (ImmutableMap&lt;RiverName, River&gt;) field.get(riversService);<a name="line.65"></a>
-<FONT color="green">066</FONT>            } catch (NoSuchFieldException e) {<a name="line.66"></a>
-<FONT color="green">067</FONT>                return null;<a name="line.67"></a>
-<FONT color="green">068</FONT>            } catch (IllegalAccessException e) {<a name="line.68"></a>
-<FONT color="green">069</FONT>                return null;<a name="line.69"></a>
-<FONT color="green">070</FONT>            }<a name="line.70"></a>
-<FONT color="green">071</FONT>        }<a name="line.71"></a>
-<FONT color="green">072</FONT>    }<a name="line.72"></a>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.rest.action;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import java.io.IOException;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import java.lang.reflect.Field;<a name="line.4"></a>
+<span class="sourceLineNo">005</span><a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.elasticsearch.client.Client;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.elasticsearch.common.collect.ImmutableMap;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.elasticsearch.common.inject.Injector;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.elasticsearch.common.settings.Settings;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.elasticsearch.common.xcontent.XContentBuilder;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import org.elasticsearch.rest.BaseRestHandler;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import org.elasticsearch.rest.RestChannel;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import org.elasticsearch.rest.RestRequest;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.elasticsearch.rest.RestStatus;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.elasticsearch.rest.XContentRestResponse;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.elasticsearch.rest.XContentThrowableRestResponse;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.elasticsearch.rest.action.support.RestXContentBuilder;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.elasticsearch.river.River;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.elasticsearch.river.RiverName;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.elasticsearch.river.RiversService;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>public abstract class AbstractRestRiverAction extends BaseRestHandler {<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>    protected Injector injector;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>    public AbstractRestRiverAction(Settings settings, Client client, Injector injector) {<a name="line.26"></a>
+<span class="sourceLineNo">027</span>        super(settings, client);<a name="line.27"></a>
+<span class="sourceLineNo">028</span>        this.injector = injector;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>    }<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>    protected void respond(boolean success, RestRequest request, RestChannel channel, String error, RestStatus status) {<a name="line.31"></a>
+<span class="sourceLineNo">032</span>        try {<a name="line.32"></a>
+<span class="sourceLineNo">033</span>            XContentBuilder builder = RestXContentBuilder.restContentBuilder(request);<a name="line.33"></a>
+<span class="sourceLineNo">034</span>            builder.startObject();<a name="line.34"></a>
+<span class="sourceLineNo">035</span>            builder.field("success", success);<a name="line.35"></a>
+<span class="sourceLineNo">036</span>            if (error != null) {<a name="line.36"></a>
+<span class="sourceLineNo">037</span>                builder.field("error", error);<a name="line.37"></a>
+<span class="sourceLineNo">038</span>            }<a name="line.38"></a>
+<span class="sourceLineNo">039</span>            builder.endObject();<a name="line.39"></a>
+<span class="sourceLineNo">040</span>            channel.sendResponse(new XContentRestResponse(request, status, builder));<a name="line.40"></a>
+<span class="sourceLineNo">041</span>        } catch (IOException e) {<a name="line.41"></a>
+<span class="sourceLineNo">042</span>            errorResponse(request, channel, e);<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        }<a name="line.43"></a>
+<span class="sourceLineNo">044</span>    }<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>    protected void errorResponse(RestRequest request, RestChannel channel, Throwable e) {<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        try {<a name="line.47"></a>
+<span class="sourceLineNo">048</span>            channel.sendResponse(new XContentThrowableRestResponse(request, e));<a name="line.48"></a>
+<span class="sourceLineNo">049</span>        } catch (IOException e1) {<a name="line.49"></a>
+<span class="sourceLineNo">050</span>            logger.error("Failed to send failure response", e1);<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        }<a name="line.51"></a>
+<span class="sourceLineNo">052</span>    }<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>    /**<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     * Retrieve the registered rivers using reflection (UGLY HACK!!)<a name="line.55"></a>
+<span class="sourceLineNo">056</span>     * TODO: Obtain the rivers using public API<a name="line.56"></a>
+<span class="sourceLineNo">057</span>     * @param injector injector<a name="line.57"></a>
+<span class="sourceLineNo">058</span>     * @return map of rivers or null if not possible<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     */<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    protected ImmutableMap&lt;RiverName, River&gt; rivers(Injector injector) {<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        RiversService riversService = injector.getInstance(RiversService.class);<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        try {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>            Field field = RiversService.class.getDeclaredField("rivers");<a name="line.63"></a>
+<span class="sourceLineNo">064</span>            field.setAccessible(true);<a name="line.64"></a>
+<span class="sourceLineNo">065</span>            return (ImmutableMap&lt;RiverName, River&gt;) field.get(riversService);<a name="line.65"></a>
+<span class="sourceLineNo">066</span>        } catch (NoSuchFieldException e) {<a name="line.66"></a>
+<span class="sourceLineNo">067</span>            return null;<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        } catch (IllegalAccessException e) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>            return null;<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        }<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    }<a name="line.71"></a>
+<span class="sourceLineNo">072</span>}<a name="line.72"></a>
 
 
 
@@ -133,6 +138,7 @@
 
 
 
-</PRE>
-</BODY>
-</HTML>
+</pre>
+</div>
+</body>
+</html>
