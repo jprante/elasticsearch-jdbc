@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.0.0.2</version>
+    <version>1.1.0.0</version>
 
     <packaging>jar</packaging>
 
@@ -69,8 +69,8 @@
     <properties>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <elasticsearch.version>1.0.0</elasticsearch.version>
-        <xbib.elasticsearch.support.version>1.0.0.2</xbib.elasticsearch.support.version>
+        <elasticsearch.version>1.1.0</elasticsearch.version>
+        <xbib.elasticsearch.support.version>1.1.0.1</xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>

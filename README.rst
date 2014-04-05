@@ -41,6 +41,7 @@ ES version     Plugin       Release date       Command
 0.90.3         0.90.3.1     Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1emqDH9
 0.90.10        0.90.10.2    Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1a8Mcve
 1.0.0          1.0.0.2      Mar 31, 2014       ./bin/plugin --install river-jdbc --url http://bit.ly/1gIk4jW
+1.1.0          1.1.0.0      Apr 5, 2014        ./bin/plugin --install river-jdbc --url http://bit.ly/1iadfnF
 =============  ===========  =================  =============================================================
 
 Do not forget to restart the node after installing.
