@@ -10,13 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-
 import org.xbib.elasticsearch.river.jdbc.JDBCRiver;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.support.AbstractRiverNodeTest;
@@ -25,6 +26,8 @@ import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 
 public class SimpleRiverJobTests extends AbstractRiverNodeTest {
 
+	private static final ESLogger logger = Loggers.getLogger(SimpleRiverJobTests.class.getSimpleName());
+	
     @Override
     public RiverSource getRiverSource() {
         return new SimpleRiverSource();
@@ -52,7 +55,11 @@ public class SimpleRiverJobTests extends AbstractRiverNodeTest {
         source.closeReading();
         assertEquals(count, 100);
         Client client = client("1");
-        assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 0);
+        try {
+			assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 0);
+		} catch (ElasticsearchException e) {
+			logger.error("Unable to execute search request due to {}", e, e.toString());
+		}
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);
         river.once();
