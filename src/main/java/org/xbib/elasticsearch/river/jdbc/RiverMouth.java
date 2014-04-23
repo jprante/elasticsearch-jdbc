@@ -159,6 +159,8 @@ public interface RiverMouth {
      * Close this river mouth
      */
     void close();
+    
+    void flushAndClose() throws IOException;
 
     void waitForCluster() throws IOException;
 

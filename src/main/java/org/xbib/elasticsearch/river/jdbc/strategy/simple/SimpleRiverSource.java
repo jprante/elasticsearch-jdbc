@@ -373,9 +373,9 @@ public class SimpleRiverSource implements RiverSource {
         }
         List<String> keys = newLinkedList();
         List<Object> values = newLinkedList();
-        for (String key : map.keySet()) {
-            keys.add(key);
-            Map<String,Object> m = (Map<String,Object>)map.get(key);
+        for (Map.Entry<String, Object> entry: map.entrySet()) {
+            keys.add(entry.getKey());
+            Map<String,Object> m = (Map<String,Object>)entry.getValue();
             values.add(statement.getObject((Integer) m.get("pos")));
         }
         listener.keys(keys);

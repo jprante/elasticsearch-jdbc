@@ -1,6 +1,7 @@
 
 package org.xbib.elasticsearch.river.jdbc;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -16,7 +17,6 @@ import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.River;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-
 import org.xbib.elasticsearch.river.jdbc.support.LocaleUtil;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.RiverServiceLoader;
@@ -193,7 +193,11 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
             riverSource.closeWriting();
         }
         if (riverMouth != null) {
-            riverMouth.close();
+            try {
+				riverMouth.flushAndClose(); //why not flush?
+			} catch (IOException e) {
+				//ignore
+			}
         }
     }
 
