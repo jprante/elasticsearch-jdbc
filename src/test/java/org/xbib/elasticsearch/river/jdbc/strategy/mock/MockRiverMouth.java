@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.elasticsearch.client.Client;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+//import org.elasticsearch.common.logging.ESLogger;
+//import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
@@ -18,7 +18,8 @@ import static org.elasticsearch.common.collect.Maps.newTreeMap;
 
 public class MockRiverMouth implements RiverMouth {
 
-    private static final ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
+	//(never used)
+	//private static final ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
 
     private Map<String, String> data;
 
@@ -131,6 +132,16 @@ public class MockRiverMouth implements RiverMouth {
 
     @Override
     public void close() {
+    }
+    
+    @Override
+    public void flushAndClose() throws IOException {
+    	
+    	try {
+			flush();
+		} finally {
+			close();
+		}
     }
 
     @Override

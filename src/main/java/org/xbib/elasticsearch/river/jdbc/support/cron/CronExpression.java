@@ -1421,7 +1421,7 @@ public final class CronExpression implements Cloneable {
         }
     }
 
-    private class ValueSet {
+    private static class ValueSet {
         int value;
         int pos;
     }

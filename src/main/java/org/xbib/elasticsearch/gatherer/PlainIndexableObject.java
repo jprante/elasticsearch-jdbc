@@ -161,9 +161,9 @@ public class PlainIndexableObject implements IndexableObject, ToXContent {
      */
     protected XContentBuilder toXContent(XContentBuilder builder, Params params, Map<String, Object> map) throws IOException {
         builder.startObject();
-        for (String k : map.keySet()) {
-            builder.field(k);
-            Object o = map.get(k);
+        for (Map.Entry<String, Object> k : map.entrySet()) {
+            builder.field(k.getKey());
+            Object o = k.getValue();
             if (o instanceof Values) {
                 Values v = (Values) o;
                 v.toXContent(builder, params);

@@ -1,7 +1,10 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.ingest;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 import org.testng.annotations.Parameters;
@@ -24,6 +27,8 @@ import java.util.UUID;
 
 public class RiverJobTests extends AbstractRiverNodeTest {
 
+	private static final ESLogger logger = Loggers.getLogger(RiverJobTests.class.getSimpleName());
+	
     @Override
     public RiverSource getRiverSource() {
         return new SimpleRiverSource();
@@ -51,7 +56,11 @@ public class RiverJobTests extends AbstractRiverNodeTest {
         source.closeReading();
         assertEquals(count, 100);
         Client client = client("1");
-        assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 0);
+        try {
+			assertEquals(client.prepareSearch(INDEX).execute().actionGet().getHits().getTotalHits(), 0);
+		} catch (ElasticsearchException e) {
+			logger.error("Unable to execute search request due to {}", e, e.toString());
+		}
         RiverSettings settings = riverSettings(riverResource);
         JDBCRiver river = new JDBCRiver(new RiverName(INDEX, TYPE), settings, client);
         river.once();

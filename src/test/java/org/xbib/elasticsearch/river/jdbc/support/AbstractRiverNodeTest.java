@@ -45,6 +45,7 @@ public abstract class AbstractRiverNodeTest extends AbstractRiverTest {
     @BeforeMethod
     public void createIndices() throws Exception {
         startNode("1").client();
+        client("1").admin().cluster().prepareHealth().setWaitForGreenStatus().execute().actionGet();
         client("1").admin().indices().create(new CreateIndexRequest(INDEX)).actionGet();
     }
 

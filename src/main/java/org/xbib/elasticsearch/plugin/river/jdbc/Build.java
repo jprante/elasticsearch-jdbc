@@ -33,7 +33,7 @@ public class Build {
                 }
                 in.close();
                 Properties props = new Properties();
-                props.load(new StringReader(new String(out.toByteArray())));
+                props.load(new StringReader(out.toString("UTF-8")));
                 String plugin = props.getProperty("plugin");
                 if (pluginName.equals(plugin)) {
                     version = props.getProperty("version");

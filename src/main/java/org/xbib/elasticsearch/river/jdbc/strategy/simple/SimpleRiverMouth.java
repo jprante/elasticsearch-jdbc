@@ -24,7 +24,6 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
-
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
 import org.xbib.elasticsearch.gatherer.ControlKeys;
@@ -38,6 +37,8 @@ public class SimpleRiverMouth implements RiverMouth {
     private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
 
     private static final AtomicInteger outstandingBulkRequests = new AtomicInteger(0);
+    
+    private static final AtomicInteger outstandingIndexRequests = new AtomicInteger(0);
 
     protected RiverContext context;
 
@@ -65,7 +66,7 @@ public class SimpleRiverMouth implements RiverMouth {
 
     private volatile boolean error;
 
-    private boolean started;
+    private volatile boolean started;
 
     protected ESLogger logger() {
         return logger;
@@ -90,6 +91,8 @@ public class SimpleRiverMouth implements RiverMouth {
             outstandingBulkRequests.decrementAndGet();
             logger().info("bulk [{}] success [{} items] [{}ms]",
                     executionId, response.getItems().length, response.getTookInMillis());
+            
+            outstandingIndexRequests.addAndGet(-response.getItems().length);
         }
 
         @Override
@@ -110,7 +113,7 @@ public class SimpleRiverMouth implements RiverMouth {
     public SimpleRiverMouth client(Client client) {
         this.client = client;
         this.bulk = BulkProcessor.builder(client, listener)
-                .setBulkActions(maxBulkActions - 1) // yes, offset by one (fixed in 1.1.0)
+                .setBulkActions(maxBulkActions) //https://github.com/elasticsearch/elasticsearch/commit/43b5d91de2d6a9f788845b2df86cb08f32c4bdec#diff-f5da36e1d41a9bd587117f9ddbc1d6be
                 .setConcurrentRequests(maxConcurrentBulkRequests)
                 .setBulkSize(maxVolumePerBulkRequest)
                 .setFlushInterval(flushInterval)
@@ -198,10 +201,9 @@ public class SimpleRiverMouth implements RiverMouth {
             logger().error("error, not indexing");
             return;
         }
-        if (!started) {
-            started = true;
-            startup();
-        }
+
+        ensureStarted();
+        
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -232,6 +234,7 @@ public class SimpleRiverMouth implements RiverMouth {
             request.ttl(Long.parseLong(object.meta(ControlKeys._ttl.name())));
         }
         bulk.add(request);
+        outstandingIndexRequests.incrementAndGet();
     }
 
     @Override
@@ -240,10 +243,9 @@ public class SimpleRiverMouth implements RiverMouth {
             logger().error("error, not indexing");
             return;
         }
-        if (!started) {
-            started = true;
-            startup();
-        }
+        
+        ensureStarted();
+        
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -272,21 +274,42 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void flush() throws IOException {
-        try {
-            // we must wait for flush interval... not really cool
-            Thread.sleep(flushInterval.millis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("interrupted (maybe harmless)");
-        }
+    	
+    	while(outstandingIndexRequests.get() > 0)
+    	{
+    		try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+	            throw new IOException("interrupted (maybe harmless)");
+			}
+    	}
     }
 
     @Override
     public void close() {
-        bulk.close();
+    	
+    	if(bulk != null) {
+    		bulk.close();
+    	}
+    }
+    
+    @Override
+    public void flushAndClose() throws IOException {
+    	
+    	try {
+			flush();
+		} finally {
+			close();
+		}
     }
 
-    private RiverMouth startup() {
+    private synchronized void ensureStarted() {
+    	
+    	if (started) {
+            return;
+        }
+    	
         try {
             //updateSettings();
             //updateMapping();
@@ -298,11 +321,16 @@ public class SimpleRiverMouth implements RiverMouth {
                 logger().warn("failed to create index", e);
                 error = true;
             }
-        }
-        return this;
+        }finally{
+        
+        	started = true;
+        
+        }    
+       
     }
 
-    private void updateSettings() {
+    /* (never used)
+     * private void updateSettings() {
         if (error) {
             logger().error("error, not updating settings");
             return;
@@ -325,7 +353,7 @@ public class SimpleRiverMouth implements RiverMouth {
                     .setSource(mapping)
                     .execute().actionGet();
         }
-    }
+    }*/
 
     private void createIndexIfNotExists() {
         if (error) {

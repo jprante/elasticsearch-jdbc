@@ -18,10 +18,9 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
-
 import org.xbib.elasticsearch.action.ingest.IngestProcessor;
-import org.xbib.elasticsearch.action.ingest.IngestRequest;
-import org.xbib.elasticsearch.action.ingest.IngestResponse;
+//import org.xbib.elasticsearch.action.ingest.IngestRequest;
+//import org.xbib.elasticsearch.action.ingest.IngestResponse;
 import org.xbib.elasticsearch.gatherer.ControlKeys;
 import org.xbib.elasticsearch.gatherer.IndexableObject;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
@@ -63,7 +62,7 @@ public class IngestRiverMouth implements RiverMouth {
 
     private volatile boolean error;
 
-    private boolean started;
+    private volatile boolean started;
 
     protected ESLogger logger() {
         return logger;
@@ -74,7 +73,8 @@ public class IngestRiverMouth implements RiverMouth {
         return "simple";
     }
 
-    private final IngestProcessor.Listener listener = new IngestProcessor.Listener() {
+    /* (never used)
+     * private final IngestProcessor.Listener listener = new IngestProcessor.Listener() {
 
         @Override
         public void beforeBulk(long bulkId, int concurrency, IngestRequest request) {
@@ -93,7 +93,7 @@ public class IngestRiverMouth implements RiverMouth {
             logger().error("bulk [" + bulkId + "] error", failure);
             error = true;
         }
-    };
+    };*/
 
     @Override
     public IngestRiverMouth riverContext(RiverContext context) {
@@ -193,10 +193,9 @@ public class IngestRiverMouth implements RiverMouth {
             logger().error("error, not indexing");
             return;
         }
-        if (!started) {
-            started = true;
-            startup();
-        }
+        
+        ensureStarted();
+        
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -235,10 +234,9 @@ public class IngestRiverMouth implements RiverMouth {
             logger().error("error, not indexing");
             return;
         }
-        if (!started) {
-            started = true;
-            startup();
-        }
+        
+        ensureStarted();
+        
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -267,20 +265,40 @@ public class IngestRiverMouth implements RiverMouth {
 
     @Override
     public void flush() throws IOException {
-        bulk.flush();
+        
+    	if(bulk != null) {
+    		bulk.flush();
+    	}
     }
 
     @Override
     public void close() {
         try {
-            bulk.close();
+        	if(bulk != null) {
+        		bulk.close();
+        	}
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error(e.getMessage(), e);
         }
     }
+    
+    @Override
+    public void flushAndClose() throws IOException {
+    	
+    	try {
+			flush();
+		} finally {
+			close();
+		}
+    }
 
-    private RiverMouth startup() {
+    private synchronized void ensureStarted() {
+    	
+    	if (started) {
+            return;
+        }    	
+    	
         try {
             createIndexIfNotExists();
         } catch (Exception e) {
@@ -290,8 +308,12 @@ public class IngestRiverMouth implements RiverMouth {
                 logger().warn("failed to create index", e);
                 error = true;
             }
+        }finally{
+        
+        	started = true;
+        
         }
-        return this;
+        
     }
 
 
