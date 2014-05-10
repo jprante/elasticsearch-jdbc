@@ -1,5 +1,13 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
+
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.unit.TimeValue;
+import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
+import org.xbib.elasticsearch.plugin.jdbc.RiverMouthKeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
+import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
+import org.xbib.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -13,20 +21,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.unit.TimeValue;
-
-import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverKeyValueStreamListener;
-import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
-import org.xbib.elasticsearch.gatherer.IndexableObject;
-import org.xbib.io.keyvalue.KeyValueStreamListener;
-
 /**
  * River source implementation for the 'column' strategy
  *
- * @author Piotr Śliwa <piotr.sliwa@zineinc.com>
+ * @author <a href="piotr.sliwa@zineinc.com">Piotr Śliwa</a>
  */
 public class ColumnRiverSource extends SimpleRiverSource {
 
@@ -46,11 +44,15 @@ public class ColumnRiverSource extends SimpleRiverSource {
     @Override
     public void fetch() throws SQLException, IOException {
         for (SQLCommand command : context.getStatements()) {
-            Connection connection = connectionForReading();
-            List<OpInfo> opInfos = getOpInfos(connection);
-            Timestamp lastRunTimestamp = getLastRunTimestamp();
-            for (OpInfo opInfo : opInfos) {
-                fetch(connection, command, opInfo, lastRunTimestamp);
+            Connection connection = getConnectionForReading();
+            if (connection != null) {
+                List<OpInfo> opInfos = getOpInfos(connection);
+                Timestamp lastRunTimestamp = getLastRunTimestamp();
+                logger.info("lastRunTimestamp={}", lastRunTimestamp);
+                for (OpInfo opInfo : opInfos) {
+                    logger.info("opinfo={}", opInfo.toString());
+                    fetch(connection, command, opInfo, lastRunTimestamp);
+                }
             }
         }
     }
@@ -65,19 +67,15 @@ public class ColumnRiverSource extends SimpleRiverSource {
         if (context.columnDeletedAt() != null) {
             opInfos.add(new OpInfo("delete", quoteColumn(context.columnDeletedAt(), quoteString) + " >= ?"));
         }
-
         return opInfos;
     }
 
     private String getIdentifierQuoteString(Connection connection) throws SQLException {
-
         if (!context.columnEscape()) {
             return "";
         }
-
         String quoteString = connection.getMetaData().getIdentifierQuoteString();
         quoteString = quoteString == null ? "" : quoteString;
-
         return quoteString;
     }
 
@@ -86,14 +84,12 @@ public class ColumnRiverSource extends SimpleRiverSource {
     }
 
     private Timestamp getLastRunTimestamp() {
-        Map jdbcSettings = (Map) context.riverSettings().get("jdbc");
-
+        Map jdbcSettings = (Map) context.getRiverSettings().get("jdbc");
+        logger.info("getLastRunTimestamp jdbcSettings={}", jdbcSettings);
         if (jdbcSettings == null || jdbcSettings.get(ColumnRiverFlow.LAST_RUN_TIME) == null) {
             return new Timestamp(0);
         }
-
         TimeValue lastRunTime = (TimeValue) jdbcSettings.get(ColumnRiverFlow.LAST_RUN_TIME);
-
         return new Timestamp(lastRunTime.millis());
     }
 
@@ -108,13 +104,12 @@ public class ColumnRiverSource extends SimpleRiverSource {
         try {
             bind(stmt, params);
             result = executeQuery(stmt);
-            try {
-                KeyValueStreamListener listener = new ColumnKeyValueStreamListener(opInfo.opType)
-                        .output(context.riverMouth());
+            KeyValueStreamListener<Object,Object> listener =
+                    new ColumnKeyValueStreamListener<Object,Object>(opInfo.opType)
+                        .output(context.getRiverMouth());
                 merge(result, listener);
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
+        } catch (Exception e) {
+            throw new IOException(e);
         } finally {
             close(result);
             close(stmt);
@@ -125,8 +120,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
         int wherePlaceholderIndex = sql.indexOf(WHERE_CLAUSE_PLACEHOLDER);
         final String whereKeyword = "where ";
         int whereIndex = sql.toLowerCase().indexOf(whereKeyword);
-
-        if(wherePlaceholderIndex >= 0) {
+        if (wherePlaceholderIndex >= 0) {
             return sql.replace(WHERE_CLAUSE_PLACEHOLDER, whereClauseToAppend);
         } else if (whereIndex >= 0) {
             return sql.substring(0, whereIndex + whereKeyword.length()) + whereClauseToAppend + " AND " + sql.substring(whereIndex + whereKeyword.length());
@@ -139,15 +133,12 @@ public class ColumnRiverSource extends SimpleRiverSource {
         List<? extends Object> statementParams = command.getParameters() != null ?
                 command.getParameters() : Collections.emptyList();
         List<Object> params = new ArrayList<Object>(statementParams.size() + lastRunTimestampParamsCount);
-
         for (int i = 0; i < lastRunTimestampParamsCount; i++) {
             params.add(lastRunTimestamp);
         }
-
         for (Object param : statementParams) {
             params.add(param);
         }
-
         return params;
     }
 
@@ -157,11 +148,9 @@ public class ColumnRiverSource extends SimpleRiverSource {
         final int paramsInWhere;
 
         public OpInfo(String opType, String where, int paramsInWhere) {
-            
-            if(where != null && !where.equals("")) {
-                where = "("+where+")";
+            if (where != null && !where.equals("")) {
+                where = "(" + where + ")";
             }
-            
             this.opType = opType;
             this.where = where;
             this.paramsInWhere = paramsInWhere;
@@ -170,9 +159,13 @@ public class ColumnRiverSource extends SimpleRiverSource {
         public OpInfo(String opType, String where) {
             this(opType, where, 1);
         }
+
+        public String toString() {
+            return opType + " " + where + " " + paramsInWhere;
+        }
     }
 
-    private static class ColumnKeyValueStreamListener extends RiverKeyValueStreamListener {
+    private static class ColumnKeyValueStreamListener<K,V> extends RiverMouthKeyValueStreamListener<K,V> {
 
         private String opType;
 
@@ -181,13 +174,12 @@ public class ColumnRiverSource extends SimpleRiverSource {
         }
 
         @Override
-        public RiverKeyValueStreamListener end(IndexableObject object) throws IOException {
-
+        public ColumnKeyValueStreamListener end(IndexableObject object) throws IOException {
             if (!object.source().isEmpty()) {
                 object.optype(opType);
             }
-
-            return super.end(object);
+            super.end(object);
+            return this;
         }
     }
 }

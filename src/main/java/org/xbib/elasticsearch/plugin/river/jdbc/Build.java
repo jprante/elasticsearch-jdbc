@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.plugin.river.jdbc;
 
 import java.io.ByteArrayOutputStream;

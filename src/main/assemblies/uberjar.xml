@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<assembly>
+    <id>uberjar</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+            <includes>
+                <include>org.xbib.elasticsearch.plugin:elasticsearch-river-jdbc</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

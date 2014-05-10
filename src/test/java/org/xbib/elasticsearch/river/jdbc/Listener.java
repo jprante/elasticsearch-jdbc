@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc;
 
 import org.elasticsearch.common.logging.ESLogger;
@@ -13,23 +12,23 @@ public class Listener implements ITestListener {
 
     @Override
     public void onTestStart(ITestResult result) {
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
         logger.info("starting test method {}", result.getName());
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
         logger.info("success of test method {}", result.getName());
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
         logger.info("failure of test method {}", result.getName());
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
     }
 
     @Override
@@ -44,16 +43,16 @@ public class Listener implements ITestListener {
 
     @Override
     public void onStart(ITestContext context) {
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
         logger.info("starting test {}", context.getName());
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
     }
 
     @Override
     public void onFinish(ITestContext context) {
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
         logger.info("finished test {}", context.getName());
-        logger.info("------------------------------------------------------");
+        logger.info("----------------------------------------------------------");
     }
 
 }

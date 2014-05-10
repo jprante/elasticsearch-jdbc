@@ -1,6 +1,6 @@
 {
     "jdbc" : {
-        "url" : "jdbc:h2:target/test?TRACE_LEVEL_FILE=target/trace",
+        "url" : "jdbc:h2:target/test",
         "user" : "",
         "password" : "",
         "sql" : "select * from \"orders\"",

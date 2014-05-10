@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="JDBC River Test Suite" verbose="1">
+    <parameter name="starturl" value="jdbc:hsqldb:mem:test"/>
+    <parameter name="stopurl" value="jdbc:hsqldb:mem:test"/>
+    <parameter name="user" value="sa"/>
+    <parameter name="password" value=""/>
+
+    <test name="JDBC River Source Tests">
+        <parameter name="create" value="hsqldb/create-ordertables.sql"/>
+        <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
+        <parameter name="sql1" value="select * from orders"/>
+        <parameter name="sql2" value="select * from orders"/>
+        <parameter name="sql3" value="select * from products where amount is null"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="JDBC River Target Data Tests">
+        <parameter name="create" value="hsqldb/create-ordertables.sql"/>
+        <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
+        <parameter name="river1" value="hsqldb/river-1.json"/>
+        <parameter name="river2" value="hsqldb/river-2.json"/>
+        <parameter name="river3" value="hsqldb/river-3.json"/>
+        <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverDataTests"/>
+        </classes>
+    </test>
+
+    <test name="JDBC River Job Target Tests">
+        <parameter name="create" value="hsqldb/create-jobtables.sql"/>
+        <parameter name="delete" value="hsqldb/delete-jobtables.sql"/>
+        <parameter name="river1" value="hsqldb/jobriver-1.json"/>
+        <parameter name="sql1" value="select count(*) from products"/>
+        <parameter name="sql2"
+                   value="insert into products (&quot;_job&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverJobTests"/>
+        </classes>
+    </test>
+
+
+</suite>

@@ -10,10 +10,34 @@
             <outputDirectory>/</outputDirectory>
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>false</unpack>
-            <scope>compile</scope>
+            <scope>runtime</scope>
             <includes>
-                <include>org.xbib.elasticsearch.plugin</include>
+                <include>org.xbib.elasticsearch.plugin:elasticsearch-support</include>
             </includes>
         </dependencySet>
     </dependencySets>
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}/releases</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>*-uberjar.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>bin/*.sh</include>
+                <include>bin/**/*.sh</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/test/resources</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>log4j.properties</include>
+            </includes>
+        </fileSet>
+    </fileSets>
 </assembly>

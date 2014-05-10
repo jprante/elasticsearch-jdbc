@@ -1,27 +1,21 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
+
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
+import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.RiverMouth;
+import org.xbib.elasticsearch.support.client.Ingest;
 
 import java.io.IOException;
 import java.util.Map;
-
-import org.elasticsearch.client.Client;
-
-//import org.elasticsearch.common.logging.ESLogger;
-//import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.gatherer.IndexableObject;
-
-import static org.elasticsearch.common.collect.Maps.newTreeMap;
+import java.util.TreeMap;
 
 public class MockRiverMouth implements RiverMouth {
 
-	//(never used)
-	//private static final ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
+    private final static ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
 
-    private Map<String, String> data;
+    private Map<IndexableObject, String> data;
 
     private long counter;
 
@@ -31,48 +25,37 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     public MockRiverMouth() {
-        data = newTreeMap(); // sort order for stability in assertions
+        data = new TreeMap<IndexableObject, String>();
         counter = 0L;
     }
 
     @Override
     public void index(IndexableObject object, boolean create) throws IOException {
-        data.put(object.toString(), object.build());
+        logger.info("index {} = {}", object.toString(), object.build());
+        data.put(object, object.build());
         counter++;
+        logger.info("size after insert {}", data.size());
     }
 
     @Override
     public void delete(IndexableObject object) throws IOException {
-        data.remove(object.toString());
+        logger.info("delete {}", object.toString());
+        data.remove(object);
         counter--;
+        logger.info("size after delete {}", data.size());
     }
 
-    public Map<String, String> data() {
+    public Map<IndexableObject, String> data() {
         return data;
     }
 
     @Override
-    public RiverMouth riverContext(RiverContext context) {
+    public RiverMouth setRiverContext(RiverContext context) {
         return this;
     }
 
     @Override
-    public RiverMouth client(Client client) {
-        return this;
-    }
-
-    @Override
-    public Client client() {
-        return null;
-    }
-
-    @Override
-    public RiverMouth setSettings(Map<String,Object> settings) {
-        return this;
-    }
-
-    @Override
-    public RiverMouth setMapping(Map<String,Object> mapping) {
+    public RiverMouth setIngest(Ingest ingester) {
         return this;
     }
 
@@ -80,22 +63,10 @@ public class MockRiverMouth implements RiverMouth {
     public RiverMouth setIndex(String index) {
         return this;
     }
-
-    @Override
-    public String getIndex() {
-        return null;
-    }
-
     @Override
     public RiverMouth setType(String type) {
         return this;
     }
-
-    @Override
-    public String getType() {
-        return null;
-    }
-
     @Override
     public RiverMouth setId(String id) {
         return this;
@@ -107,45 +78,11 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     @Override
-    public RiverMouth setMaxBulkActions(int actions) {
-        return this;
-    }
-
-    @Override
-    public RiverMouth setMaxConcurrentBulkRequests(int max) {
-        return this;
-    }
-
-    @Override
-    public RiverMouth setMaxVolumePerBulkRequest(ByteSizeValue maxVolumePerBulkRequest) {
-        return this;
-    }
-
-    @Override
-    public RiverMouth setFlushInterval(TimeValue flushInterval) {
-        return this;
-    }
-
-    @Override
     public void flush() throws IOException {
     }
 
     @Override
     public void close() {
-    }
-    
-    @Override
-    public void flushAndClose() throws IOException {
-    	
-    	try {
-			flush();
-		} finally {
-			close();
-		}
-    }
-
-    @Override
-    public void waitForCluster() throws IOException {
     }
 
     public long getCounter() {

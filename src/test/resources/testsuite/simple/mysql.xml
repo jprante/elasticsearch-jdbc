@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="JDBC River Test Suite" verbose="1">
+    <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
+    <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
+    <parameter name="user" value=""/>
+    <parameter name="password" value=""/>
+
+    <test name="JDBC River Source Tests">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="sql1" value="select * from orders"/>
+        <parameter name="sql2" value="select * from orders"/>
+        <parameter name="sql3" value="select * from products where amount is NULL"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="JDBC River Target Data Tests">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="river1" value="mysql/river-1.json"/>
+        <parameter name="river2" value="mysql/river-2.json"/>
+        <parameter name="river3" value="mysql/river-3.json"/>
+        <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverDataTests"/>
+        </classes>
+    </test>
+
+    <test name="JDBC River Target Job Tests">
+        <parameter name="create" value="mysql/create-jobtables.sql"/>
+        <parameter name="delete" value="mysql/delete-jobtables.sql"/>
+        <parameter name="river1" value="mysql/jobriver-1.json"/>
+        <parameter name="sql1" value="select count(*) from products"/>
+        <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverJobTests"/>
+        </classes>
+    </test>
+
+
+</suite>

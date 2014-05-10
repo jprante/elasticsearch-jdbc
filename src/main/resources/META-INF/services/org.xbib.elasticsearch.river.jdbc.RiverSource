@@ -1,3 +1,2 @@
 org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource
-org.xbib.elasticsearch.river.jdbc.strategy.ingest.IngestRiverSource
 org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSource

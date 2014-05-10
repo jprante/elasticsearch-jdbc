@@ -1,5 +1,7 @@
-
 package org.xbib.elasticsearch.river.jdbc;
+
+import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.CallableStatement;
@@ -12,9 +14,6 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.io.keyvalue.KeyValueStreamListener;
 
 /**
  * The river source models the data producing side
@@ -34,14 +33,14 @@ public interface RiverSource {
      * @param context the context
      * @return this river source
      */
-    RiverSource riverContext(RiverContext context);
+    RiverSource setRiverContext(RiverContext context);
 
     /**
      * Fetch a data portion from the database and pass it to the river task
      * for firther processing.
      *
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     void fetch() throws SQLException, IOException;
 
@@ -51,7 +50,7 @@ public interface RiverSource {
      * @param url the JDBC URL
      * @return this river source
      */
-    RiverSource url(String url);
+    RiverSource setUrl(String url);
 
     /**
      * Set the user authentication
@@ -59,7 +58,7 @@ public interface RiverSource {
      * @param user the user
      * @return this river source
      */
-    RiverSource user(String user);
+    RiverSource setUser(String user);
 
     /**
      * Set the password authentication
@@ -67,31 +66,31 @@ public interface RiverSource {
      * @param password the password
      * @return this river source
      */
-    RiverSource password(String password);
+    RiverSource setPassword(String password);
 
 
     /**
      * Get a connection for reading data
      *
      * @return connection
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
-    Connection connectionForReading() throws SQLException;
+    Connection getConnectionForReading() throws SQLException;
 
     /**
      * Get a connection for writing data
      *
      * @return connection
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
-    Connection connectionForWriting() throws SQLException;
+    Connection getConnectionForWriting() throws SQLException;
 
     /**
      * Prepare query statement
      *
      * @param sql SQL statement
      * @return a prepared statement
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     PreparedStatement prepareQuery(String sql) throws SQLException;
 
@@ -100,7 +99,7 @@ public interface RiverSource {
      *
      * @param sql SQL statement
      * @return a prepared statement
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     PreparedStatement prepareUpdate(String sql) throws SQLException;
 
@@ -108,19 +107,19 @@ public interface RiverSource {
      * Bind query variables
      *
      * @param statement prepared statement
-     * @param values values
+     * @param values    values
      * @return this river source
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
-    RiverSource bind(PreparedStatement statement, List<? extends Object> values) throws SQLException;
+    RiverSource bind(PreparedStatement statement, List<Object> values) throws SQLException;
 
     /**
      * Register output variables for callable statement
      *
      * @param statement callable statement
-     * @param values values
+     * @param values    values
      * @return this river source
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     RiverSource register(CallableStatement statement, Map<String, Object> values) throws SQLException;
 
@@ -129,7 +128,7 @@ public interface RiverSource {
      *
      * @param statement prepared statement
      * @return the result set
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     ResultSet executeQuery(PreparedStatement statement) throws SQLException;
 
@@ -139,7 +138,7 @@ public interface RiverSource {
      * @param statement the SQL statement
      * @param sql       the SQL query
      * @return the result set
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     ResultSet executeQuery(Statement statement, String sql) throws SQLException;
 
@@ -148,7 +147,7 @@ public interface RiverSource {
      *
      * @param statement statement
      * @return this river source
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     RiverSource executeUpdate(PreparedStatement statement) throws SQLException;
 
@@ -159,14 +158,13 @@ public interface RiverSource {
     /**
      * Action for the next row of the result set to be processed
      *
-     * @param results result
+     * @param results  result
      * @param listener listener
      * @return true if next row exists
-     * @throws SQLException
-     * @throws IOException
-     * @throws ParseException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
-    boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException, ParseException;
+    boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
     void afterRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
@@ -174,13 +172,13 @@ public interface RiverSource {
      * Parse a value in a row column
      *
      * @param results result set
-     * @param num position
-     * @param type type
-     * @param locale locale
+     * @param num     position
+     * @param type    type
+     * @param locale  locale
      * @return object
-     * @throws SQLException
-     * @throws IOException
-     * @throws ParseException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
+     * @throws ParseException if number format could not be parsed
      */
     Object parseType(ResultSet results, Integer num, int type, Locale locale) throws SQLException, IOException, ParseException;
 
@@ -189,7 +187,7 @@ public interface RiverSource {
      *
      * @param result result set
      * @return this river source
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     RiverSource close(ResultSet result) throws SQLException;
 
@@ -198,7 +196,7 @@ public interface RiverSource {
      *
      * @param statement statement
      * @return this river source
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     RiverSource close(Statement statement) throws SQLException;
 

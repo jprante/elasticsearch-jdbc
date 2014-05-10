@@ -1,6 +1,15 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.RiverMouthKeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.keyvalue.KeyValueStreamListener;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Blob;
@@ -24,22 +33,11 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.RiverKeyValueStreamListener;
-import org.xbib.elasticsearch.river.jdbc.support.SQLCommand;
-import org.xbib.io.keyvalue.KeyValueStreamListener;
-
-import static org.elasticsearch.common.collect.Lists.newLinkedList;
-import static org.elasticsearch.common.collect.Maps.newHashMap;
 
 /**
  * Simple river source.
@@ -66,7 +64,7 @@ public class SimpleRiverSource implements RiverSource {
 
     protected Connection writeConnection;
 
-    private final Map<String, Object> lastRow = newHashMap();
+    private final Map<String, Object> lastRow = new HashMap<String, Object>();
 
     private long lastRowCount;
 
@@ -80,29 +78,29 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     @Override
-    public SimpleRiverSource riverContext(RiverContext context) {
+    public SimpleRiverSource setRiverContext(RiverContext context) {
         this.context = context;
         return this;
     }
 
     @Override
-    public SimpleRiverSource url(String url) {
+    public SimpleRiverSource setUrl(String url) {
         this.url = url;
         return this;
     }
 
-    public String url() {
+    public String getUrl() {
         return url;
     }
 
     @Override
-    public SimpleRiverSource user(String user) {
+    public SimpleRiverSource setUser(String user) {
         this.user = user;
         return this;
     }
 
     @Override
-    public SimpleRiverSource password(String password) {
+    public SimpleRiverSource setPassword(String password) {
         this.password = password;
         return this;
     }
@@ -111,10 +109,10 @@ public class SimpleRiverSource implements RiverSource {
      * Get JDBC connection for reading
      *
      * @return the connection
-     * @throws java.sql.SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
-    public Connection connectionForReading() throws SQLException {
+    public Connection getConnectionForReading() throws SQLException {
         boolean cond = readConnection == null || readConnection.isClosed();
         try {
             cond = cond || !readConnection.isValid(5);
@@ -159,10 +157,10 @@ public class SimpleRiverSource implements RiverSource {
      * Get JDBC connection for writing
      *
      * @return the connection
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
-    public Connection connectionForWriting() throws SQLException {
+    public Connection getConnectionForWriting() throws SQLException {
         boolean cond = writeConnection == null || writeConnection.isClosed();
         try {
             cond = cond || !writeConnection.isValid(5);
@@ -200,8 +198,8 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * River cycle fetch. Issue a series of SQL statements.
      *
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     @Override
     public void fetch() throws SQLException, IOException {
@@ -237,9 +235,10 @@ public class SimpleRiverSource implements RiverSource {
 
     /**
      * Execute SQL query command without parameter binding.
+     *
      * @param command the SQL command
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     private void execute(SQLCommand command) throws Exception {
         Statement statement = null;
@@ -249,15 +248,21 @@ public class SimpleRiverSource implements RiverSource {
                 // use read connection
                 // we must not use prepareStatement for Postgresql!
                 // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize set.
-                statement = connectionForReading().createStatement();
-                results = executeQuery(statement, command.getSQL());
-                KeyValueStreamListener listener = new RiverKeyValueStreamListener()
-                        .output(context.riverMouth());
-                merge(results, listener);
+                Connection connection = getConnectionForReading();
+                if (connection != null) {
+                    statement = connection.createStatement();
+                    results = executeQuery(statement, command.getSQL());
+                    RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
+                            .output(context.getRiverMouth());
+                    merge(results, listener);
+                }
             } else {
                 // use write connection
-                statement = connectionForWriting().createStatement();
-                executeUpdate(statement, command.getSQL());
+                Connection connection = getConnectionForWriting();
+                if (connection != null) {
+                    statement = connection.createStatement();
+                    executeUpdate(statement, command.getSQL());
+                }
             }
         } finally {
             close(results);
@@ -267,9 +272,10 @@ public class SimpleRiverSource implements RiverSource {
 
     /**
      * Execute SQL query command with parameter binding.
+     *
      * @param command the SQL command
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     private void executeWithParameter(SQLCommand command) throws Exception {
         PreparedStatement statement = null;
@@ -279,8 +285,8 @@ public class SimpleRiverSource implements RiverSource {
                 statement = prepareQuery(command.getSQL());
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
-                KeyValueStreamListener listener = new RiverKeyValueStreamListener()
-                        .output(context.riverMouth());
+                RiverMouthKeyValueStreamListener<Object,Object> listener = new RiverMouthKeyValueStreamListener<Object,Object>()
+                        .output(context.getRiverMouth());
                 merge(results, listener);
             } else {
                 statement = prepareUpdate(command.getSQL());
@@ -295,9 +301,10 @@ public class SimpleRiverSource implements RiverSource {
 
     /**
      * Execute callable SQL command
+     *
      * @param command the SQL command
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     private void executeCallable(SQLCommand command) throws Exception {
         // call stored procedure
@@ -305,7 +312,7 @@ public class SimpleRiverSource implements RiverSource {
         try {
             // we do not make a difference betwwen read/write and we assume
             // it is safe to use the read connection and query the DB
-            statement = connectionForWriting().prepareCall(command.getSQL());
+            statement = getConnectionForWriting().prepareCall(command.getSQL());
             if (!command.getParameters().isEmpty()) {
                 bind(statement, command.getParameters());
             }
@@ -313,15 +320,17 @@ public class SimpleRiverSource implements RiverSource {
                 register(statement, command.getResults());
             }
             boolean hasRows = statement.execute();
-            RiverKeyValueStreamListener listener = new RiverKeyValueStreamListener()
-                    .output(context.riverMouth());
+            RiverMouthKeyValueStreamListener<Object,Object> listener = new RiverMouthKeyValueStreamListener<Object,Object>()
+                    .output(context.getRiverMouth());
             if (!hasRows) {
                 // merge from registered params
                 merge(statement, command, listener);
-            } else while (hasRows) {
-                // merge result set
-                merge(statement.getResultSet(), listener);
-                hasRows = statement.getMoreResults();
+            } else {
+                while (hasRows) {
+                    // merge result set
+                    merge(statement.getResultSet(), listener);
+                    hasRows = statement.getMoreResults();
+                }
             }
         } finally {
             close(statement);
@@ -331,10 +340,10 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * Merge key/values from JDBC result set
      *
-     * @param results result set
+     * @param results  result set
      * @param listener the value listener
-     * @throws IOException
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     public void merge(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
@@ -361,21 +370,22 @@ public class SimpleRiverSource implements RiverSource {
      * Merge key/values from registered params of a callable statement
      *
      * @param statement callable statement
-     * @param listener the value listener
-     * @throws SQLException
-     * @throws IOException
+     * @param listener  the value listener
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
+    @SuppressWarnings({"unchecked"})
     public void merge(CallableStatement statement, SQLCommand command, KeyValueStreamListener listener)
-        throws SQLException, IOException {
-        Map<String,Object> map = command.getResults();
+            throws SQLException, IOException {
+        Map<String, Object> map = command.getResults();
         if (map.isEmpty()) {
             return;
         }
-        List<String> keys = newLinkedList();
-        List<Object> values = newLinkedList();
-        for (Map.Entry<String, Object> entry: map.entrySet()) {
+        List<String> keys = new LinkedList<String>();
+        List<Object> values = new LinkedList<Object>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
             keys.add(entry.getKey());
-            Map<String,Object> m = (Map<String,Object>)entry.getValue();
+            Map<String, Object> m = (Map<String, Object>) entry.getValue();
             values.add(statement.getObject((Integer) m.get("pos")));
         }
         listener.keys(keys);
@@ -388,20 +398,20 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param sql the SQL statement
      * @return a prepared statement
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public PreparedStatement prepareQuery(String sql) throws SQLException {
-        Connection connection = connectionForReading();
+        Connection connection = getConnectionForReading();
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
         }
         logger().debug("preparing statement with SQL {}", sql);
         int type =
-            "TYPE_FORWARD_ONLY".equals(context.getResultSetType()) ? ResultSet.TYPE_FORWARD_ONLY :
-            "TYPE_SCROLL_SENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_SENSITIVE :
-            "TYPE_SCROLL_INSENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_INSENSITIVE :
-                ResultSet.TYPE_FORWARD_ONLY;
+                "TYPE_FORWARD_ONLY".equals(context.getResultSetType()) ? ResultSet.TYPE_FORWARD_ONLY :
+                        "TYPE_SCROLL_SENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_SENSITIVE :
+                                "TYPE_SCROLL_INSENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_INSENSITIVE :
+                                        ResultSet.TYPE_FORWARD_ONLY;
         int concurrency = "CONCUR_READ_ONLY".equals(context.getResultSetConcurrency()) ?
                 ResultSet.CONCUR_READ_ONLY : ResultSet.CONCUR_UPDATABLE;
         return connection.prepareStatement(sql, type, concurrency);
@@ -412,11 +422,11 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param sql the SQL statement
      * @return a prepared statement
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public PreparedStatement prepareUpdate(String sql) throws SQLException {
-        Connection connection = connectionForWriting();
+        Connection connection = getConnectionForWriting();
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
         }
@@ -427,11 +437,11 @@ public class SimpleRiverSource implements RiverSource {
      * Bind values to prepared statement
      *
      * @param statement the prepared statement
-     * @param values the values to bind
-     * @throws SQLException
+     * @param values    the values to bind
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
-    public SimpleRiverSource bind(PreparedStatement statement, List<? extends Object> values) throws SQLException {
+    public SimpleRiverSource bind(PreparedStatement statement, List<Object> values) throws SQLException {
         if (values == null) {
             logger().warn("no values given for bind");
             return this;
@@ -446,20 +456,21 @@ public class SimpleRiverSource implements RiverSource {
      * Register variables in callable statement
      *
      * @param statement callable statement
-     * @param values values
+     * @param values    values
      * @return this river source
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
-    public SimpleRiverSource register(CallableStatement statement, Map<String,Object> values) throws SQLException {
+    @SuppressWarnings({"unchecked"})
+    public SimpleRiverSource register(CallableStatement statement, Map<String, Object> values) throws SQLException {
         if (values == null) {
             return this;
         }
-        for (Map.Entry<String,Object> me : values.entrySet()) {
+        for (Map.Entry<String, Object> me : values.entrySet()) {
             // { "fieldname" : { "pos": n, "type" : "VARCHAR" }, ... }
-            Map<String,Object> m = (Map<String,Object>)me.getValue();
-            Integer n = (Integer)m.get("pos");
-            String type = (String)m.get("type");
+            Map<String, Object> m = (Map<String, Object>) me.getValue();
+            Integer n = (Integer) m.get("pos");
+            String type = (String) m.get("type");
             register(statement, n, type);
         }
         return this;
@@ -470,7 +481,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param statement the prepared statement
      * @return the result set
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public ResultSet executeQuery(PreparedStatement statement) throws SQLException {
@@ -483,9 +494,9 @@ public class SimpleRiverSource implements RiverSource {
      * Execute query statement
      *
      * @param statement the statement
-     * @param sql the SQL
+     * @param sql       the SQL
      * @return the result set
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public ResultSet executeQuery(Statement statement, String sql) throws SQLException {
@@ -499,7 +510,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param statement the prepared statement
      * @return the result set
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public RiverSource executeUpdate(PreparedStatement statement) throws SQLException {
@@ -515,7 +526,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param statement the prepared statement
      * @return the result set
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public RiverSource executeUpdate(Statement statement, String sql) throws SQLException {
@@ -529,17 +540,18 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * Before rows are read, let the KeyValueStreamListener know about the keys.
      *
-     * @param results the result set
+     * @param results  the result set
      * @param listener the key/value stream listener
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     @Override
+    @SuppressWarnings({"unchecked"})
     public void beforeRows(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
-        List<String> keys = newLinkedList();
+        List<String> keys = new LinkedList();
         for (int i = 1; i <= columns; i++) {
             keys.add(metadata.getColumnLabel(i));
         }
@@ -551,16 +563,16 @@ public class SimpleRiverSource implements RiverSource {
      * Get next row and prepare the values for processing. The labels of each
      * columns are used for the ValueListener as paths for JSON object merging.
      *
-     * @param results   the result set
+     * @param results  the result set
      * @param listener the listener
      * @return true if row exists and was processed, false otherwise
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     @Override
     public boolean nextRow(ResultSet results, KeyValueStreamListener listener)
-            throws SQLException, IOException, ParseException {
-        if (results.next()) {
+            throws SQLException, IOException {
+        if (results.next() && (context.getRiverFlow() == null || !context.getRiverFlow().getFeeder().isInterrupted())) {
             processRow(results, listener);
             return true;
         }
@@ -570,10 +582,11 @@ public class SimpleRiverSource implements RiverSource {
     /**
      * After the rows keys and values, let the listener know about the end of
      * the result set.
-     * @param results the result set
+     *
+     * @param results  the result set
      * @param listener the key/value stream listener
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     @Override
     public void afterRows(ResultSet results, KeyValueStreamListener listener)
@@ -581,20 +594,26 @@ public class SimpleRiverSource implements RiverSource {
         listener.end();
     }
 
+    @SuppressWarnings({"unchecked"})
     private void processRow(ResultSet results, KeyValueStreamListener listener)
-            throws SQLException, IOException, ParseException {
+            throws SQLException, IOException {
         Locale locale = context != null ? context.getLocale() != null ? context.getLocale() : Locale.getDefault() : Locale.getDefault();
-        List<Object> values = newLinkedList();
+        List<Object> values = new LinkedList<Object>();
         ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
         lastRow.clear();
         for (int i = 1; i <= columns; i++) {
-            Object value = parseType(results, i, metadata.getColumnType(i), locale);
-            if (logger().isTraceEnabled()) {
-                logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+            try {
+                Object value = parseType(results, i, metadata.getColumnType(i), locale);
+                if (logger().isTraceEnabled()) {
+                    logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+                }
+                values.add(value);
+                lastRow.put("$row." + metadata.getColumnLabel(i), value);
+            } catch (ParseException e) {
+                logger().warn("parse error for value {}, using null instead", results.getObject(i));
+                values.add(null);
             }
-            values.add(value);
-            lastRow.put("$row." + metadata.getColumnLabel(i), value);
         }
         if (listener != null) {
             listener.values(values);
@@ -605,7 +624,7 @@ public class SimpleRiverSource implements RiverSource {
      * Close result set
      *
      * @param result the result set to be closed or null
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public SimpleRiverSource close(ResultSet result) throws SQLException {
@@ -619,7 +638,7 @@ public class SimpleRiverSource implements RiverSource {
      * Close statement
      *
      * @param statement the statement to be closed or null
-     * @throws SQLException
+     * @throws SQLException when SQL execution gives an error
      */
     @Override
     public SimpleRiverSource close(Statement statement) throws SQLException {
@@ -702,17 +721,22 @@ public class SimpleRiverSource implements RiverSource {
                 }
                 statement.setLong(i, lastRowCount);
             } else if ("$river.name".equals(s)) {
-                String name = context.riverName();
+                String name = context.getRiverName();
                 statement.setString(i, name);
             } else if ("$river.state.timestamp".equals(s)) {
-                Long timestamp = context.riverFlow().riverState().timestamp();
-                statement.setTimestamp(i, new Timestamp(timestamp));
+                Timestamp timestamp = context.getRiverFlow() != null ?
+                        new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getTimestamp().getTime()) : null;
+                statement.setTimestamp(i, timestamp);
             } else if ("$river.state.started".equals(s)) {
-                Long started = context.riverFlow().riverState().started();
-                statement.setTimestamp(i, new Timestamp(started));
+                Timestamp started = context.getRiverFlow() != null ?
+                        new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
+                statement.setTimestamp(i, started);
             } else if ("$river.state.counter".equals(s)) {
-                Long counter = context.riverFlow().riverState().counter();
-                statement.setLong(i, counter);
+                Long counter = context.getRiverFlow() != null ?
+                        context.getRiverFlow().getFeeder().getRiverState().getCounter() : null;
+                if (counter != null) {
+                    statement.setLong(i, counter);
+                }
             } else {
                 Object rowValue = lastRow.get(s);
                 if (rowValue != null) {
@@ -751,12 +775,12 @@ public class SimpleRiverSource implements RiverSource {
      * Parse of value of result set
      *
      * @param result the result set
-     * @param i the offset in the result set
-     * @param type the JDBC type
+     * @param i      the offset in the result set
+     * @param type   the JDBC type
      * @param locale the locale to use for parsing
      * @return The parse value
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException when input/output error occurs
      */
     @Override
     public Object parseType(ResultSet result, Integer i, int type, Locale locale)

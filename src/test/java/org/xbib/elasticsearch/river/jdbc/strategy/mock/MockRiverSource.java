@@ -1,5 +1,8 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
+
+import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.CallableStatement;
@@ -13,13 +16,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
-import org.xbib.io.keyvalue.KeyValueStreamListener;
-
 /**
- *
- * @author Piotr Śliwa <piotr.sliwa@zineinc.com>
+ * @author <a href="piotr.sliwa@zineinc.com">Piotr Śliwa</a>
  */
 public class MockRiverSource implements RiverSource {
 
@@ -29,7 +27,7 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public RiverSource riverContext(RiverContext context) {
+    public RiverSource setRiverContext(RiverContext context) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -39,27 +37,27 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public RiverSource url(String url) {
+    public RiverSource setUrl(String url) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public RiverSource user(String user) {
+    public RiverSource setUser(String user) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public RiverSource password(String password) {
+    public RiverSource setPassword(String password) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Connection connectionForReading() throws SQLException {
+    public Connection getConnectionForReading() throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Connection connectionForWriting() throws SQLException {
+    public Connection getConnectionForWriting() throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -74,7 +72,7 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public RiverSource bind(PreparedStatement statement, List<? extends Object> values) throws SQLException {
+    public RiverSource bind(PreparedStatement statement, List<Object> values) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -109,7 +107,7 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public boolean nextRow(ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException, ParseException {
+    public boolean nextRow(ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

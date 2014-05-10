@@ -2,14 +2,13 @@
 
 Image by `icons8 <http://www.iconsdb.com/icons8/?icon=database>`_ Creative Commons Attribution-NoDerivs 3.0 Unported.
 
-Elasticsearch JDBC river
-========================
+JDBC plugin for Elasticsearch
+=============================
+.. image:: https://travis-ci.org/jprante/elasticsearch-river-jdbc.png
 
-The Java Database Connection (JDBC) `river <http://www.elasticsearch.org/guide/reference/river/>`_  allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_.
+The Java Database Connection (JDBC) plugin allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_.
 
 It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guide/reference/modules/plugins.html>`_.
-
-The relational data is internally transformed into structured JSON objects for the schema-less indexing model in Elasticsearch.
 
 Creating a JDBC river is easy. Install the plugin. Download a JDBC driver jar from your vendor's site (here MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
 Then issue this simple command::
@@ -26,36 +25,58 @@ Then issue this simple command::
         }
     }'
 
+Plugin works as a river or a feeder
+-----------------------------------
+
+The plugin can operate as a river in "pull mode" or as a feeder in "push mode". In feeder mode, the plugin
+runs in a separate JVM and can connect to a remote Elasticsearch cluster.
+
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/jdbc-river-feeder-architecture.png
+
+The relational data is internally transformed into structured JSON objects for the schema-less indexing model
+of Elasticsearch documents.
+
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/simple-tabular-json-data.png
+
+Both ends are scalable. The plugin can fetch data from different RDBMS source in parallel, and multithreaded
+bulk mode ensures high throughput when indexing to Elasticsearch.
+
+.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/tabular-json-data.png
+
+Versions
+--------
+
+=============  ===========  =================
+ES version     Plugin       Release date
+-------------  -----------  -----------------
+1.1.0          1.1.0.1      May 10, 2014
+=============  ===========  =================
+
+Prerequisites
+-------------
+
+- a JDBC driver jar for your database (download from vendor site and put into JDBC river plugin folder)
+
 Installation
 ------------
 
-.. image:: https://travis-ci.org/jprante/elasticsearch-river-jdbc.png
-
-Prerequisites
-
-  - a JDBC driver jar for your database (download from vendor site and put into JDBC river plugin folder)
-
-=============  ===========  =================  =============================================================
-ES version     Plugin       Release date       Command
--------------  -----------  -----------------  -------------------------------------------------------------
-0.90.3         0.90.3.1     Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1emqDH9
-0.90.10        0.90.10.2    Jan 31, 2014       ./bin/plugin -install river-jdbc -url http://bit.ly/1a8Mcve
-1.0.0          1.0.0.2      Mar 31, 2014       ./bin/plugin --install river-jdbc --url http://bit.ly/1gIk4jW
-1.1.0          1.1.0.0      Apr 5, 2014        ./bin/plugin --install river-jdbc --url http://bit.ly/1iadfnF
-=============  ===========  =================  =============================================================
+    ./bin/plugin --install river-jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.1/elasticsearch-river-jdbc-1.1.0.1-plugin.zip
 
 Do not forget to restart the node after installing.
+
+Checksum
+--------
+
+===========================================   ========================================
+File                                          SHA1
+-------------------------------------------   ----------------------------------------
+elasticsearch-river-jdbc-1.1.0.1-plugin.zip   1065a30897beddd4e37cb63ca40500a02319dbe7
+===========================================   ========================================
 
 Project docs
 ------------
 
 The Maven project site is available at `Github <http://jprante.github.io/elasticsearch-river-jdbc>`_
-
-Binaries
---------
-
-Binaries are available at `Bintray <https://bintray.com/pkg/show/general/jprante/elasticsearch-plugins/elasticsearch-river-jdbc>`_
-
 
 Documentation
 -------------
@@ -89,7 +110,7 @@ License
 
 Elasticsearch JDBC River Plugin
 
-Copyright (C) 2012,2013 Jörg Prante
+Copyright (C) 2012-2014 Jörg Prante
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

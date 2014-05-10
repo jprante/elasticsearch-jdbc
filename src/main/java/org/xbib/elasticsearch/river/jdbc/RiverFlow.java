@@ -1,73 +1,29 @@
 
 package org.xbib.elasticsearch.river.jdbc;
 
-import org.xbib.elasticsearch.river.jdbc.support.RiverContext;
+import org.xbib.elasticsearch.plugin.feeder.Feeder;
+import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 
-/**
- * RiverFlow API.
- * The RiverFlow is the abstraction to the thread which
- * performs data fetching from the river source and transports it
- * to the river mouth
- *
- */
-public interface RiverFlow extends Runnable {
-
+public interface RiverFlow {
     /**
-     * The doc ID of the info document in the river index
-     */
-    String ID_INFO_RIVER_INDEX = "_custom";
-
-    /**
-     * The strategy name
+     * The river strategy
      *
-     * @return the strategy of this river task
+     * @return the strategy
      */
     String strategy();
 
+    RiverFlow setRiverContext(RiverContext riverContext);
+
     /**
-     * Set river context
-     *
-     * @param context the context
+     * Set the feeder
+     * @param feeder the feeder
      * @return this river flow
      */
-    RiverFlow riverContext(RiverContext context);
+    RiverFlow setFeeder(Feeder feeder);
 
     /**
-     * Get river context
-     *
-     * @return the river context
+     * Return the feeder
+     * @return the feeder
      */
-    RiverContext riverContext();
-
-    /**
-     * Get river state
-     * @return the river state
-     */
-    RiverState riverState();
-
-    /**
-     * Schedule thread
-     * @param thread the thread
-     */
-    void schedule(Thread thread);
-
-    /**
-     * Run thread once
-     * @param thread the thread
-     */
-    void once(Thread thread);
-
-    /**
-     * Run river once
-     */
-    void move();
-
-    /**
-     * Abort river task. Set signal to interrupt thread and free resources.
-     */
-    void abort();
-
-    boolean isActive();
-
+    Feeder getFeeder();
 }
-
