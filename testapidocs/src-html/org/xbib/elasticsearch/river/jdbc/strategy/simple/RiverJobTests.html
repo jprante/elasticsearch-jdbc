@@ -10,7 +10,7 @@
 <span class="sourceLineNo">002</span><a name="line.2"></a>
 <span class="sourceLineNo">003</span>import org.testng.annotations.Parameters;<a name="line.3"></a>
 <span class="sourceLineNo">004</span>import org.testng.annotations.Test;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.xbib.elasticsearch.plugin.support.RiverContext;<a name="line.5"></a>
+<span class="sourceLineNo">005</span>import org.xbib.elasticsearch.plugin.jdbc.RiverContext;<a name="line.5"></a>
 <span class="sourceLineNo">006</span>import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.6"></a>
 <span class="sourceLineNo">007</span>import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;<a name="line.7"></a>
 <span class="sourceLineNo">008</span><a name="line.8"></a>
@@ -45,7 +45,7 @@
 <span class="sourceLineNo">037</span>        source.close(results);<a name="line.37"></a>
 <span class="sourceLineNo">038</span>        source.closeReading();<a name="line.38"></a>
 <span class="sourceLineNo">039</span>        assertEquals(count, 100);<a name="line.39"></a>
-<span class="sourceLineNo">040</span>        assertHits("1", 0);<a name="line.40"></a>
+<span class="sourceLineNo">040</span>        //assertHits("1", 0);<a name="line.40"></a>
 <span class="sourceLineNo">041</span>        createRiver(riverResource);<a name="line.41"></a>
 <span class="sourceLineNo">042</span>        waitForRiverEnabled();<a name="line.42"></a>
 <span class="sourceLineNo">043</span>        waitForInactiveRiver();<a name="line.43"></a>

@@ -1,13 +1,7 @@
-org.xbib.elasticsearch.action.river.execute
-org.xbib.elasticsearch.action.river.state
-org.xbib.elasticsearch.plugin.feeder
 org.xbib.elasticsearch.plugin.feeder.jdbc
-org.xbib.elasticsearch.plugin.river
+org.xbib.elasticsearch.plugin.jdbc
 org.xbib.elasticsearch.plugin.river.jdbc
-org.xbib.elasticsearch.plugin.support
-org.xbib.elasticsearch.plugin.support.cron
-org.xbib.elasticsearch.rest.action.river
-org.xbib.elasticsearch.rest.action.support
 org.xbib.elasticsearch.river.jdbc
 org.xbib.elasticsearch.river.jdbc.strategy.column
 org.xbib.elasticsearch.river.jdbc.strategy.simple
+org.xbib.keyvalue

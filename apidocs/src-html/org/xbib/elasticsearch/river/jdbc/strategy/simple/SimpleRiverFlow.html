@@ -11,7 +11,7 @@
 <span class="sourceLineNo">003</span><a name="line.3"></a>
 <span class="sourceLineNo">004</span>import org.xbib.elasticsearch.plugin.feeder.Feeder;<a name="line.4"></a>
 <span class="sourceLineNo">005</span>import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.support.RiverContext;<a name="line.6"></a>
+<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.jdbc.RiverContext;<a name="line.6"></a>
 <span class="sourceLineNo">007</span>import org.xbib.elasticsearch.river.jdbc.RiverFlow;<a name="line.7"></a>
 <span class="sourceLineNo">008</span><a name="line.8"></a>
 <span class="sourceLineNo">009</span>public class SimpleRiverFlow  implements RiverFlow {<a name="line.9"></a>
@@ -40,7 +40,7 @@
 <span class="sourceLineNo">032</span>    @Override<a name="line.32"></a>
 <span class="sourceLineNo">033</span>    public Feeder getFeeder() {<a name="line.33"></a>
 <span class="sourceLineNo">034</span>        if (feeder == null) {<a name="line.34"></a>
-<span class="sourceLineNo">035</span>            this.feeder = new JDBCFeeder&lt;&gt;();<a name="line.35"></a>
+<span class="sourceLineNo">035</span>            this.feeder = new JDBCFeeder();<a name="line.35"></a>
 <span class="sourceLineNo">036</span>        }<a name="line.36"></a>
 <span class="sourceLineNo">037</span>        return feeder;<a name="line.37"></a>
 <span class="sourceLineNo">038</span>    }<a name="line.38"></a>

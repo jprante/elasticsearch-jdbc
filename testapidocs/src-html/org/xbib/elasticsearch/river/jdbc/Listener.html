@@ -8,15 +8,15 @@
 <div class="sourceContainer">
 <pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.river.jdbc;<a name="line.1"></a>
 <span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>import org.testng.ITestContext;<a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.testng.ITestListener;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.testng.ITestResult;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.xbib.logging.Logger;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.xbib.logging.LoggerFactory;<a name="line.7"></a>
+<span class="sourceLineNo">003</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.testng.ITestContext;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.testng.ITestListener;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.testng.ITestResult;<a name="line.7"></a>
 <span class="sourceLineNo">008</span><a name="line.8"></a>
 <span class="sourceLineNo">009</span>public class Listener implements ITestListener {<a name="line.9"></a>
 <span class="sourceLineNo">010</span><a name="line.10"></a>
-<span class="sourceLineNo">011</span>    private final Logger logger = LoggerFactory.getLogger(Listener.class.getSimpleName());<a name="line.11"></a>
+<span class="sourceLineNo">011</span>    private final ESLogger logger = ESLoggerFactory.getLogger(Listener.class.getSimpleName());<a name="line.11"></a>
 <span class="sourceLineNo">012</span><a name="line.12"></a>
 <span class="sourceLineNo">013</span>    @Override<a name="line.13"></a>
 <span class="sourceLineNo">014</span>    public void onTestStart(ITestResult result) {<a name="line.14"></a>

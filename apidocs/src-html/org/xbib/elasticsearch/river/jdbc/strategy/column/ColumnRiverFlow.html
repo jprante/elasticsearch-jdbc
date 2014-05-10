@@ -9,20 +9,20 @@
 <pre><span class="sourceLineNo">001</span><a name="line.1"></a>
 <span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.strategy.column;<a name="line.2"></a>
 <span class="sourceLineNo">003</span><a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.xbib.elasticsearch.plugin.feeder.Feeder;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.xbib.elasticsearch.river.jdbc.RiverFlow;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.xbib.logging.Logger;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import org.xbib.logging.LoggerFactory;<a name="line.8"></a>
+<span class="sourceLineNo">004</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.feeder.Feeder;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.xbib.elasticsearch.river.jdbc.RiverFlow;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;<a name="line.8"></a>
 <span class="sourceLineNo">009</span><a name="line.9"></a>
 <span class="sourceLineNo">010</span>/**<a name="line.10"></a>
 <span class="sourceLineNo">011</span> * River flow implementation for the 'column' strategy<a name="line.11"></a>
 <span class="sourceLineNo">012</span> *<a name="line.12"></a>
-<span class="sourceLineNo">013</span> * @author &lt;a href="piotr.sliwa@zineinc.com"&gt;Piotr Śliwa&lt;/a&gt;<a name="line.13"></a>
+<span class="sourceLineNo">013</span> * @author &lt;a href="piotr.sliwa@zineinc.com"&gt;Piotr ?liwa&lt;/a&gt;<a name="line.13"></a>
 <span class="sourceLineNo">014</span> */<a name="line.14"></a>
 <span class="sourceLineNo">015</span>public class ColumnRiverFlow extends SimpleRiverFlow {<a name="line.15"></a>
 <span class="sourceLineNo">016</span><a name="line.16"></a>
-<span class="sourceLineNo">017</span>    private final Logger logger = LoggerFactory.getLogger(ColumnRiverFlow.class.getName());<a name="line.17"></a>
+<span class="sourceLineNo">017</span>    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFlow.class.getName());<a name="line.17"></a>
 <span class="sourceLineNo">018</span><a name="line.18"></a>
 <span class="sourceLineNo">019</span>    public static final String DOCUMENT = "_custom";<a name="line.19"></a>
 <span class="sourceLineNo">020</span><a name="line.20"></a>
@@ -30,7 +30,7 @@
 <span class="sourceLineNo">022</span><a name="line.22"></a>
 <span class="sourceLineNo">023</span>    public static final String CURRENT_RUN_STARTED_TIME = "current_run_started_time";<a name="line.23"></a>
 <span class="sourceLineNo">024</span><a name="line.24"></a>
-<span class="sourceLineNo">025</span>    protected Logger logger() {<a name="line.25"></a>
+<span class="sourceLineNo">025</span>    protected ESLogger logger() {<a name="line.25"></a>
 <span class="sourceLineNo">026</span>        return logger;<a name="line.26"></a>
 <span class="sourceLineNo">027</span>    }<a name="line.27"></a>
 <span class="sourceLineNo">028</span><a name="line.28"></a>
@@ -48,7 +48,7 @@
 <span class="sourceLineNo">040</span>    @Override<a name="line.40"></a>
 <span class="sourceLineNo">041</span>    public Feeder getFeeder() {<a name="line.41"></a>
 <span class="sourceLineNo">042</span>        if (feeder == null) {<a name="line.42"></a>
-<span class="sourceLineNo">043</span>            this.feeder = new ColumnRiverFeeder&lt;&gt;();<a name="line.43"></a>
+<span class="sourceLineNo">043</span>            this.feeder = new ColumnRiverFeeder();<a name="line.43"></a>
 <span class="sourceLineNo">044</span>        }<a name="line.44"></a>
 <span class="sourceLineNo">045</span>        return feeder;<a name="line.45"></a>
 <span class="sourceLineNo">046</span>    }<a name="line.46"></a>

@@ -8,7 +8,7 @@
 <div class="sourceContainer">
 <pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.river.jdbc;<a name="line.1"></a>
 <span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>import org.xbib.elasticsearch.plugin.support.RiverContext;<a name="line.3"></a>
+<span class="sourceLineNo">003</span>import org.xbib.elasticsearch.plugin.jdbc.RiverContext;<a name="line.3"></a>
 <span class="sourceLineNo">004</span>import org.xbib.keyvalue.KeyValueStreamListener;<a name="line.4"></a>
 <span class="sourceLineNo">005</span><a name="line.5"></a>
 <span class="sourceLineNo">006</span>import java.io.IOException;<a name="line.6"></a>
@@ -119,7 +119,7 @@
 <span class="sourceLineNo">111</span>     * @return this river source<a name="line.111"></a>
 <span class="sourceLineNo">112</span>     * @throws SQLException when SQL execution gives an error<a name="line.112"></a>
 <span class="sourceLineNo">113</span>     */<a name="line.113"></a>
-<span class="sourceLineNo">114</span>    RiverSource bind(PreparedStatement statement, List&lt;? extends Object&gt; values) throws SQLException;<a name="line.114"></a>
+<span class="sourceLineNo">114</span>    RiverSource bind(PreparedStatement statement, List&lt;Object&gt; values) throws SQLException;<a name="line.114"></a>
 <span class="sourceLineNo">115</span><a name="line.115"></a>
 <span class="sourceLineNo">116</span>    /**<a name="line.116"></a>
 <span class="sourceLineNo">117</span>     * Register output variables for callable statement<a name="line.117"></a>

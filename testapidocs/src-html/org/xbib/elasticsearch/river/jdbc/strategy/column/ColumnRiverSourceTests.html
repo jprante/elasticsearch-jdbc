@@ -9,20 +9,20 @@
 <pre><span class="sourceLineNo">001</span><a name="line.1"></a>
 <span class="sourceLineNo">002</span>package org.xbib.elasticsearch.river.jdbc.strategy.column;<a name="line.2"></a>
 <span class="sourceLineNo">003</span><a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.elasticsearch.common.xcontent.support.XContentMapValues;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.elasticsearch.river.RiverSettings;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.testng.annotations.Parameters;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.testng.annotations.Test;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import org.xbib.common.unit.TimeValue;<a name="line.8"></a>
-<span class="sourceLineNo">009</span>import org.xbib.elasticsearch.plugin.support.IndexableObject;<a name="line.9"></a>
-<span class="sourceLineNo">010</span>import org.xbib.elasticsearch.plugin.support.PlainIndexableObject;<a name="line.10"></a>
-<span class="sourceLineNo">011</span>import org.xbib.elasticsearch.plugin.support.RiverContext;<a name="line.11"></a>
-<span class="sourceLineNo">012</span>import org.xbib.elasticsearch.plugin.support.SQLCommand;<a name="line.12"></a>
-<span class="sourceLineNo">013</span>import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.13"></a>
-<span class="sourceLineNo">014</span>import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;<a name="line.14"></a>
-<span class="sourceLineNo">015</span>import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import org.xbib.logging.Logger;<a name="line.16"></a>
-<span class="sourceLineNo">017</span>import org.xbib.logging.LoggerFactory;<a name="line.17"></a>
+<span class="sourceLineNo">004</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.elasticsearch.common.unit.TimeValue;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.elasticsearch.common.xcontent.support.XContentMapValues;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.elasticsearch.river.RiverSettings;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.testng.annotations.Parameters;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.testng.annotations.Test;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import org.xbib.elasticsearch.plugin.jdbc.PlainIndexableObject;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import org.xbib.elasticsearch.plugin.jdbc.RiverContext;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;<a name="line.17"></a>
 <span class="sourceLineNo">018</span><a name="line.18"></a>
 <span class="sourceLineNo">019</span>import java.io.IOException;<a name="line.19"></a>
 <span class="sourceLineNo">020</span>import java.sql.Connection;<a name="line.20"></a>
@@ -37,7 +37,7 @@
 <span class="sourceLineNo">029</span><a name="line.29"></a>
 <span class="sourceLineNo">030</span>public class ColumnRiverSourceTests extends AbstractRiverNodeTest {<a name="line.30"></a>
 <span class="sourceLineNo">031</span><a name="line.31"></a>
-<span class="sourceLineNo">032</span>    private final Logger logger = LoggerFactory.getLogger(ColumnRiverSourceTests.class.getName());<a name="line.32"></a>
+<span class="sourceLineNo">032</span>    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSourceTests.class.getName());<a name="line.32"></a>
 <span class="sourceLineNo">033</span><a name="line.33"></a>
 <span class="sourceLineNo">034</span>    private Random random = new Random();<a name="line.34"></a>
 <span class="sourceLineNo">035</span><a name="line.35"></a>
