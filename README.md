@@ -20,9 +20,7 @@ Then issue this simple command::
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
-            "sql" : "select * from orders",
-            "index" : "my_jdbc_index",
-            "type" : "my_jdbc_type"
+            "sql" : "select * from orders"
         }
     }'
 
@@ -137,6 +135,7 @@ A terminal / console with commands `curl` and `unzip` and Internet access (of co
 
 8. Start another terminal, and create a JDBC river instance with name `my_jdbc_river`
 
+    ```
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
 	    "type" : "jdbc",
 	    "jdbc" : {
@@ -146,25 +145,39 @@ A terminal / console with commands `curl` and `unzip` and Internet access (of co
 	        "sql" : "select * from orders"
 	    }
 	}'
+	```
 
 9. The river runs immediately. It will run exactly once. Watch the log on the elasticsearch terminal
    for the river activity. When the river fetched the data, you can query your elasticsearch node
-   for the data you just indexed with the following `curl` command
+   for the data you just indexed with the following command
 
-	`curl'localhost:9200/jdbc/_search?pretty&q=*'`
+	`curl 'localhost:9200/jdbc/_search?pretty&q=*'`
 
 10. Enjoy the result!
 
 11. If you want to stop the `my_jdbc_river` river fetching data from the `orders` table after the
-    quick demonstration, use this command:
+    quick demonstration, use this command
 
-	`curl -XDELETE 'localhost:9200/_river/my_jdbc_river'``
+	`curl -XDELETE 'localhost:9200/_river/my_jdbc_river'`
 
 Now, if you want more fine-tuning, add a schedule for fetching data regularly,
 you can change the index name, add more SQL statements, tune bulk indexing,
 change the mapping, change the river creation settings.
 
 ## Plugin parameters
+
+Important note: all plugin-related parameters are subsumed in the `jdbc` section of a river delaration.
+For example, if you declare an index for the JDBC plugin, this parameter must be placed with
+the `jdbc` section, not outside of it!
+
+    ```
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "type" : "jdbc",
+	    "jdbc" : {
+	         <all parameters go here>
+	    }
+	}'
+	```
 
 `strategy` -the strategy of the JDBC plugin, currently implemented: "simple", "column"
 
@@ -191,7 +204,7 @@ change the mapping, change the river creation settings.
 
 `sql.parameter` - bind parameters for the SQL statement (in order)
 
-`sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC CallableStatement (default: false)
+`sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC CallableStatement (default: false). Note: callable statement support is experimental and not well tested.
 
 `locale` - the default locale (used for parsing numerical values, floating point character. Recommended values is "en_US")
 
@@ -250,21 +263,6 @@ Quartz cron expression format (see below).
 	        "maxconcurrentbulkactions" : 4 * available CPU cores,
 	    }
 	}
-
-## Obsolete parameters
-
-In older versions, the following parameters were available. THey are no longer supported.
-
-`driver` - Class name of JDBC river. Since JDBC plugin requires JDBC Version 4 (or higher), which is
-included in Java 6, this parameter is not used any more.
-
-`poll` - interval for waiting between river invocations. Replaced by `schedule`
-
-`bulk_size` - renamed to `maxbulkactions`
-
-`max_bulk_requests` - renamed to `maxconcurrrentbulkactions`
-
-`bulk_flush_interval` - no longer supported, replaced by internal flush invocations
 
 ## Cron expression syntax
 
@@ -350,6 +348,23 @@ It is very important to note that overuse of overflowing ranges creates ranges t
 and no effort has been made to determine which interpretation CronExpression chooses.
 An example would be "0 0 14-6 ? * FRI-MON".
 
+
+## Obsolete parameters
+
+In older versions, the following parameters were available. THey are no longer supported.
+
+`driver` - Class name of JDBC river. Since JDBC plugin requires JDBC Version 4 (or higher), which is
+included in Java 6, this parameter is not used any more.
+
+`poll` - interval for waiting between river invocations. Replaced by `schedule`
+
+`bulk_size` - renamed to `maxbulkactions`
+
+`max_bulk_requests` - renamed to `maxconcurrrentbulkactions`
+
+`bulk_flush_interval` - no longer supported, replaced by internal flush invocations
+
+
 ## Feeder start
 
 In the `bin` directory, you find some river/feeder examples.
@@ -407,7 +422,7 @@ and understands some more parameters. In this example, the default parameters ar
 In the example, you can also see that you can change your favorite `java` executable when
 executing a feed.
 
-## Column names for drivin JSON document construction
+## Column names for JSON document construction
 
 In SQL, each column may be labeled. This label is used by the JDBC plugin for JSON document
 construction. The dot is the path separator for the document strcuture.
@@ -467,9 +482,54 @@ http://www.elasticsearch.org/guide/reference/mapping/ttl-field.html
 http://www.elasticsearch.org/guide/reference/mapping/routing-field.html
 
 
-## JSON array construction
+## Bracket notation for JSON array construction
 
+When construction JSON, it is often the case you want to group SQL columns into a JSON object and
+line them up into JSON arrays. For allowing this, a bracket notation is used to identify children
+elements that repeat in each child. Example:
 
+| _id  | blog.name | blog.published      | blog.association[id] | blog.association[name] | blog.attachment[id]   | blog.attachment[name]    |
+| ---- | ----------| --------------------| -------------------- | ---------------------- | --------------------- | ------------------------ |
+| 4679 | Joe       | 2014-01-06 00:00:00 | 3917                 | John                   | 9450                  | /web/q/g/h/57436356.jpg  |
+| 4679 | Joe       | 2014-01-06 00:00:00 | 3917                 | John                   | 9965                  | /web/i/s/q/GS3193626.jpg |
+| 4679 | Joe       | 2014-01-06 00:00:00 | 3917                 | John                   | 9451                  | /web/i/s/q/GS3193626.jpg |
+
+Result:
+
+    {
+        "blog" : {
+            "attachment": [
+                {
+                    "name" : "/web/q/g/h/57436356.jpg",
+                    "id" : "9450"
+                },
+                {
+                    "name" : "/web/i/s/q/GS3193626.jpg",
+                    "id" : "9965"
+                },
+                {
+                    "name" : "/web/i/s/q/GS3193626.jpg",
+                    "id" : "9451"
+                }
+            ],
+            "name" : "Joe",
+            "association" : [
+                {
+                    "name" : "John",
+                    "id" : "3917"
+                },
+                {
+                    "name" : "John",
+                    "id" : "3917"
+                },
+                {
+                    "name" : "John",
+                    "id" : "3917"
+                }
+             ],
+             "published":"2014-01-06 00:00:00"
+         }
+    }
 
 
 # Frequently asked questions
@@ -515,25 +575,311 @@ will result into the following JSON documents
 	id=<random> {"product":"Oranges","created":1338501600000,"department":"English Fruits","quantity":3,"customer":"Bad"}
 
 
-
-
 # Advanced topics
 
 ## RiverSource, RiverMouth, RiverFlow
 
+The JDBC river consists of three conceptual interfaces than can be implemented separately.
+
+When you use the ``strategy`` parameter, the JDBC river tries to load additional classes before falling back to the ``simple`` strategy.
+
+You can implement your own strategy by adding your implementation jars to the plugin folder and exporting the implementing classes in the ``META-INF/services`` directory. The ``RiverService`` looks up implementations for your favorite ``strategy`` before the JDBC river initializes.
+
+So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy to the core JDBC river.
+
+RiverSource
+-----------
+
+The river source models the data producing side. Beside defining the JDBC connect parameters, it manages a dual-channel connection to the data producer for reading and for writing.
+The reading channel is used for fetching data, while the writing channel can update the source.
+
+The RiverSource API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverSource.html
+
+RiverMouth
+-----------
+
+The ``RiverMouth`` is the abstraction of the destination where all the data is flowing from the river source. It controls the resource usage of the bulk indexing method of Elasticsearch. Throttling is possible by limiting the number of bulk actions per request or by the maximum number of concurrent request.
+
+The RiverMouth API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverSource.html
+
+RiverFlow
+---------
+
+The ``RiverFlow`` is the abstraction to the thread which performs data fetching from the river source and transports it to the river mouth. A 'move' is considered a single step in the river live cycle. A river flow can be aborted.
+
+The RiverFlow API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverFlow.html
+
+
 ## Structured objects
+
+One of the advantage of SQL queries is the join operation. From many tables, new tuples can be formed.
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "type" : "jdbc",
+	    "jdbc" : {
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+	        "sql" : "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department"
+	    }
+	}'
+
+For example, these rows from SQL
+
+	mysql> select "relations" as "_index", orders.customer as "_id", orders.customer as "contact.customer", employees.name as "contact.employee"  from orders left join employees on employees.department = orders.department;
+	+-----------+-------+------------------+------------------+
+	| _index    | _id   | contact.customer | contact.employee |
+	+-----------+-------+------------------+------------------+
+	| relations | Big   | Big              | Smith            |
+	| relations | Large | Large            | Müller           |
+	| relations | Large | Large            | Meier            |
+	| relations | Large | Large            | Schulze          |
+	| relations | Huge  | Huge             | Müller           |
+	| relations | Huge  | Huge             | Meier            |
+	| relations | Huge  | Huge             | Schulze          |
+	| relations | Good  | Good             | Müller           |
+	| relations | Good  | Good             | Meier            |
+	| relations | Good  | Good             | Schulze          |
+	| relations | Bad   | Bad              | Jones            |
+	+-----------+-------+------------------+------------------+
+	11 rows in set (0.00 sec)
+
+will generate fewer JSON objects for the index `relations`.
+
+	index=relations id=Big {"contact":{"employee":"Smith","customer":"Big"}}
+	index=relations id=Large {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Large"}}
+	index=relations id=Huge {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Huge"}}
+	index=relations id=Good {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Good"}}
+	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
+
+Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
+controls how values are folded into arrays for making use of the Elasticsearch JSON data model.
 
 ## Strategies
 
+The JDBC plugin can be configured for different methods of data transport.
+Such methods of data transports are called a 'strategy'.
+
+By default, the JDBC plugin implements a ``simple`` strategy.
+
+## Simple strategy
+
+This strategy contains the following steps of processing:
+
+1. fetch data from the JDBC connection
+2. build structured objects and move them to Elasticsearch for indexing or deleting
+
+In the ``sql`` parameter of the river, a series of SQL statements can be defined which are executed at each river cycle to fetch the data.
+
+## Your custom strategy
+
+If you want to extend the JDBC plugin, for example by your custom password authentication, you could
+extend the SimpleRiverSource. Then, declare your strategy classes in `META-INF/services`. Add your
+jar to the classpath and add the `strategy` parameter to the river/feeder specifications.
+
+
 ## Support plugin
+
+The JDBC plugin comes bundled with the xbib Elasticsearch support plugin. This plugin contains
+various additions to the Elasticsearch core for reuse by other (xbib) plugins too.
+
+The JDBC zip contains the support jar beside the JDBC plugin jar, so it is easy to identify the
+support plugin that is bundled with the JDBC plugin.
+
+Currently, Elasticseach does not use classpath separation between plugins. So unfortunately,
+you must take care  for yourself that you have only one version of each jar in your classpath.
+If you find different versions of the support plugin jar in the folders of your Elasticsearch plugins,
+remove the jars you do not need.
+
+Note: if you update the JDBC plugin, old versions of the support plugin are NOT removed automatically.
 
 # Some real-world examples
 
-## Setting up the river with PostgreSQL
+## Step by step recipe for setting up the JDBC river with PostgreSQL
 
-## Setting up the river with MS SQL Server
+1. Install PostgreSQL
 
-## Index geo coordinates form MySQL in Elasticsearch
+   Example: PostgreSQL .dmg (Version 9.1.5) for Mac OS X from http://www.enterprisedb.com/products-services-training/pgdownload
+
+   Filename: postgresql-9.1.5-1-osx.dmg
+
+2. Install Elasticsearch
+
+   Follow instructions on http://elasticsearch.org
+
+3. Install JDBC plugin
+
+   Check for the JDBC version under http://github.com/jprante/elasticsearch-river/jdbc
+
+	    cd $ES_HOME
+	    ./bin/plugin -install river-jdbc -url http://bit.ly/1dKqNJy
+
+4. Download PostgreSQL JDBC driver
+
+   Check http://jdbc.postgresql.org/download.html
+
+   Current version is JDBC4 Postgresql Driver, Version 9.1-902
+
+   Filname postgresql-9.1-902.jdbc4.jar
+
+5. Copy driver into river folder
+
+   The reason is to include the JDBC driver into the Java classpath.
+
+	    cp postgresql-9.1-902.jdbc4.jar $ES_HOME/plugins/river-jdbc/
+
+6. Start Elasticsearch
+
+   Just in the foreground to follow log messages on the console.
+
+	    cd $ES_HOME
+	    ./bin/elasticsearch
+
+   Check if the river is installed correctly, Elasticsearch announces it in the second line logged. It must show ``loaded [jdbc-river]``.
+
+	[2014-01-22 23:00:06,821][INFO ][node                     ] [Julie Power] version[1.0.0.RC1], pid[26152], build[c6155c5/2014-01-15T17:02:32Z]
+	[2014-01-22 23:00:06,841][INFO ][node                     ] [Julie Power] initializing ...
+	[2014-01-22 23:00:06,932][INFO ][plugins                  ] [Julie Power] loaded [river-jdbc], sites []
+
+7. Create JDBC river
+
+   This is just a basic example to a database `test` with user `fred` and password `secret`.
+   The easiest method is using ``curl`` for a river creation via the REST interface.
+   Use the port configured during PostgreSQL installation. The default is `5432`.
+   ```
+       curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+            "type" : "jdbc",
+            "jdbc" : {
+                "url" : "jdbc:postgresql://localhost:5432/test",
+                "user" : "fred",
+                "password" : "secret",
+                "sql" : "select * from orders"
+            }
+       }'
+   ```
+
+8. Check log messages
+
+   In case the user does not exist, Elasticsearch will log a message.
+
+9. Repeat River creation until the river runs fine.
+
+
+## Step by step recipe for using the JDBC river with MS SQL Server
+
+1. Download Elasticsearch
+
+2. Download SQL Server JDBC driver from [the vendor](http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx)
+
+3. Put the `SQLJDBC4.jar` file in the lib folder of elasticsearch.
+
+4. Download elasticsearch-river-jdbc using the plugin downloader. Navigate to the elasticsearch folder on your computer and run...
+   ```
+    ./bin/plugin --install jdbc --url ...
+   ```
+
+5. Set up the database you want to be indexed.
+   [This includes allowing TCP/IP connections](http://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip)
+
+6. Start Elasticsearch
+    ```
+    ./elasticsearch.bat
+    ```
+
+7. Install a river like this
+    ```
+    curl -XPUT 'localhost:9200/_river/scorecards_river/_meta' -d '
+    {
+        "type" : "jdbc",
+        "jdbc": {
+            "url":"jdbc:sqlserver://localhost:1433;databaseName=ICFV",
+            "user":"elasticsearch",
+            "password":"elasticsearch",
+            "sql":"select * from ScoreCards"
+        }
+    }
+    ```
+
+8. You should see the river parsing the incoming data from the database in the logfile.
+
+## Index geo coordinates from MySQL in Elasticsearch
+
+This minimalistic example can also be found at `bin/river/mysql/geo.sh`
+
+- install MySQL e.g. in /usr/local/mysql
+
+- start MySQL on localhost:3306 (default)
+
+- prepare a 'test' database in MySQL
+
+- create empty user '' with empty password '' (this user should exist as default user, otherwise set up a password and adapt the example)
+
+- execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
+
+- then run this script: bash bin/river/mysql/geo.sh
+
+    ```
+    curl -XDELETE 'localhost:9200/_river/my_geo_river/'
+    curl -XGET 'localhost:9200/_river/_refresh'
+    curl -XDELETE 'localhost:9200/myjdbc'
+    curl -XPOST 'localhost:9200/_river/my_geo_river/_meta' -d '
+    {
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:mysql://localhost:3306/test",
+            "user" : "",
+            "password" : "",
+            "locale" : "en_US",
+            "sql" : [
+                {
+                    "statement" : "select \"myjdbc\" as _index, \"mytype\" as _type, name as _id, city, zip, address, lat as \"location.lat\", lon as \"location.lon\" from geo"
+                }
+            ],
+            "index" : "myjdbc",
+            "type" : "mytype",
+            "index_settings" : {
+                "index" : {
+                    "number_of_shards" : 1
+                }
+            },
+            "type_mapping": {
+                "mytype" : {
+                    "properties" : {
+                        "location" : {
+                            "type" : "geo_point"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    '
+    echo "sleeping while river should run..."
+    sleep 45
+    curl -XDELETE 'localhost:9200/_river/my_geo_river/'
+    curl -XGET 'localhost:9200/myjdbc/_refresh'
+    curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
+    {
+      "query": {
+         "filtered": {
+           "query": {
+              "match_all": {
+               }
+           },
+           "filter": {
+               "geo_distance" : {
+                   "distance" : "20km",
+                   "location" : {
+                        "lat" : 51.0,
+                        "lon" : 7.0
+                    }
+                }
+            }
+         }
+       }
+    }'
+    ```
+
 
 # License
 
