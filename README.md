@@ -76,14 +76,14 @@ The Maven project site is available at [Github](http://jprante.github.io/elastic
 
 # Documentation
 
-
 ## River or feeder?
 
 The plugin comes in two flavors, river or feeder. Here are the differences.
-Depending on your requirements, it is up to you to make a choice.
+Depending on your requirements, it is up to you to make a reasonable choice.
 
 Note, the JDBC river code wraps the feeder code, there is no reinvention of anything.
-Main difference is the different handling by starting/stopping a separate JVM.
+Main difference is the different handling by starting/stopping the process by
+a separate JVM in the feeder flavor.
 
 | River                            | Feeder                             |
 | ---------------------------------| -----------------------------------|
@@ -96,7 +96,7 @@ Main difference is the different handling by starting/stopping a separate JVM.
 | no standard method of  viewing river activity from within Elasticsearch | feed activity can be monitored by examining separate JVM |
 | about to be deprecated by Elasticsearch core team | Feeder API provided by xbib, using advanced features supported by xbib libraries only. Part of upcoming "gatherer" API to support coordinated data harvesting by multiple ES nodes |
 
-## River start
+## How to start the JDBC river
 
 Prerequisites:
 
@@ -104,7 +104,7 @@ A running MySQL database `test`, a table `orders`, and a user without name and p
 
 A terminal / console with commands `curl` and `unzip` and Internet access (of course)
 
-1. Download elasticsearch
+1. Download elasticsearch (latest version that is compatible with JDBC plugin)
 
 	`curl -OL https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-1.1.0.0.zip`
 
@@ -164,7 +164,7 @@ Now, if you want more fine-tuning, add a schedule for fetching data regularly,
 you can change the index name, add more SQL statements, tune bulk indexing,
 change the mapping, change the river creation settings.
 
-## Plugin parameters
+## JDBC plugin parameters
 
 Important note: all plugin-related parameters are subsumed in the `jdbc` section of a river delaration.
 For example, if you declare an index for the JDBC plugin, this parameter must be placed with
@@ -351,10 +351,10 @@ An example would be "0 0 14-6 ? * FRI-MON".
 
 ## Obsolete parameters
 
-In older versions, the following parameters were available. THey are no longer supported.
+In older versions of JDBC river, the following parameters were available. They are no longer supported.
 
 `driver` - Class name of JDBC river. Since JDBC plugin requires JDBC Version 4 (or higher), which is
-included in Java 6, this parameter is not used any more.
+part of Java 6, this parameter is not used any more.
 
 `poll` - interval for waiting between river invocations. Replaced by `schedule`
 
@@ -364,18 +364,17 @@ included in Java 6, this parameter is not used any more.
 
 `bulk_flush_interval` - no longer supported, replaced by internal flush invocations
 
+## How to start a JDBC feeder
 
-## Feeder start
+In the `bin/feeder` directory, you find some feeder examples.
 
-In the `bin` directory, you find some river/feeder examples.
-
-A feed can be startet from the $ES_HOME/plugins/jdbc folder. Create a `bin` folder so it is easy to
-maintain feeder script side by side with the river.
+A feed can be started from the `$ES_HOME/plugins/jdbc` folder. If not already present, you should
+create a `bin` folder so it is easy to maintain feeder script side by side with the river.
 
 The feeder script must include the Elasticsearch core libraries into the classpath. Note the `-cp`
 parameter.
 
-Here is an example of a feed script in `$ES_HOME/plugins/jdbc/bin/feeder/oracle.create.sh`
+Here is an example of a feeder bash script in `$ES_HOME/plugins/jdbc/bin/feeder/oracle.create.sh`
 
     #!/bin/sh
 
@@ -413,14 +412,61 @@ The `jdbc` parameter structure is exactly the same as in a river.
 The feeder is invoked by `org.xbib.elasticsearch.plugin.feeder.Runner org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder`
 and understands some more parameters. In this example, the default parameters are shown.
 
-`elasticsearch` - an URI pointing to a host of an Elasticsearch cluster
+`elasticsearch` - an URI pointing to a host of an Elasticsearch cluster. In `es.cluster.name` you can configure the
+cluster name you want to connect to.
 
-`client` - the value `bulk` enables a transport client with the vanilla BulkProcessor
+`client` - the value `bulk` enables a transport client with the vanilla BulkProcessor, `ingest` enables a transport client with a customized IngestProcessor (advanced feature, only available with the xbib elasticsearch-support plugin)
 
 `concurrency` - how many `jdbc` jobs should be executed in parallel
 
 In the example, you can also see that you can change your favorite `java` executable when
 executing a feed.
+
+## Structured objects
+
+One of the advantage of SQL queries is the join operation. From many tables, new tuples can be formed.
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "type" : "jdbc",
+	    "jdbc" : {
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+	        "sql" : "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department"
+	    }
+	}'
+
+For example, these rows from SQL
+
+	mysql> select "relations" as "_index", orders.customer as "_id", orders.customer as "contact.customer", employees.name as "contact.employee"  from orders left join employees on employees.department = orders.department;
+	+-----------+-------+------------------+------------------+
+	| _index    | _id   | contact.customer | contact.employee |
+	+-----------+-------+------------------+------------------+
+	| relations | Big   | Big              | Smith            |
+	| relations | Large | Large            | Müller           |
+	| relations | Large | Large            | Meier            |
+	| relations | Large | Large            | Schulze          |
+	| relations | Huge  | Huge             | Müller           |
+	| relations | Huge  | Huge             | Meier            |
+	| relations | Huge  | Huge             | Schulze          |
+	| relations | Good  | Good             | Müller           |
+	| relations | Good  | Good             | Meier            |
+	| relations | Good  | Good             | Schulze          |
+	| relations | Bad   | Bad              | Jones            |
+	+-----------+-------+------------------+------------------+
+	11 rows in set (0.00 sec)
+
+will generate fewer JSON objects for the index `relations`.
+
+	index=relations id=Big {"contact":{"employee":"Smith","customer":"Big"}}
+	index=relations id=Large {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Large"}}
+	index=relations id=Huge {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Huge"}}
+	index=relations id=Good {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Good"}}
+	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
+
+Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
+controls how values are folded into arrays for making use of the Elasticsearch JSON data model.
+
 
 ## Column names for JSON document construction
 
@@ -484,9 +530,14 @@ http://www.elasticsearch.org/guide/reference/mapping/routing-field.html
 
 ## Bracket notation for JSON array construction
 
-When construction JSON, it is often the case you want to group SQL columns into a JSON object and
+When construction JSON documents, it is often the case you want to group SQL columns into a JSON object and
 line them up into JSON arrays. For allowing this, a bracket notation is used to identify children
-elements that repeat in each child. Example:
+elements that repeat in each child.
+
+Note, because of limitations in identifying SQL column groups, nested document structures may lead to
+repititions of the same group. Fortunately, this is harmless to Elasticsearch queries.
+
+Example:
 
 | _id  | blog.name | blog.published      | blog.association[id] | blog.association[name] | blog.attachment[id]   | blog.attachment[name]    |
 | ---- | ----------| --------------------| -------------------- | ---------------------- | --------------------- | ------------------------ |
@@ -531,14 +582,11 @@ Result:
          }
     }
 
-
-# Frequently asked questions
-
 ## How to fetch a table?
 
 For fetching a table, a simple "select *" (star) query can be used.
 Star queries are the simplest variant of selecting data from a database.
-They dump tables into Elasticsearch row-by-row.
+They dump tables into Elasticsearch row-by-row. If no `_id` column name is given, IDs will be automatically generated.
 
 For example, this river
 
@@ -574,6 +622,57 @@ will result into the following JSON documents
 	id=<random> {"product":"Apples","created":1338501600000,"department":"German Fruits","quantity":2,"customer":"Good"}
 	id=<random> {"product":"Oranges","created":1338501600000,"department":"English Fruits","quantity":3,"customer":"Bad"}
 
+# Monitoring the JDBC river state
+
+While a river/feed is running, you can monitor the activity by using the `_state` command.
+
+When running very large data fetches, it might be of interest to find out if the fetch is complete or still running.
+
+The `_state` command can show the state of a specific river or of all rivers, when an asterisk `*` is used as the river name.
+
+In the result, you can evaluate the field `active`. If set to `true`, the river is actively fetching data from the database.
+
+In the field `timestamp`, the latest state modification of the river is recorded.
+
+Example:
+
+    curl 'localhost:9200/_river/jdbc/*/_state?pretty'
+    {
+      "state" : [ {
+        "name" : "my_oracle_river",
+        "type" : "jdbc",
+        "enabled" : true,
+        "started" : "2014-05-10T20:29:04.260Z",
+        "timestamp" : "2014-05-10T20:52:15.866Z",
+        "counter" : 3,
+        "active" : true,
+        "custom" : {
+          "rivername" : "feeder",
+          "settings" : {
+            "index" : "myoracle",
+            "sql" : [ "select or_id as \"_id\", or_tan as \"tan\" from orders" ],
+            "maxbulkactions" : 10,
+            "type" : "myoracle",
+            "password" : "...",
+            "user" : "...",
+            "url" : "jdbc:oracle:thin:@//localhost:1521/sid"
+          },
+          "locale" : "de_",
+          "job" : null,
+          "sql" : [ "statement=select or_id as \"_id\", or_tan as \"tan\" from orders parameter=[] callable=false" ],
+          "autocommit" : false,
+          "fetchsize" : 10,
+          "maxrows" : 0,
+          "retries" : 3,
+          "maxretrywait" : "30s",
+          "resultsetconcurrency" : "CONCUR_UPDATABLE",
+          "resultsettype" : "TYPE_FORWARD_ONLY",
+          "rounding" : 0,
+          "scale" : 2
+        }
+      } ]
+    }
+
 
 # Advanced topics
 
@@ -581,79 +680,33 @@ will result into the following JSON documents
 
 The JDBC river consists of three conceptual interfaces than can be implemented separately.
 
-When you use the ``strategy`` parameter, the JDBC river tries to load additional classes before falling back to the ``simple`` strategy.
+When you use the ``strategy`` parameter, the JDBC river tries to load additional classes before
+falling back to the ``simple`` strategy.
 
-You can implement your own strategy by adding your implementation jars to the plugin folder and exporting the implementing classes in the ``META-INF/services`` directory. The ``RiverService`` looks up implementations for your favorite ``strategy`` before the JDBC river initializes.
+You can implement your own strategy by adding your implementation jars to the plugin folder and
+exporting the implementing classes in the ``META-INF/services`` directory. The ``RiverService`` looks up implementations for your favorite ``strategy`` before the JDBC river initializes.
 
-So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy to the core JDBC river.
+So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy
+to the core JDBC river.
 
-RiverSource
------------
+### RiverSource
 
 The river source models the data producing side. Beside defining the JDBC connect parameters, it manages a dual-channel connection to the data producer for reading and for writing.
 The reading channel is used for fetching data, while the writing channel can update the source.
 
 The RiverSource API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverSource.html
 
-RiverMouth
------------
+### RiverMouth
 
 The ``RiverMouth`` is the abstraction of the destination where all the data is flowing from the river source. It controls the resource usage of the bulk indexing method of Elasticsearch. Throttling is possible by limiting the number of bulk actions per request or by the maximum number of concurrent request.
 
 The RiverMouth API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverSource.html
 
-RiverFlow
----------
+### RiverFlow
 
 The ``RiverFlow`` is the abstraction to the thread which performs data fetching from the river source and transports it to the river mouth. A 'move' is considered a single step in the river live cycle. A river flow can be aborted.
 
 The RiverFlow API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverFlow.html
-
-
-## Structured objects
-
-One of the advantage of SQL queries is the join operation. From many tables, new tuples can be formed.
-
-	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
-	    "type" : "jdbc",
-	    "jdbc" : {
-	        "url" : "jdbc:mysql://localhost:3306/test",
-	        "user" : "",
-	        "password" : "",
-	        "sql" : "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department"
-	    }
-	}'
-
-For example, these rows from SQL
-
-	mysql> select "relations" as "_index", orders.customer as "_id", orders.customer as "contact.customer", employees.name as "contact.employee"  from orders left join employees on employees.department = orders.department;
-	+-----------+-------+------------------+------------------+
-	| _index    | _id   | contact.customer | contact.employee |
-	+-----------+-------+------------------+------------------+
-	| relations | Big   | Big              | Smith            |
-	| relations | Large | Large            | Müller           |
-	| relations | Large | Large            | Meier            |
-	| relations | Large | Large            | Schulze          |
-	| relations | Huge  | Huge             | Müller           |
-	| relations | Huge  | Huge             | Meier            |
-	| relations | Huge  | Huge             | Schulze          |
-	| relations | Good  | Good             | Müller           |
-	| relations | Good  | Good             | Meier            |
-	| relations | Good  | Good             | Schulze          |
-	| relations | Bad   | Bad              | Jones            |
-	+-----------+-------+------------------+------------------+
-	11 rows in set (0.00 sec)
-
-will generate fewer JSON objects for the index `relations`.
-
-	index=relations id=Big {"contact":{"employee":"Smith","customer":"Big"}}
-	index=relations id=Large {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Large"}}
-	index=relations id=Huge {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Huge"}}
-	index=relations id=Good {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Good"}}
-	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
-
-Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
-controls how values are folded into arrays for making use of the Elasticsearch JSON data model.
 
 ## Strategies
 
@@ -735,11 +788,11 @@ Note: if you update the JDBC plugin, old versions of the support plugin are NOT 
 	    cd $ES_HOME
 	    ./bin/elasticsearch
 
-   Check if the river is installed correctly, Elasticsearch announces it in the second line logged. It must show ``loaded [jdbc-river]``.
+   Check if the river is installed correctly, Elasticsearch announces it in the second line logged. It must show ``loaded [jdbc-...]``.
 
-	[2014-01-22 23:00:06,821][INFO ][node                     ] [Julie Power] version[1.0.0.RC1], pid[26152], build[c6155c5/2014-01-15T17:02:32Z]
+	[2014-01-22 23:00:06,821][INFO ][node                     ] [Julie Power] version[...], pid[26152], build[c6155c5/2014-01-15T17:02:32Z]
 	[2014-01-22 23:00:06,841][INFO ][node                     ] [Julie Power] initializing ...
-	[2014-01-22 23:00:06,932][INFO ][plugins                  ] [Julie Power] loaded [river-jdbc], sites []
+	[2014-01-22 23:00:06,932][INFO ][plugins                  ] [Julie Power] loaded [jdbc-..., support-...], sites []
 
 7. Create JDBC river
 
