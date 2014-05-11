@@ -1,16 +1,17 @@
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/database-128.png
+![JDBC](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/database-128.png)
 
-Image by `icons8 <http://www.iconsdb.com/icons8/?icon=database>`_ Creative Commons Attribution-NoDerivs 3.0 Unported.
+Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons Attribution-NoDerivs 3.0 Unported.
 
-JDBC plugin for Elasticsearch
-=============================
-.. image:: https://travis-ci.org/jprante/elasticsearch-river-jdbc.png
+# JDBC plugin for Elasticsearch
+![Travis](https://travis-ci.org/jprante/elasticsearch-river-jdbc.png)
 
-The Java Database Connection (JDBC) plugin allows to fetch data from JDBC sources for indexing into `Elasticsearch <http://www.elasticsearch.org>`_.
+The Java Database Connection (JDBC) plugin allows to fetch data from JDBC sources for
+indexing into [Elasticsearch](http://www.elasticsearch.org).
 
-It is implemented as an `Elasticsearch plugin <http://www.elasticsearch.org/guide/reference/modules/plugins.html>`_.
+It is implemented as an [Elasticsearch plugin](http://www.elasticsearch.org/guide/reference/modules/plugins.html).
 
-Creating a JDBC river is easy. Install the plugin. Download a JDBC driver jar from your vendor's site (here MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
+Creating a JDBC river is easy. Install the plugin. Download a JDBC driver jar from your vendor's site
+(for example MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
 Then issue this simple command::
 
     curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
@@ -25,72 +26,60 @@ Then issue this simple command::
         }
     }'
 
-Plugin works as a river or a feeder
------------------------------------
+## Plugin works as a river or a feeder
 
-The plugin can operate as a river in "pull mode" or as a feeder in "push mode". In feeder mode, the plugin
-runs in a separate JVM and can connect to a remote Elasticsearch cluster.
+The plugin can operate as a river in "pull mode" or as a feeder in "push mode".
+In feeder mode, the plugin runs in a separate JVM and can connect to a remote Elasticsearch cluster.
 
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/jdbc-river-feeder-architecture.png
+![Architecture](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/jdbc-river-feeder-architecture.png)
 
-The relational data is internally transformed into structured JSON objects for the schema-less indexing model
-of Elasticsearch documents.
+The relational data is internally transformed into structured JSON objects for the schema-less
+indexing model of Elasticsearch documents.
 
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/simple-tabular-json-data.png
+![Simple data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/simple-tabular-json-data.png)
 
 Both ends are scalable. The plugin can fetch data from different RDBMS source in parallel, and multithreaded
 bulk mode ensures high throughput when indexing to Elasticsearch.
 
-.. image:: ../../../elasticsearch-river-jdbc/raw/master/src/site/resources/tabular-json-data.png
+![Scalable data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/tabular-json-data.png)
 
-Versions
---------
+## Versions
 
-=============  ===========  =================
-ES version     Plugin       Release date
--------------  -----------  -----------------
-1.1.0          1.1.0.1      May 10, 2014
-=============  ===========  =================
+| ES version    | Plugin     | Release date |
+| ------------- | -----------| -------------|
+| 1.1.0         | 1.1.0.1    | May 10, 2014 |
 
-Prerequisites
--------------
+## Prerequisites
 
 - a JDBC driver jar for your database. You should download a driver from the vendor site. Put the jar into JDBC plugin folder.
 
-Installation
-------------
+## Installation
 
     ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.1/elasticsearch-river-jdbc-1.1.0.1-plugin.zip
 
 Do not forget to restart the node after installing.
 
-If you have installer Elasticsearch with Homebrew or other automation tools,
+If you have installed Elasticsearch with other automation tools, like for example Homebrew,
 you will need to locate your `ES_HOME` directory.  The easiest way to do this is by navigating to
 
     localhost:9200/_cluster/nodes?settings=true&pretty=true
 
 Change into this directory to invoke the `./bin/plugin` command line tool.
 
-Checksum
---------
+## Checksum
 
-===========================================   ========================================
-File                                          SHA1
--------------------------------------------   ----------------------------------------
-elasticsearch-river-jdbc-1.1.0.1-plugin.zip   1065a30897beddd4e37cb63ca40500a02319dbe7
-===========================================   ========================================
+| File                                         | SHA1                                     |
+| ---------------------------------------------| -----------------------------------------|
+| elasticsearch-river-jdbc-1.1.0.1-plugin.zip  | 1065a30897beddd4e37cb63ca40500a02319dbe7 |
 
-Project docs
-------------
+## Project docs
 
-The Maven project site is available at `Github <http://jprante.github.io/elasticsearch-river-jdbc>`_
+The Maven project site is available at [Github](http://jprante.github.io/elasticsearch-river-jdbc)
 
-Documentation
-=============
+# Documentation
 
 
-River or feeder?
-----------------
+## River or feeder?
 
 The plugin comes in two flavors, river or feeder. Here are the differences.
 Depending on your requirements, it is up to you to make a choice.
@@ -98,44 +87,41 @@ Depending on your requirements, it is up to you to make a choice.
 Note, the JDBC river code wraps the feeder code, there is no reinvention of anything.
 Main difference is the different handling by starting/stopping a separate JVM.
 
-================================= ===================================
-River                             Feeder
---------------------------------- -----------------------------------
-standard method of Elasticsearch  method to connect to external
-to connect to external sources    sources for pushing data into
-and pull data                     Elasticsearch
+| River                            | Feeder                             |
+| ---------------------------------| -----------------------------------|
+| standard method of Elasticsearch | method to connect to external      |
+| to connect to external sources   | sources for pushing data into      |
+| and pull data                    | Elasticsearch                      |
+| ---------------------------------| -----------------------------------|
+| multiple river instances, many   | no feeder types, feeder instances  |
+| river types                      | are separate JVMs                  |
+| ---------------------------------|------------------------------------|
+| based on an internal index       | based on a feeder document in the  |
+| `_river` to keep state           | Elasticsearch index for maintaining|
+|                                  | state                              |
+| ---------------------------------|------------------------------------|
+| does not scale, single           | scalable, not limited              |
+| local node only                  | to single node, can connect to     |
+|                                  | local or remote clusters           |
+| ---------------------------------|------------------------------------|
+| automatic failover and restart   | no failover, no restart            |
+| after cluster recovery           |                                    |
+| ---------------------------------|------------------------------------|
+| hard to control single or        | command line control of feeds,     |
+| multi runs and interruptions     | error exit code 1, crontab control |
+| ---------------------------------|------------------------------------|
+| no standard method of            | feed activity can be               |
+| viewing river activity from      | monitored by examining separate    |
+| within Elasticsearch             | JVM                                |
+| ---------------------------------|------------------------------------|
+| about to be deprecated by        | Feeder API provided by xbib,       |
+| Elasticsearch core team          | using advanced features supported  |
+|                                  | by xbib libraries only.            |
+|                                  | Part of upcoming "gatherer" API    |
+|                                  | to support coordinated data        |
+|                                  | harvesting by multiple ES nodes    |
 
-multiple river instances, many    no feeder types, feeder instances
-river types                       are separate JVMs
-
-based on an internal index        based on a feeder document in the
-`_river` to keep state            Elasticsearch index for maintaining
-                                  state
-
-does not scale, single            scalable, not limited
-local node only                   to single node, can connect to
-                                  local or remote clusters
-
-automatic failover and restart    no failover, no restart
-after cluster recovery
-
-hard to control single or         command line control of feeds,
-multi runs and interruptions      error exit code 1, crontab control
-
-no standard method of             feed activity can be
-viewing river activity from       monitored by examining separate
-within Elasticsearch              JVM
-
-about to be deprecated by         Feeder API provided by xbib,
-Elasticsearch core team           using features supported by xbib
-                                  tools only.
-                                  Part of upcoming "gatherer" API
-                                  to support coordinated data
-                                  harvesting by multiple ES nodes
-================================  ===================================
-
-River start
------------
+## River start
 
 Prerequisites:
 
@@ -201,8 +187,7 @@ Now, if you want more fine-tuning, add a schedule for fetching data regularly,
 you can change the index name, add more SQL statements, tune bulk indexing,
 change the mapping, change the river creation settings.
 
-Plugin parameters
------------------
+## Plugin parameters
 
 `strategy` -the strategy of the JDBC plugin, currently implemented: "simple", "column"
 
@@ -262,8 +247,7 @@ Plugin parameters
 `schedule` - a single or a list of cron expressions for scheduled execution. Syntax is equivalent to the
 Quartz cron expression format (see below).
 
-Default parameter settings
---------------------------
+## Default parameter settings
 
 	{
 	    "jdbc" :{
@@ -290,9 +274,7 @@ Default parameter settings
 	    }
 	}
 
-
-Obsolete parameters
--------------------
+## Obsolete parameters
 
 In older versions, the following parameters were available. THey are no longer supported.
 
@@ -307,10 +289,7 @@ included in Java 6, this parameter is not used any more.
 
 `bulk_flush_interval` - no longer supported, replaced by internal flush invocations
 
-
-
-Cron expression syntax
-----------------------
+## Cron expression syntax
 
 The following documentation is copied from the Quartz scheduler javadoc page.
 
@@ -320,17 +299,15 @@ Cron expressions provide the ability to specify complex time combinations such a
 Cron expressions are comprised of 6 required fields and one optional field separated by
 white space. The fields respectively are described as follows:
 
-=============== =================== ============================
-Field Name	 	Allowed Values	 	Allowed Special Characters
---------------- ------------------- ----------------------------
-Seconds         0-59                , - * /
-Minutes         0-59                , - * /
-Hours           0-23                , - * /
-Day-of-month    1-31                , - * ? / L W
-Month           1-12 or JAN-DEC     , - * /
-Day-of-Week     1-7 or SUN-SAT      , - * ? / L #
-Year (Optional) empty, 1970-2199    , - * /
-=============== =================== ============================
+| Field Name      | Allowed Values      | Allowed Special Characters  |
+| --------------- | ------------------- | ----------------------------|
+| Seconds         | 0-59                | , - * / |
+| Minutes         | 0-59                | , - * / |
+| Hours           | 0-23                | , - * / |
+| Day-of-month    | 1-31                | , - * ? / L W |
+| Month           | 1-12 or JAN-DEC     | , - * / |
+| Day-of-Week     | 1-7 or SUN-SAT      | , - * ? / L # |
+| Year (Optional) | empty, 1970-2199    | , - * / |
 
 The '*' character is used to specify all values. For example, "*" in the minute field means "every minute".
 
@@ -396,9 +373,7 @@ It is very important to note that overuse of overflowing ranges creates ranges t
 and no effort has been made to determine which interpretation CronExpression chooses.
 An example would be "0 0 14-6 ? * FRI-MON".
 
-
-Feeder start
-------------
+## Feeder start
 
 In the `bin` directory, you find some river/feeder examples.
 
@@ -455,8 +430,7 @@ and understands some more parameters. In this example, the default parameters ar
 In the example, you can also see that you can change your favorite `java` executable when
 executing a feed.
 
-Column names for drivin JSON document construction
---------------------------------------------------
+## Column names for drivin JSON document construction
 
 In SQL, each column may be labeled. This label is used by the JDBC plugin for JSON document
 construction. The dot is the path separator for the document strcuture.
@@ -516,17 +490,14 @@ http://www.elasticsearch.org/guide/reference/mapping/ttl-field.html
 http://www.elasticsearch.org/guide/reference/mapping/routing-field.html
 
 
-JSON array construction
------------------------
+## JSON array construction
 
 
 
 
-Frequently asked questions
-==========================
+# Frequently asked questions
 
-How to fetch a table?
----------------------
+## How to fetch a table?
 
 For fetching a table, a simple "select *" (star) query can be used.
 Star queries are the simplest variant of selecting data from a database.
@@ -568,38 +539,26 @@ will result into the following JSON documents
 
 
 
-`Parameters <../../../elasticsearch-river-jdbc/wiki/JDBC-River-parameters>`_
 
-`Fetching a table <../../../elasticsearch-river-jdbc/wiki/Moving-a-table-into-Elasticsearch>`_
+# Advanced topics
 
-`Column labeling: how to construct JSON out of tabular data <../../../elasticsearch-river-jdbc/wiki/Labeled-columns>`_
+## RiverSource, RiverMouth, RiverFlow
 
-`Bulk indexing <../../../elasticsearch-river-jdbc/wiki/Bulk-indexing>`_
+## Structured objects
 
-`SQL statements <../../../elasticsearch-river-jdbc/wiki/Using-a-series-of-SQL-statements>`_
+## Strategies
 
-`Display river state <../../../elasticsearch-river-jdbc/wiki/DisplayRiverState>`_
+## Support plugin
 
-Advanced topics
----------------
+# Some real-world examples
 
-`RiverSource, RiverMouth, RiverFlow <../../../elasticsearch-river-jdbc/wiki/RiverSource,-RiverMouth,-and-RiverFlow>`_
+## Setting up the river with PostgreSQL
 
-`Structured objects <../../../elasticsearch-river-jdbc/wiki/Structured-Objects>`_
+## Setting up the river with MS SQL Server
 
-`Strategies <../../../elasticsearch-river-jdbc/wiki/Strategies>`_
+## Index geo coordinates form MySQL in Elasticsearch
 
-`Support plugin <../../../elasticsearch-river-jdbc/wiki/SupportPlugin>`_
-
-Some real-world examples
-------------------------
-
-`Setting up the river with PostgreSQL <../../../elasticsearch-river-jdbc/wiki/Step-by-step-recipe-for-setting-up-the-river-with-PostgreSQL>`_
-
-`Index geo coordinates form MySQL in Elasticsearch <../../../elasticsearch-river-jdbc/wiki/MySQL-Geo>`_
-
-License
-=======
+# License
 
 Elasticsearch JDBC Plugin
 
