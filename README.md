@@ -24,7 +24,7 @@ Then issue this simple command::
         }
     }'
 
-## Plugin works as a river or a feeder
+## Two flavors: river or feeder
 
 The plugin can operate as a river in "pull mode" or as a feeder in "push mode".
 In feeder mode, the plugin runs in a separate JVM and can connect to a remote Elasticsearch cluster.
@@ -43,9 +43,9 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ## Versions
 
-| ES version    | Plugin     | Release date |
-| ------------- | -----------| -------------|
-| 1.1.0         | 1.1.0.1    | May 10, 2014 |
+| Elasticsearch version    | Plugin     | Release date |
+| ------------------------ | -----------| -------------|
+| 1.1.0                    | 1.1.0.1    | May 10, 2014 |
 
 ## Prerequisites
 
@@ -167,7 +167,7 @@ change the mapping, change the river creation settings.
 ## JDBC plugin parameters
 
 Important note: all plugin-related parameters are subsumed in the `jdbc` section of a river delaration.
-For example, if you declare an index for the JDBC plugin, this parameter must be placed with
+For example, if you declare an index for the JDBC plugin, this parameter must be placed within
 the `jdbc` section, not outside of it!
 
     ```
