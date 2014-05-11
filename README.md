@@ -209,13 +209,13 @@ the `jdbc` section, not outside of it!
 
 `sql.parameter` - bind parameters for the SQL statement (in order). Some special values can be used with the following meanings:
 
-    `$now` - the current timestamp
-    `$job` - job ID from context
-    `$count` - last number of rows merged
-    `$river.name` - the river name
-    `$river.state.timestamp` - last timestamp from river state
-    `$river.state.started` - timestamp of river start from river state
-    `$river.state.counter` - counter from river state, counts the numbers of runs
+  `$now` - the current timestamp
+  `$job` - job ID from context
+  `$count` - last number of rows merged
+  `$river.name` - the river name
+  `$river.state.timestamp` - last timestamp from river state
+  `$river.state.started` - timestamp of river start from river state
+  `$river.state.counter` - counter from river state, counts the numbers of runs
 
 `sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC CallableStatement (default: false). Note: callable statement support is experimental and not well tested.
 
