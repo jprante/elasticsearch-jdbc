@@ -89,23 +89,14 @@ Main difference is the different handling by starting/stopping a separate JVM.
 
 | River                            | Feeder                             |
 | ---------------------------------| -----------------------------------|
-| standard method of Elasticsearch to connect to external sources and pull data
-| method to connect to external sources for pushing data into Elasticsearch |
-| multiple river instances, many river types
-| no feeder types, feeder instances are separate JVMs |
-| based on an internal index `_river` to keep state      
-| based on a feeder document in the Elasticsearch index for maintaining state |
-| does not scale, single local node only
-| scalable, not limited to single node, can connect to local or remote clusters |
-| automatic failover and restart after cluster recovery
-| no failover, no restart |
-| hard to supervise single or multi runs and interruptions
-| command line control of feeds, error exit code 1, crontab control |
-| no standard method of  viewing river activity from within Elasticsearch
-| feed activity can be monitored by examining separate JVM |
-| about to be deprecated by Elasticsearch core team
-| Feeder API provided by xbib, using advanced features supported by xbib libraries only.
-Part of upcoming "gatherer" API to support coordinated data harvesting by multiple ES nodes |
+| standard method of Elasticsearch to connect to external sources and pull data | method to connect to external sources for pushing data into Elasticsearch |
+| multiple river instances, many river types | no feeder types, feeder instances are separate JVMs |
+| based on an internal index `_river` to keep state | based on a feeder document in the Elasticsearch index for maintaining state |
+| does not scale, single local node only | scalable, not limited to single node, can connect to local or remote clusters |
+| automatic failover and restart after cluster recovery | no failover, no restart |
+| hard to supervise single or multi runs and interruptions | command line control of feeds, error exit code 1, crontab control |
+| no standard method of  viewing river activity from within Elasticsearch | feed activity can be monitored by examining separate JVM |
+| about to be deprecated by Elasticsearch core team | Feeder API provided by xbib, using advanced features supported by xbib libraries only. Part of upcoming "gatherer" API to support coordinated data harvesting by multiple ES nodes |
 
 ## River start
 
