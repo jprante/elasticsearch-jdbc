@@ -74,6 +74,11 @@ Change into this directory to invoke the `./bin/plugin` command line tool.
 
 The Maven project site is available at [Github](http://jprante.github.io/elasticsearch-river-jdbc)
 
+## Issues
+
+All feedback is welcome! If you find issues, please post them at
+`Github <https://github.com/jprante/elasticsearch-river-jdbc/issues>`_
+
 # Documentation
 
 ## River or feeder?
@@ -202,7 +207,15 @@ the `jdbc` section, not outside of it!
 
 `sql.statement` - the SQL statement
 
-`sql.parameter` - bind parameters for the SQL statement (in order)
+`sql.parameter` - bind parameters for the SQL statement (in order). Some special values can be used with the following meanings:
+
+    `$now` - the current timestamp
+    `$job` - job ID from context
+    `$count` - last number of rows merged
+    `$river.name` - the river name
+    `$river.state.timestamp` - last timestamp from river state
+    `$river.state.started` - timestamp of river start from river state
+    `$river.state.counter` - counter from river state, counts the numbers of runs
 
 `sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC CallableStatement (default: false). Note: callable statement support is experimental and not well tested.
 
