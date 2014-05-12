@@ -8,6 +8,7 @@ import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 public class ValueListenerTests extends Assert {
 
@@ -86,7 +87,7 @@ public class ValueListenerTests extends Assert {
                 .end();
         assertEquals(output.data().size(), 2, "Number of inserted objects");
         assertEquals(output.data().toString(),
-                "{[null/null/null/1]->{person={name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-12\"}, salary=\"$1000\"}}={\"person\":{\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"},\"salary\":\"$1000\"}}, [null/null/null/2]->{person={name=\"Bill Smith\", position={name=\"Boss\", since=\"2012-06-13\"}, salary=\"$2000\"}}={\"person\":{\"name\":\"Bill Smith\",\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"},\"salary\":\"$2000\"}}}"
+                "{[null/null/null/1]->{person={salary=\"$1000\", name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-12\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"}}}, [null/null/null/2]->{person={salary=\"$2000\", name=\"Bill Smith\", position={name=\"Boss\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$2000\",\"name\":\"Bill Smith\",\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"}}}}"
         );
     }
 
@@ -103,9 +104,8 @@ public class ValueListenerTests extends Assert {
                 .values(row1)
                 .values(row2)
                 .end();
-        //assertEquals(output.data().size(), 1, "Number of inserted objects");
         assertEquals(output.data().toString(),
-                "{[null/null/null/1]->{person={name=\"Joe Doe\", position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}, salary=\"$1000\"}}={\"person\":{\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]},\"salary\":\"$1000\"}}}"
+                "{[null/null/null/1]->{person={salary=\"$1000\", name=\"Joe Doe\", position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]}}}}"
         );
     }
 
@@ -124,7 +124,7 @@ public class ValueListenerTests extends Assert {
                 .end();
         assertEquals(output.data().size(), 1, "Number of inserted objects");
         assertEquals(output.data().toString(),
-                "{[null/null/null/1]->{person={name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-13\"}, salary=\"$1000\"}}={\"person\":{\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"salary\":\"$1000\"}}}"
+                "{[null/null/null/1]->{person={salary=\"$1000\", name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"}}}}"
         );
     }
 
@@ -145,7 +145,7 @@ public class ValueListenerTests extends Assert {
                 .end();
         assertEquals(output.data().size(), 2, "Number of inserted objects");
         assertEquals(output.data().toString(),
-                "{[null/null/null/1]->{person={name=[\"Joe\",\"John\",\"Mark\"], position={name=\"Worker\", since=\"2012-06-13\"}, salary=\"$1000\"}}={\"person\":{\"name\":[\"Joe\",\"John\",\"Mark\"],\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"salary\":\"$1000\"}}, [null/null/null/2]->{person={name=\"Mark\", position={name=\"Worker\", since=\"2012-06-13\"}, salary=\"$1000\"}}={\"person\":{\"name\":\"Mark\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"salary\":\"$1000\"}}}"
+                "{[null/null/null/1]->{person={salary=\"$1000\", name=[\"Joe\",\"John\",\"Mark\"], position={name=\"Worker\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":[\"Joe\",\"John\",\"Mark\"],\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"}}}, [null/null/null/2]->{person={salary=\"$1000\", name=\"Mark\", position={name=\"Worker\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Mark\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"}}}}"
         );
     }
 
@@ -171,7 +171,7 @@ public class ValueListenerTests extends Assert {
                 .values(row6)
                 .end();
         assertEquals(output.data().toString(),
-                "{[null/null/null/1]->{person={coursename=[{name=\"Machine Learning\", count=\"5\"}, {name=\"Recommender Systems\", count=\"5\"}], name=\"Andrew Ng\"}}={\"person\":{\"coursename\":[{\"name\":\"Machine Learning\",\"count\":\"5\"},{\"name\":\"Recommender Systems\",\"count\":\"5\"}],\"name\":\"Andrew Ng\"}}, [null/null/null/2]->{person={coursename=[{name=\"Hadoop Internals\", count=\"12\"}, {name=\"Basic of Lucene\", count=\"25\"}, {name=\"Advanced Lucene\", count=\"5\"}, {name=\"Introduction to Apache Avro\", count=\"5\"}], name=\"Doug Cutting\"}}={\"person\":{\"coursename\":[{\"name\":\"Hadoop Internals\",\"count\":\"12\"},{\"name\":\"Basic of Lucene\",\"count\":\"25\"},{\"name\":\"Advanced Lucene\",\"count\":\"5\"},{\"name\":\"Introduction to Apache Avro\",\"count\":\"5\"}],\"name\":\"Doug Cutting\"}}}"
+                "{[null/null/null/1]->{person={name=\"Andrew Ng\", coursename=[{name=\"Machine Learning\", count=\"5\"}, {name=\"Recommender Systems\", count=\"5\"}]}}={\"person\":{\"name\":\"Andrew Ng\",\"coursename\":[{\"name\":\"Machine Learning\",\"count\":\"5\"},{\"name\":\"Recommender Systems\",\"count\":\"5\"}]}}, [null/null/null/2]->{person={name=\"Doug Cutting\", coursename=[{name=\"Hadoop Internals\", count=\"12\"}, {name=\"Basic of Lucene\", count=\"25\"}, {name=\"Advanced Lucene\", count=\"5\"}, {name=\"Introduction to Apache Avro\", count=\"5\"}]}}={\"person\":{\"name\":\"Doug Cutting\",\"coursename\":[{\"name\":\"Hadoop Internals\",\"count\":\"12\"},{\"name\":\"Basic of Lucene\",\"count\":\"25\"},{\"name\":\"Advanced Lucene\",\"count\":\"5\"},{\"name\":\"Introduction to Apache Avro\",\"count\":\"5\"}]}}}"
         );
     }
 
@@ -241,26 +241,53 @@ public class ValueListenerTests extends Assert {
                 .values(row3)
                 .end();
         assertEquals(output.data().toString(),
-                "{[null/null/null/4679]->{blog={attachment=[{name=\"/web/q/g/h/57436356.jpg\", id=\"9450\"}, {name=\"/web/i/s/q/GS3193626.jpg\", id=\"9965\"}, {name=\"/web/i/s/q/GS3193626.jpg\", id=\"9451\"}], name=\"Tesla, Abe and Elba\", association=[{name=\"Idris Elba\", id=\"3917\"}, {name=\"Idris Elba\", id=\"3917\"}, {name=\"Idris Elba\", id=\"3917\"}], published=\"2014-01-06 00:00:00\"}}={\"blog\":{\"attachment\":[{\"name\":\"/web/q/g/h/57436356.jpg\",\"id\":\"9450\"},{\"name\":\"/web/i/s/q/GS3193626.jpg\",\"id\":\"9965\"},{\"name\":\"/web/i/s/q/GS3193626.jpg\",\"id\":\"9451\"}],\"name\":\"Tesla, Abe and Elba\",\"association\":[{\"name\":\"Idris Elba\",\"id\":\"3917\"},{\"name\":\"Idris Elba\",\"id\":\"3917\"},{\"name\":\"Idris Elba\",\"id\":\"3917\"}],\"published\":\"2014-01-06 00:00:00\"}}}"
+                "{[null/null/null/4679]->{blog={name=\"Tesla, Abe and Elba\", published=\"2014-01-06 00:00:00\", association=[{id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}], attachment=[{id=\"9450\", name=\"/web/q/g/h/57436356.jpg\"}, {id=\"9965\", name=\"/web/i/s/q/GS3193626.jpg\"}, {id=\"9451\", name=\"/web/i/s/q/GS3193626.jpg\"}]}}={\"blog\":{\"name\":\"Tesla, Abe and Elba\",\"published\":\"2014-01-06 00:00:00\",\"association\":[{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3917\",\"name\":\"Idris Elba\"}],\"attachment\":[{\"id\":\"9450\",\"name\":\"/web/q/g/h/57436356.jpg\"},{\"id\":\"9965\",\"name\":\"/web/i/s/q/GS3193626.jpg\"},{\"id\":\"9451\",\"name\":\"/web/i/s/q/GS3193626.jpg\"}]}}}"
         );
     }
 
     @Test
     public void testDoubleScientificNotation() throws Exception {
+        Locale.setDefault(Locale.US);
         List<String> columns = Arrays.asList("_id", "lat", "lon");
         List<Object> row1 = new LinkedList<Object>();
         row1.add("1");
         row1.add(50.940664);
         row1.add(6.9599115);
         MockRiverMouth output = new MockRiverMouth();
-        new RiverMouthKeyValueStreamListener<String,Object>()
+        new RiverMouthKeyValueStreamListener<String, Object>()
                 .output(output)
                 .begin()
                 .keys(columns)
                 .values(row1)
                 .end();
         assertEquals(output.data().toString(),
-                "{[null/null/null/1]->{lat=50,940664000000, lon=6,959911500000}={\"lat\":50.940664,\"lon\":6.9599115}}"
+                "{[null/null/null/1]->{lat=50.940664000000, lon=6.959911500000}={\"lat\":50.940664,\"lon\":6.9599115}}"
+        );
+    }
+
+    @Test
+    public void testNestedDots() throws Exception {
+        List<String> columns = Arrays.asList("_id", "person.name", "person.coursename[teacher.id]", "person.coursename[teacher.name]");
+        List<String> row1 = Arrays.asList("1", "Andrew Ng", "1", "Brian Smith");
+        List<String> row2 = Arrays.asList("1", "Andrew Ng", "2", "Marc Levengood");
+        List<String> row3 = Arrays.asList("2", "Doug Cutting", "1", "Brian Smith");
+        List<String> row4 = Arrays.asList("2", "Doug Cutting", "2", "Marc Levengood");
+        List<String> row5 = Arrays.asList("2", "Doug Cutting", "3", "Samantha Carter");
+        List<String> row6 = Arrays.asList("2", "Doug Cutting", "4", "Jack O'Neill");
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverMouthKeyValueStreamListener<String, String>()
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .values(row2)
+                .values(row3)
+                .values(row4)
+                .values(row5)
+                .values(row6)
+                .end();
+        assertEquals(output.data().toString(),
+                "{[null/null/null/1]->{person={name=\"Andrew Ng\", coursename=[{teacher={id=\"1\", name=\"Brian Smith\"}}, {teacher={id=\"2\", name=\"Marc Levengood\"}}]}}={\"person\":{\"name\":\"Andrew Ng\",\"coursename\":[{\"teacher\":{\"id\":\"1\",\"name\":\"Brian Smith\"}},{\"teacher\":{\"id\":\"2\",\"name\":\"Marc Levengood\"}}]}}, [null/null/null/2]->{person={name=\"Doug Cutting\", coursename=[{teacher={id=\"1\", name=\"Brian Smith\"}}, {teacher={id=\"2\", name=\"Marc Levengood\"}}, {teacher={id=\"3\", name=\"Samantha Carter\"}}, {teacher={id=\"4\", name=\"Jack O'Neill\"}}]}}={\"person\":{\"name\":\"Doug Cutting\",\"coursename\":[{\"teacher\":{\"id\":\"1\",\"name\":\"Brian Smith\"}},{\"teacher\":{\"id\":\"2\",\"name\":\"Marc Levengood\"}},{\"teacher\":{\"id\":\"3\",\"name\":\"Samantha Carter\"}},{\"teacher\":{\"id\":\"4\",\"name\":\"Jack O'Neill\"}}]}}}"
         );
     }
 

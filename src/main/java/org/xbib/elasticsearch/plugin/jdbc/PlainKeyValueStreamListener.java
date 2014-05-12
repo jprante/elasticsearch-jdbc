@@ -4,7 +4,7 @@ import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.xbib.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -207,9 +207,13 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         }
         int i = key.indexOf(delimiter);
         String index = null;
-        if (i <= 0) {
-            Matcher matcher = p.matcher(key);
-            boolean isSequence = matcher.matches();
+        boolean isSequence = false;
+        Matcher matcher = p.matcher(key);
+        if (matcher.matches()) {
+            isSequence = key.indexOf("[") < i;
+        }
+        if (i <= 0 || isSequence) {
+            isSequence = matcher.matches();
             String head = key;
             if (isSequence) {
                 head = matcher.group(1);
@@ -227,20 +231,29 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
                     int j = l.isEmpty() ? -1 : l.size() - 1;
                     if (j >= 0) {
                         Map<String, Object> m = (Map<String, Object>) l.get(j);
-                        if (!m.containsKey(index)) {
-                            l.set(j, merge(m, index, value)); // append
+                        int delimiterOffset = index.indexOf(delimiter);
+                        if (delimiterOffset >= 0) {
+                            if (!containsKeyInDotNotation(index, m)) {
+                                l.set(j, merge(m, index, value)); // append
+                            } else {
+                                l.add(merge(new LinkedHashMap(), index, value));
+                            }
                         } else {
-                            l.add(merge(new HashMap(), index, value));
+                            if (!m.containsKey(index)) {
+                                l.set(j, merge(m, index, value)); // append
+                            } else {
+                                l.add(merge(new LinkedHashMap(), index, value));
+                            }
                         }
                     } else {
-                        l.add(merge(new HashMap(), index, value));
+                        l.add(merge(new LinkedHashMap(), index, value));
                     }
                 }
             }
         } else {
             String head = key.substring(0, i);
-            Matcher matcher = p.matcher(head);
-            boolean isSequence = matcher.matches();
+            matcher = p.matcher(head);
+            isSequence = matcher.matches();
             if (isSequence) {
                 head = matcher.group(1);
             }
@@ -261,7 +274,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
                     throw new IllegalArgumentException("illegal head: " + head);
                 }
             } else {
-                Map<String, Object> m = new HashMap<String, Object>();
+                Map<String, Object> m = new LinkedHashMap<String, Object>();
                 map.put(head, m);
                 merge(m, tail, value);
             }
@@ -290,5 +303,26 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         }
         return b;
     }
+
+    private boolean containsKeyInDotNotation(String key, Map mapToCheck) {
+        int delimiterIndex = key.indexOf(delimiter);
+        if (delimiterIndex < 0) {
+            return mapToCheck.containsKey(key);
+        } else {
+            String head = key.substring(0, delimiterIndex);
+            String tail = key.substring(delimiterIndex + 1);
+            Object nextObject = mapToCheck.get(head);
+            if (nextObject != null) {
+                if (nextObject instanceof Map) {
+                    Map nextMap = (Map) nextObject;
+                    return containsKeyInDotNotation(tail, nextMap);
+                }
+                return false;
+            } else {
+                return false;
+            }
+        }
+    }
+
 
 }

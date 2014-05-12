@@ -7,7 +7,7 @@ import java.util.Map;
  * A structured object is composed by an object data source together with
  * meta data about the object.
  */
-public interface IndexableObject extends Comparable<IndexableObject> {
+public interface IndexableObject {
 
     /**
      * Set the operation type, either "index", "create", or "delete"

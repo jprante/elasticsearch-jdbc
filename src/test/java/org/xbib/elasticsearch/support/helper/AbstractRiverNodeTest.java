@@ -134,12 +134,6 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
             logger.warn(e.getMessage());
         }
         // do not create index, river must do this
-        /*try {
-            client("1").admin().indices().create(new CreateIndexRequest(index)).actionGet();
-            logger.info("index {} created", index);
-        } catch (IndexAlreadyExistsException e) {
-            logger.warn(e.getMessage());
-        }*/
     }
 
     @AfterMethod

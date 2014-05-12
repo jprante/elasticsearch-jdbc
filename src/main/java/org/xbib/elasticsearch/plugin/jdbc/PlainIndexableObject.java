@@ -4,27 +4,26 @@ import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**
- * A basic indexable object. The indexable object can store meta data and core data.
+ * A plain indexable object. The indexable object can store meta data and core data.
  * The indexable object can be iterated and passed to an XContentBuilder. The individual values
  * are formatted for JSON, which should be the correct format
- *
  */
-public class PlainIndexableObject implements IndexableObject, ToXContent {
+public class PlainIndexableObject implements IndexableObject, ToXContent, Comparable<IndexableObject> {
 
     private Map<String, String> meta;
 
     private Map<String, Object> core;
 
     public PlainIndexableObject() {
-        this.meta = new TreeMap<String, String>();
-        this.core = new TreeMap<String, Object>();
+        this.meta = new LinkedHashMap<String, String>();
+        this.core = new LinkedHashMap<String, Object>();
 
     }
 
@@ -176,17 +175,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
-        if (!(o instanceof IndexableObject)) {
-            return false;
-        }
-        IndexableObject c = (IndexableObject) o;
-        return equal(optype(), c.optype()) &&
-                equal(index(), c.index()) &&
-                equal(type(), c.type()) &&
-                equal(id(), c.id());
+        return o != null && o instanceof IndexableObject && hashCode() == o.hashCode();
     }
 
     @Override
@@ -199,15 +188,4 @@ public class PlainIndexableObject implements IndexableObject, ToXContent {
         return hash;
     }
 
-    private boolean equal(Object a, Object b) {
-        if (a == null && b == null) {
-            return true;
-        }
-        if (a != null && b != null) {
-            if (a.equals(b)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
