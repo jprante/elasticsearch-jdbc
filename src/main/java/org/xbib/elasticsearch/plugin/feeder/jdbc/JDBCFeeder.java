@@ -141,6 +141,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 XContentMapValues.nodeIntegerValue(mySettings.get("fetchsize"), 10);
         int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
         int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
+        boolean ignoreNull = XContentMapValues.nodeBooleanValue(mySettings.get("ignore_null"), Boolean.FALSE);
         TimeValue maxretrywait =
                 XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
                         TimeValue.timeValueSeconds(30));
@@ -203,6 +204,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setMaxRetryWait(maxretrywait)
                 .setResultSetType(resultSetType)
                 .setResultSetConcurrency(resultSetConcurrency)
+                .ignoreNull(ignoreNull)
                 .contextualize();
         logger.trace("JDBC feeder ready to start, context is {}", riverContext);
     }

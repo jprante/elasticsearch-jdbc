@@ -109,6 +109,11 @@ public class RiverContext {
      */
     private boolean columnEscape;
 
+    /**
+     * Ignore null values from being indexed
+     */
+    private boolean ignoreNull;
+
     public RiverContext setRiverSettings(Map<String, Object> settings) {
         this.settings = settings;
         return this;
@@ -315,6 +320,15 @@ public class RiverContext {
         return this.columnEscape;
     }
 
+    public RiverContext ignoreNull(boolean ignoreNull) {
+        this.ignoreNull = ignoreNull;
+        return this;
+    }
+
+    public boolean ignoreNull() {
+        return ignoreNull;
+    }
+
     public RiverContext contextualize() {
         if (source != null) {
             source.setRiverContext(this);
@@ -350,6 +364,7 @@ public class RiverContext {
                     .field("columnUpdatedAt", columnUpdatedAt)
                     .field("columnDeletedAt", columnDeletedAt)
                     .field("columnEscape", columnEscape)
+                    .field("ignoreNull", ignoreNull)
                     .endObject();
             return XContentHelper.convertToMap(builder.bytes(), true).v2();
         } catch (IOException e) {
