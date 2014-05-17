@@ -250,6 +250,8 @@ the `jdbc` section, not outside of it!
 `schedule` - a single or a list of cron expressions for scheduled execution. Syntax is equivalent to the
 Quartz cron expression format (see below).
 
+`ignore_null` - ignore `null` values from being indexed. Default is `false.`
+
 ## Default parameter settings
 
 	{
