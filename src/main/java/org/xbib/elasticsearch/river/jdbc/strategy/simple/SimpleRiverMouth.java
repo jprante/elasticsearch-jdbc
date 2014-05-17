@@ -11,10 +11,14 @@ import org.elasticsearch.index.VersionType;
 import org.xbib.elasticsearch.plugin.jdbc.ControlKeys;
 import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.Values;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.support.client.Ingest;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Simple river mouth
@@ -90,6 +94,11 @@ public class SimpleRiverMouth implements RiverMouth {
         if (Strings.hasLength(object.id())) {
             setId(object.id());
         }
+
+        if(context.ignoreNull()) {
+            removeEmptyObjects(object.source());
+        }
+
         IndexRequest request = Requests.indexRequest(this.index)
                 .type(this.type)
                 .id(getId())
@@ -159,6 +168,73 @@ public class SimpleRiverMouth implements RiverMouth {
         if (!closed) {
             // do not shut down ingest object...  we need it for cleanup
             closed = true;
+        }
+    }
+
+    private void removeEmptyObjects(Map map)
+    {
+        Iterator mapIterator = map.keySet().iterator();
+        while (mapIterator.hasNext())
+        {
+            Object key = mapIterator.next();
+            Object mapObject = map.get(key);
+            if (mapObject == null)
+            {
+                mapIterator.remove();
+            } else if (mapObject instanceof Values && ((Values) mapObject).isNull())
+            {
+                mapIterator.remove();
+            }
+            else if (mapObject instanceof Map)
+            {
+                Map innerMap = (Map) mapObject;
+                removeEmptyObjects(innerMap);
+                if (innerMap.size() == 0)
+                {
+                    mapIterator.remove();
+                }
+            }
+            else if (mapObject instanceof List)
+            {
+                List innerList = (List) mapObject;
+                removeEmptyObjects(innerList);
+                if (innerList.size() == 0)
+                {
+                    mapIterator.remove();
+                }
+            }
+        }
+    }
+
+    private void removeEmptyObjects(List list)
+    {
+        Iterator listIterator = list.iterator();
+        while (listIterator.hasNext())
+        {
+            Object listObject = listIterator.next();
+            if (listObject == null)
+            {
+                listIterator.remove();
+            } else if (listObject instanceof Values && ((Values) listObject).isNull())
+            {
+                listIterator.remove();
+            } else if (listObject instanceof List)
+            {
+                List innerList = (List) listObject;
+                removeEmptyObjects(innerList);
+                if (innerList.size() == 0)
+                {
+                    listIterator.remove();
+                }
+            } else if (listObject instanceof Map)
+            {
+                Map innerMap = (Map) listObject;
+                removeEmptyObjects(innerMap);
+                if (innerMap.size() == 0)
+                {
+                    listIterator.remove();
+                }
+            }
         }
     }
 
