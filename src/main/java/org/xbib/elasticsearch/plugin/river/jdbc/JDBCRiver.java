@@ -15,6 +15,7 @@ import org.xbib.elasticsearch.action.river.execute.RunnableRiver;
 import org.xbib.elasticsearch.action.river.state.RiverState;
 import org.xbib.elasticsearch.action.river.state.StatefulRiver;
 import org.xbib.elasticsearch.plugin.feeder.Feeder;
+import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.elasticsearch.plugin.jdbc.RiverServiceLoader;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 
@@ -48,11 +49,11 @@ public class JDBCRiver extends AbstractRiverComponent implements RunnableRiver, 
             throw new IllegalArgumentException("no 'jdbc' settings in river settings?");
         }
         this.client = client;
-        this.feeder = createFeeder(riverSettings);
+        this.feeder = createFeeder(riverName.getType(), riverName.getName(), riverSettings);
     }
 
-    private Feeder createFeeder(RiverSettings riverSettings) {
-        Feeder feeder = null;
+    private Feeder createFeeder(String riverType, String riverName, RiverSettings riverSettings) {
+        JDBCFeeder feeder = null;
         try {
             Map<String,Object> spec = (Map<String, Object>) riverSettings.settings().get("jdbc");
             Map<String, String> loadedSettings = new JsonSettingsLoader().load(jsonBuilder().map(spec).string());
@@ -61,8 +62,10 @@ public class JDBCRiver extends AbstractRiverComponent implements RunnableRiver, 
             RiverFlow riverFlow = RiverServiceLoader.findRiverFlow(strategy);
             logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
             feeder = riverFlow.getFeeder();
-            logger.info("spec = {} settings = {}", spec, mySettings);
-            feeder.setType("jdbc").setSpec(spec).setSettings(mySettings);
+            logger.debug("spec = {} settings = {}", spec, mySettings.getAsMap());
+            feeder.setName(riverName)
+                    .setType(riverType)
+                    .setSpec(spec).setSettings(mySettings);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }

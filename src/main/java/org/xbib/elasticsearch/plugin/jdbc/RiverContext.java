@@ -89,6 +89,8 @@ public class RiverContext {
 
     private String resultSetConcurrency = "CONCUR_UPDATABLE";
 
+    private boolean shouldIgnoreNull;
+
     /**
      * Column name that contains creation time (for column strategy)
      */
@@ -279,6 +281,15 @@ public class RiverContext {
         return resultSetConcurrency;
     }
 
+    public RiverContext shouldIgnoreNull(boolean shouldIgnoreNull) {
+        this.shouldIgnoreNull = shouldIgnoreNull;
+        return this;
+    }
+
+    public boolean shouldIgnoreNull() {
+        return shouldIgnoreNull;
+    }
+
     public RiverContext columnUpdatedAt(String updatedAt) {
         this.columnUpdatedAt = updatedAt;
         return this;
@@ -346,6 +357,7 @@ public class RiverContext {
                     .field("resultsettype", resultSetType)
                     .field("rounding", rounding)
                     .field("scale", scale)
+                    .field("shouldignorenull", shouldIgnoreNull)
                     .field("columnCreatedAt", columnCreatedAt)
                     .field("columnUpdatedAt", columnUpdatedAt)
                     .field("columnDeletedAt", columnDeletedAt)

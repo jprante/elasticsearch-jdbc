@@ -40,6 +40,8 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     protected RiverContext riverContext;
 
+    private String name = "feeder";
+
     public JDBCFeeder() {
     }
 
@@ -61,6 +63,15 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     @Override
     public String getType() {
         return "jdbc";
+    }
+
+    public Feeder<T, R, P> setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Feeder<T, R, P> beforeRun() throws IOException {
@@ -96,7 +107,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             logger.warn("interrupted");
             return;
         }
-        createRiverContext("jdbc", "feeder", map);
+        createRiverContext(getType(), getName(), map);
         if (riverState == null) {
             riverState = new RiverState();
         }
@@ -136,7 +147,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         List<SQLCommand> sql = SQLCommand.parse(mySettings);
         String rounding = XContentMapValues.nodeStringValue(mySettings.get("rounding"), null);
         int scale = XContentMapValues.nodeIntegerValue(mySettings.get("scale"), 2);
-        boolean autocommit = XContentMapValues.nodeBooleanValue(mySettings.get("autocommit"), Boolean.FALSE);
+        boolean autocommit = XContentMapValues.nodeBooleanValue(mySettings.get("autocommit"), false);
         int fetchsize = url != null && url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
                 XContentMapValues.nodeIntegerValue(mySettings.get("fetchsize"), 10);
         int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
@@ -150,6 +161,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 "TYPE_FORWARD_ONLY");
         String resultSetConcurrency = XContentMapValues.nodeStringValue(mySettings.get("resultset_concurrency"),
                 "CONCUR_UPDATABLE");
+        boolean shouldIgnoreNull = XContentMapValues.nodeBooleanValue(mySettings.get("ignore_null_values"), false);
 
         RiverSource riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
@@ -203,6 +215,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setMaxRetryWait(maxretrywait)
                 .setResultSetType(resultSetType)
                 .setResultSetConcurrency(resultSetConcurrency)
+                .shouldIgnoreNull(shouldIgnoreNull)
                 .contextualize();
         logger.trace("JDBC feeder ready to start, context is {}", riverContext);
     }

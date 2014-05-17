@@ -1,7 +1,6 @@
 
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
-import org.xbib.elasticsearch.plugin.feeder.Feeder;
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
@@ -10,7 +9,7 @@ public class SimpleRiverFlow  implements RiverFlow {
 
     protected RiverContext context;
 
-    protected Feeder feeder;
+    protected JDBCFeeder feeder;
 
     @Override
     public String strategy() {
@@ -24,13 +23,13 @@ public class SimpleRiverFlow  implements RiverFlow {
     }
 
     @Override
-    public RiverFlow setFeeder(Feeder feeder) {
+    public RiverFlow setFeeder(JDBCFeeder feeder) {
         this.feeder = feeder;
         return this;
     }
 
     @Override
-    public Feeder getFeeder() {
+    public JDBCFeeder getFeeder() {
         if (feeder == null) {
             this.feeder = new JDBCFeeder();
         }

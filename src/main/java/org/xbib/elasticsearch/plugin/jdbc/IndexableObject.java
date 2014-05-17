@@ -88,4 +88,6 @@ public interface IndexableObject {
 
     boolean isEmpty();
 
+    IndexableObject ignoreNull(boolean ignorenull);
+
 }

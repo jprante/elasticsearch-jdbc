@@ -253,7 +253,8 @@ public class SimpleRiverSource implements RiverSource {
                     statement = connection.createStatement();
                     results = executeQuery(statement, command.getSQL());
                     RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
-                            .output(context.getRiverMouth());
+                            .output(context.getRiverMouth())
+                            .shouldIgnoreNull(context.shouldIgnoreNull());
                     merge(results, listener);
                 }
             } else {
@@ -286,7 +287,8 @@ public class SimpleRiverSource implements RiverSource {
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
                 RiverMouthKeyValueStreamListener<Object,Object> listener = new RiverMouthKeyValueStreamListener<Object,Object>()
-                        .output(context.getRiverMouth());
+                        .output(context.getRiverMouth())
+                        .shouldIgnoreNull(context.shouldIgnoreNull());
                 merge(results, listener);
             } else {
                 statement = prepareUpdate(command.getSQL());

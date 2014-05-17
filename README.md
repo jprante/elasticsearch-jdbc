@@ -183,6 +183,23 @@ the `jdbc` section, not outside of it!
 	    }
 	}'
 	```
+	
+Example:
+	
+    ```
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "type" : "jdbc",
+	    "jdbc" : {
+            "url" : "jdbc:mysql://localhost:3306/test",
+            "user" : "",
+            "password" : "",
+            "sql" : "select * from orders",
+            "index" : "myindex",
+            "type" : "mytype",
+            ...	         
+	    }
+	}'
+	```
 
 `strategy` -the strategy of the JDBC plugin, currently implemented: "simple", "column"
 
@@ -813,15 +830,17 @@ Note: if you update the JDBC plugin, old versions of the support plugin are NOT 
    The easiest method is using ``curl`` for a river creation via the REST interface.
    Use the port configured during PostgreSQL installation. The default is `5432`.
    ```
-       curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
-            "type" : "jdbc",
-            "jdbc" : {
-                "url" : "jdbc:postgresql://localhost:5432/test",
-                "user" : "fred",
-                "password" : "secret",
-                "sql" : "select * from orders"
-            }
-       }'
+   curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:postgresql://localhost:5432/test",
+            "user" : "fred",
+            "password" : "secret",
+            "sql" : "select * from orders",
+            "index" : "myindex",
+            "type" : "mytype"
+        }
+   }'
    ```
 
 8. Check log messages
@@ -861,7 +880,9 @@ Note: if you update the JDBC plugin, old versions of the support plugin are NOT 
             "url":"jdbc:sqlserver://localhost:1433;databaseName=ICFV",
             "user":"elasticsearch",
             "password":"elasticsearch",
-            "sql":"select * from ScoreCards"
+            "sql":"select * from ScoreCards",
+            "index" : "myindex",
+            "type" : "mytype"
         }
     }
     ```

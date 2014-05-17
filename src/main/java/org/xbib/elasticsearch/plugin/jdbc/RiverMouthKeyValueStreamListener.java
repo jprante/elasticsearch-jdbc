@@ -17,6 +17,11 @@ public class RiverMouthKeyValueStreamListener<K,V> extends PlainKeyValueStreamLi
         return this;
     }
 
+    public RiverMouthKeyValueStreamListener<K,V> shouldIgnoreNull(boolean shouldIgnoreNull) {
+        super.shouldIgnoreNull(shouldIgnoreNull);
+        return this;
+    }
+
     /**
      * The object is complete. Push it to the river mouth.
      *

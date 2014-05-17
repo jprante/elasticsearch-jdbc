@@ -38,6 +38,8 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
 
     private boolean shouldAutoGenID;
 
+    private boolean shouldIgnoreNull = false;
+
     /**
      * Set custom delimiter
      *
@@ -48,6 +50,12 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         this.delimiter = delimiter;
         return this;
     }
+
+    public PlainKeyValueStreamListener shouldIgnoreNull(boolean shouldIgnoreNull) {
+        this.shouldIgnoreNull = shouldIgnoreNull;
+        return this;
+    }
+
 
     /**
      * @return this value listener
@@ -290,7 +298,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
      * @return a new structured object
      */
     private IndexableObject newObject() {
-        return new PlainIndexableObject();
+        return new PlainIndexableObject().ignoreNull(shouldIgnoreNull);
     }
 
     private boolean shouldAutoGenID() {

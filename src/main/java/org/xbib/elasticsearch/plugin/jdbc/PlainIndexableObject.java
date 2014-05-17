@@ -21,62 +21,81 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
 
     private Map<String, Object> core;
 
+    private boolean ignoreNull;
+
     public PlainIndexableObject() {
         this.meta = new LinkedHashMap<String, String>();
         this.core = new LinkedHashMap<String, Object>();
-
     }
 
+    @Override
+    public IndexableObject ignoreNull(boolean ignorenull) {
+        this.ignoreNull = ignorenull;
+        return this;
+    }
+
+    @Override
     public IndexableObject optype(String optype) {
         meta.put(ControlKeys._optype.name(), optype);
         return this;
     }
 
+    @Override
     public String optype() {
         return meta.get(ControlKeys._optype.name());
     }
 
+    @Override
     public IndexableObject index(String index) {
         meta.put(ControlKeys._index.name(), index);
         return this;
     }
 
+    @Override
     public String index() {
         return meta.get(ControlKeys._index.name());
     }
 
+    @Override
     public IndexableObject type(String type) {
         meta.put(ControlKeys._type.name(), type);
         return this;
     }
 
+    @Override
     public String type() {
         return meta.get(ControlKeys._type.name());
     }
 
+    @Override
     public IndexableObject id(String id) {
         meta.put(ControlKeys._id.name(), id);
         return this;
     }
 
+    @Override
     public String id() {
         return meta.get(ControlKeys._id.name());
     }
 
+    @Override
     public IndexableObject meta(String key, String value) {
         meta.put(key, value);
         return this;
     }
 
+    @Override
     public String meta(String key) {
         return meta.get(key);
     }
 
+    @Override
     public IndexableObject source(Map<String, Object> source) {
         this.core = source;
         return this;
     }
 
+    @Override
     public Map<String, Object> source() {
         return core;
     }
@@ -86,6 +105,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
      *
      * @throws java.io.IOException when build gave an error
      */
+    @Override
     public String build() throws IOException {
         XContentBuilder builder = jsonBuilder();
         toXContent(builder, ToXContent.EMPTY_PARAMS);
@@ -110,8 +130,11 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
     protected XContentBuilder toXContent(XContentBuilder builder, Params params, Map<String, Object> map) throws IOException {
         builder.startObject();
         for (Map.Entry<String, Object> k : map.entrySet()) {
-            builder.field(k.getKey());
             Object o = k.getValue();
+            if (ignoreNull && (o == null || (o instanceof Values) && ((Values)o).isNull())) {
+                continue;
+            }
+            builder.field(k.getKey());
             if (o instanceof Values) {
                 Values v = (Values) o;
                 v.toXContent(builder, params);
@@ -154,6 +177,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
         return builder;
     }
 
+    @Override
     public boolean isEmpty() {
         return optype() == null && index() == null && type() == null && id() == null && core.isEmpty();
     }

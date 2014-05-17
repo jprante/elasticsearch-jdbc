@@ -3,7 +3,7 @@ package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.plugin.feeder.Feeder;
+import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;
 
@@ -32,13 +32,13 @@ public class ColumnRiverFlow extends SimpleRiverFlow {
     }
 
     @Override
-    public RiverFlow setFeeder(Feeder feeder) {
+    public RiverFlow setFeeder(JDBCFeeder feeder) {
         this.feeder = feeder;
         return this;
     }
 
     @Override
-    public Feeder getFeeder() {
+    public JDBCFeeder getFeeder() {
         if (feeder == null) {
             this.feeder = new ColumnRiverFeeder();
         }

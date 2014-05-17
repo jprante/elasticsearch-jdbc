@@ -291,4 +291,29 @@ public class ValueListenerTests extends Assert {
         );
     }
 
+    @Test
+    public void testIgnoreNull() throws Exception {
+        List<String> columns = Arrays.asList("_id", "col1", "col2");
+        List<Object> row1 = new LinkedList<Object>();
+        row1.add("1");
+        row1.add("Hello World");
+        row1.add(null);
+        List<Object> row2 = new LinkedList<Object>();
+        row2.add("1");
+        row2.add(null);
+        row2.add("Hello World");
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverMouthKeyValueStreamListener<String, Object>()
+                .shouldIgnoreNull(true)
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .values(row2)
+                .end();
+        assertEquals(output.data().toString(),
+                "{[null/null/null/1]->{col1=\"Hello World\", col2=\"Hello World\"}={\"col1\":\"Hello World\",\"col2\":\"Hello World\"}}"
+        );
+    }
+
 }
