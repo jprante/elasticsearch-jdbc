@@ -13,27 +13,27 @@ public class Listener implements ITestListener {
     @Override
     public void onTestStart(ITestResult result) {
         logger.info("----------------------------------------------------------");
-        logger.info("starting test method {}", result.getName());
+        logger.info("starting {}", result.getMethod());
         logger.info("----------------------------------------------------------");
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
         logger.info("----------------------------------------------------------");
-        logger.info("success of test method {}", result.getName());
+        logger.info("success {}", result.getMethod());
         logger.info("----------------------------------------------------------");
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
         logger.info("----------------------------------------------------------");
-        logger.info("failure of test method {}", result.getName());
+        logger.info("failure of {}", result.getMethod());
         logger.info("----------------------------------------------------------");
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        logger.info("skipped test {}", result.getMethod().getMethodName());
+        logger.info("skipped test {}", result.getMethod());
         result.setStatus(ITestResult.FAILURE);
     }
 

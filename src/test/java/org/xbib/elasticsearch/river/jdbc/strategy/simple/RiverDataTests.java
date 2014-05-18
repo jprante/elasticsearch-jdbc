@@ -27,7 +27,6 @@ public class RiverDataTests extends AbstractRiverNodeTest {
     public void testSimpleRiverOnce(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
         createRiver(riverResource);
-        waitForRiverEnabled();
         waitForInactiveRiver();
     }
 
@@ -42,7 +41,6 @@ public class RiverDataTests extends AbstractRiverNodeTest {
     public void testSimpleRiverRandom(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
         createRiver(riverResource);
-        waitForRiverEnabled();
         waitForInactiveRiver();
         assertHits("1", 104);
         logger.info("success");
@@ -60,7 +58,6 @@ public class RiverDataTests extends AbstractRiverNodeTest {
     public void testSimpleRiverMaxrows(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
         createRiver(riverResource);
-        waitForRiverEnabled();
         waitForInactiveRiver();
         assertHits("1", 104);
         logger.info("success");

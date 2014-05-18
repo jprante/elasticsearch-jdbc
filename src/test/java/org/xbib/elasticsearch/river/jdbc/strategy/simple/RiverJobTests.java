@@ -39,7 +39,6 @@ public class RiverJobTests extends AbstractRiverNodeTest {
         assertEquals(count, 100);
         //assertHits("1", 0);
         createRiver(riverResource);
-        waitForRiverEnabled();
         waitForInactiveRiver();
         assertHits("1", 100);
         connection = source.getConnectionForReading();

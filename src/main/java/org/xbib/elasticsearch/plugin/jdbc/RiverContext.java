@@ -9,6 +9,7 @@ import org.xbib.elasticsearch.river.jdbc.RiverSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -289,6 +290,8 @@ public class RiverContext {
     public boolean shouldIgnoreNull() {
         return shouldIgnoreNull;
     }
+
+
 
     public RiverContext columnUpdatedAt(String updatedAt) {
         this.columnUpdatedAt = updatedAt;

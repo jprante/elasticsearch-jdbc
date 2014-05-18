@@ -11,9 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * The river source models the data producing side
@@ -213,4 +215,9 @@ public interface RiverSource {
      * @return this river source
      */
     RiverSource closeWriting();
+
+    RiverSource setTimeZone(TimeZone timeZone);
+
+    TimeZone getTimeZone();
+
 }

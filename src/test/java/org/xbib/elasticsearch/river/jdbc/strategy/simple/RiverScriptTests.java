@@ -28,7 +28,6 @@ public class RiverScriptTests extends AbstractRiverNodeTest {
     @Parameters({"river1"})
     public void testSimpleRiverOnce(String riverResource) throws Exception {
         createRiver(riverResource);
-        waitForRiverEnabled();
         waitForInactiveRiver();
     }
 

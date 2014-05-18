@@ -4,7 +4,6 @@
 <suite name="JDBC River Test Suite (simple strategy - derby)" verbose="1">
     <parameter name="starturl" value="jdbc:derby:memory:myDB;create=true"/>
     <parameter name="stopurl" value="jdbc:derby:memory:myDB;drop=true"/>
-    <parameter name="driver" value="org.apache.derby.jdbc.EmbeddedDriver"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 

@@ -344,7 +344,7 @@
                 <dependency>
                     <groupId>org.apache.derby</groupId>
                     <artifactId>derby</artifactId>
-                    <version>10.10.1.1</version>
+                    <version>10.10.2.0</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -353,11 +353,11 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <skipTests>false</skipTests>
                             <systemPropertyVariables>
                                 <derby.system.home>${project.build.directory}/derby</derby.system.home>
                                 <derby.stream.error.file>${project.build.directory}/derby.log</derby.stream.error.file>
                             </systemPropertyVariables>
-                            <skipTests>false</skipTests>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/derby.xml</suiteXmlFile>

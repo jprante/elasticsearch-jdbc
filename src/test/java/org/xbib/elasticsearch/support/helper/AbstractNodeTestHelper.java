@@ -63,7 +63,6 @@ public abstract class AbstractNodeTestHelper extends Assert {
                 .build();
     }
 
-    @BeforeMethod
     public void startNodes() throws Exception {
         setClusterName();
         startNode("1");
@@ -92,7 +91,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
                 .put(getNodeSettings())
                 .put("name", id)
                 .build();
-        Node node = nodeBuilder().settings(finalSettings).build();
+        Node node = nodeBuilder().local(true).settings(finalSettings).build();
         Client client = node.client();
         nodes.put(id, node);
         clients.put(id, client);
@@ -125,7 +124,6 @@ public abstract class AbstractNodeTestHelper extends Assert {
         return client;
     }
 
-    @AfterMethod
     public void stopNodes() {
         for (Client client : clients.values()) {
             client.close();

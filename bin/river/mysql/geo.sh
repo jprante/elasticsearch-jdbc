@@ -50,11 +50,11 @@ curl -XPOST 'localhost:9200/_river/my_geo_river/_meta' -d '
 
 echo "sleeping while river should run..."
 
-sleep 45
+sleep 15
 
 curl -XDELETE 'localhost:9200/_river/my_geo_river/'
 
-curl -XGET 'localhost:9200/myjdbc/_refresh'
+#curl -XGET 'localhost:9200/myjdbc/_refresh'
 
 curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
 {

@@ -33,11 +33,13 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Simple river source.
@@ -64,9 +66,19 @@ public class SimpleRiverSource implements RiverSource {
 
     protected Connection writeConnection;
 
+    protected Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+
     private final Map<String, Object> lastRow = new HashMap<String, Object>();
 
     private long lastRowCount;
+
+    private long lastStartDate;
+
+    private long lastEndDate;
+
+    private long lastExecutionStartDate;
+
+    private long lastExecutionEndDate;
 
     protected ESLogger logger() {
         return logger;
@@ -195,6 +207,17 @@ public class SimpleRiverSource implements RiverSource {
         return writeConnection;
     }
 
+    @Override
+    public SimpleRiverSource setTimeZone(TimeZone timezone) {
+        this.calendar = Calendar.getInstance(timezone);
+        return this;
+    }
+
+    @Override
+    public TimeZone getTimeZone() {
+        return calendar.getTimeZone();
+    }
+
     /**
      * River cycle fetch. Issue a series of SQL statements.
      *
@@ -206,8 +229,10 @@ public class SimpleRiverSource implements RiverSource {
         if (logger().isDebugEnabled()) {
             logger().debug("fetching, {} SQL commands", context.getStatements().size());
         }
+        this.lastStartDate = new java.util.Date().getTime();
         try {
             for (SQLCommand command : context.getStatements()) {
+                this.lastExecutionStartDate = new java.util.Date().getTime();
                 if (command.isCallable()) {
                     if (logger().isDebugEnabled()) {
                         logger().debug("executing callable SQL: {}", command);
@@ -224,10 +249,12 @@ public class SimpleRiverSource implements RiverSource {
                     }
                     execute(command);
                 }
+                this.lastExecutionEndDate = new java.util.Date().getTime();
             }
         } catch (Exception e) {
             throw new IOException(e);
         } finally {
+            this.lastEndDate = new java.util.Date().getTime();
             closeReading();
             closeWriting();
         }
@@ -711,7 +738,7 @@ public class SimpleRiverSource implements RiverSource {
                 if (logger().isDebugEnabled()) {
                     logger().debug("setting $now to {}", t);
                 }
-                statement.setTimestamp(i, t);
+                statement.setTimestamp(i, t, calendar);
             } else if ("$job".equals(s)) {
                 if (logger().isDebugEnabled()) {
                     logger().debug("setting $job to {}", context.job());
@@ -722,17 +749,45 @@ public class SimpleRiverSource implements RiverSource {
                     logger().debug("setting $count to {}", lastRowCount);
                 }
                 statement.setLong(i, lastRowCount);
+            } else if ("$last.sql.start".equals(s)) {
+                if (lastExecutionStartDate == 0L) {
+                    Timestamp riverStarted = context.getRiverFlow() != null ?
+                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
+                    lastExecutionStartDate = riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime();
+                }
+                statement.setTimestamp(i, new Timestamp(lastExecutionStartDate), calendar);
+            } else if ("$last.sql.end".equals(s)) {
+                if (lastExecutionEndDate == 0L) {
+                    Timestamp riverStarted = context.getRiverFlow() != null ?
+                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
+                    lastExecutionEndDate = riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime();
+                }
+                statement.setTimestamp(i, new Timestamp(lastExecutionEndDate), calendar);
+            } else if ("$last.sql.sequence.start".equals(s)) {
+                if (lastStartDate == 0L) {
+                    Timestamp riverStarted = context.getRiverFlow() != null ?
+                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
+                    lastStartDate = riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime();
+                }
+                statement.setTimestamp(i, new Timestamp(lastStartDate), calendar);
+            } else if ("$last.sql.sequence.end".equals(s)) {
+                if (lastEndDate == 0L) {
+                    Timestamp riverStarted = context.getRiverFlow() != null ?
+                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
+                    lastEndDate = riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime();
+                }
+                statement.setTimestamp(i, new Timestamp(lastEndDate), calendar);
             } else if ("$river.name".equals(s)) {
                 String name = context.getRiverName();
                 statement.setString(i, name);
             } else if ("$river.state.timestamp".equals(s)) {
                 Timestamp timestamp = context.getRiverFlow() != null ?
                         new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getTimestamp().getTime()) : null;
-                statement.setTimestamp(i, timestamp);
+                statement.setTimestamp(i, timestamp, calendar);
             } else if ("$river.state.started".equals(s)) {
                 Timestamp started = context.getRiverFlow() != null ?
                         new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
-                statement.setTimestamp(i, started);
+                statement.setTimestamp(i, started, calendar);
             } else if ("$river.state.counter".equals(s)) {
                 Long counter = context.getRiverFlow() != null ?
                         context.getRiverFlow().getFeeder().getRiverState().getCounter() : null;
@@ -759,7 +814,7 @@ public class SimpleRiverSource implements RiverSource {
         } else if (value instanceof Date) {
             statement.setDate(i, (Date) value);
         } else if (value instanceof Timestamp) {
-            statement.setTimestamp(i, (Timestamp) value);
+            statement.setTimestamp(i, (Timestamp) value, calendar);
         } else if (value instanceof Float) {
             statement.setFloat(i, (Float) value);
         } else if (value instanceof Double) {

@@ -33,7 +33,6 @@ public class RiverStoredProcedureTests extends AbstractRiverNodeTest {
         statement.close();
         source.closeWriting();
         createRiver(riverResource);
-        waitForRiverEnabled();
         waitForInactiveRiver();
     }
 

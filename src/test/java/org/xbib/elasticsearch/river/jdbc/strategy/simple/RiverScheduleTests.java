@@ -32,7 +32,6 @@ public class RiverScheduleTests extends AbstractRiverNodeTest {
     public void testSimpleSchedule(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
         createRiver(riverResource);
-        waitForRiverEnabled();
         Thread.sleep(12500L);
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         assertThat(client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits(),

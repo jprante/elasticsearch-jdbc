@@ -1,6 +1,7 @@
 
 package org.xbib.elasticsearch.plugin.feeder.jdbc;
 
+import org.elasticsearch.common.collect.ImmutableSet;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.settings.loader.JsonSettingsLoader;
@@ -17,6 +18,7 @@ import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.support.client.State;
 import org.xbib.elasticsearch.support.client.bulk.BulkTransportClient;
 import org.xbib.elasticsearch.support.client.ingest.IngestTransportClient;
 import org.xbib.pipeline.Pipeline;
@@ -29,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
@@ -38,9 +41,21 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     private final static ESLogger logger = ESLoggerFactory.getLogger(JDBCFeeder.class.getSimpleName());
 
+    /**
+     * River context used between runs
+     */
     protected RiverContext riverContext;
 
+    /**
+     * River name, default is "feeder". If feeder runs ins river mode, this can be overwritten
+     */
     private String name = "feeder";
+
+    /**
+     *  A default index that may be optionally declared. This index is created beforehand and configured
+     *  to bulk mode before the feeder starts.
+     */
+    private String defaultIndex;
 
     public JDBCFeeder() {
     }
@@ -74,6 +89,12 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         return name;
     }
 
+    /**
+     * Prepare a feed run. Open a client to Elasticsearch and create a queue of input specifications.
+     * This method is executed in a single thread before feed threads are created.
+     * @return this feeder
+     * @throws IOException
+     */
     public Feeder<T, R, P> beforeRun() throws IOException {
         if (spec == null) {
             throw new IllegalArgumentException("no spec?");
@@ -101,6 +122,12 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         return this;
     }
 
+    /**
+     * Each feed thread executes this method to do the main work.
+     * This method is executed in paralle by all feed threads.
+     * @param map the specification f the task to perform
+     * @throws Exception
+     */
     @Override
     public void executeTask(Map<String, Object> map) throws Exception {
         if (isInterrupted()) {
@@ -108,6 +135,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             return;
         }
         createRiverContext(getType(), getName(), map);
+        startBulk();
         if (riverState == null) {
             riverState = new RiverState();
         }
@@ -136,6 +164,8 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         if (logger.isDebugEnabled()) {
             logger.debug("flushed");
         }
+        // we don't know if this is the last run. Stop bulk for now, make indexed documents visible for search
+        stopBulk();
     }
 
     protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) {
@@ -152,8 +182,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 XContentMapValues.nodeIntegerValue(mySettings.get("fetchsize"), 10);
         int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
         int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
-        TimeValue maxretrywait =
-                XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
+        TimeValue maxretrywait = XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
                         TimeValue.timeValueSeconds(30));
         String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"),
                 LocaleUtil.fromLocale(Locale.getDefault()));
@@ -162,6 +191,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         String resultSetConcurrency = XContentMapValues.nodeStringValue(mySettings.get("resultset_concurrency"),
                 "CONCUR_UPDATABLE");
         boolean shouldIgnoreNull = XContentMapValues.nodeBooleanValue(mySettings.get("ignore_null_values"), false);
+        String timezone = XContentMapValues.nodeStringValue(mySettings.get("timezone"), TimeZone.getDefault().getID());
 
         RiverSource riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
@@ -170,7 +200,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         RiverFlow riverFlow = RiverServiceLoader.findRiverFlow(strategy);
         logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
 
-        String defaultIndex = XContentMapValues.nodeStringValue(mySettings.get("index"), "jdbc");
+        defaultIndex = XContentMapValues.nodeStringValue(mySettings.get("index"), "jdbc");
         String defaultType = XContentMapValues.nodeStringValue(mySettings.get("type"), "jdbc");
 
         logger.info("river default index/type {}/{}", defaultIndex, defaultType);
@@ -188,14 +218,10 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 logger.error(e.getMessage(),e);
             }
         }
-        try {
-            ingest.newIndex(defaultIndex).startBulk(defaultIndex);
-        } catch (IOException e) {
-            logger.error(e.getMessage(),e);
-        }
         riverSource.setUrl(url)
                 .setUser(user)
-                .setPassword(password);
+                .setPassword(password)
+                .setTimeZone(TimeZone.getTimeZone(timezone));
         riverMouth.setIndex(defaultIndex).setType(defaultType).setIngest(ingest);
         riverFlow.setFeeder(this);
         this.riverContext = new RiverContext()
@@ -247,6 +273,29 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                     .setTimestamp(new Date());
             riverState.save(ingest.client());
             logger.info("river state saved");
+        }
+    }
+
+    private void startBulk() {
+        try {
+            logger.info("creating index {} and enabling bulk mode", defaultIndex);
+            ingest.newIndex(defaultIndex).startBulk(defaultIndex);
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+        }
+    }
+
+    private void stopBulk() {
+        State state = ingest.getState();
+        if (state.indices() != null && !state.indices().isEmpty()) {
+            logger.info("stopping bulk mode for indices {}...", state.indices());
+            for (String index : ImmutableSet.copyOf(state.indices())) {
+                try {
+                    ingest.stopBulk(index);
+                } catch (IOException e) {
+                    logger.error(e.getMessage(),e);
+                }
+            }
         }
     }
 

@@ -12,9 +12,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * @author <a href="piotr.sliwa@zineinc.com">Piotr Śliwa</a>
@@ -139,6 +141,16 @@ public class MockRiverSource implements RiverSource {
     @Override
     public RiverSource closeWriting() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public RiverSource setTimeZone(TimeZone timezone) {
+        return this;
+    }
+
+    @Override
+    public TimeZone getTimeZone() {
+        return Calendar.getInstance().getTimeZone();
     }
 
 }
