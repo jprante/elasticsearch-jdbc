@@ -216,8 +216,17 @@ public interface RiverSource {
      */
     RiverSource closeWriting();
 
+    /**
+     * Set the timezone for JDBC setTimestamp() calls with calendar object.
+     * @param timeZone the time zone
+     * @return this river source
+     */
     RiverSource setTimeZone(TimeZone timeZone);
 
+    /**
+     * Get the current timezone of this river source for the JDBC setTimestamp() call
+     * @return the time zone
+     */
     TimeZone getTimeZone();
 
 }

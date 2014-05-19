@@ -45,6 +45,7 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 | Elasticsearch version    | Plugin     | Release date |
 | ------------------------ | -----------| -------------|
+| 1.1.0                    | 1.1.0.2    | May 19, 2014 |
 | 1.1.0                    | 1.1.0.1    | May 10, 2014 |
 
 ## Prerequisites
@@ -53,7 +54,7 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.1/elasticsearch-river-jdbc-1.1.0.1-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.2/elasticsearch-river-jdbc-1.1.0.2-plugin.zip
 
 Do not forget to restart the node after installing.
 
@@ -68,6 +69,7 @@ Change into this directory to invoke the `./bin/plugin` command line tool.
 
 | File                                         | SHA1                                     |
 | ---------------------------------------------| -----------------------------------------|
+| elasticsearch-river-jdbc-1.1.0.2-plugin.zip  | 0f3fea12ebccf20324482bb5c144349e97aa3345 |
 | elasticsearch-river-jdbc-1.1.0.1-plugin.zip  | 1065a30897beddd4e37cb63ca40500a02319dbe7 |
 
 ## Project docs
@@ -121,7 +123,7 @@ A terminal / console with commands `curl` and `unzip` and Internet access (of co
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.1/elasticsearch-river-jdbc-1.1.0.1-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.2/elasticsearch-river-jdbc-1.1.0.2-plugin.zip`
 
 4. Download MySQL JDBC driver
 
@@ -226,21 +228,29 @@ Example:
 
 `sql.parameter` - bind parameters for the SQL statement (in order). Some special values can be used with the following meanings:
 
-  `$now` - the current timestamp
-  `$job` - job ID from context
-  `$count` - last number of rows merged
-  `$river.name` - the river name
-  `$river.state.timestamp` - last timestamp from river state
-  `$river.state.started` - timestamp of river start from river state
-  `$river.state.counter` - counter from river state, counts the numbers of runs
+  * `$now` - the current timestamp
+  * `$job` - job ID from context
+  * `$count` - last number of rows merged
+  * `$river.name` - the river name
+  * `$last.sql.start` - a timestamp value for the time when the last SQL statement started
+  * `$last.sql.end` - a timestamp value for the time when the last SQL statement ended
+  * `$last.sql.sequence.start` - a timestamp value for the time when the last SQL sequence started
+  * `$last.sql.sequence.end` - a timestamp value for the time when the last SQL sequence ended
+  * `$river.state.started` - the timestamp of river start (from river state)
+  * `$river.state.timestamp` - last timestamp of river activity (from river state)
+  * `$river.state.counter` - counter from river state, counts the numbers of runs
 
 `sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC CallableStatement (default: false). Note: callable statement support is experimental and not well tested.
 
 `locale` - the default locale (used for parsing numerical values, floating point character. Recommended values is "en_US")
 
+`timezone` - the timezone for JDBC setTimestamp() calls when binding parameters with timestamp values
+
 `rounding` -  rounding mode for parsing numeric values. Possible values  "ceiling", "down", "floor", "halfdown", "halfeven", "halfup", "unnecessary", "up"
 
 `scale` -  the precision of parsing numeric values
+
+`ignore_null` - if NULL values should be ignored when constructing JSON documents. Default is `false`
 
 `autocommit` -  `true` if each statement should be automatically executed. Default is `false`
 
@@ -279,12 +289,14 @@ Quartz cron expression format (see below).
 	        "schedule" : null,
 	        "rounding" : null,
 	        "scale" : 2,
+	        "ignore_null" : false,
 	        "autocommit" : false,
 	        "fetchsize" : 10, /* Integer.MIN for MySQL */
 	        "max_rows" : 0,
 	        "max_retries" : 3,
 	        "max_retries_wait" : "30s",
 	        "locale" : Locale.getDefault().toLanguageTag(),
+	        "timezone" : TimeZone.getDefault(),
 	        "index" : "jdbc",
 	        "type" : "jdbc",
 	        "index_settings" : null,
