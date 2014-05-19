@@ -192,6 +192,8 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 "CONCUR_UPDATABLE");
         boolean shouldIgnoreNull = XContentMapValues.nodeBooleanValue(mySettings.get("ignore_null_values"), false);
         String timezone = XContentMapValues.nodeStringValue(mySettings.get("timezone"), TimeZone.getDefault().getID());
+        boolean shouldPrepareDatabaseMetadata = XContentMapValues.nodeBooleanValue(mySettings.get("prepare_database_metadata"), false);
+        boolean shouldPrepareResultSetMetadata = XContentMapValues.nodeBooleanValue(mySettings.get("prepare_resultset_metadata"), false);
 
         RiverSource riverSource = RiverServiceLoader.findRiverSource(strategy);
         logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
@@ -242,6 +244,8 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setResultSetType(resultSetType)
                 .setResultSetConcurrency(resultSetConcurrency)
                 .shouldIgnoreNull(shouldIgnoreNull)
+                .shouldPrepareDatabaseMetadata(shouldPrepareDatabaseMetadata)
+                .shouldPrepareResultSetMetadata(shouldPrepareResultSetMetadata)
                 .contextualize();
         logger.trace("JDBC feeder ready to start, context is {}", riverContext);
     }
