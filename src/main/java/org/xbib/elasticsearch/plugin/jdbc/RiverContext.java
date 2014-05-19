@@ -114,6 +114,12 @@ public class RiverContext {
      */
     private boolean ignoreNull;
 
+    /**
+     * If allowed to have more than one
+     * running river active at the same time.
+     */
+    private boolean allowConcurrency;
+
     public RiverContext setRiverSettings(Map<String, Object> settings) {
         this.settings = settings;
         return this;
@@ -329,6 +335,15 @@ public class RiverContext {
         return ignoreNull;
     }
 
+    public RiverContext allowConcurrency(boolean allowConcurrency) {
+        this.allowConcurrency = allowConcurrency;
+        return this;
+    }
+
+    public boolean allowConcurrency() {
+        return allowConcurrency;
+    }
+
     public RiverContext contextualize() {
         if (source != null) {
             source.setRiverContext(this);
@@ -365,6 +380,7 @@ public class RiverContext {
                     .field("columnDeletedAt", columnDeletedAt)
                     .field("columnEscape", columnEscape)
                     .field("ignoreNull", ignoreNull)
+                    .field("allowConcurrency", allowConcurrency)
                     .endObject();
             return XContentHelper.convertToMap(builder.bytes(), true).v2();
         } catch (IOException e) {

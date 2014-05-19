@@ -721,7 +721,7 @@ public class SimpleRiverSource implements RiverSource {
                 }
                 statement.setLong(i, lastRowCount);
             } else if ("$river.name".equals(s)) {
-                String name = context.getRiverName();
+                String name = context.getRiverFlow().getFeeder().getRiverState().getName();
                 statement.setString(i, name);
             } else if ("$river.state.timestamp".equals(s)) {
                 Timestamp timestamp = context.getRiverFlow() != null ?
@@ -731,6 +731,14 @@ public class SimpleRiverSource implements RiverSource {
                 Timestamp started = context.getRiverFlow() != null ?
                         new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
                 statement.setTimestamp(i, started);
+            } else if ("$river.state.lastStartTime".equals(s)) {
+                Timestamp lastStartTime = (context.getRiverFlow() != null && context.getRiverFlow().getFeeder().getRiverState().getLastStartTime() != null) ?
+                        new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getLastStartTime().getTime()) : null;
+                statement.setTimestamp(i, lastStartTime);
+            } else if ("$river.state.lastEndTime".equals(s)) {
+                Timestamp lastEndTime = (context.getRiverFlow() != null && context.getRiverFlow().getFeeder().getRiverState().getLastEndTime() != null) ?
+                        new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getLastEndTime().getTime()) : null;
+                statement.setTimestamp(i, lastEndTime);
             } else if ("$river.state.counter".equals(s)) {
                 Long counter = context.getRiverFlow() != null ?
                         context.getRiverFlow().getFeeder().getRiverState().getCounter() : null;

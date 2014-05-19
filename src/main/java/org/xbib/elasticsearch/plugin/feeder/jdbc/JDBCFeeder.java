@@ -40,6 +40,8 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     protected RiverContext riverContext;
 
+    private Date startTime;
+
     public JDBCFeeder() {
     }
 
@@ -104,6 +106,13 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         riverState.setCustom(riverContext.asMap());
         // increment state counter
         Long counter = riverState.getCounter() + 1;
+
+        //Abort river run if river concurrency is not allowed
+        if(!riverContext.allowConcurrency() && riverState.isActive()) {
+            logger.info("River already running. Aborting this run since allow concurrency is set to false");
+            return;
+        }
+
         this.riverState = riverState.setCounter(counter)
                 .setEnabled(true)
                 .setActive(true)
@@ -117,6 +126,10 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         if (logger.isDebugEnabled()) {
             logger.debug("trying to fetch ...");
         }
+
+        //Store the start time so it can be set as lastStartTime when the feed have completed.
+        startTime = new Date();
+
         riverContext.getRiverSource().fetch();
         if (logger.isDebugEnabled()) {
             logger.debug("fetched, flushing");
@@ -142,6 +155,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
         int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
         boolean ignoreNull = XContentMapValues.nodeBooleanValue(mySettings.get("ignore_null"), Boolean.FALSE);
+        boolean allowConcurrency = XContentMapValues.nodeBooleanValue(mySettings.get("allow_concurrency"), Boolean.FALSE);
         TimeValue maxretrywait =
                 XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
                         TimeValue.timeValueSeconds(30));
@@ -205,6 +219,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setResultSetType(resultSetType)
                 .setResultSetConcurrency(resultSetConcurrency)
                 .ignoreNull(ignoreNull)
+                .allowConcurrency(allowConcurrency)
                 .contextualize();
         logger.trace("JDBC feeder ready to start, context is {}", riverContext);
     }
@@ -219,6 +234,13 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     public void close() throws IOException {
         super.close();
         if (riverContext != null) {
+
+            //Abort river run if river concurrency is not allowed
+            if(!riverContext.allowConcurrency() && riverState.isActive()) {
+                logger.info("River already running. Aborting this run since allow concurrency is set to false");
+                return;
+            }
+
             riverContext.getRiverSource().closeReading();
             logger.info("reading connection closed");
             riverContext.getRiverSource().closeWriting();
@@ -233,7 +255,9 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             this.riverState = riverState
                     .setEnabled(false)
                     .setActive(false)
-                    .setTimestamp(new Date());
+                    .setTimestamp(new Date())
+                    .setLastStartTime(startTime)
+                    .setLastEndTime(new Date());
             riverState.save(ingest.client());
             logger.info("river state saved");
         }
