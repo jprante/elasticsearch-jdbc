@@ -92,6 +92,10 @@ public class RiverContext {
 
     private boolean shouldIgnoreNull;
 
+    private boolean shouldPrepareResultSetMetadata;
+
+    private boolean shouldPrepareDatabaseMetadata;
+
     /**
      * Column name that contains creation time (for column strategy)
      */
@@ -291,7 +295,23 @@ public class RiverContext {
         return shouldIgnoreNull;
     }
 
+    public RiverContext shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
+        this.shouldPrepareResultSetMetadata = shouldPrepareResultSetMetadata;
+        return this;
+    }
 
+    public boolean shouldPrepareResultSetMetadata() {
+        return shouldPrepareResultSetMetadata;
+    }
+
+    public RiverContext shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
+        this.shouldPrepareDatabaseMetadata = shouldPrepareDatabaseMetadata;
+        return this;
+    }
+
+    public boolean shouldPrepareDatabaseMetadata() {
+        return shouldPrepareDatabaseMetadata;
+    }
 
     public RiverContext columnUpdatedAt(String updatedAt) {
         this.columnUpdatedAt = updatedAt;

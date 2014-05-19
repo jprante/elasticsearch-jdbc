@@ -16,6 +16,7 @@ import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.NClob;
@@ -69,6 +70,10 @@ public class SimpleRiverSource implements RiverSource {
     protected Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
 
     private final Map<String, Object> lastRow = new HashMap<String, Object>();
+
+    private final Map<String, Object> lastResultSetMetadata = new HashMap<String, Object>();
+
+    private final Map<String, Object> lastDatabaseMetadata = new HashMap<String, Object>();
 
     private long lastRowCount;
 
@@ -141,6 +146,9 @@ public class SimpleRiverSource implements RiverSource {
                 retries--;
                 try {
                     readConnection = DriverManager.getConnection(url, user, password);
+                    if (context.shouldPrepareDatabaseMetadata()) {
+                        prepare(readConnection.getMetaData());
+                    }
                     // required by MySQL for large result streaming
                     readConnection.setReadOnly(true);
                     // Postgresql cursor mode condition:
@@ -279,6 +287,9 @@ public class SimpleRiverSource implements RiverSource {
                 if (connection != null) {
                     statement = connection.createStatement();
                     results = executeQuery(statement, command.getSQL());
+                    if (context.shouldPrepareResultSetMetadata()) {
+                        prepare(results.getMetaData());
+                    }
                     RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                             .output(context.getRiverMouth())
                             .shouldIgnoreNull(context.shouldIgnoreNull());
@@ -725,6 +736,87 @@ public class SimpleRiverSource implements RiverSource {
         return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
     }
 
+    private void prepare(DatabaseMetaData metaData) throws SQLException {
+        lastDatabaseMetadata.clear();
+        lastDatabaseMetadata.put("$meta.db.allproceduresarecallable", metaData.allProceduresAreCallable());
+        lastDatabaseMetadata.put("$meta.db.alltablesareselectable", metaData.allTablesAreSelectable());
+        lastDatabaseMetadata.put("$meta.db.autocommitclosesallresultsets", metaData.autoCommitFailureClosesAllResultSets());
+        lastDatabaseMetadata.put("$meta.db.datadefinitioncasestransactioncommit", metaData.dataDefinitionCausesTransactionCommit());
+        lastDatabaseMetadata.put("$meta.db.datadefinitionignoredintransactions", metaData.dataDefinitionIgnoredInTransactions());
+        lastDatabaseMetadata.put("$meta.db.doesmaxrowsizeincludeblobs", metaData.doesMaxRowSizeIncludeBlobs());
+        lastDatabaseMetadata.put("$meta.db.catalogseparator", metaData.getCatalogSeparator());
+        lastDatabaseMetadata.put("$meta.db.catalogterm", metaData.getCatalogTerm());
+        lastDatabaseMetadata.put("$meta.db.databasemajorversion", metaData.getDatabaseMajorVersion());
+        lastDatabaseMetadata.put("$meta.db.databaseminorversion", metaData.getDatabaseMinorVersion());
+        lastDatabaseMetadata.put("$meta.db.databaseproductname", metaData.getDatabaseProductName());
+        lastDatabaseMetadata.put("$meta.db.databaseproductversion", metaData.getDatabaseProductVersion());
+        lastDatabaseMetadata.put("$meta.db.defaulttransactionisolation", metaData.getDefaultTransactionIsolation());
+        lastDatabaseMetadata.put("$meta.db.drivermajorversion", metaData.getDriverMajorVersion());
+        lastDatabaseMetadata.put("$meta.db.driverminorversion", metaData.getDriverMinorVersion());
+        lastDatabaseMetadata.put("$meta.db.drivername", metaData.getDriverName());
+        lastDatabaseMetadata.put("$meta.db.driverversion", metaData.getDriverVersion());
+        lastDatabaseMetadata.put("$meta.db.extranamecharacters", metaData.getExtraNameCharacters());
+        lastDatabaseMetadata.put("$meta.db.identifierquotestring", metaData.getIdentifierQuoteString());
+        lastDatabaseMetadata.put("$meta.db.jdbcmajorversion", metaData.getJDBCMajorVersion());
+        lastDatabaseMetadata.put("$meta.db.jdbcminorversion", metaData.getJDBCMinorVersion());
+        lastDatabaseMetadata.put("$meta.db.maxbinaryliterallength", metaData.getMaxBinaryLiteralLength());
+        lastDatabaseMetadata.put("$meta.db.maxcatalognamelength", metaData.getMaxCatalogNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxcharliterallength", metaData.getMaxCharLiteralLength());
+        lastDatabaseMetadata.put("$meta.db.maxcolumnnamelength", metaData.getMaxColumnNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxcolumnsingroupby", metaData.getMaxColumnsInGroupBy());
+        lastDatabaseMetadata.put("$meta.db.maxcolumnsinindex", metaData.getMaxColumnsInIndex());
+        lastDatabaseMetadata.put("$meta.db.maxcolumnsinorderby", metaData.getMaxColumnsInOrderBy());
+        lastDatabaseMetadata.put("$meta.db.maxcolumnsinselect", metaData.getMaxColumnsInSelect());
+        lastDatabaseMetadata.put("$meta.db.maxcolumnsintable", metaData.getMaxColumnsInTable());
+        lastDatabaseMetadata.put("$meta.db.maxconnections", metaData.getMaxConnections());
+        lastDatabaseMetadata.put("$meta.db.maxcursornamelength", metaData.getMaxCursorNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxindexlength", metaData.getMaxIndexLength());
+        lastDatabaseMetadata.put("$meta.db.maxusernamelength", metaData.getMaxUserNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxprocedurenamelength", metaData.getMaxProcedureNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxrowsize", metaData.getMaxRowSize());
+        lastDatabaseMetadata.put("$meta.db.maxschemanamelength", metaData.getMaxSchemaNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxstatementlength", metaData.getMaxStatementLength());
+        lastDatabaseMetadata.put("$meta.db.maxstatements", metaData.getMaxStatements());
+        lastDatabaseMetadata.put("$meta.db.maxtablenamelength", metaData.getMaxTableNameLength());
+        lastDatabaseMetadata.put("$meta.db.maxtablesinselect", metaData.getMaxTablesInSelect());
+        lastDatabaseMetadata.put("$meta.db.numericfunctions", metaData.getNumericFunctions());
+        lastDatabaseMetadata.put("$meta.db.procedureterm", metaData.getProcedureTerm());
+        lastDatabaseMetadata.put("$meta.db.resultsetholdability", metaData.getResultSetHoldability());
+        lastDatabaseMetadata.put("$meta.db.rowidlifetime", metaData.getRowIdLifetime().name());
+        lastDatabaseMetadata.put("$meta.db.schematerm", metaData.getSchemaTerm());
+        lastDatabaseMetadata.put("$meta.db.searchstringescape", metaData.getSearchStringEscape());
+        lastDatabaseMetadata.put("$meta.db.sqlkeywords", metaData.getSQLKeywords());
+        lastDatabaseMetadata.put("$meta.db.sqlstatetype", metaData.getSQLStateType());
+    }
+
+
+    private void prepare(ResultSetMetaData metaData) throws SQLException {
+        lastResultSetMetadata.clear();
+        lastResultSetMetadata.put("$meta.row.columnCount", metaData.getColumnCount());
+        for (int i = 0; i < metaData.getColumnCount(); i++) {
+            lastResultSetMetadata.put("$meta.rs.catalogname." + i, metaData.getCatalogName(i));
+            lastResultSetMetadata.put("$meta.rs.columnclassname." + i, metaData.getColumnClassName(i));
+            lastResultSetMetadata.put("$meta.rs.columndisplaysize." + i, metaData.getColumnDisplaySize(i));
+            lastResultSetMetadata.put("$meta.rs.columnlabel." + i, metaData.getColumnLabel(i));
+            lastResultSetMetadata.put("$meta.rs.columnname." + i, metaData.getColumnName(i));
+            lastResultSetMetadata.put("$meta.rs.columntype." + i, metaData.getColumnType(i));
+            lastResultSetMetadata.put("$meta.rs.columntypename." + i, metaData.getColumnTypeName(i));
+            lastResultSetMetadata.put("$meta.rs.precision." + i, metaData.getPrecision(i));
+            lastResultSetMetadata.put("$meta.rs.scale." + i, metaData.getScale(i));
+            lastResultSetMetadata.put("$meta.rs.schemaname." + i, metaData.getSchemaName(i));
+            lastResultSetMetadata.put("$meta.rs.tablename." + i, metaData.getTableName(i));
+            lastResultSetMetadata.put("$meta.rs.isautoincrement." + i, metaData.isAutoIncrement(i));
+            lastResultSetMetadata.put("$meta.rs.iscasesensitive." + i, metaData.isCaseSensitive(i));
+            lastResultSetMetadata.put("$meta.rs.iscurrency." + i, metaData.isCurrency(i));
+            lastResultSetMetadata.put("$meta.rs.isdefinitelywritable." + i, metaData.isDefinitelyWritable(i));
+            lastResultSetMetadata.put("$meta.rs.isnullable." + i, metaData.isNullable(i));
+            lastResultSetMetadata.put("$meta.rs.isreadonly." + i, metaData.isReadOnly(i));
+            lastResultSetMetadata.put("$meta.rs.issearchable." + i, metaData.isSearchable(i));
+            lastResultSetMetadata.put("$meta.rs.issigned." + i, metaData.isSigned(i));
+            lastResultSetMetadata.put("$meta.rs.iswritable." + i, metaData.isWritable(i));
+        }
+    }
+
     private void bind(PreparedStatement statement, int i, Object value) throws SQLException {
         if (value == null) {
             statement.setNull(i, Types.VARCHAR);
@@ -794,12 +886,21 @@ public class SimpleRiverSource implements RiverSource {
                 if (counter != null) {
                     statement.setLong(i, counter);
                 }
+            } else if (context.shouldPrepareDatabaseMetadata()) {
+                for (String k : lastDatabaseMetadata.keySet()) {
+                    if (k.equals(s)) {
+                        statement.setObject(i, lastDatabaseMetadata.get(k));
+                    }
+                }
+            } else if (context.shouldPrepareResultSetMetadata()) {
+                for (String k : lastResultSetMetadata.keySet()) {
+                    if (k.equals(s)) {
+                        statement.setObject(i, lastResultSetMetadata.get(k));
+                    }
+                }
             } else {
                 Object rowValue = lastRow.get(s);
                 if (rowValue != null) {
-                    if (logger().isDebugEnabled()) {
-                        logger().debug("setting ${} to {}", s, rowValue);
-                    }
                     statement.setObject(i, rowValue);
                 } else {
                     statement.setString(i, (String) value);
