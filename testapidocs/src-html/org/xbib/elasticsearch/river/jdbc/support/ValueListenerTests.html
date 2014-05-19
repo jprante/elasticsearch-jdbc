@@ -16,104 +16,104 @@
 <span class="sourceLineNo">008</span>import java.util.Arrays;<a name="line.8"></a>
 <span class="sourceLineNo">009</span>import java.util.LinkedList;<a name="line.9"></a>
 <span class="sourceLineNo">010</span>import java.util.List;<a name="line.10"></a>
-<span class="sourceLineNo">011</span><a name="line.11"></a>
-<span class="sourceLineNo">012</span>public class ValueListenerTests extends Assert {<a name="line.12"></a>
-<span class="sourceLineNo">013</span><a name="line.13"></a>
-<span class="sourceLineNo">014</span>    @Test<a name="line.14"></a>
-<span class="sourceLineNo">015</span>    public void testId() throws Exception {<a name="line.15"></a>
-<span class="sourceLineNo">016</span>        List&lt;String&gt; columns = Arrays.asList("_optype", "_id", "label");<a name="line.16"></a>
-<span class="sourceLineNo">017</span>        List&lt;String&gt; row1 = Arrays.asList("index", "1", "label1");<a name="line.17"></a>
-<span class="sourceLineNo">018</span>        List&lt;String&gt; row2 = Arrays.asList("index", "2", "label2");<a name="line.18"></a>
-<span class="sourceLineNo">019</span>        List&lt;String&gt; row3 = Arrays.asList("index", "3", "label3");<a name="line.19"></a>
-<span class="sourceLineNo">020</span>        List&lt;String&gt; row4 = Arrays.asList("index", "4", "label4");<a name="line.20"></a>
-<span class="sourceLineNo">021</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.21"></a>
-<span class="sourceLineNo">022</span>        new StringKeyValueStreamListener()<a name="line.22"></a>
-<span class="sourceLineNo">023</span>                .output(output)<a name="line.23"></a>
-<span class="sourceLineNo">024</span>                .begin()<a name="line.24"></a>
-<span class="sourceLineNo">025</span>                .keys(columns)<a name="line.25"></a>
-<span class="sourceLineNo">026</span>                .values(row1)<a name="line.26"></a>
-<span class="sourceLineNo">027</span>                .values(row2)<a name="line.27"></a>
-<span class="sourceLineNo">028</span>                .values(row3)<a name="line.28"></a>
-<span class="sourceLineNo">029</span>                .values(row4)<a name="line.29"></a>
-<span class="sourceLineNo">030</span>                .end();<a name="line.30"></a>
-<span class="sourceLineNo">031</span>        assertEquals(output.data().size(), 4, "Number of inserted objects");<a name="line.31"></a>
-<span class="sourceLineNo">032</span>    }<a name="line.32"></a>
-<span class="sourceLineNo">033</span><a name="line.33"></a>
-<span class="sourceLineNo">034</span>    @Test<a name="line.34"></a>
-<span class="sourceLineNo">035</span>    public void testOptype() throws Exception {<a name="line.35"></a>
-<span class="sourceLineNo">036</span>        List&lt;String&gt; columns = Arrays.asList("_optype", "_id", "label");<a name="line.36"></a>
-<span class="sourceLineNo">037</span>        List&lt;String&gt; row1 = Arrays.asList("index", "1", "label1");<a name="line.37"></a>
-<span class="sourceLineNo">038</span>        List&lt;String&gt; row2 = Arrays.asList("create", "2", "label2");<a name="line.38"></a>
-<span class="sourceLineNo">039</span>        List&lt;String&gt; row3 = Arrays.asList("delete", "3", "label3");<a name="line.39"></a>
-<span class="sourceLineNo">040</span>        List&lt;String&gt; row4 = Arrays.asList("index", "4", "label4");<a name="line.40"></a>
-<span class="sourceLineNo">041</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.41"></a>
-<span class="sourceLineNo">042</span>        new StringKeyValueStreamListener()<a name="line.42"></a>
-<span class="sourceLineNo">043</span>                .output(output)<a name="line.43"></a>
-<span class="sourceLineNo">044</span>                .begin()<a name="line.44"></a>
-<span class="sourceLineNo">045</span>                .keys(columns)<a name="line.45"></a>
-<span class="sourceLineNo">046</span>                .values(row1)<a name="line.46"></a>
-<span class="sourceLineNo">047</span>                .values(row2)<a name="line.47"></a>
-<span class="sourceLineNo">048</span>                .values(row3)<a name="line.48"></a>
-<span class="sourceLineNo">049</span>                .values(row4)<a name="line.49"></a>
-<span class="sourceLineNo">050</span>                .end();<a name="line.50"></a>
-<span class="sourceLineNo">051</span>        assertEquals(output.data().size(), 3, "number of objects");<a name="line.51"></a>
-<span class="sourceLineNo">052</span>    }<a name="line.52"></a>
-<span class="sourceLineNo">053</span><a name="line.53"></a>
-<span class="sourceLineNo">054</span>    @Test<a name="line.54"></a>
-<span class="sourceLineNo">055</span>    public void testOverlappingOps() throws Exception {<a name="line.55"></a>
-<span class="sourceLineNo">056</span>        List&lt;String&gt; columns = Arrays.asList("_optype", "_id", "label");<a name="line.56"></a>
-<span class="sourceLineNo">057</span>        List&lt;String&gt; row1 = Arrays.asList("index", "1", "label1");<a name="line.57"></a>
-<span class="sourceLineNo">058</span>        List&lt;String&gt; row2 = Arrays.asList("create", "1", "label2");<a name="line.58"></a>
-<span class="sourceLineNo">059</span>        List&lt;String&gt; row3 = Arrays.asList("delete", "2", "label3");<a name="line.59"></a>
-<span class="sourceLineNo">060</span>        List&lt;String&gt; row4 = Arrays.asList("index", "2", "label4");<a name="line.60"></a>
-<span class="sourceLineNo">061</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.61"></a>
-<span class="sourceLineNo">062</span>        new StringKeyValueStreamListener()<a name="line.62"></a>
-<span class="sourceLineNo">063</span>                .output(output)<a name="line.63"></a>
-<span class="sourceLineNo">064</span>                .begin()<a name="line.64"></a>
-<span class="sourceLineNo">065</span>                .keys(columns)<a name="line.65"></a>
-<span class="sourceLineNo">066</span>                .values(row1)<a name="line.66"></a>
-<span class="sourceLineNo">067</span>                .values(row2)<a name="line.67"></a>
-<span class="sourceLineNo">068</span>                .values(row3)<a name="line.68"></a>
-<span class="sourceLineNo">069</span>                .values(row4)<a name="line.69"></a>
-<span class="sourceLineNo">070</span>                .end();<a name="line.70"></a>
-<span class="sourceLineNo">071</span>        assertEquals(output.data().size(), 3, "Number of objects");<a name="line.71"></a>
-<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
-<span class="sourceLineNo">073</span><a name="line.73"></a>
-<span class="sourceLineNo">074</span>    @Test<a name="line.74"></a>
-<span class="sourceLineNo">075</span>    public void testNestedObjects() throws Exception {<a name="line.75"></a>
-<span class="sourceLineNo">076</span>        List&lt;String&gt; columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");<a name="line.76"></a>
-<span class="sourceLineNo">077</span>        List&lt;String&gt; row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");<a name="line.77"></a>
-<span class="sourceLineNo">078</span>        List&lt;String&gt; row2 = Arrays.asList("2", "$2000", "Bill Smith", "Boss", "2012-06-13");<a name="line.78"></a>
-<span class="sourceLineNo">079</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.79"></a>
-<span class="sourceLineNo">080</span>        new StringKeyValueStreamListener()<a name="line.80"></a>
-<span class="sourceLineNo">081</span>                .output(output)<a name="line.81"></a>
-<span class="sourceLineNo">082</span>                .begin()<a name="line.82"></a>
-<span class="sourceLineNo">083</span>                .keys(columns)<a name="line.83"></a>
-<span class="sourceLineNo">084</span>                .values(row1)<a name="line.84"></a>
-<span class="sourceLineNo">085</span>                .values(row2)<a name="line.85"></a>
-<span class="sourceLineNo">086</span>                .end();<a name="line.86"></a>
-<span class="sourceLineNo">087</span>        assertEquals(output.data().size(), 2, "Number of inserted objects");<a name="line.87"></a>
-<span class="sourceLineNo">088</span>        assertEquals(output.data().toString(),<a name="line.88"></a>
-<span class="sourceLineNo">089</span>                "{[null/null/null/1]-&gt;{person={name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-12\"}, salary=\"$1000\"}}={\"person\":{\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"},\"salary\":\"$1000\"}}, [null/null/null/2]-&gt;{person={name=\"Bill Smith\", position={name=\"Boss\", since=\"2012-06-13\"}, salary=\"$2000\"}}={\"person\":{\"name\":\"Bill Smith\",\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"},\"salary\":\"$2000\"}}}"<a name="line.89"></a>
-<span class="sourceLineNo">090</span>        );<a name="line.90"></a>
-<span class="sourceLineNo">091</span>    }<a name="line.91"></a>
-<span class="sourceLineNo">092</span><a name="line.92"></a>
-<span class="sourceLineNo">093</span>    @Test<a name="line.93"></a>
-<span class="sourceLineNo">094</span>    public void testMultipleValues() throws Exception {<a name="line.94"></a>
-<span class="sourceLineNo">095</span>        List&lt;String&gt; columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");<a name="line.95"></a>
-<span class="sourceLineNo">096</span>        List&lt;String&gt; row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");<a name="line.96"></a>
-<span class="sourceLineNo">097</span>        List&lt;String&gt; row2 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-13");<a name="line.97"></a>
-<span class="sourceLineNo">098</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.98"></a>
-<span class="sourceLineNo">099</span>        new StringKeyValueStreamListener()<a name="line.99"></a>
-<span class="sourceLineNo">100</span>                .output(output)<a name="line.100"></a>
-<span class="sourceLineNo">101</span>                .begin()<a name="line.101"></a>
-<span class="sourceLineNo">102</span>                .keys(columns)<a name="line.102"></a>
-<span class="sourceLineNo">103</span>                .values(row1)<a name="line.103"></a>
-<span class="sourceLineNo">104</span>                .values(row2)<a name="line.104"></a>
-<span class="sourceLineNo">105</span>                .end();<a name="line.105"></a>
-<span class="sourceLineNo">106</span>        //assertEquals(output.data().size(), 1, "Number of inserted objects");<a name="line.106"></a>
+<span class="sourceLineNo">011</span>import java.util.Locale;<a name="line.11"></a>
+<span class="sourceLineNo">012</span><a name="line.12"></a>
+<span class="sourceLineNo">013</span>public class ValueListenerTests extends Assert {<a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14"></a>
+<span class="sourceLineNo">015</span>    @Test<a name="line.15"></a>
+<span class="sourceLineNo">016</span>    public void testId() throws Exception {<a name="line.16"></a>
+<span class="sourceLineNo">017</span>        List&lt;String&gt; columns = Arrays.asList("_optype", "_id", "label");<a name="line.17"></a>
+<span class="sourceLineNo">018</span>        List&lt;String&gt; row1 = Arrays.asList("index", "1", "label1");<a name="line.18"></a>
+<span class="sourceLineNo">019</span>        List&lt;String&gt; row2 = Arrays.asList("index", "2", "label2");<a name="line.19"></a>
+<span class="sourceLineNo">020</span>        List&lt;String&gt; row3 = Arrays.asList("index", "3", "label3");<a name="line.20"></a>
+<span class="sourceLineNo">021</span>        List&lt;String&gt; row4 = Arrays.asList("index", "4", "label4");<a name="line.21"></a>
+<span class="sourceLineNo">022</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.22"></a>
+<span class="sourceLineNo">023</span>        new StringKeyValueStreamListener()<a name="line.23"></a>
+<span class="sourceLineNo">024</span>                .output(output)<a name="line.24"></a>
+<span class="sourceLineNo">025</span>                .begin()<a name="line.25"></a>
+<span class="sourceLineNo">026</span>                .keys(columns)<a name="line.26"></a>
+<span class="sourceLineNo">027</span>                .values(row1)<a name="line.27"></a>
+<span class="sourceLineNo">028</span>                .values(row2)<a name="line.28"></a>
+<span class="sourceLineNo">029</span>                .values(row3)<a name="line.29"></a>
+<span class="sourceLineNo">030</span>                .values(row4)<a name="line.30"></a>
+<span class="sourceLineNo">031</span>                .end();<a name="line.31"></a>
+<span class="sourceLineNo">032</span>        assertEquals(output.data().size(), 4, "Number of inserted objects");<a name="line.32"></a>
+<span class="sourceLineNo">033</span>    }<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>    @Test<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    public void testOptype() throws Exception {<a name="line.36"></a>
+<span class="sourceLineNo">037</span>        List&lt;String&gt; columns = Arrays.asList("_optype", "_id", "label");<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        List&lt;String&gt; row1 = Arrays.asList("index", "1", "label1");<a name="line.38"></a>
+<span class="sourceLineNo">039</span>        List&lt;String&gt; row2 = Arrays.asList("create", "2", "label2");<a name="line.39"></a>
+<span class="sourceLineNo">040</span>        List&lt;String&gt; row3 = Arrays.asList("delete", "3", "label3");<a name="line.40"></a>
+<span class="sourceLineNo">041</span>        List&lt;String&gt; row4 = Arrays.asList("index", "4", "label4");<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        new StringKeyValueStreamListener()<a name="line.43"></a>
+<span class="sourceLineNo">044</span>                .output(output)<a name="line.44"></a>
+<span class="sourceLineNo">045</span>                .begin()<a name="line.45"></a>
+<span class="sourceLineNo">046</span>                .keys(columns)<a name="line.46"></a>
+<span class="sourceLineNo">047</span>                .values(row1)<a name="line.47"></a>
+<span class="sourceLineNo">048</span>                .values(row2)<a name="line.48"></a>
+<span class="sourceLineNo">049</span>                .values(row3)<a name="line.49"></a>
+<span class="sourceLineNo">050</span>                .values(row4)<a name="line.50"></a>
+<span class="sourceLineNo">051</span>                .end();<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        assertEquals(output.data().size(), 3, "number of objects");<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    @Test<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public void testOverlappingOps() throws Exception {<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        List&lt;String&gt; columns = Arrays.asList("_optype", "_id", "label");<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        List&lt;String&gt; row1 = Arrays.asList("index", "1", "label1");<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        List&lt;String&gt; row2 = Arrays.asList("create", "1", "label2");<a name="line.59"></a>
+<span class="sourceLineNo">060</span>        List&lt;String&gt; row3 = Arrays.asList("delete", "2", "label3");<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        List&lt;String&gt; row4 = Arrays.asList("index", "2", "label4");<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.62"></a>
+<span class="sourceLineNo">063</span>        new StringKeyValueStreamListener()<a name="line.63"></a>
+<span class="sourceLineNo">064</span>                .output(output)<a name="line.64"></a>
+<span class="sourceLineNo">065</span>                .begin()<a name="line.65"></a>
+<span class="sourceLineNo">066</span>                .keys(columns)<a name="line.66"></a>
+<span class="sourceLineNo">067</span>                .values(row1)<a name="line.67"></a>
+<span class="sourceLineNo">068</span>                .values(row2)<a name="line.68"></a>
+<span class="sourceLineNo">069</span>                .values(row3)<a name="line.69"></a>
+<span class="sourceLineNo">070</span>                .values(row4)<a name="line.70"></a>
+<span class="sourceLineNo">071</span>                .end();<a name="line.71"></a>
+<span class="sourceLineNo">072</span>        assertEquals(output.data().size(), 3, "Number of objects");<a name="line.72"></a>
+<span class="sourceLineNo">073</span>    }<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>    @Test<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    public void testNestedObjects() throws Exception {<a name="line.76"></a>
+<span class="sourceLineNo">077</span>        List&lt;String&gt; columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        List&lt;String&gt; row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");<a name="line.78"></a>
+<span class="sourceLineNo">079</span>        List&lt;String&gt; row2 = Arrays.asList("2", "$2000", "Bill Smith", "Boss", "2012-06-13");<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        new StringKeyValueStreamListener()<a name="line.81"></a>
+<span class="sourceLineNo">082</span>                .output(output)<a name="line.82"></a>
+<span class="sourceLineNo">083</span>                .begin()<a name="line.83"></a>
+<span class="sourceLineNo">084</span>                .keys(columns)<a name="line.84"></a>
+<span class="sourceLineNo">085</span>                .values(row1)<a name="line.85"></a>
+<span class="sourceLineNo">086</span>                .values(row2)<a name="line.86"></a>
+<span class="sourceLineNo">087</span>                .end();<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        assertEquals(output.data().size(), 2, "Number of inserted objects");<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        assertEquals(output.data().toString(),<a name="line.89"></a>
+<span class="sourceLineNo">090</span>                "{[null/null/null/1]-&gt;{person={salary=\"$1000\", name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-12\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-12\"}}}, [null/null/null/2]-&gt;{person={salary=\"$2000\", name=\"Bill Smith\", position={name=\"Boss\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$2000\",\"name\":\"Bill Smith\",\"position\":{\"name\":\"Boss\",\"since\":\"2012-06-13\"}}}}"<a name="line.90"></a>
+<span class="sourceLineNo">091</span>        );<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    }<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>    @Test<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    public void testMultipleValues() throws Exception {<a name="line.95"></a>
+<span class="sourceLineNo">096</span>        List&lt;String&gt; columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        List&lt;String&gt; row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");<a name="line.97"></a>
+<span class="sourceLineNo">098</span>        List&lt;String&gt; row2 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-13");<a name="line.98"></a>
+<span class="sourceLineNo">099</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        new StringKeyValueStreamListener()<a name="line.100"></a>
+<span class="sourceLineNo">101</span>                .output(output)<a name="line.101"></a>
+<span class="sourceLineNo">102</span>                .begin()<a name="line.102"></a>
+<span class="sourceLineNo">103</span>                .keys(columns)<a name="line.103"></a>
+<span class="sourceLineNo">104</span>                .values(row1)<a name="line.104"></a>
+<span class="sourceLineNo">105</span>                .values(row2)<a name="line.105"></a>
+<span class="sourceLineNo">106</span>                .end();<a name="line.106"></a>
 <span class="sourceLineNo">107</span>        assertEquals(output.data().toString(),<a name="line.107"></a>
-<span class="sourceLineNo">108</span>                "{[null/null/null/1]-&gt;{person={name=\"Joe Doe\", position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}, salary=\"$1000\"}}={\"person\":{\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]},\"salary\":\"$1000\"}}}"<a name="line.108"></a>
+<span class="sourceLineNo">108</span>                "{[null/null/null/1]-&gt;{person={salary=\"$1000\", name=\"Joe Doe\", position={name=\"Worker\", since=[\"2012-06-12\",\"2012-06-13\"]}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":[\"2012-06-12\",\"2012-06-13\"]}}}}"<a name="line.108"></a>
 <span class="sourceLineNo">109</span>        );<a name="line.109"></a>
 <span class="sourceLineNo">110</span>    }<a name="line.110"></a>
 <span class="sourceLineNo">111</span><a name="line.111"></a>
@@ -132,7 +132,7 @@
 <span class="sourceLineNo">124</span>                .end();<a name="line.124"></a>
 <span class="sourceLineNo">125</span>        assertEquals(output.data().size(), 1, "Number of inserted objects");<a name="line.125"></a>
 <span class="sourceLineNo">126</span>        assertEquals(output.data().toString(),<a name="line.126"></a>
-<span class="sourceLineNo">127</span>                "{[null/null/null/1]-&gt;{person={name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-13\"}, salary=\"$1000\"}}={\"person\":{\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"salary\":\"$1000\"}}}"<a name="line.127"></a>
+<span class="sourceLineNo">127</span>                "{[null/null/null/1]-&gt;{person={salary=\"$1000\", name=\"Joe Doe\", position={name=\"Worker\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Joe Doe\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"}}}}"<a name="line.127"></a>
 <span class="sourceLineNo">128</span>        );<a name="line.128"></a>
 <span class="sourceLineNo">129</span>    }<a name="line.129"></a>
 <span class="sourceLineNo">130</span><a name="line.130"></a>
@@ -153,7 +153,7 @@
 <span class="sourceLineNo">145</span>                .end();<a name="line.145"></a>
 <span class="sourceLineNo">146</span>        assertEquals(output.data().size(), 2, "Number of inserted objects");<a name="line.146"></a>
 <span class="sourceLineNo">147</span>        assertEquals(output.data().toString(),<a name="line.147"></a>
-<span class="sourceLineNo">148</span>                "{[null/null/null/1]-&gt;{person={name=[\"Joe\",\"John\",\"Mark\"], position={name=\"Worker\", since=\"2012-06-13\"}, salary=\"$1000\"}}={\"person\":{\"name\":[\"Joe\",\"John\",\"Mark\"],\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"salary\":\"$1000\"}}, [null/null/null/2]-&gt;{person={name=\"Mark\", position={name=\"Worker\", since=\"2012-06-13\"}, salary=\"$1000\"}}={\"person\":{\"name\":\"Mark\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"},\"salary\":\"$1000\"}}}"<a name="line.148"></a>
+<span class="sourceLineNo">148</span>                "{[null/null/null/1]-&gt;{person={salary=\"$1000\", name=[\"Joe\",\"John\",\"Mark\"], position={name=\"Worker\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":[\"Joe\",\"John\",\"Mark\"],\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"}}}, [null/null/null/2]-&gt;{person={salary=\"$1000\", name=\"Mark\", position={name=\"Worker\", since=\"2012-06-13\"}}}={\"person\":{\"salary\":\"$1000\",\"name\":\"Mark\",\"position\":{\"name\":\"Worker\",\"since\":\"2012-06-13\"}}}}"<a name="line.148"></a>
 <span class="sourceLineNo">149</span>        );<a name="line.149"></a>
 <span class="sourceLineNo">150</span>    }<a name="line.150"></a>
 <span class="sourceLineNo">151</span><a name="line.151"></a>
@@ -179,7 +179,7 @@
 <span class="sourceLineNo">171</span>                .values(row6)<a name="line.171"></a>
 <span class="sourceLineNo">172</span>                .end();<a name="line.172"></a>
 <span class="sourceLineNo">173</span>        assertEquals(output.data().toString(),<a name="line.173"></a>
-<span class="sourceLineNo">174</span>                "{[null/null/null/1]-&gt;{person={coursename=[{name=\"Machine Learning\", count=\"5\"}, {name=\"Recommender Systems\", count=\"5\"}], name=\"Andrew Ng\"}}={\"person\":{\"coursename\":[{\"name\":\"Machine Learning\",\"count\":\"5\"},{\"name\":\"Recommender Systems\",\"count\":\"5\"}],\"name\":\"Andrew Ng\"}}, [null/null/null/2]-&gt;{person={coursename=[{name=\"Hadoop Internals\", count=\"12\"}, {name=\"Basic of Lucene\", count=\"25\"}, {name=\"Advanced Lucene\", count=\"5\"}, {name=\"Introduction to Apache Avro\", count=\"5\"}], name=\"Doug Cutting\"}}={\"person\":{\"coursename\":[{\"name\":\"Hadoop Internals\",\"count\":\"12\"},{\"name\":\"Basic of Lucene\",\"count\":\"25\"},{\"name\":\"Advanced Lucene\",\"count\":\"5\"},{\"name\":\"Introduction to Apache Avro\",\"count\":\"5\"}],\"name\":\"Doug Cutting\"}}}"<a name="line.174"></a>
+<span class="sourceLineNo">174</span>                "{[null/null/null/1]-&gt;{person={name=\"Andrew Ng\", coursename=[{name=\"Machine Learning\", count=\"5\"}, {name=\"Recommender Systems\", count=\"5\"}]}}={\"person\":{\"name\":\"Andrew Ng\",\"coursename\":[{\"name\":\"Machine Learning\",\"count\":\"5\"},{\"name\":\"Recommender Systems\",\"count\":\"5\"}]}}, [null/null/null/2]-&gt;{person={name=\"Doug Cutting\", coursename=[{name=\"Hadoop Internals\", count=\"12\"}, {name=\"Basic of Lucene\", count=\"25\"}, {name=\"Advanced Lucene\", count=\"5\"}, {name=\"Introduction to Apache Avro\", count=\"5\"}]}}={\"person\":{\"name\":\"Doug Cutting\",\"coursename\":[{\"name\":\"Hadoop Internals\",\"count\":\"12\"},{\"name\":\"Basic of Lucene\",\"count\":\"25\"},{\"name\":\"Advanced Lucene\",\"count\":\"5\"},{\"name\":\"Introduction to Apache Avro\",\"count\":\"5\"}]}}}"<a name="line.174"></a>
 <span class="sourceLineNo">175</span>        );<a name="line.175"></a>
 <span class="sourceLineNo">176</span>    }<a name="line.176"></a>
 <span class="sourceLineNo">177</span><a name="line.177"></a>
@@ -249,30 +249,82 @@
 <span class="sourceLineNo">241</span>                .values(row3)<a name="line.241"></a>
 <span class="sourceLineNo">242</span>                .end();<a name="line.242"></a>
 <span class="sourceLineNo">243</span>        assertEquals(output.data().toString(),<a name="line.243"></a>
-<span class="sourceLineNo">244</span>                "{[null/null/null/4679]-&gt;{blog={attachment=[{name=\"/web/q/g/h/57436356.jpg\", id=\"9450\"}, {name=\"/web/i/s/q/GS3193626.jpg\", id=\"9965\"}, {name=\"/web/i/s/q/GS3193626.jpg\", id=\"9451\"}], name=\"Tesla, Abe and Elba\", association=[{name=\"Idris Elba\", id=\"3917\"}, {name=\"Idris Elba\", id=\"3917\"}, {name=\"Idris Elba\", id=\"3917\"}], published=\"2014-01-06 00:00:00\"}}={\"blog\":{\"attachment\":[{\"name\":\"/web/q/g/h/57436356.jpg\",\"id\":\"9450\"},{\"name\":\"/web/i/s/q/GS3193626.jpg\",\"id\":\"9965\"},{\"name\":\"/web/i/s/q/GS3193626.jpg\",\"id\":\"9451\"}],\"name\":\"Tesla, Abe and Elba\",\"association\":[{\"name\":\"Idris Elba\",\"id\":\"3917\"},{\"name\":\"Idris Elba\",\"id\":\"3917\"},{\"name\":\"Idris Elba\",\"id\":\"3917\"}],\"published\":\"2014-01-06 00:00:00\"}}}"<a name="line.244"></a>
+<span class="sourceLineNo">244</span>                "{[null/null/null/4679]-&gt;{blog={name=\"Tesla, Abe and Elba\", published=\"2014-01-06 00:00:00\", association=[{id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}], attachment=[{id=\"9450\", name=\"/web/q/g/h/57436356.jpg\"}, {id=\"9965\", name=\"/web/i/s/q/GS3193626.jpg\"}, {id=\"9451\", name=\"/web/i/s/q/GS3193626.jpg\"}]}}={\"blog\":{\"name\":\"Tesla, Abe and Elba\",\"published\":\"2014-01-06 00:00:00\",\"association\":[{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3917\",\"name\":\"Idris Elba\"}],\"attachment\":[{\"id\":\"9450\",\"name\":\"/web/q/g/h/57436356.jpg\"},{\"id\":\"9965\",\"name\":\"/web/i/s/q/GS3193626.jpg\"},{\"id\":\"9451\",\"name\":\"/web/i/s/q/GS3193626.jpg\"}]}}}"<a name="line.244"></a>
 <span class="sourceLineNo">245</span>        );<a name="line.245"></a>
 <span class="sourceLineNo">246</span>    }<a name="line.246"></a>
 <span class="sourceLineNo">247</span><a name="line.247"></a>
 <span class="sourceLineNo">248</span>    @Test<a name="line.248"></a>
 <span class="sourceLineNo">249</span>    public void testDoubleScientificNotation() throws Exception {<a name="line.249"></a>
-<span class="sourceLineNo">250</span>        List&lt;String&gt; columns = Arrays.asList("_id", "lat", "lon");<a name="line.250"></a>
-<span class="sourceLineNo">251</span>        List&lt;Object&gt; row1 = new LinkedList&lt;Object&gt;();<a name="line.251"></a>
-<span class="sourceLineNo">252</span>        row1.add("1");<a name="line.252"></a>
-<span class="sourceLineNo">253</span>        row1.add(50.940664);<a name="line.253"></a>
-<span class="sourceLineNo">254</span>        row1.add(6.9599115);<a name="line.254"></a>
-<span class="sourceLineNo">255</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.255"></a>
-<span class="sourceLineNo">256</span>        new RiverMouthKeyValueStreamListener&lt;String,Object&gt;()<a name="line.256"></a>
-<span class="sourceLineNo">257</span>                .output(output)<a name="line.257"></a>
-<span class="sourceLineNo">258</span>                .begin()<a name="line.258"></a>
-<span class="sourceLineNo">259</span>                .keys(columns)<a name="line.259"></a>
-<span class="sourceLineNo">260</span>                .values(row1)<a name="line.260"></a>
-<span class="sourceLineNo">261</span>                .end();<a name="line.261"></a>
-<span class="sourceLineNo">262</span>        assertEquals(output.data().toString(),<a name="line.262"></a>
-<span class="sourceLineNo">263</span>                "{[null/null/null/1]-&gt;{lat=50,940664000000, lon=6,959911500000}={\"lat\":50.940664,\"lon\":6.9599115}}"<a name="line.263"></a>
-<span class="sourceLineNo">264</span>        );<a name="line.264"></a>
-<span class="sourceLineNo">265</span>    }<a name="line.265"></a>
-<span class="sourceLineNo">266</span><a name="line.266"></a>
-<span class="sourceLineNo">267</span>}<a name="line.267"></a>
+<span class="sourceLineNo">250</span>        Locale.setDefault(Locale.US);<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        List&lt;String&gt; columns = Arrays.asList("_id", "lat", "lon");<a name="line.251"></a>
+<span class="sourceLineNo">252</span>        List&lt;Object&gt; row1 = new LinkedList&lt;Object&gt;();<a name="line.252"></a>
+<span class="sourceLineNo">253</span>        row1.add("1");<a name="line.253"></a>
+<span class="sourceLineNo">254</span>        row1.add(50.940664);<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        row1.add(6.9599115);<a name="line.255"></a>
+<span class="sourceLineNo">256</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        new RiverMouthKeyValueStreamListener&lt;String, Object&gt;()<a name="line.257"></a>
+<span class="sourceLineNo">258</span>                .output(output)<a name="line.258"></a>
+<span class="sourceLineNo">259</span>                .begin()<a name="line.259"></a>
+<span class="sourceLineNo">260</span>                .keys(columns)<a name="line.260"></a>
+<span class="sourceLineNo">261</span>                .values(row1)<a name="line.261"></a>
+<span class="sourceLineNo">262</span>                .end();<a name="line.262"></a>
+<span class="sourceLineNo">263</span>        assertEquals(output.data().toString(),<a name="line.263"></a>
+<span class="sourceLineNo">264</span>                "{[null/null/null/1]-&gt;{lat=50.940664000000, lon=6.959911500000}={\"lat\":50.940664,\"lon\":6.9599115}}"<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        );<a name="line.265"></a>
+<span class="sourceLineNo">266</span>    }<a name="line.266"></a>
+<span class="sourceLineNo">267</span><a name="line.267"></a>
+<span class="sourceLineNo">268</span>    @Test<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    public void testNestedDots() throws Exception {<a name="line.269"></a>
+<span class="sourceLineNo">270</span>        List&lt;String&gt; columns = Arrays.asList("_id", "person.name", "person.coursename[teacher.id]", "person.coursename[teacher.name]");<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        List&lt;String&gt; row1 = Arrays.asList("1", "Andrew Ng", "1", "Brian Smith");<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        List&lt;String&gt; row2 = Arrays.asList("1", "Andrew Ng", "2", "Marc Levengood");<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        List&lt;String&gt; row3 = Arrays.asList("2", "Doug Cutting", "1", "Brian Smith");<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        List&lt;String&gt; row4 = Arrays.asList("2", "Doug Cutting", "2", "Marc Levengood");<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        List&lt;String&gt; row5 = Arrays.asList("2", "Doug Cutting", "3", "Samantha Carter");<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        List&lt;String&gt; row6 = Arrays.asList("2", "Doug Cutting", "4", "Jack O'Neill");<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        new RiverMouthKeyValueStreamListener&lt;String, String&gt;()<a name="line.278"></a>
+<span class="sourceLineNo">279</span>                .output(output)<a name="line.279"></a>
+<span class="sourceLineNo">280</span>                .begin()<a name="line.280"></a>
+<span class="sourceLineNo">281</span>                .keys(columns)<a name="line.281"></a>
+<span class="sourceLineNo">282</span>                .values(row1)<a name="line.282"></a>
+<span class="sourceLineNo">283</span>                .values(row2)<a name="line.283"></a>
+<span class="sourceLineNo">284</span>                .values(row3)<a name="line.284"></a>
+<span class="sourceLineNo">285</span>                .values(row4)<a name="line.285"></a>
+<span class="sourceLineNo">286</span>                .values(row5)<a name="line.286"></a>
+<span class="sourceLineNo">287</span>                .values(row6)<a name="line.287"></a>
+<span class="sourceLineNo">288</span>                .end();<a name="line.288"></a>
+<span class="sourceLineNo">289</span>        assertEquals(output.data().toString(),<a name="line.289"></a>
+<span class="sourceLineNo">290</span>                "{[null/null/null/1]-&gt;{person={name=\"Andrew Ng\", coursename=[{teacher={id=\"1\", name=\"Brian Smith\"}}, {teacher={id=\"2\", name=\"Marc Levengood\"}}]}}={\"person\":{\"name\":\"Andrew Ng\",\"coursename\":[{\"teacher\":{\"id\":\"1\",\"name\":\"Brian Smith\"}},{\"teacher\":{\"id\":\"2\",\"name\":\"Marc Levengood\"}}]}}, [null/null/null/2]-&gt;{person={name=\"Doug Cutting\", coursename=[{teacher={id=\"1\", name=\"Brian Smith\"}}, {teacher={id=\"2\", name=\"Marc Levengood\"}}, {teacher={id=\"3\", name=\"Samantha Carter\"}}, {teacher={id=\"4\", name=\"Jack O'Neill\"}}]}}={\"person\":{\"name\":\"Doug Cutting\",\"coursename\":[{\"teacher\":{\"id\":\"1\",\"name\":\"Brian Smith\"}},{\"teacher\":{\"id\":\"2\",\"name\":\"Marc Levengood\"}},{\"teacher\":{\"id\":\"3\",\"name\":\"Samantha Carter\"}},{\"teacher\":{\"id\":\"4\",\"name\":\"Jack O'Neill\"}}]}}}"<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        );<a name="line.291"></a>
+<span class="sourceLineNo">292</span>    }<a name="line.292"></a>
+<span class="sourceLineNo">293</span><a name="line.293"></a>
+<span class="sourceLineNo">294</span>    @Test<a name="line.294"></a>
+<span class="sourceLineNo">295</span>    public void testIgnoreNull() throws Exception {<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        List&lt;String&gt; columns = Arrays.asList("_id", "col1", "col2");<a name="line.296"></a>
+<span class="sourceLineNo">297</span>        List&lt;Object&gt; row1 = new LinkedList&lt;Object&gt;();<a name="line.297"></a>
+<span class="sourceLineNo">298</span>        row1.add("1");<a name="line.298"></a>
+<span class="sourceLineNo">299</span>        row1.add("Hello World");<a name="line.299"></a>
+<span class="sourceLineNo">300</span>        row1.add(null);<a name="line.300"></a>
+<span class="sourceLineNo">301</span>        List&lt;Object&gt; row2 = new LinkedList&lt;Object&gt;();<a name="line.301"></a>
+<span class="sourceLineNo">302</span>        row2.add("1");<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        row2.add(null);<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        row2.add("Hello World");<a name="line.304"></a>
+<span class="sourceLineNo">305</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.305"></a>
+<span class="sourceLineNo">306</span>        new RiverMouthKeyValueStreamListener&lt;String, Object&gt;()<a name="line.306"></a>
+<span class="sourceLineNo">307</span>                .shouldIgnoreNull(true)<a name="line.307"></a>
+<span class="sourceLineNo">308</span>                .output(output)<a name="line.308"></a>
+<span class="sourceLineNo">309</span>                .begin()<a name="line.309"></a>
+<span class="sourceLineNo">310</span>                .keys(columns)<a name="line.310"></a>
+<span class="sourceLineNo">311</span>                .values(row1)<a name="line.311"></a>
+<span class="sourceLineNo">312</span>                .values(row2)<a name="line.312"></a>
+<span class="sourceLineNo">313</span>                .end();<a name="line.313"></a>
+<span class="sourceLineNo">314</span>        assertEquals(output.data().toString(),<a name="line.314"></a>
+<span class="sourceLineNo">315</span>                "{[null/null/null/1]-&gt;{col1=\"Hello World\", col2=\"Hello World\"}={\"col1\":\"Hello World\",\"col2\":\"Hello World\"}}"<a name="line.315"></a>
+<span class="sourceLineNo">316</span>        );<a name="line.316"></a>
+<span class="sourceLineNo">317</span>    }<a name="line.317"></a>
+<span class="sourceLineNo">318</span><a name="line.318"></a>
+<span class="sourceLineNo">319</span>}<a name="line.319"></a>
 
 
 

@@ -15,7 +15,7 @@
 <span class="sourceLineNo">007</span> * A structured object is composed by an object data source together with<a name="line.7"></a>
 <span class="sourceLineNo">008</span> * meta data about the object.<a name="line.8"></a>
 <span class="sourceLineNo">009</span> */<a name="line.9"></a>
-<span class="sourceLineNo">010</span>public interface IndexableObject extends Comparable&lt;IndexableObject&gt; {<a name="line.10"></a>
+<span class="sourceLineNo">010</span>public interface IndexableObject {<a name="line.10"></a>
 <span class="sourceLineNo">011</span><a name="line.11"></a>
 <span class="sourceLineNo">012</span>    /**<a name="line.12"></a>
 <span class="sourceLineNo">013</span>     * Set the operation type, either "index", "create", or "delete"<a name="line.13"></a>
@@ -96,7 +96,9 @@
 <span class="sourceLineNo">088</span><a name="line.88"></a>
 <span class="sourceLineNo">089</span>    boolean isEmpty();<a name="line.89"></a>
 <span class="sourceLineNo">090</span><a name="line.90"></a>
-<span class="sourceLineNo">091</span>}<a name="line.91"></a>
+<span class="sourceLineNo">091</span>    IndexableObject ignoreNull(boolean ignorenull);<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>}<a name="line.93"></a>
 
 
 

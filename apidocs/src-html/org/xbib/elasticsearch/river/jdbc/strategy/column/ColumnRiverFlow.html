@@ -11,7 +11,7 @@
 <span class="sourceLineNo">003</span><a name="line.3"></a>
 <span class="sourceLineNo">004</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.4"></a>
 <span class="sourceLineNo">005</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.feeder.Feeder;<a name="line.6"></a>
+<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;<a name="line.6"></a>
 <span class="sourceLineNo">007</span>import org.xbib.elasticsearch.river.jdbc.RiverFlow;<a name="line.7"></a>
 <span class="sourceLineNo">008</span>import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;<a name="line.8"></a>
 <span class="sourceLineNo">009</span><a name="line.9"></a>
@@ -40,13 +40,13 @@
 <span class="sourceLineNo">032</span>    }<a name="line.32"></a>
 <span class="sourceLineNo">033</span><a name="line.33"></a>
 <span class="sourceLineNo">034</span>    @Override<a name="line.34"></a>
-<span class="sourceLineNo">035</span>    public RiverFlow setFeeder(Feeder feeder) {<a name="line.35"></a>
+<span class="sourceLineNo">035</span>    public RiverFlow setFeeder(JDBCFeeder feeder) {<a name="line.35"></a>
 <span class="sourceLineNo">036</span>        this.feeder = feeder;<a name="line.36"></a>
 <span class="sourceLineNo">037</span>        return this;<a name="line.37"></a>
 <span class="sourceLineNo">038</span>    }<a name="line.38"></a>
 <span class="sourceLineNo">039</span><a name="line.39"></a>
 <span class="sourceLineNo">040</span>    @Override<a name="line.40"></a>
-<span class="sourceLineNo">041</span>    public Feeder getFeeder() {<a name="line.41"></a>
+<span class="sourceLineNo">041</span>    public JDBCFeeder getFeeder() {<a name="line.41"></a>
 <span class="sourceLineNo">042</span>        if (feeder == null) {<a name="line.42"></a>
 <span class="sourceLineNo">043</span>            this.feeder = new ColumnRiverFeeder();<a name="line.43"></a>
 <span class="sourceLineNo">044</span>        }<a name="line.44"></a>
