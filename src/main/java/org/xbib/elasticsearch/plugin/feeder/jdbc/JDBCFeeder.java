@@ -41,6 +41,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     protected RiverContext riverContext;
 
     private Date startTime;
+    private boolean thisRun;
 
     public JDBCFeeder() {
     }
@@ -109,9 +110,10 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
         //Abort river run if river concurrency is not allowed
         if(!riverContext.allowConcurrency() && riverState.isActive()) {
-            logger.info("River already running. Aborting this run since allow concurrency is set to false");
+            logger.info("River is already running. Aborting this run since allow concurrency is set to false");
             return;
         }
+        thisRun = true;
 
         this.riverState = riverState.setCounter(counter)
                 .setEnabled(true)
@@ -235,9 +237,9 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         super.close();
         if (riverContext != null) {
 
-            //Abort river run if river concurrency is not allowed
-            if(!riverContext.allowConcurrency() && riverState.isActive()) {
-                logger.info("River already running. Aborting this run since allow concurrency is set to false");
+            //Abort river run if river concurrency is not allowed and river is already running and it is not this run.
+            if(!riverContext.allowConcurrency() && !thisRun) {
+                logger.info("Closing river. Aborting this run since allow concurrency is set to false");
                 return;
             }
 
