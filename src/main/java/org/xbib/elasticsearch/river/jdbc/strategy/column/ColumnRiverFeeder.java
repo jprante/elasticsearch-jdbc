@@ -13,6 +13,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.xbib.elasticsearch.action.river.state.RiverState;
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.pipeline.Pipeline;
+import org.xbib.pipeline.PipelineProvider;
 import org.xbib.pipeline.PipelineRequest;
 
 import java.io.IOException;
@@ -25,6 +26,15 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
 
     private final static ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFeeder.class.getSimpleName());
 
+    public ColumnRiverFeeder(){
+        super();
+    }
+    
+    @SuppressWarnings("rawtypes")
+    public ColumnRiverFeeder(ColumnRiverFeeder feeder){
+        super(feeder);
+    }
+    
     @Override
     protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) {
         super.createRiverContext(riverType, riverName, mySettings);
@@ -134,4 +144,16 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
         jdbcSettings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);
         jdbcSettings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);
     }
+    
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public PipelineProvider<P> pipelineProvider() {
+        return new PipelineProvider<P>() {
+            @Override
+            public P get() {
+                return  (P) new ColumnRiverFeeder(ColumnRiverFeeder.this);
+            }
+        };
+    }
+
 }
