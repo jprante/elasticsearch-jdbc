@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.1.0.2</version>
+    <version>1.2.0.0</version>
 
     <packaging>jar</packaging>
 
@@ -68,9 +68,9 @@
     <properties>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <elasticsearch.version>1.1.0</elasticsearch.version>
-        <org.xbib.version>1.0.0.Beta2</org.xbib.version>
-        <org.xbib.elasticsearch.support.version>1.1.0.7</org.xbib.elasticsearch.support.version>
+        <elasticsearch.version>1.2.0</elasticsearch.version>
+        <org.xbib.version>1.0.0.Beta3</org.xbib.version>
+        <org.xbib.elasticsearch.support.version>1.2.0.0</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -160,8 +160,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                     <encoding>UTF-8</encoding>
                     <optimize>true</optimize>
                     <showDeprecation>true</showDeprecation>
