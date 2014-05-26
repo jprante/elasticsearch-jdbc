@@ -131,18 +131,13 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
                 .source(builder.string())).execute().actionGet();
     }
 
-    @SuppressWarnings({"unchecked"})
     private void writeTimesToJdbcSettings(TimeValue lastRunTime, TimeValue currentTime) {
         if (riverContext == null || riverContext.getRiverSettings() == null) {
             return;
         }
-        Map<String, Object> jdbcSettings = (Map<String, Object>) riverContext.getRiverSettings().get("jdbc");
-        if (jdbcSettings == null) {
-            jdbcSettings = new HashMap<String, Object>();
-            riverContext.getRiverSettings().put("jdbc", jdbcSettings);
-        }
-        jdbcSettings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);
-        jdbcSettings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);
+        Map<String, Object> settings = riverContext.getRiverSettings();
+        settings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);
+        settings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);
     }
     
     @Override
