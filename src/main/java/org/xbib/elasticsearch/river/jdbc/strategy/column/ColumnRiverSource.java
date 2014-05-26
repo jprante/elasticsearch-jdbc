@@ -83,13 +83,14 @@ public class ColumnRiverSource extends SimpleRiverSource {
         return quote + column + quote;
     }
 
+    @SuppressWarnings("rawtypes")
     private Timestamp getLastRunTimestamp() {
-        Map jdbcSettings = (Map) context.getRiverSettings().get("jdbc");
-        logger.info("getLastRunTimestamp jdbcSettings={}", jdbcSettings);
-        if (jdbcSettings == null || jdbcSettings.get(ColumnRiverFlow.LAST_RUN_TIME) == null) {
+        Map settings = (Map) context.getRiverSettings();
+        logger.info("getLastRunTimestamp settings = {}",  context.getRiverSettings());
+        if (settings == null || settings.get(ColumnRiverFlow.LAST_RUN_TIME) == null) {
             return new Timestamp(0);
         }
-        TimeValue lastRunTime = (TimeValue) jdbcSettings.get(ColumnRiverFlow.LAST_RUN_TIME);
+        TimeValue lastRunTime = (TimeValue) settings.get(ColumnRiverFlow.LAST_RUN_TIME);
         return new Timestamp(lastRunTime.millis());
     }
 
