@@ -21,128 +21,145 @@
 <span class="sourceLineNo">013</span>import org.xbib.elasticsearch.action.river.state.RiverState;<a name="line.13"></a>
 <span class="sourceLineNo">014</span>import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;<a name="line.14"></a>
 <span class="sourceLineNo">015</span>import org.xbib.pipeline.Pipeline;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import org.xbib.pipeline.PipelineRequest;<a name="line.16"></a>
-<span class="sourceLineNo">017</span><a name="line.17"></a>
-<span class="sourceLineNo">018</span>import java.io.IOException;<a name="line.18"></a>
-<span class="sourceLineNo">019</span>import java.util.Date;<a name="line.19"></a>
-<span class="sourceLineNo">020</span>import java.util.HashMap;<a name="line.20"></a>
-<span class="sourceLineNo">021</span>import java.util.Map;<a name="line.21"></a>
-<span class="sourceLineNo">022</span><a name="line.22"></a>
-<span class="sourceLineNo">023</span>public class ColumnRiverFeeder&lt;T, R extends PipelineRequest, P extends Pipeline&lt;T, R&gt;&gt;<a name="line.23"></a>
-<span class="sourceLineNo">024</span>        extends JDBCFeeder&lt;T,R,P&gt; {<a name="line.24"></a>
-<span class="sourceLineNo">025</span><a name="line.25"></a>
-<span class="sourceLineNo">026</span>    private final static ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFeeder.class.getSimpleName());<a name="line.26"></a>
-<span class="sourceLineNo">027</span><a name="line.27"></a>
-<span class="sourceLineNo">028</span>    @Override<a name="line.28"></a>
-<span class="sourceLineNo">029</span>    protected void createRiverContext(String riverType, String riverName, Map&lt;String, Object&gt; mySettings) {<a name="line.29"></a>
-<span class="sourceLineNo">030</span>        super.createRiverContext(riverType, riverName, mySettings);<a name="line.30"></a>
-<span class="sourceLineNo">031</span>        // defaults for column strategy<a name="line.31"></a>
-<span class="sourceLineNo">032</span>        String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("created_at"), "created_at");<a name="line.32"></a>
-<span class="sourceLineNo">033</span>        String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("updated_at"), "updated_at");<a name="line.33"></a>
-<span class="sourceLineNo">034</span>        String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("deleted_at"), null);<a name="line.34"></a>
-<span class="sourceLineNo">035</span>        boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);<a name="line.35"></a>
-<span class="sourceLineNo">036</span>        riverContext<a name="line.36"></a>
-<span class="sourceLineNo">037</span>                .columnCreatedAt(columnCreatedAt)<a name="line.37"></a>
-<span class="sourceLineNo">038</span>                .columnUpdatedAt(columnUpdatedAt)<a name="line.38"></a>
-<span class="sourceLineNo">039</span>                .columnDeletedAt(columnDeletedAt)<a name="line.39"></a>
-<span class="sourceLineNo">040</span>                .columnEscape(columnEscape);<a name="line.40"></a>
-<span class="sourceLineNo">041</span>    }<a name="line.41"></a>
-<span class="sourceLineNo">042</span><a name="line.42"></a>
-<span class="sourceLineNo">043</span>        @Override<a name="line.43"></a>
-<span class="sourceLineNo">044</span>    public void executeTask(Map&lt;String, Object&gt; map) throws Exception {<a name="line.44"></a>
-<span class="sourceLineNo">045</span>        logger.info("processing map {}", map);<a name="line.45"></a>
-<span class="sourceLineNo">046</span>        createRiverContext("jdbc", "feeder", map);<a name="line.46"></a>
-<span class="sourceLineNo">047</span>        if (riverState == null) {<a name="line.47"></a>
-<span class="sourceLineNo">048</span>            riverState = new RiverState();<a name="line.48"></a>
-<span class="sourceLineNo">049</span>        }<a name="line.49"></a>
-<span class="sourceLineNo">050</span>        riverState.load(ingest.client());<a name="line.50"></a>
-<span class="sourceLineNo">051</span>        // increment state counter<a name="line.51"></a>
-<span class="sourceLineNo">052</span>        Long counter = riverState.getCounter() + 1;<a name="line.52"></a>
-<span class="sourceLineNo">053</span>        this.riverState = riverState.setCounter(counter)<a name="line.53"></a>
-<span class="sourceLineNo">054</span>                .setEnabled(true)<a name="line.54"></a>
-<span class="sourceLineNo">055</span>                .setActive(true)<a name="line.55"></a>
-<span class="sourceLineNo">056</span>                .setTimestamp(new Date());<a name="line.56"></a>
-<span class="sourceLineNo">057</span>        riverState.save(ingest.client());<a name="line.57"></a>
-<span class="sourceLineNo">058</span>        if (logger.isDebugEnabled()) {<a name="line.58"></a>
-<span class="sourceLineNo">059</span>            logger.debug("state saved before fetch");<a name="line.59"></a>
-<span class="sourceLineNo">060</span>        }<a name="line.60"></a>
-<span class="sourceLineNo">061</span>        // set the job number to the state counter<a name="line.61"></a>
-<span class="sourceLineNo">062</span>        riverContext.job(Long.toString(counter));<a name="line.62"></a>
-<span class="sourceLineNo">063</span>        if (logger.isDebugEnabled()) {<a name="line.63"></a>
-<span class="sourceLineNo">064</span>            logger.debug("trying to fetch ...");<a name="line.64"></a>
-<span class="sourceLineNo">065</span>        }<a name="line.65"></a>
-<span class="sourceLineNo">066</span><a name="line.66"></a>
-<span class="sourceLineNo">067</span>        // column river specific code here<a name="line.67"></a>
-<span class="sourceLineNo">068</span>        TimeValue lastRunTime = readLastRunTimeFromCustomInfo();<a name="line.68"></a>
-<span class="sourceLineNo">069</span>        TimeValue currentTime = new TimeValue(new java.util.Date().getTime());<a name="line.69"></a>
-<span class="sourceLineNo">070</span>        writeTimesToJdbcSettings(lastRunTime, currentTime);<a name="line.70"></a>
-<span class="sourceLineNo">071</span>        riverContext.getRiverSource().fetch();<a name="line.71"></a>
-<span class="sourceLineNo">072</span>        writeCustomInfo(currentTime.millis());<a name="line.72"></a>
-<span class="sourceLineNo">073</span><a name="line.73"></a>
-<span class="sourceLineNo">074</span><a name="line.74"></a>
-<span class="sourceLineNo">075</span>        if (logger.isDebugEnabled()) {<a name="line.75"></a>
-<span class="sourceLineNo">076</span>            logger.debug("fetched, flushing");<a name="line.76"></a>
-<span class="sourceLineNo">077</span>        }<a name="line.77"></a>
-<span class="sourceLineNo">078</span>        riverContext.getRiverMouth().flush();<a name="line.78"></a>
-<span class="sourceLineNo">079</span>        if (logger.isDebugEnabled()) {<a name="line.79"></a>
-<span class="sourceLineNo">080</span>            logger.debug("flushed");<a name="line.80"></a>
-<span class="sourceLineNo">081</span>        }<a name="line.81"></a>
-<span class="sourceLineNo">082</span>        riverContext.getRiverSource().closeReading();<a name="line.82"></a>
-<span class="sourceLineNo">083</span>        riverContext.getRiverSource().closeWriting();<a name="line.83"></a>
-<span class="sourceLineNo">084</span>        this.riverState = riverState<a name="line.84"></a>
-<span class="sourceLineNo">085</span>                .setActive(false)<a name="line.85"></a>
-<span class="sourceLineNo">086</span>                .setTimestamp(new Date());<a name="line.86"></a>
-<span class="sourceLineNo">087</span>        riverState.save(ingest.client());<a name="line.87"></a>
-<span class="sourceLineNo">088</span>    }<a name="line.88"></a>
-<span class="sourceLineNo">089</span><a name="line.89"></a>
-<span class="sourceLineNo">090</span>    private TimeValue readLastRunTimeFromCustomInfo() throws IOException {<a name="line.90"></a>
-<span class="sourceLineNo">091</span>        try {<a name="line.91"></a>
-<span class="sourceLineNo">092</span>            GetResponse response = getClient().prepareGet("_river", riverContext.getRiverName(), ColumnRiverFlow.DOCUMENT).execute().actionGet();<a name="line.92"></a>
-<span class="sourceLineNo">093</span>            if (response != null &amp;&amp; response.isExists()) {<a name="line.93"></a>
-<span class="sourceLineNo">094</span>                Map jdbcState = (Map) response.getSourceAsMap().get("jdbc");<a name="line.94"></a>
-<span class="sourceLineNo">095</span><a name="line.95"></a>
-<span class="sourceLineNo">096</span>                if (jdbcState != null) {<a name="line.96"></a>
-<span class="sourceLineNo">097</span>                    Number lastRunTime = (Number) jdbcState.get(ColumnRiverFlow.LAST_RUN_TIME);<a name="line.97"></a>
-<span class="sourceLineNo">098</span><a name="line.98"></a>
-<span class="sourceLineNo">099</span>                    if (lastRunTime != null) {<a name="line.99"></a>
-<span class="sourceLineNo">100</span>                        return new TimeValue(lastRunTime.longValue());<a name="line.100"></a>
-<span class="sourceLineNo">101</span>                    }<a name="line.101"></a>
-<span class="sourceLineNo">102</span>                } else {<a name="line.102"></a>
-<span class="sourceLineNo">103</span>                    throw new IOException("can't retrieve previously persisted state from _river/" + riverContext.getRiverName());<a name="line.103"></a>
-<span class="sourceLineNo">104</span>                }<a name="line.104"></a>
-<span class="sourceLineNo">105</span>            }<a name="line.105"></a>
-<span class="sourceLineNo">106</span>        } catch (IndexMissingException e) {<a name="line.106"></a>
-<span class="sourceLineNo">107</span>            logger.warn("river state missing: _river/{}/{}", riverContext.getRiverName(), "_custom");<a name="line.107"></a>
-<span class="sourceLineNo">108</span>        }<a name="line.108"></a>
-<span class="sourceLineNo">109</span><a name="line.109"></a>
-<span class="sourceLineNo">110</span>        return null;<a name="line.110"></a>
-<span class="sourceLineNo">111</span>    }<a name="line.111"></a>
-<span class="sourceLineNo">112</span><a name="line.112"></a>
-<span class="sourceLineNo">113</span>    private void writeCustomInfo(long lastRunAt) throws IOException {<a name="line.113"></a>
-<span class="sourceLineNo">114</span>        XContentBuilder builder = XContentFactory.jsonBuilder()<a name="line.114"></a>
-<span class="sourceLineNo">115</span>                .startObject()<a name="line.115"></a>
-<span class="sourceLineNo">116</span>                .startObject("jdbc")<a name="line.116"></a>
-<span class="sourceLineNo">117</span>                .field(ColumnRiverFlow.LAST_RUN_TIME, lastRunAt)<a name="line.117"></a>
-<span class="sourceLineNo">118</span>                .endObject()<a name="line.118"></a>
-<span class="sourceLineNo">119</span>                .endObject();<a name="line.119"></a>
-<span class="sourceLineNo">120</span>        getClient().prepareBulk().add(Requests.indexRequest("_river").type(riverContext.getRiverName()).id(ColumnRiverFlow.DOCUMENT)<a name="line.120"></a>
-<span class="sourceLineNo">121</span>                .source(builder.string())).execute().actionGet();<a name="line.121"></a>
-<span class="sourceLineNo">122</span>    }<a name="line.122"></a>
-<span class="sourceLineNo">123</span><a name="line.123"></a>
-<span class="sourceLineNo">124</span>    @SuppressWarnings({"unchecked"})<a name="line.124"></a>
-<span class="sourceLineNo">125</span>    private void writeTimesToJdbcSettings(TimeValue lastRunTime, TimeValue currentTime) {<a name="line.125"></a>
-<span class="sourceLineNo">126</span>        if (riverContext == null || riverContext.getRiverSettings() == null) {<a name="line.126"></a>
-<span class="sourceLineNo">127</span>            return;<a name="line.127"></a>
-<span class="sourceLineNo">128</span>        }<a name="line.128"></a>
-<span class="sourceLineNo">129</span>        Map&lt;String, Object&gt; jdbcSettings = (Map&lt;String, Object&gt;) riverContext.getRiverSettings().get("jdbc");<a name="line.129"></a>
-<span class="sourceLineNo">130</span>        if (jdbcSettings == null) {<a name="line.130"></a>
-<span class="sourceLineNo">131</span>            jdbcSettings = new HashMap&lt;String, Object&gt;();<a name="line.131"></a>
-<span class="sourceLineNo">132</span>            riverContext.getRiverSettings().put("jdbc", jdbcSettings);<a name="line.132"></a>
-<span class="sourceLineNo">133</span>        }<a name="line.133"></a>
-<span class="sourceLineNo">134</span>        jdbcSettings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);<a name="line.134"></a>
-<span class="sourceLineNo">135</span>        jdbcSettings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);<a name="line.135"></a>
-<span class="sourceLineNo">136</span>    }<a name="line.136"></a>
-<span class="sourceLineNo">137</span>}<a name="line.137"></a>
+<span class="sourceLineNo">016</span>import org.xbib.pipeline.PipelineProvider;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.xbib.pipeline.PipelineRequest;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.io.IOException;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.util.Date;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.util.HashMap;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.Map;<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>public class ColumnRiverFeeder&lt;T, R extends PipelineRequest, P extends Pipeline&lt;T, R&gt;&gt;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>        extends JDBCFeeder&lt;T,R,P&gt; {<a name="line.25"></a>
+<span class="sourceLineNo">026</span><a name="line.26"></a>
+<span class="sourceLineNo">027</span>    private final static ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFeeder.class.getSimpleName());<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>    public ColumnRiverFeeder(){<a name="line.29"></a>
+<span class="sourceLineNo">030</span>        super();<a name="line.30"></a>
+<span class="sourceLineNo">031</span>    }<a name="line.31"></a>
+<span class="sourceLineNo">032</span>    <a name="line.32"></a>
+<span class="sourceLineNo">033</span>    @SuppressWarnings("rawtypes")<a name="line.33"></a>
+<span class="sourceLineNo">034</span>    public ColumnRiverFeeder(ColumnRiverFeeder feeder){<a name="line.34"></a>
+<span class="sourceLineNo">035</span>        super(feeder);<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    }<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    <a name="line.37"></a>
+<span class="sourceLineNo">038</span>    @Override<a name="line.38"></a>
+<span class="sourceLineNo">039</span>    protected void createRiverContext(String riverType, String riverName, Map&lt;String, Object&gt; mySettings) {<a name="line.39"></a>
+<span class="sourceLineNo">040</span>        super.createRiverContext(riverType, riverName, mySettings);<a name="line.40"></a>
+<span class="sourceLineNo">041</span>        // defaults for column strategy<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("created_at"), "created_at");<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("updated_at"), "updated_at");<a name="line.43"></a>
+<span class="sourceLineNo">044</span>        String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("deleted_at"), null);<a name="line.44"></a>
+<span class="sourceLineNo">045</span>        boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        riverContext<a name="line.46"></a>
+<span class="sourceLineNo">047</span>                .columnCreatedAt(columnCreatedAt)<a name="line.47"></a>
+<span class="sourceLineNo">048</span>                .columnUpdatedAt(columnUpdatedAt)<a name="line.48"></a>
+<span class="sourceLineNo">049</span>                .columnDeletedAt(columnDeletedAt)<a name="line.49"></a>
+<span class="sourceLineNo">050</span>                .columnEscape(columnEscape);<a name="line.50"></a>
+<span class="sourceLineNo">051</span>    }<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>        @Override<a name="line.53"></a>
+<span class="sourceLineNo">054</span>    public void executeTask(Map&lt;String, Object&gt; map) throws Exception {<a name="line.54"></a>
+<span class="sourceLineNo">055</span>        logger.info("processing map {}", map);<a name="line.55"></a>
+<span class="sourceLineNo">056</span>        createRiverContext("jdbc", "feeder", map);<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        if (riverState == null) {<a name="line.57"></a>
+<span class="sourceLineNo">058</span>            riverState = new RiverState();<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        }<a name="line.59"></a>
+<span class="sourceLineNo">060</span>        riverState.load(ingest.client());<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        // increment state counter<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        Long counter = riverState.getCounter() + 1;<a name="line.62"></a>
+<span class="sourceLineNo">063</span>        this.riverState = riverState.setCounter(counter)<a name="line.63"></a>
+<span class="sourceLineNo">064</span>                .setEnabled(true)<a name="line.64"></a>
+<span class="sourceLineNo">065</span>                .setActive(true)<a name="line.65"></a>
+<span class="sourceLineNo">066</span>                .setTimestamp(new Date());<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        riverState.save(ingest.client());<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        if (logger.isDebugEnabled()) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>            logger.debug("state saved before fetch");<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        }<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        // set the job number to the state counter<a name="line.71"></a>
+<span class="sourceLineNo">072</span>        riverContext.job(Long.toString(counter));<a name="line.72"></a>
+<span class="sourceLineNo">073</span>        if (logger.isDebugEnabled()) {<a name="line.73"></a>
+<span class="sourceLineNo">074</span>            logger.debug("trying to fetch ...");<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        }<a name="line.75"></a>
+<span class="sourceLineNo">076</span><a name="line.76"></a>
+<span class="sourceLineNo">077</span>        // column river specific code here<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        TimeValue lastRunTime = readLastRunTimeFromCustomInfo();<a name="line.78"></a>
+<span class="sourceLineNo">079</span>        TimeValue currentTime = new TimeValue(new java.util.Date().getTime());<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        writeTimesToJdbcSettings(lastRunTime, currentTime);<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        riverContext.getRiverSource().fetch();<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        writeCustomInfo(currentTime.millis());<a name="line.82"></a>
+<span class="sourceLineNo">083</span><a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>        if (logger.isDebugEnabled()) {<a name="line.85"></a>
+<span class="sourceLineNo">086</span>            logger.debug("fetched, flushing");<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        }<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        riverContext.getRiverMouth().flush();<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        if (logger.isDebugEnabled()) {<a name="line.89"></a>
+<span class="sourceLineNo">090</span>            logger.debug("flushed");<a name="line.90"></a>
+<span class="sourceLineNo">091</span>        }<a name="line.91"></a>
+<span class="sourceLineNo">092</span>        riverContext.getRiverSource().closeReading();<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        riverContext.getRiverSource().closeWriting();<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        this.riverState = riverState<a name="line.94"></a>
+<span class="sourceLineNo">095</span>                .setActive(false)<a name="line.95"></a>
+<span class="sourceLineNo">096</span>                .setTimestamp(new Date());<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        riverState.save(ingest.client());<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    }<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    private TimeValue readLastRunTimeFromCustomInfo() throws IOException {<a name="line.100"></a>
+<span class="sourceLineNo">101</span>        try {<a name="line.101"></a>
+<span class="sourceLineNo">102</span>            GetResponse response = getClient().prepareGet("_river", riverContext.getRiverName(), ColumnRiverFlow.DOCUMENT).execute().actionGet();<a name="line.102"></a>
+<span class="sourceLineNo">103</span>            if (response != null &amp;&amp; response.isExists()) {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>                Map jdbcState = (Map) response.getSourceAsMap().get("jdbc");<a name="line.104"></a>
+<span class="sourceLineNo">105</span><a name="line.105"></a>
+<span class="sourceLineNo">106</span>                if (jdbcState != null) {<a name="line.106"></a>
+<span class="sourceLineNo">107</span>                    Number lastRunTime = (Number) jdbcState.get(ColumnRiverFlow.LAST_RUN_TIME);<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>                    if (lastRunTime != null) {<a name="line.109"></a>
+<span class="sourceLineNo">110</span>                        return new TimeValue(lastRunTime.longValue());<a name="line.110"></a>
+<span class="sourceLineNo">111</span>                    }<a name="line.111"></a>
+<span class="sourceLineNo">112</span>                } else {<a name="line.112"></a>
+<span class="sourceLineNo">113</span>                    throw new IOException("can't retrieve previously persisted state from _river/" + riverContext.getRiverName());<a name="line.113"></a>
+<span class="sourceLineNo">114</span>                }<a name="line.114"></a>
+<span class="sourceLineNo">115</span>            }<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        } catch (IndexMissingException e) {<a name="line.116"></a>
+<span class="sourceLineNo">117</span>            logger.warn("river state missing: _river/{}/{}", riverContext.getRiverName(), "_custom");<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        }<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>        return null;<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    }<a name="line.121"></a>
+<span class="sourceLineNo">122</span><a name="line.122"></a>
+<span class="sourceLineNo">123</span>    private void writeCustomInfo(long lastRunAt) throws IOException {<a name="line.123"></a>
+<span class="sourceLineNo">124</span>        XContentBuilder builder = XContentFactory.jsonBuilder()<a name="line.124"></a>
+<span class="sourceLineNo">125</span>                .startObject()<a name="line.125"></a>
+<span class="sourceLineNo">126</span>                .startObject("jdbc")<a name="line.126"></a>
+<span class="sourceLineNo">127</span>                .field(ColumnRiverFlow.LAST_RUN_TIME, lastRunAt)<a name="line.127"></a>
+<span class="sourceLineNo">128</span>                .endObject()<a name="line.128"></a>
+<span class="sourceLineNo">129</span>                .endObject();<a name="line.129"></a>
+<span class="sourceLineNo">130</span>        getClient().prepareBulk().add(Requests.indexRequest("_river").type(riverContext.getRiverName()).id(ColumnRiverFlow.DOCUMENT)<a name="line.130"></a>
+<span class="sourceLineNo">131</span>                .source(builder.string())).execute().actionGet();<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    }<a name="line.132"></a>
+<span class="sourceLineNo">133</span><a name="line.133"></a>
+<span class="sourceLineNo">134</span>    private void writeTimesToJdbcSettings(TimeValue lastRunTime, TimeValue currentTime) {<a name="line.134"></a>
+<span class="sourceLineNo">135</span>        if (riverContext == null || riverContext.getRiverSettings() == null) {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>            return;<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        }<a name="line.137"></a>
+<span class="sourceLineNo">138</span>        Map&lt;String, Object&gt; settings = riverContext.getRiverSettings();<a name="line.138"></a>
+<span class="sourceLineNo">139</span>        settings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);<a name="line.139"></a>
+<span class="sourceLineNo">140</span>        settings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    }<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    <a name="line.142"></a>
+<span class="sourceLineNo">143</span>    @Override<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    @SuppressWarnings({"rawtypes", "unchecked"})<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    public PipelineProvider&lt;P&gt; pipelineProvider() {<a name="line.145"></a>
+<span class="sourceLineNo">146</span>        return new PipelineProvider&lt;P&gt;() {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>            @Override<a name="line.147"></a>
+<span class="sourceLineNo">148</span>            public P get() {<a name="line.148"></a>
+<span class="sourceLineNo">149</span>                return  (P) new ColumnRiverFeeder(ColumnRiverFeeder.this);<a name="line.149"></a>
+<span class="sourceLineNo">150</span>            }<a name="line.150"></a>
+<span class="sourceLineNo">151</span>        };<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    }<a name="line.152"></a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span>}<a name="line.154"></a>
 
 
 
