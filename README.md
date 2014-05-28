@@ -45,9 +45,8 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 | Elasticsearch version    | Plugin     | Release date |
 | ------------------------ | -----------| -------------|
-| 1.2.0                    | 1.2.0.0    | May 23, 2014 |
+| 1.2.0                    | 1.2.0.1    | May 28, 2014 |
 | 1.1.0                    | 1.1.0.2    | May 19, 2014 |
-| 1.1.0                    | 1.1.0.1    | May 10, 2014 |
 
 ## Prerequisites
 
@@ -70,6 +69,7 @@ Change into this directory to invoke the `./bin/plugin` command line tool.
 
 | File                                         | SHA1                                     |
 | ---------------------------------------------| -----------------------------------------|
+| elasticsearch-river-jdbc-1.2.0.1-plugin.zip  | 3c81488b7fe6aa65576415c6a84df5e36310e382 |
 | elasticsearch-river-jdbc-1.2.0.0-plugin.zip  | 978c5c8aa3aa5082fbf21cdfca4fd8783b4e6431 |
 | elasticsearch-river-jdbc-1.1.0.2-plugin.zip  | 0f3fea12ebccf20324482bb5c144349e97aa3345 |
 | elasticsearch-river-jdbc-1.1.0.1-plugin.zip  | 1065a30897beddd4e37cb63ca40500a02319dbe7 |
@@ -308,9 +308,21 @@ Quartz cron expression format (see below).
 	    }
 	}
 
-## Cron expression syntax
+## Time scheduled execution of JDBC river
 
-The following documentation is copied from the Quartz scheduler javadoc page.
+Setting a cron expression in the paramter `schedule` enables repeated (or time scheduled) runs of JDBC river.
+
+You can also define a list of cron expressions (in a JSON array) to schedule for many
+different time schedules.
+
+Example of a `schedule` paramter:
+
+        "schedule" : "0 0-59 0-23 ? * *"
+
+This executes JDBC river every minute, every hour, all the days in the week/month/year.
+
+The following documentation about the syntax of the cron expression is copied from the Quartz 
+scheduler javadoc page.
 
 Cron expressions provide the ability to specify complex time combinations such as
 "At 8:00am every Monday through Friday" or "At 1:30am every last Friday of the month".

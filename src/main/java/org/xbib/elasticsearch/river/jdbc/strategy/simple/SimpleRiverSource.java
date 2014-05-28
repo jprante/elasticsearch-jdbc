@@ -694,14 +694,12 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public SimpleRiverSource closeReading() {
         try {
-            if (readConnection != null) {
+            if (readConnection != null && !readConnection.isClosed()) {
                 // always commit before close to finish cursors/transactions
                 if (!readConnection.getAutoCommit()) {
                     readConnection.commit();
                 }
-                if (!readConnection.isClosed()) {
-                    readConnection.close();
-                }
+                readConnection.close();
             }
         } catch (SQLException e) {
             logger().warn("while closing read connection: " + e.getMessage());
@@ -715,14 +713,12 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public SimpleRiverSource closeWriting() {
         try {
-            if (writeConnection != null) {
+            if (writeConnection != null && !writeConnection.isClosed()) {
                 // always commit before close to finish cursors/transactions
                 if (!writeConnection.getAutoCommit()) {
                     writeConnection.commit();
                 }
-                if (!writeConnection.isClosed()) {
-                    writeConnection.close();
-                }
+                writeConnection.close();
             }
         } catch (SQLException e) {
             logger().warn("while closing write connection: " + e.getMessage());

@@ -1,0 +1,12 @@
+{
+    "jdbc" : {
+        "url" : "jdbc:sqlite:file::memory:?cache=shared",
+        "user" : "",
+        "password" : "",
+        "sql" : "select * from \"products\"",
+        "maxrows" : 50,
+        "autocommit" : true,
+        "index" : "my_jdbc_river_index",
+        "type" : "my_jdbc_river_type"
+    }
+}

@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.2.0.0</version>
+    <version>1.2.0.1</version>
 
     <packaging>jar</packaging>
 
@@ -52,25 +52,11 @@
         </repository>
     </distributionManagement>
 
-    <repositories>
-        <repository>
-            <id>xbib</id>
-            <url>http://xbib.org/repository</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <properties>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <elasticsearch.version>1.2.0</elasticsearch.version>
-        <org.xbib.version>1.0.0.Beta3</org.xbib.version>
-        <org.xbib.elasticsearch.support.version>1.2.0.0</org.xbib.elasticsearch.support.version>
+        <org.xbib.elasticsearch.support.version>1.2.0.1</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -474,6 +460,32 @@
         </profile>
 
         <profile>
+            <id>test-sqlite</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.xerial</groupId>
+                    <artifactId>sqlite-jdbc</artifactId>
+                    <version>3.7.15-M1</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>false</skipTests>
+                            <useSystemClassLoader>false</useSystemClassLoader>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/sqlite.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <id>test-oracle</id>
             <dependencies>
                 <dependency>
@@ -545,7 +557,7 @@
                     </plugin>
                 </plugins>
             </build>
-
         </profile>
+
     </profiles>
 </project>

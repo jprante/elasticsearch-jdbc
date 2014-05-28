@@ -7,6 +7,7 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.xbib.elasticsearch.plugin.jdbc.ControlKeys;
 import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
@@ -151,13 +152,19 @@ public class SimpleRiverMouth implements RiverMouth {
     public void flush() throws IOException {
         if (ingest != null) {
             ingest.flush();
+            // wait for all outstanding bulk requests before continue with river
+            try {
+                ingest.waitForResponses(TimeValue.timeValueSeconds(60));
+            } catch (InterruptedException e) {
+                // ignore
+            }
         }
     }
 
     @Override
     public void close() throws IOException {
         if (!closed) {
-            // do not shut down ingest object...  we need it for cleanup
+            // do not shut down ingest object here...  we need it for cleanup
             closed = true;
         }
     }

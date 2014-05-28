@@ -282,8 +282,11 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     private void startBulk() {
         try {
-            logger.info("creating index {} and enabling bulk mode", defaultIndex);
-            ingest.newIndex(defaultIndex).startBulk(defaultIndex);
+            if (!ingest.client().admin().indices().prepareExists(defaultIndex).execute().actionGet().isExists()) {
+                logger.info("creating index {} and enabling bulk mode", defaultIndex);
+                ingest.newIndex(defaultIndex);
+            }
+            ingest.startBulk(defaultIndex);
         } catch (IOException e) {
             logger.error(e.getMessage(),e);
         }
