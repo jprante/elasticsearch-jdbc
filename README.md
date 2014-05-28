@@ -54,7 +54,7 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.2.0.0/elasticsearch-river-jdbc-1.2.0.0-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.2.0.1/elasticsearch-river-jdbc-1.2.0.1-plugin.zip
 
 Do not forget to restart the node after installing.
 
