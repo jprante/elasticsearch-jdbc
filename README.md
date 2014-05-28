@@ -279,6 +279,8 @@ Example:
 `schedule` - a single or a list of cron expressions for scheduled execution. Syntax is equivalent to the
 Quartz cron expression format (see below).
 
+`cronpoolsize` - the thread pool size of the cron job executions for `schedule` parameter. If set to `1`, all jobs will be executed serially. Default is `4`.
+
 ## Default parameter settings
 
 	{
@@ -289,6 +291,7 @@ Quartz cron expression format (see below).
 	        "password" : null,
 	        "sql" : null,
 	        "schedule" : null,
+	        "cronpoolsize" : 4,
 	        "rounding" : null,
 	        "scale" : 2,
 	        "ignore_null" : false,
