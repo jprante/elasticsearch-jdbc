@@ -983,7 +983,7 @@ public class SimpleRiverSource implements RiverSource {
              * ResultSet object.
              */
             case Types.ARRAY: {
-                return result.getArray(i).getArray();
+                return result.wasNull() ? null : result.getArray(i).getArray();
             }
             /**
              * The JDBC type BIGINT represents a 64-bit signed integer value
