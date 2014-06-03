@@ -144,6 +144,10 @@ public class Values<O extends Object> implements ToXContent {
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
+		if (this.values.length == 0) {
+			builder.nullValue();
+			return builder;
+		}
         if (this.values.length > 1) {
             builder.startArray();
         }
