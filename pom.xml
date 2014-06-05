@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.2.0.1</version>
+    <version>1.2.1.0</version>
 
     <packaging>jar</packaging>
 
@@ -52,11 +52,29 @@
         </repository>
     </distributionManagement>
 
+    <!-- declaring my private repo here really sucks, it is only here for Travis CI clean builds
+    until a better solution is found for repos that can also provide snapshot artifacts
+      -->
+    <repositories>
+        <repository>
+            <id>xbib</id>
+            <url>http://xbib.org/repository</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+
     <properties>
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <elasticsearch.version>1.2.0</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>1.2.0.1</org.xbib.elasticsearch.support.version>
+        <java.compile.version>1.7</java.compile.version>
+        <elasticsearch.version>1.2.1</elasticsearch.version>
+        <org.xbib.elasticsearch.support.version>1.2.1.0</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -146,8 +164,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>${java.compile.version}</source>
+                    <target>${java.compile.version}</target>
                     <encoding>UTF-8</encoding>
                     <optimize>true</optimize>
                     <showDeprecation>true</showDeprecation>
@@ -246,7 +264,7 @@
                     <locale>en</locale>
                     <linksource>true</linksource>
                     <validateLinks>true</validateLinks>
-                    <bottom></bottom>
+                    <bottom><!-- drop copyright line --></bottom>
                 </configuration>
                 <executions>
                     <execution>
