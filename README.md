@@ -824,7 +824,7 @@ Note: if you update the JDBC plugin, old versions of the support plugin are NOT 
    Check for the JDBC version under http://github.com/jprante/elasticsearch-river/jdbc
 
 	    cd $ES_HOME
-	    ./bin/plugin -install river-jdbc -url http://bit.ly/1dKqNJy
+	    ./bin/plugin -install river-jdbc -url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.2.0.1/elasticsearch-river-jdbc-1.2.0.1-plugin.zip
 
 4. Download PostgreSQL JDBC driver
 
