@@ -45,6 +45,7 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 | Elasticsearch version    | Plugin     | Release date |
 | ------------------------ | -----------| -------------|
+| 1.2.1                    | 1.2.1.1    | Jun  9, 2014 |
 | 1.2.1                    | 1.2.1.0    | Jun  5, 2014 |
 | 1.1.0                    | 1.1.0.2    | May 19, 2014 |
 
@@ -54,7 +55,7 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.2.1.0/elasticsearch-river-jdbc-1.2.1.0-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.2.1.1/elasticsearch-river-jdbc-1.2.1.1-plugin.zip
 
 Do not forget to restart the node after installing.
 
@@ -69,6 +70,7 @@ Change into this directory to invoke the `./bin/plugin` command line tool.
 
 | File                                         | SHA1                                     |
 | ---------------------------------------------| -----------------------------------------|
+| elasticsearch-river-jdbc-1.2.1.1-plugin.zip  | 68e7e1fdf45d0e5852b21610a84740595223ea11 |
 | elasticsearch-river-jdbc-1.2.1.0-plugin.zip  | a5a953fe71259e21b6311604efda584d8260c7a3 |
 | elasticsearch-river-jdbc-1.2.0.1-plugin.zip  | 3c81488b7fe6aa65576415c6a84df5e36310e382 |
 | elasticsearch-river-jdbc-1.2.0.0-plugin.zip  | 978c5c8aa3aa5082fbf21cdfca4fd8783b4e6431 |
