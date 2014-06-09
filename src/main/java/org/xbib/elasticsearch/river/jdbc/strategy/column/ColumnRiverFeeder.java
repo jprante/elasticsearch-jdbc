@@ -18,7 +18,6 @@ import org.xbib.pipeline.PipelineRequest;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
@@ -36,7 +35,7 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
     }
     
     @Override
-    protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) {
+    protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) throws IOException {
         super.createRiverContext(riverType, riverName, mySettings);
         // defaults for column strategy
         String columnCreatedAt = XContentMapValues.nodeStringValue(mySettings.get("created_at"), "created_at");

@@ -168,7 +168,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         stopBulk();
     }
 
-    protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) {
+    protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) throws IOException {
         String strategy = XContentMapValues.nodeStringValue(mySettings.get("strategy"), "simple");
 
         String url = XContentMapValues.nodeStringValue(mySettings.get("url"), null);
@@ -208,18 +208,15 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         logger.info("river default index/type {}/{}", defaultIndex, defaultType);
 
         if (mySettings.containsKey("index_settings")) {
-            try {
-                ingest.setSettings(settingsBuilder().put(new JsonSettingsLoader()
-                        .load(jsonBuilder().map((Map<String, Object>) mySettings.get("index_settings")).string()))
-                        .build());
-                if (mySettings.containsKey("type_mapping")) {
-                    ingest.addMapping(defaultType,
-                        jsonBuilder().map((Map<String, Object>) mySettings.get("type_mapping")).string());
-                }
-            } catch (Exception e) {
-                logger.error(e.getMessage(),e);
-            }
+            ingest.setSettings(settingsBuilder().put(new JsonSettingsLoader()
+                    .load(jsonBuilder().map((Map<String, Object>) mySettings.get("index_settings")).string()))
+                    .build());
         }
+        if (mySettings.containsKey("type_mapping")) {
+            ingest.addMapping(defaultType,
+                    jsonBuilder().map((Map<String, Object>) mySettings.get("type_mapping")).string());
+        }
+
         riverSource.setUrl(url)
                 .setUser(user)
                 .setPassword(password)
