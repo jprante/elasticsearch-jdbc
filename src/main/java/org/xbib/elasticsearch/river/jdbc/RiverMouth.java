@@ -39,6 +39,8 @@ public interface RiverMouth {
 
     RiverMouth setType(String type);
 
+    RiverMouth setTimeWindowed(boolean timeWindowed);
+
     RiverMouth setId(String id);
 
     String getId();

@@ -204,8 +204,9 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
         defaultIndex = XContentMapValues.nodeStringValue(mySettings.get("index"), "jdbc");
         String defaultType = XContentMapValues.nodeStringValue(mySettings.get("type"), "jdbc");
+        boolean timeWindowed = XContentMapValues.nodeBooleanValue(mySettings.get("index_timewindow"), false);
 
-        logger.info("river default index/type {}/{}", defaultIndex, defaultType);
+        logger.info("river default index/type {}/{} (timewindowed={})", defaultIndex, defaultType, timeWindowed);
 
         if (mySettings.containsKey("index_settings")) {
             ingest.setSettings(settingsBuilder().put(new JsonSettingsLoader()
@@ -221,7 +222,10 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setUser(user)
                 .setPassword(password)
                 .setTimeZone(TimeZone.getTimeZone(timezone));
-        riverMouth.setIndex(defaultIndex).setType(defaultType).setIngest(ingest);
+        riverMouth.setIndex(defaultIndex)
+                .setType(defaultType)
+                .setIngest(ingest)
+                .setTimeWindowed(timeWindowed);
         riverFlow.setFeeder(this);
         this.riverContext = new RiverContext()
                 .setRiverName(riverName)

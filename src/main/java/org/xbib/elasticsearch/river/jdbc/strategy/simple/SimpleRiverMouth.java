@@ -5,6 +5,8 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.format.DateTimeFormat;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
@@ -34,6 +36,8 @@ public class SimpleRiverMouth implements RiverMouth {
 
     protected String id;
 
+    private boolean timeWindowed;
+
     private volatile boolean closed;
 
     protected ESLogger logger() {
@@ -59,8 +63,12 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public SimpleRiverMouth setIndex(String index) {
-        this.index = index;
+        this.index = timeWindowed ? DateTimeFormat.forPattern(index).print(new DateTime()) : index;
         return this;
+    }
+
+    public String getIndex() {
+        return index;
     }
 
     @Override
@@ -69,10 +77,24 @@ public class SimpleRiverMouth implements RiverMouth {
         return this;
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
     public SimpleRiverMouth setId(String id) {
         this.id = id;
         return this;
+    }
+
+    @Override
+    public SimpleRiverMouth setTimeWindowed(boolean timeWindowed) {
+        this.timeWindowed = timeWindowed;
+        return this;
+    }
+
+    public boolean isTimeWindowed() {
+        return timeWindowed;
     }
 
     @Override
@@ -83,10 +105,10 @@ public class SimpleRiverMouth implements RiverMouth {
     @Override
     public void index(IndexableObject object, boolean create) throws IOException {
         if (Strings.hasLength(object.index())) {
-            this.index = object.index();
+            setIndex(object.index());
         }
         if (Strings.hasLength(object.type())) {
-            this.type = object.type();
+            setType(object.type());
         }
         if (Strings.hasLength(object.id())) {
             setId(object.id());
@@ -114,7 +136,9 @@ public class SimpleRiverMouth implements RiverMouth {
         if (logger.isTraceEnabled()) {
             logger.trace("adding bulk index action {}", request.source().toUtf8());
         }
-        ingest.index(request);
+        if (ingest != null) {
+            ingest.index(request);
+        }
     }
 
     @Override
@@ -145,7 +169,9 @@ public class SimpleRiverMouth implements RiverMouth {
         if (logger.isTraceEnabled()) {
             logger.trace("adding bulk delete action {}/{}/{}", request.index(), request.type(), request.id());
         }
-        ingest.delete(request);
+        if (ingest != null) {
+            ingest.delete(request);
+        }
     }
 
     @Override

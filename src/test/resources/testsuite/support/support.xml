@@ -7,6 +7,7 @@
         <classes>
             <class name="org.xbib.elasticsearch.river.jdbc.support.ValuesTests"/>
             <class name="org.xbib.elasticsearch.river.jdbc.support.ValueListenerTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.support.TimeWindowedTests"/>
         </classes>
     </test>
 

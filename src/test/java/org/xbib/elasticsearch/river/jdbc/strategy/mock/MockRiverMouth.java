@@ -67,6 +67,12 @@ public class MockRiverMouth implements RiverMouth {
     public RiverMouth setType(String type) {
         return this;
     }
+
+    @Override
+    public RiverMouth setTimeWindowed(boolean timeWindowed) {
+        return this;
+    }
+
     @Override
     public RiverMouth setId(String id) {
         return this;
