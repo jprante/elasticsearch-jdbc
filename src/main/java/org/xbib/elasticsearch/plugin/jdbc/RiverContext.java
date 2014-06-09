@@ -9,7 +9,6 @@ import org.xbib.elasticsearch.river.jdbc.RiverSource;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -95,6 +94,22 @@ public class RiverContext {
     private boolean shouldPrepareResultSetMetadata;
 
     private boolean shouldPrepareDatabaseMetadata;
+
+    private Map<String, Object> lastRow = new HashMap<String, Object>();
+
+    private Map<String, Object> lastResultSetMetadata = new HashMap<String, Object>();
+
+    private Map<String, Object> lastDatabaseMetadata = new HashMap<String, Object>();
+
+    private long lastRowCount;
+
+    private long lastStartDate;
+
+    private long lastEndDate;
+
+    private long lastExecutionStartDate;
+
+    private long lastExecutionEndDate;
 
     /**
      * Column name that contains creation time (for column strategy)
@@ -318,6 +333,78 @@ public class RiverContext {
         return this;
     }
 
+    public RiverContext setLastRow(Map<String, Object> lastRow) {
+        this.lastRow = lastRow;
+        return this;
+    }
+
+    public Map<String,Object> getLastRow() {
+        return lastRow;
+    }
+
+    public RiverContext setLastResultSetMetadata(Map<String, Object> lastResultSetMetadata) {
+        this.lastResultSetMetadata = lastResultSetMetadata;
+        return this;
+    }
+
+    public Map<String,Object> getLastResultSetMetadata() {
+        return lastResultSetMetadata;
+    }
+
+    public RiverContext setLastDatabaseMetadata(Map<String, Object> lastDatabaseMetadata) {
+        this.lastDatabaseMetadata = lastDatabaseMetadata;
+        return this;
+    }
+
+    public Map<String,Object> getLastDatabaseMetadata() {
+        return lastDatabaseMetadata;
+    }
+
+    public RiverContext setLastRowCount(long lastRowCount) {
+        this.lastRowCount = lastRowCount;
+        return this;
+    }
+
+    public long getLastRowCount() {
+        return lastRowCount;
+    }
+
+    public RiverContext setLastStartDate(long lastStartDate) {
+        this.lastStartDate = lastStartDate;
+        return this;
+    }
+
+    public long getLastStartDate() {
+        return lastStartDate;
+    }
+
+    public RiverContext setLastEndDate(long lastEndDate) {
+        this.lastEndDate = lastEndDate;
+        return this;
+    }
+
+    public long getLastEndDate() {
+        return lastEndDate;
+    }
+
+    public RiverContext setLastExecutionStartDate(long lastExecutionStartDate) {
+        this.lastExecutionStartDate = lastExecutionStartDate;
+        return this;
+    }
+
+    public long getLastExecutionStartDate() {
+        return lastExecutionStartDate;
+    }
+
+    public RiverContext setLastExecutionEndDate(long lastExecutionEndDate) {
+        this.lastExecutionEndDate = lastExecutionEndDate;
+        return this;
+    }
+
+    public long getLastExecutionEndDate() {
+        return lastExecutionEndDate;
+    }
+
     public String columnUpdatedAt() {
         return columnUpdatedAt;
     }
@@ -381,6 +468,13 @@ public class RiverContext {
                     .field("rounding", rounding)
                     .field("scale", scale)
                     .field("shouldignorenull", shouldIgnoreNull)
+                    .field("lastRow", lastRow)
+                    .field("lastResultSetMetadata", lastResultSetMetadata)
+                    .field("lastDatabaseMetadata", lastDatabaseMetadata)
+                    .field("lastStartDate", lastStartDate)
+                    .field("lastEndDate", lastEndDate)
+                    .field("lastExecutionStartDate", lastExecutionStartDate)
+                    .field("lastExecutionEndDate", lastExecutionEndDate)
                     .field("columnCreatedAt", columnCreatedAt)
                     .field("columnUpdatedAt", columnUpdatedAt)
                     .field("columnDeletedAt", columnDeletedAt)
