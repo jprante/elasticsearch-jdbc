@@ -189,10 +189,7 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void close() throws IOException {
-        if (!closed) {
-            // do not shut down ingest object here...  we need it for cleanup
-            closed = true;
-        }
+        // keep open, do not close or shut down ingest object here...  we need it for cleanup
     }
 
 }

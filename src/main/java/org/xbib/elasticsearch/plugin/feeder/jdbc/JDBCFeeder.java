@@ -166,6 +166,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         }
         // we don't know if this is the last run. Stop bulk for now, make indexed documents visible for search
         stopBulk();
+
     }
 
     protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) throws IOException {
@@ -296,10 +297,11 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     private void stopBulk() {
         State state = ingest.getState();
         if (state.indices() != null && !state.indices().isEmpty()) {
-            logger.info("stopping bulk mode for indices {}...", state.indices());
             for (String index : ImmutableSet.copyOf(state.indices())) {
+                logger.info("stopping bulk mode for index {} and refreshing...", index);
                 try {
                     ingest.stopBulk(index);
+                    ingest.refresh(index);
                 } catch (IOException e) {
                     logger.error(e.getMessage(),e);
                 }
