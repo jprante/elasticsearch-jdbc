@@ -226,7 +226,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         riverMouth.setTimeWindowed(timeWindowed)
                 .setIndex(defaultIndex)
                 .setType(defaultType)
-                .setIngest(ingest);                ;
+                .setIngest(ingest);
         riverFlow.setFeeder(this);
         this.riverContext = new RiverContext()
                 .setRiverName(riverName)
