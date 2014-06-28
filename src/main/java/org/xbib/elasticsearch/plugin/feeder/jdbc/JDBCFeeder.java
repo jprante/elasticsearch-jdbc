@@ -223,10 +223,10 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setUser(user)
                 .setPassword(password)
                 .setTimeZone(TimeZone.getTimeZone(timezone));
-        riverMouth.setIndex(defaultIndex)
+        riverMouth.setTimeWindowed(timeWindowed)
+                .setIndex(defaultIndex)
                 .setType(defaultType)
-                .setIngest(ingest)
-                .setTimeWindowed(timeWindowed);
+                .setIngest(ingest);
         riverFlow.setFeeder(this);
         this.riverContext = new RiverContext()
                 .setRiverName(riverName)
