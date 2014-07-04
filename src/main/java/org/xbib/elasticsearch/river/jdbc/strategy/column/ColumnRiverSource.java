@@ -91,7 +91,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
             return new Timestamp(0);
         }
         TimeValue lastRunTime = (TimeValue) settings.get(ColumnRiverFlow.LAST_RUN_TIME);
-        return new Timestamp(lastRunTime.millis());
+        return new Timestamp(lastRunTime.millis() - context.getLastRunTimeStampOverlap().millis());
     }
 
     private void fetch(Connection connection, SQLCommand command, OpInfo opInfo, Timestamp lastRunTimestamp) throws IOException, SQLException {

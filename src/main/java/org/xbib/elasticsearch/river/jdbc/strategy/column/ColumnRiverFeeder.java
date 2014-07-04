@@ -42,11 +42,14 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
         String columnUpdatedAt = XContentMapValues.nodeStringValue(mySettings.get("updated_at"), "updated_at");
         String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("deleted_at"), null);
         boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);
+        TimeValue lastRunTimeStampOverlap = XContentMapValues.nodeTimeValue(mySettings.get("last_run_timestamp_overlap"),
+            TimeValue.timeValueSeconds(0));
         riverContext
                 .columnCreatedAt(columnCreatedAt)
                 .columnUpdatedAt(columnUpdatedAt)
                 .columnDeletedAt(columnDeletedAt)
-                .columnEscape(columnEscape);
+                .columnEscape(columnEscape)
+                .setLastRunTimeStampOverlap(lastRunTimeStampOverlap);
     }
 
         @Override
