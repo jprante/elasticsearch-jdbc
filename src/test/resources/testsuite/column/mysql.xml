@@ -67,6 +67,7 @@
         <parameter name="river-sqlForTestDeletions" value="mysql/river-sqlForTestDeletions.json"/>
         <parameter name="river-sqlForTestDeletionsAndWherePlaceholder" value="mysql/river-sqlForTestDeletionsAndWherePlaceholder.json"/>
         <parameter name="river-whereClausePlaceholder" value="mysql/river-whereClausePlaceholder.json"/>
+        <parameter name="river-existedWhereClauseWithOverlap" value="mysql/river-existedWhereClauseWithOverlap.json"/>
         <parameter name="river-sqlparams" value="mysql/river-sqlparams.json"/>
         <parameter name="sqlInsert"
                     value="insert into products (id, name, amount, price, created_at, updated_at, deleted_at) VALUES(?,?,?,?,?,?,?)" />

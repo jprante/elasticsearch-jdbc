@@ -80,6 +80,33 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         verifyDeleteObjects(riverResource, insertSql);
     }
 
+    @Test
+    @Parameters({"river-existedWhereClauseWithOverlap", "sqlInsert"})
+    public void testCreateObjects_withLastRunTimeStampOverlap(String riverResource, String sql)
+        throws SQLException, IOException, InterruptedException {
+        final int newRecordsOutOfTimeRange = 3;
+        final int newRecordsInTimeRange = 2;
+        final int updatedRecordsInTimeRange = 4;
+        final int updatedRecordsInTimeRangeWithOverlap = 1;
+
+        testColumnRiver(new MockRiverMouth(), riverResource, sql, new ProductFixture[] {
+            ProductFixture
+            .size(newRecordsOutOfTimeRange)
+            .createdAt(oldTimestamp()),
+            ProductFixture
+            .size(newRecordsInTimeRange)
+            .createdAt(okTimestamp()),
+            ProductFixture
+            .size(updatedRecordsInTimeRange)
+            .createdAt(oldTimestamp())
+            .updatedAt(okTimestamp()),
+            ProductFixture
+            .size(updatedRecordsInTimeRangeWithOverlap)
+            .createdAt(oldTimestamp())
+            .updatedAt(overlapTimestamp()),
+        }, newRecordsInTimeRange + updatedRecordsInTimeRange + updatedRecordsInTimeRangeWithOverlap);
+    }
+
     private void verifyCreateObjects(String riverResource, String sql)
             throws SQLException, IOException, InterruptedException {
         final int newRecordsOutOfTimeRange = 3;
@@ -159,6 +186,16 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         context.columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null));
         context.columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null));
         context.columnEscape(true);
+        context.setLastRunTimeStampOverlap(getLastRunTimestampOverlap(riverSettings));
+    }
+
+    private TimeValue getLastRunTimestampOverlap(RiverSettings riverSettings) {
+        TimeValue overlap = TimeValue.timeValueMillis(0);
+        Map<String, Object> jdbcSettingsMap = ((Map<String, Object>) (riverSettings.settings().get("jdbc")));
+        if (jdbcSettingsMap != null && jdbcSettingsMap.containsKey("last_run_timestamp_overlap")) {
+            overlap = ((TimeValue) (jdbcSettingsMap.get("last_run_timestamp_overlap")));
+        }
+        return overlap;
     }
 
     private Timestamp okTimestamp() {
@@ -167,6 +204,10 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
 
     private Timestamp oldTimestamp() {
         return new Timestamp(LAST_RUN_TIME.getMillis() - 1000);
+    }
+
+    private Timestamp overlapTimestamp() {
+        return new Timestamp(LAST_RUN_TIME.getMillis() - 50);
     }
 
     private void createData(String sql, ProductFixture[] fixtures) throws SQLException {
