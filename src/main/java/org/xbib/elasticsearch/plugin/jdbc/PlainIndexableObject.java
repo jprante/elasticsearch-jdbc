@@ -128,6 +128,9 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
      */
     @SuppressWarnings({"unchecked"})
     protected XContentBuilder toXContent(XContentBuilder builder, Params params, Map<String, Object> map) throws IOException {
+        if (checkCollapsedMapLength(map)) {
+            return builder;
+        }
         builder.startObject();
         for (Map.Entry<String, Object> k : map.entrySet()) {
             Object o = k.getValue();
@@ -152,6 +155,23 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
         }
         builder.endObject();
         return builder;
+    }
+
+    /**
+     * Check if the map is empty, after optional null value removal.
+     * @param map the map to check
+     * @return true if map is empty, false if not
+     */
+    protected boolean checkCollapsedMapLength(Map<String,Object> map) {
+        int exists = 0;
+        for (Map.Entry<String, Object> k : map.entrySet()) {
+            Object o = k.getValue();
+            if (ignoreNull && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
+                continue;
+            }
+            exists++;
+        }
+        return exists == 0;
     }
 
     @SuppressWarnings({"unchecked"})

@@ -316,4 +316,37 @@ public class ValueListenerTests extends Assert {
         );
     }
 
+    @Test
+    public void testIgnoreNullObject() throws Exception {
+        List<String> columns = Arrays.asList("_id", "blog.name", "blog.association[id]", "blog.association[name]");
+        List<Object> row1 = new LinkedList<Object>();
+        row1.add("4679");
+        row1.add("Joe");
+        row1.add("3917");
+        row1.add("John");
+        List<Object> row2 = new LinkedList<Object>();
+        row2.add("4679");
+        row2.add("Joe");
+        row2.add("4015");
+        row2.add("Jack");
+        List<Object> row3 = new LinkedList<Object>();
+        row3.add("4679");
+        row3.add("Joe");
+        row3.add(null);
+        row3.add(null);
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverMouthKeyValueStreamListener<String, Object>()
+                .shouldIgnoreNull(true)
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .values(row2)
+                .values(row3)
+                .end();
+        assertEquals(output.data().toString(),
+                "{[null/null/null/4679]->{blog={name=\"Joe\", association=[{id=\"3917\", name=\"John\"}, {id=\"4015\", name=\"Jack\"}, {id=null, name=null}]}}={\"blog\":{\"name\":\"Joe\",\"association\":[{\"id\":\"3917\",\"name\":\"John\"},{\"id\":\"4015\",\"name\":\"Jack\"}]}}}"
+        );
+    }
+
 }
