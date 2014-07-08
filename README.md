@@ -84,7 +84,7 @@ The Maven project site is available at [Github](http://jprante.github.io/elastic
 ## Issues
 
 All feedback is welcome! If you find issues, please post them at
-`Github <https://github.com/jprante/elasticsearch-river-jdbc/issues>`_
+[Github](https://github.com/jprante/elasticsearch-river-jdbc/issues)
 
 # Documentation
 
@@ -255,7 +255,7 @@ Example:
 
 `scale` -  the precision of parsing numeric values
 
-`ignore_null` - if NULL values should be ignored when constructing JSON documents. Default is `false`
+`ignore_null_values` - if NULL values should be ignored when constructing JSON documents. Default is `false`
 
 `autocommit` -  `true` if each statement should be automatically executed. Default is `false`
 
@@ -297,7 +297,7 @@ Quartz cron expression format (see below).
 	        "cronpoolsize" : 4,
 	        "rounding" : null,
 	        "scale" : 2,
-	        "ignore_null" : false,
+	        "ignore_null_values" : false,
 	        "autocommit" : false,
 	        "fetchsize" : 10, /* Integer.MIN for MySQL */
 	        "max_rows" : 0,
