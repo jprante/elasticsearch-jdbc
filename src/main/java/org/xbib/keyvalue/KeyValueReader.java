@@ -50,7 +50,7 @@ public class KeyValueReader extends BufferedReader
     public KeyValueReader(Reader reader) throws IOException {
         this(reader, '=');
     }
-    
+
     public KeyValueReader(Reader reader, char delimiter) throws IOException {
         super(reader);
         this.atStart = true;
@@ -91,7 +91,7 @@ public class KeyValueReader extends BufferedReader
         if (line != null) {
             int pos = line.indexOf(delimiter);
             if (pos > 0) {
-                keyValue(line.substring(0, pos), line.substring(pos+1));
+                keyValue(line.substring(0, pos), line.substring(pos + 1));
             }
         }
         return line;

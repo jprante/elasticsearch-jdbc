@@ -31,7 +31,7 @@
  */
 package org.xbib.keyvalue;
 
-public class KeyValue<K,V> {
+public class KeyValue<K, V> {
 
     private final K key;
 

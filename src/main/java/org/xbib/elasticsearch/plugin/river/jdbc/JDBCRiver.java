@@ -7,10 +7,10 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.loader.JsonSettingsLoader;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
+import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.xbib.elasticsearch.action.river.execute.RunnableRiver;
 import org.xbib.elasticsearch.action.river.state.RiverState;
 import org.xbib.elasticsearch.action.river.state.StatefulRiver;
@@ -55,7 +55,7 @@ public class JDBCRiver extends AbstractRiverComponent implements RunnableRiver, 
     private Feeder createFeeder(String riverType, String riverName, RiverSettings riverSettings) {
         JDBCFeeder feeder = null;
         try {
-            Map<String,Object> spec = (Map<String, Object>) riverSettings.settings().get("jdbc");
+            Map<String, Object> spec = (Map<String, Object>) riverSettings.settings().get("jdbc");
             Map<String, String> loadedSettings = new JsonSettingsLoader().load(jsonBuilder().map(spec).string());
             Settings mySettings = settingsBuilder().put(loadedSettings).build();
             String strategy = XContentMapValues.nodeStringValue(spec.get("strategy"), "simple");

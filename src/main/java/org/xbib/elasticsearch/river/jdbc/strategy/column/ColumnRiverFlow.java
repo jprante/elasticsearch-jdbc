@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
 import org.elasticsearch.common.logging.ESLogger;

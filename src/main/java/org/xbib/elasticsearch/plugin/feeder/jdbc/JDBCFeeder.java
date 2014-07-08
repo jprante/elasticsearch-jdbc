@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.plugin.feeder.jdbc;
 
 import org.elasticsearch.common.collect.ImmutableSet;
@@ -52,8 +51,8 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     private String name = "feeder";
 
     /**
-     *  A default index that may be optionally declared. This index is created beforehand and configured
-     *  to bulk mode before the feeder starts.
+     * A default index that may be optionally declared. This index is created beforehand and configured
+     * to bulk mode before the feeder starts.
      */
     private String defaultIndex;
 
@@ -70,7 +69,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         return new PipelineProvider<P>() {
             @Override
             public P get() {
-                return  (P) new JDBCFeeder(JDBCFeeder.this);
+                return (P) new JDBCFeeder(JDBCFeeder.this);
             }
         };
     }
@@ -92,6 +91,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     /**
      * Prepare a feed run. Open a client to Elasticsearch and create a queue of input specifications.
      * This method is executed in a single thread before feed threads are created.
+     *
      * @return this feeder
      * @throws IOException
      */
@@ -125,6 +125,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     /**
      * Each feed thread executes this method to do the main work.
      * This method is executed in paralle by all feed threads.
+     *
      * @param map the specification f the task to perform
      * @throws Exception
      */
@@ -184,7 +185,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
         int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
         TimeValue maxretrywait = XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
-                        TimeValue.timeValueSeconds(30));
+                TimeValue.timeValueSeconds(30));
         String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"),
                 LocaleUtil.fromLocale(Locale.getDefault()));
         String resultSetType = XContentMapValues.nodeStringValue(mySettings.get("resultset_type"),
@@ -207,7 +208,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         String defaultType = XContentMapValues.nodeStringValue(mySettings.get("type"), "jdbc");
         boolean timeWindowed = XContentMapValues.nodeBooleanValue(mySettings.get("index_timewindow"), false);
 
-        logger.info("river default index/type {}/{} (timewindowed={})", defaultIndex, defaultType, timeWindowed);
+        logger.info("river default index/type {}/{} (index_timewindow={})", defaultIndex, defaultType, timeWindowed);
 
         if (mySettings.containsKey("index_settings")) {
             ingest.setSettings(settingsBuilder().put(new JsonSettingsLoader()
@@ -290,7 +291,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             }
             ingest.startBulk(defaultIndex);
         } catch (IOException e) {
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -303,7 +304,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                     ingest.stopBulk(index);
                     ingest.refresh(index);
                 } catch (IOException e) {
-                    logger.error(e.getMessage(),e);
+                    logger.error(e.getMessage(), e);
                 }
             }
         }

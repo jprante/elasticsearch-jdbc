@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.action.delete.DeleteRequest;

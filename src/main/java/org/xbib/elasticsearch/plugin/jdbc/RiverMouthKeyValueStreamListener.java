@@ -8,16 +8,16 @@ import java.io.IOException;
  * This class consumes pairs from a key/value stream
  * and transports them to the river mouth.
  */
-public class RiverMouthKeyValueStreamListener<K,V> extends PlainKeyValueStreamListener<K, V> {
+public class RiverMouthKeyValueStreamListener<K, V> extends PlainKeyValueStreamListener<K, V> {
 
     private RiverMouth output;
 
-    public RiverMouthKeyValueStreamListener<K,V> output(RiverMouth output) {
+    public RiverMouthKeyValueStreamListener<K, V> output(RiverMouth output) {
         this.output = output;
         return this;
     }
 
-    public RiverMouthKeyValueStreamListener<K,V> shouldIgnoreNull(boolean shouldIgnoreNull) {
+    public RiverMouthKeyValueStreamListener<K, V> shouldIgnoreNull(boolean shouldIgnoreNull) {
         super.shouldIgnoreNull(shouldIgnoreNull);
         return this;
     }
@@ -29,7 +29,7 @@ public class RiverMouthKeyValueStreamListener<K,V> extends PlainKeyValueStreamLi
      * @return this value listener
      * @throws java.io.IOException
      */
-    public RiverMouthKeyValueStreamListener<K,V> end(IndexableObject object) throws IOException {
+    public RiverMouthKeyValueStreamListener<K, V> end(IndexableObject object) throws IOException {
         if (object.isEmpty()) {
             return this;
         }

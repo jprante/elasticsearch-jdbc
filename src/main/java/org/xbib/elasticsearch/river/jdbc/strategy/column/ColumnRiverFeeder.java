@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
 import org.elasticsearch.action.get.GetResponse;
@@ -6,10 +5,10 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import org.elasticsearch.indices.IndexMissingException;
 import org.xbib.elasticsearch.action.river.state.RiverState;
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.pipeline.Pipeline;
@@ -21,19 +20,19 @@ import java.util.Date;
 import java.util.Map;
 
 public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
-        extends JDBCFeeder<T,R,P> {
+        extends JDBCFeeder<T, R, P> {
 
     private final static ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFeeder.class.getSimpleName());
 
-    public ColumnRiverFeeder(){
+    public ColumnRiverFeeder() {
         super();
     }
-    
+
     @SuppressWarnings("rawtypes")
-    public ColumnRiverFeeder(ColumnRiverFeeder feeder){
+    public ColumnRiverFeeder(ColumnRiverFeeder feeder) {
         super(feeder);
     }
-    
+
     @Override
     protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) throws IOException {
         super.createRiverContext(riverType, riverName, mySettings);
@@ -43,7 +42,7 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
         String columnDeletedAt = XContentMapValues.nodeStringValue(mySettings.get("deleted_at"), null);
         boolean columnEscape = XContentMapValues.nodeBooleanValue(mySettings.get("column_escape"), true);
         TimeValue lastRunTimeStampOverlap = XContentMapValues.nodeTimeValue(mySettings.get("last_run_timestamp_overlap"),
-            TimeValue.timeValueSeconds(0));
+                TimeValue.timeValueSeconds(0));
         riverContext
                 .columnCreatedAt(columnCreatedAt)
                 .columnUpdatedAt(columnUpdatedAt)
@@ -52,7 +51,7 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
                 .setLastRunTimeStampOverlap(lastRunTimeStampOverlap);
     }
 
-        @Override
+    @Override
     public void executeTask(Map<String, Object> map) throws Exception {
         logger.info("processing map {}", map);
         createRiverContext("jdbc", "feeder", map);
@@ -141,14 +140,14 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
         settings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);
         settings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);
     }
-    
+
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public PipelineProvider<P> pipelineProvider() {
         return new PipelineProvider<P>() {
             @Override
             public P get() {
-                return  (P) new ColumnRiverFeeder(ColumnRiverFeeder.this);
+                return (P) new ColumnRiverFeeder(ColumnRiverFeeder.this);
             }
         };
     }

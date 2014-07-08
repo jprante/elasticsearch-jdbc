@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc;
 
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
@@ -16,6 +15,7 @@ public interface RiverFlow {
 
     /**
      * Set the feeder
+     *
      * @param feeder the feeder
      * @return this river flow
      */
@@ -23,6 +23,7 @@ public interface RiverFlow {
 
     /**
      * Return the feeder
+     *
      * @return the feeder
      */
     JDBCFeeder getFeeder();

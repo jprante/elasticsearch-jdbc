@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.plugin.jdbc;
 
 import org.elasticsearch.common.io.Streams;

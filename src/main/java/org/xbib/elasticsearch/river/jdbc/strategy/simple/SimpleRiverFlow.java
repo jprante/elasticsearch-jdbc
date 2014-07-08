@@ -1,11 +1,10 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 
-public class SimpleRiverFlow  implements RiverFlow {
+public class SimpleRiverFlow implements RiverFlow {
 
     protected RiverContext context;
 

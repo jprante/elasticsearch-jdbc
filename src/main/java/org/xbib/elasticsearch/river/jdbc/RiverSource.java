@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,7 +41,7 @@ public interface RiverSource {
      * for firther processing.
      *
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     void fetch() throws SQLException, IOException;
 
@@ -164,7 +163,7 @@ public interface RiverSource {
      * @param listener listener
      * @return true if next row exists
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
@@ -178,8 +177,8 @@ public interface RiverSource {
      * @param type    type
      * @param locale  locale
      * @return object
-     * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws SQLException   when SQL execution gives an error
+     * @throws IOException    when input/output error occurs
      * @throws ParseException if number format could not be parsed
      */
     Object parseType(ResultSet results, Integer num, int type, Locale locale) throws SQLException, IOException, ParseException;
@@ -218,6 +217,7 @@ public interface RiverSource {
 
     /**
      * Set the timezone for JDBC setTimestamp() calls with calendar object.
+     *
      * @param timeZone the time zone
      * @return this river source
      */
@@ -225,6 +225,7 @@ public interface RiverSource {
 
     /**
      * Get the current timezone of this river source for the JDBC setTimestamp() call
+     *
      * @return the time zone
      */
     TimeZone getTimeZone();

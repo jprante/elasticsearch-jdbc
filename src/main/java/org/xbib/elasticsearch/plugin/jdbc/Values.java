@@ -130,11 +130,11 @@ public class Values<O extends Object> implements ToXContent {
         }
         if (o instanceof Float) {
             // suppress scientific notation
-            return String.format("%.12f", (Float)o);
+            return String.format("%.12f", (Float) o);
         }
         if (o instanceof Double) {
             // suppress scientific notation
-            return String.format("%.12f", (Double)o);
+            return String.format("%.12f", (Double) o);
         }
         // stringify
         String t = o.toString();
@@ -144,10 +144,10 @@ public class Values<O extends Object> implements ToXContent {
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
-		if (this.values.length == 0) {
-			builder.nullValue();
-			return builder;
-		}
+        if (this.values.length == 0) {
+            builder.nullValue();
+            return builder;
+        }
         if (this.values.length > 1) {
             builder.startArray();
         }

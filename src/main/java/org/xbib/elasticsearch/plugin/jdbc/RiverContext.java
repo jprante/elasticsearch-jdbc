@@ -343,7 +343,7 @@ public class RiverContext {
         return this;
     }
 
-    public Map<String,Object> getLastRow() {
+    public Map<String, Object> getLastRow() {
         return lastRow;
     }
 
@@ -352,7 +352,7 @@ public class RiverContext {
         return this;
     }
 
-    public Map<String,Object> getLastResultSetMetadata() {
+    public Map<String, Object> getLastResultSetMetadata() {
         return lastResultSetMetadata;
     }
 
@@ -361,7 +361,7 @@ public class RiverContext {
         return this;
     }
 
-    public Map<String,Object> getLastDatabaseMetadata() {
+    public Map<String, Object> getLastDatabaseMetadata() {
         return lastDatabaseMetadata;
     }
 

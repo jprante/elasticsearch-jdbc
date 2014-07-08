@@ -34,7 +34,7 @@ package org.xbib.keyvalue;
 import java.io.IOException;
 import java.util.List;
 
-public class KeyValueStreamAdapter<K,V> implements KeyValueStreamListener<K,V> {
+public class KeyValueStreamAdapter<K, V> implements KeyValueStreamListener<K, V> {
 
     /**
      * Begin a key/value sequence
@@ -42,16 +42,17 @@ public class KeyValueStreamAdapter<K,V> implements KeyValueStreamListener<K,V> {
      * @return this value listener
      * @throws java.io.IOException
      */
-    public KeyValueStreamListener<K,V> begin() throws IOException {
+    public KeyValueStreamListener<K, V> begin() throws IOException {
         return this;
     }
 
     /**
      * Receive key/value pair
-     * @param key the key
+     *
+     * @param key   the key
      * @param value the value
      */
-    public KeyValueStreamListener<K,V> keyValue(K key, V value) throws IOException {
+    public KeyValueStreamListener<K, V> keyValue(K key, V value) throws IOException {
         return this;
     }
 
@@ -61,7 +62,7 @@ public class KeyValueStreamAdapter<K,V> implements KeyValueStreamListener<K,V> {
      * @param keys the keys
      * @return this ValueListener
      */
-    public KeyValueStreamListener<K,V> keys(List<K> keys) throws IOException {
+    public KeyValueStreamListener<K, V> keys(List<K> keys) throws IOException {
         return this;
     }
 
@@ -72,7 +73,7 @@ public class KeyValueStreamAdapter<K,V> implements KeyValueStreamListener<K,V> {
      * @return this ValueListener
      * @throws java.io.IOException
      */
-    public KeyValueStreamListener<K,V> values(List<V> values) throws IOException {
+    public KeyValueStreamListener<K, V> values(List<V> values) throws IOException {
         return this;
     }
 
@@ -82,7 +83,7 @@ public class KeyValueStreamAdapter<K,V> implements KeyValueStreamListener<K,V> {
      * @return this listener
      * @throws java.io.IOException
      */
-    public KeyValueStreamListener<K,V> end() throws IOException {
+    public KeyValueStreamListener<K, V> end() throws IOException {
         return this;
     }
 }

@@ -86,7 +86,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
     @SuppressWarnings("rawtypes")
     private Timestamp getLastRunTimestamp() {
         Map settings = (Map) context.getRiverSettings();
-        logger.info("getLastRunTimestamp settings = {}",  context.getRiverSettings());
+        logger.info("getLastRunTimestamp settings = {}", context.getRiverSettings());
         if (settings == null || settings.get(ColumnRiverFlow.LAST_RUN_TIME) == null) {
             return new Timestamp(0);
         }
@@ -105,10 +105,10 @@ public class ColumnRiverSource extends SimpleRiverSource {
         try {
             bind(stmt, params);
             result = executeQuery(stmt);
-            KeyValueStreamListener<Object,Object> listener =
-                    new ColumnKeyValueStreamListener<Object,Object>(opInfo.opType)
-                        .output(context.getRiverMouth());
-                merge(result, listener);
+            KeyValueStreamListener<Object, Object> listener =
+                    new ColumnKeyValueStreamListener<Object, Object>(opInfo.opType)
+                            .output(context.getRiverMouth());
+            merge(result, listener);
         } catch (Exception e) {
             throw new IOException(e);
         } finally {
@@ -166,7 +166,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
         }
     }
 
-    private static class ColumnKeyValueStreamListener<K,V> extends RiverMouthKeyValueStreamListener<K,V> {
+    private static class ColumnKeyValueStreamListener<K, V> extends RiverMouthKeyValueStreamListener<K, V> {
 
         private String opType;
 

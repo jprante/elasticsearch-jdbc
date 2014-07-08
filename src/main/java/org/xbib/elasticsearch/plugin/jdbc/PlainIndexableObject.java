@@ -131,7 +131,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
         builder.startObject();
         for (Map.Entry<String, Object> k : map.entrySet()) {
             Object o = k.getValue();
-            if (ignoreNull && (o == null || (o instanceof Values) && ((Values)o).isNull())) {
+            if (ignoreNull && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
                 continue;
             }
             builder.field(k.getKey());

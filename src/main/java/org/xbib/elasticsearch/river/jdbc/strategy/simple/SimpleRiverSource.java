@@ -1,4 +1,3 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.common.joda.time.DateTime;
@@ -45,11 +44,11 @@ import java.util.TimeZone;
 
 /**
  * Simple river source.
- *
+ * <p/>
  * The simple river source iterates through a JDBC result set,
  * merges the rows into Elasticsearch documents, and passes them to
  * a bulk indexer.
- *
+ * <p/>
  * There are two channels open, one for reading the database, one for writing.
  */
 public class SimpleRiverSource implements RiverSource {
@@ -215,7 +214,7 @@ public class SimpleRiverSource implements RiverSource {
      * River cycle fetch. Issue a series of SQL statements.
      *
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     @Override
     public void fetch() throws SQLException, IOException {
@@ -258,7 +257,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param command the SQL command
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     private void execute(SQLCommand command) throws Exception {
         Statement statement = null;
@@ -299,7 +298,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param command the SQL command
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     private void executeWithParameter(SQLCommand command) throws Exception {
         PreparedStatement statement = null;
@@ -309,7 +308,7 @@ public class SimpleRiverSource implements RiverSource {
                 statement = prepareQuery(command.getSQL());
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
-                RiverMouthKeyValueStreamListener<Object,Object> listener = new RiverMouthKeyValueStreamListener<Object,Object>()
+                RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                         .output(context.getRiverMouth())
                         .shouldIgnoreNull(context.shouldIgnoreNull());
                 merge(results, listener);
@@ -329,7 +328,7 @@ public class SimpleRiverSource implements RiverSource {
      *
      * @param command the SQL command
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     private void executeCallable(SQLCommand command) throws Exception {
         // call stored procedure
@@ -345,7 +344,7 @@ public class SimpleRiverSource implements RiverSource {
                 register(statement, command.getResults());
             }
             boolean hasRows = statement.execute();
-            RiverMouthKeyValueStreamListener<Object,Object> listener = new RiverMouthKeyValueStreamListener<Object,Object>()
+            RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                     .output(context.getRiverMouth());
             if (!hasRows) {
                 // merge from registered params
@@ -368,7 +367,7 @@ public class SimpleRiverSource implements RiverSource {
      * @param results  result set
      * @param listener the value listener
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     public void merge(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
@@ -397,7 +396,7 @@ public class SimpleRiverSource implements RiverSource {
      * @param statement callable statement
      * @param listener  the value listener
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     @SuppressWarnings({"unchecked"})
     public void merge(CallableStatement statement, SQLCommand command, KeyValueStreamListener listener)
@@ -568,7 +567,7 @@ public class SimpleRiverSource implements RiverSource {
      * @param results  the result set
      * @param listener the key/value stream listener
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     @Override
     @SuppressWarnings({"unchecked"})
@@ -592,7 +591,7 @@ public class SimpleRiverSource implements RiverSource {
      * @param listener the listener
      * @return true if row exists and was processed, false otherwise
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     @Override
     public boolean nextRow(ResultSet results, KeyValueStreamListener listener)
@@ -611,7 +610,7 @@ public class SimpleRiverSource implements RiverSource {
      * @param results  the result set
      * @param listener the key/value stream listener
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     @Override
     public void afterRows(ResultSet results, KeyValueStreamListener listener)
@@ -718,7 +717,7 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     private void prepare(final DatabaseMetaData metaData) throws SQLException {
-        Map<String,Object> m = new HashMap<String,Object>() {
+        Map<String, Object> m = new HashMap<String, Object>() {
             {
                 put("$meta.db.allproceduresarecallable", metaData.allProceduresAreCallable());
                 put("$meta.db.alltablesareselectable", metaData.allTablesAreSelectable());
@@ -776,7 +775,7 @@ public class SimpleRiverSource implements RiverSource {
 
 
     private void prepare(final ResultSetMetaData metaData) throws SQLException {
-        Map<String,Object> m = new HashMap<String,Object>() {
+        Map<String, Object> m = new HashMap<String, Object>() {
             {
                 put("$meta.row.columnCount", metaData.getColumnCount());
             }
@@ -927,7 +926,7 @@ public class SimpleRiverSource implements RiverSource {
      * @param locale the locale to use for parsing
      * @return The parse value
      * @throws SQLException when SQL execution gives an error
-     * @throws IOException when input/output error occurs
+     * @throws IOException  when input/output error occurs
      */
     @Override
     public Object parseType(ResultSet result, Integer i, int type, Locale locale)
@@ -976,7 +975,7 @@ public class SimpleRiverSource implements RiverSource {
              * ResultSet object.
              */
             case Types.ARRAY: {
-            	Array arr = result.getArray(i);
+                Array arr = result.getArray(i);
                 return arr == null ? null : arr.getArray();
             }
             /**
