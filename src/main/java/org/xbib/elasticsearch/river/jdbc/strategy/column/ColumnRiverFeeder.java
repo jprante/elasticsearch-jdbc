@@ -54,7 +54,7 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
     @Override
     public void executeTask(Map<String, Object> map) throws Exception {
         logger.info("processing map {}", map);
-        createRiverContext("jdbc", "feeder", map);
+        createRiverContext("jdbc", getName(), map);
         if (riverState == null) {
             riverState = new RiverState();
         }
