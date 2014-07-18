@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * The SQL command
@@ -20,6 +21,8 @@ import java.util.Map;
 public class SQLCommand {
 
     private String sql;
+
+    private static final Pattern STATEMENT_PATTERN = Pattern.compile("^\\s*(update|insert)",Pattern.CASE_INSENSITIVE);
 
     private List<Object> params = new LinkedList<Object>();
 
@@ -62,6 +65,9 @@ public class SQLCommand {
     public boolean isQuery() {
         if (sql == null) {
             throw new IllegalArgumentException("no SQL found");
+        }
+        if (STATEMENT_PATTERN.matcher(sql).find()) {
+            return false;
         }
         int p1 = sql.toLowerCase().indexOf("select");
         if (p1 < 0) {

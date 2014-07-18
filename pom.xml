@@ -343,6 +343,23 @@
         </profile>
 
         <profile>
+            <id>test-plugin</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>false</skipTests>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/plugin/plugin.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <id>test-derby</id>
             <dependencies>
                 <dependency>
