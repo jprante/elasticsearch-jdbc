@@ -178,8 +178,10 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     private void setContextSettings(String riverResource) throws IOException {
         RiverSettings riverSettings = riverSettings(riverResource);
         Map<String, Object> settings = (Map<String, Object>) riverSettings.settings().get("jdbc");
-        settings.put(ColumnRiverFlow.LAST_RUN_TIME, LAST_RUN_TIME);
-        settings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, new TimeValue(new Date().getTime()));
+
+        riverSettings.settings().put(ColumnRiverFlow.LAST_RUN_TIME, LAST_RUN_TIME);
+        riverSettings.settings().put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, new TimeValue(new Date().getTime()));
+
         context.setRiverSettings(riverSettings.settings());
         context.setStatements(SQLCommand.parse(settings));
         context.columnCreatedAt(XContentMapValues.nodeStringValue(settings.get("column_created_at"), null));
@@ -193,21 +195,21 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         TimeValue overlap = TimeValue.timeValueMillis(0);
         Map<String, Object> jdbcSettingsMap = ((Map<String, Object>) (riverSettings.settings().get("jdbc")));
         if (jdbcSettingsMap != null && jdbcSettingsMap.containsKey("last_run_timestamp_overlap")) {
-            overlap = ((TimeValue) (jdbcSettingsMap.get("last_run_timestamp_overlap")));
+            overlap = XContentMapValues.nodeTimeValue(jdbcSettingsMap.get("last_run_timestamp_overlap"));
         }
         return overlap;
     }
 
     private Timestamp okTimestamp() {
-        return new Timestamp(LAST_RUN_TIME.getMillis() + 1000);
+        return new Timestamp(LAST_RUN_TIME.getMillis() + 60*2*1000);
     }
 
     private Timestamp oldTimestamp() {
-        return new Timestamp(LAST_RUN_TIME.getMillis() - 1000);
+        return new Timestamp(LAST_RUN_TIME.getMillis() - 60*2*1000);
     }
 
     private Timestamp overlapTimestamp() {
-        return new Timestamp(LAST_RUN_TIME.getMillis() - 50);
+        return new Timestamp(LAST_RUN_TIME.getMillis() - 1000);
     }
 
     private void createData(String sql, ProductFixture[] fixtures) throws SQLException {
