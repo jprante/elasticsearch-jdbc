@@ -1,0 +1,27 @@
+-locale
+'en'
+-classpath
+'/Users/joerg/Projects/github/jprante/elasticsearch-river-jdbc/target/classes:/Users/joerg/.m2/repository/log4j/log4j/1.2.17/log4j-1.2.17.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-suggest/4.8.1/lucene-suggest-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-misc/4.8.1/lucene-misc-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-core/4.8.1/lucene-core-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-join/4.8.1/lucene-join-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-highlighter/4.8.1/lucene-highlighter-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-queryparser/4.8.1/lucene-queryparser-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-spatial/4.8.1/lucene-spatial-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-memory/4.8.1/lucene-memory-4.8.1.jar:/Users/joerg/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.3.0/jackson-annotations-2.3.0.jar:/Users/joerg/.m2/repository/org/xbib/elasticsearch/plugin/elasticsearch-support/1.2.2.0/elasticsearch-support-1.2.2.0.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-grouping/4.8.1/lucene-grouping-4.8.1.jar:/Users/joerg/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.3.3/jackson-databind-2.3.3.jar:/Users/joerg/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.3.3/jackson-core-2.3.3.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-sandbox/4.8.1/lucene-sandbox-4.8.1.jar:/Users/joerg/.m2/repository/com/spatial4j/spatial4j/0.4.1/spatial4j-0.4.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-analyzers-common/4.8.1/lucene-analyzers-common-4.8.1.jar:/Users/joerg/.m2/repository/org/elasticsearch/elasticsearch/1.2.2/elasticsearch-1.2.2.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-codecs/4.8.1/lucene-codecs-4.8.1.jar:/Users/joerg/.m2/repository/org/apache/lucene/lucene-queries/4.8.1/lucene-queries-4.8.1.jar'
+-encoding
+'UTF-8'
+-protected
+-sourcepath
+'/Users/joerg/Projects/github/jprante/elasticsearch-river-jdbc/src/main/java'
+-author
+-bottom
+'elasticsearch-river-jdbc'
+-charset
+'UTF-8'
+-d
+'/Users/joerg/Projects/github/jprante/elasticsearch-river-jdbc/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'elasticsearch-river-jdbc 1.2.2.0 API'
+-linkoffline
+'http://docs.oracle.com/javase/7/docs/api' '/Users/joerg/Projects/github/jprante/elasticsearch-river-jdbc/target/javadoc-bundle-options'
+-linksource
+-use
+-version
+-windowtitle
+'elasticsearch-river-jdbc 1.2.2.0 API'

@@ -3,4 +3,5 @@ org.xbib.elasticsearch.river.jdbc.strategy.column
 org.xbib.elasticsearch.river.jdbc.strategy.mock
 org.xbib.elasticsearch.river.jdbc.strategy.simple
 org.xbib.elasticsearch.river.jdbc.support
+org.xbib.elasticsearch.river.plugin
 org.xbib.elasticsearch.support.helper

@@ -324,7 +324,40 @@
 <span class="sourceLineNo">316</span>        );<a name="line.316"></a>
 <span class="sourceLineNo">317</span>    }<a name="line.317"></a>
 <span class="sourceLineNo">318</span><a name="line.318"></a>
-<span class="sourceLineNo">319</span>}<a name="line.319"></a>
+<span class="sourceLineNo">319</span>    @Test<a name="line.319"></a>
+<span class="sourceLineNo">320</span>    public void testIgnoreNullObject() throws Exception {<a name="line.320"></a>
+<span class="sourceLineNo">321</span>        List&lt;String&gt; columns = Arrays.asList("_id", "blog.name", "blog.association[id]", "blog.association[name]");<a name="line.321"></a>
+<span class="sourceLineNo">322</span>        List&lt;Object&gt; row1 = new LinkedList&lt;Object&gt;();<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        row1.add("4679");<a name="line.323"></a>
+<span class="sourceLineNo">324</span>        row1.add("Joe");<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        row1.add("3917");<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        row1.add("John");<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        List&lt;Object&gt; row2 = new LinkedList&lt;Object&gt;();<a name="line.327"></a>
+<span class="sourceLineNo">328</span>        row2.add("4679");<a name="line.328"></a>
+<span class="sourceLineNo">329</span>        row2.add("Joe");<a name="line.329"></a>
+<span class="sourceLineNo">330</span>        row2.add("4015");<a name="line.330"></a>
+<span class="sourceLineNo">331</span>        row2.add("Jack");<a name="line.331"></a>
+<span class="sourceLineNo">332</span>        List&lt;Object&gt; row3 = new LinkedList&lt;Object&gt;();<a name="line.332"></a>
+<span class="sourceLineNo">333</span>        row3.add("4679");<a name="line.333"></a>
+<span class="sourceLineNo">334</span>        row3.add("Joe");<a name="line.334"></a>
+<span class="sourceLineNo">335</span>        row3.add(null);<a name="line.335"></a>
+<span class="sourceLineNo">336</span>        row3.add(null);<a name="line.336"></a>
+<span class="sourceLineNo">337</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.337"></a>
+<span class="sourceLineNo">338</span>        new RiverMouthKeyValueStreamListener&lt;String, Object&gt;()<a name="line.338"></a>
+<span class="sourceLineNo">339</span>                .shouldIgnoreNull(true)<a name="line.339"></a>
+<span class="sourceLineNo">340</span>                .output(output)<a name="line.340"></a>
+<span class="sourceLineNo">341</span>                .begin()<a name="line.341"></a>
+<span class="sourceLineNo">342</span>                .keys(columns)<a name="line.342"></a>
+<span class="sourceLineNo">343</span>                .values(row1)<a name="line.343"></a>
+<span class="sourceLineNo">344</span>                .values(row2)<a name="line.344"></a>
+<span class="sourceLineNo">345</span>                .values(row3)<a name="line.345"></a>
+<span class="sourceLineNo">346</span>                .end();<a name="line.346"></a>
+<span class="sourceLineNo">347</span>        assertEquals(output.data().toString(),<a name="line.347"></a>
+<span class="sourceLineNo">348</span>                "{[null/null/null/4679]-&gt;{blog={name=\"Joe\", association=[{id=\"3917\", name=\"John\"}, {id=\"4015\", name=\"Jack\"}, {id=null, name=null}]}}={\"blog\":{\"name\":\"Joe\",\"association\":[{\"id\":\"3917\",\"name\":\"John\"},{\"id\":\"4015\",\"name\":\"Jack\"}]}}}"<a name="line.348"></a>
+<span class="sourceLineNo">349</span>        );<a name="line.349"></a>
+<span class="sourceLineNo">350</span>    }<a name="line.350"></a>
+<span class="sourceLineNo">351</span><a name="line.351"></a>
+<span class="sourceLineNo">352</span>}<a name="line.352"></a>
 
 
 

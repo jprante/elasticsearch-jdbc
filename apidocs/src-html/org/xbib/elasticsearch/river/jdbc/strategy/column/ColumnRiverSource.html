@@ -32,7 +32,7 @@
 <span class="sourceLineNo">024</span>/**<a name="line.24"></a>
 <span class="sourceLineNo">025</span> * River source implementation for the 'column' strategy<a name="line.25"></a>
 <span class="sourceLineNo">026</span> *<a name="line.26"></a>
-<span class="sourceLineNo">027</span> * @author &lt;a href="piotr.sliwa@zineinc.com"&gt;Piotr ?liwa&lt;/a&gt;<a name="line.27"></a>
+<span class="sourceLineNo">027</span> * @author &lt;a href="piotr.sliwa@zineinc.com"&gt;Piotr Śliwa&lt;/a&gt;<a name="line.27"></a>
 <span class="sourceLineNo">028</span> */<a name="line.28"></a>
 <span class="sourceLineNo">029</span>public class ColumnRiverSource extends SimpleRiverSource {<a name="line.29"></a>
 <span class="sourceLineNo">030</span><a name="line.30"></a>
@@ -94,12 +94,12 @@
 <span class="sourceLineNo">086</span>    @SuppressWarnings("rawtypes")<a name="line.86"></a>
 <span class="sourceLineNo">087</span>    private Timestamp getLastRunTimestamp() {<a name="line.87"></a>
 <span class="sourceLineNo">088</span>        Map settings = (Map) context.getRiverSettings();<a name="line.88"></a>
-<span class="sourceLineNo">089</span>        logger.info("getLastRunTimestamp settings = {}",  context.getRiverSettings());<a name="line.89"></a>
+<span class="sourceLineNo">089</span>        logger.info("getLastRunTimestamp settings = {}", context.getRiverSettings());<a name="line.89"></a>
 <span class="sourceLineNo">090</span>        if (settings == null || settings.get(ColumnRiverFlow.LAST_RUN_TIME) == null) {<a name="line.90"></a>
 <span class="sourceLineNo">091</span>            return new Timestamp(0);<a name="line.91"></a>
 <span class="sourceLineNo">092</span>        }<a name="line.92"></a>
 <span class="sourceLineNo">093</span>        TimeValue lastRunTime = (TimeValue) settings.get(ColumnRiverFlow.LAST_RUN_TIME);<a name="line.93"></a>
-<span class="sourceLineNo">094</span>        return new Timestamp(lastRunTime.millis());<a name="line.94"></a>
+<span class="sourceLineNo">094</span>        return new Timestamp(lastRunTime.millis() - context.getLastRunTimeStampOverlap().millis());<a name="line.94"></a>
 <span class="sourceLineNo">095</span>    }<a name="line.95"></a>
 <span class="sourceLineNo">096</span><a name="line.96"></a>
 <span class="sourceLineNo">097</span>    private void fetch(Connection connection, SQLCommand command, OpInfo opInfo, Timestamp lastRunTimestamp) throws IOException, SQLException {<a name="line.97"></a>
@@ -113,10 +113,10 @@
 <span class="sourceLineNo">105</span>        try {<a name="line.105"></a>
 <span class="sourceLineNo">106</span>            bind(stmt, params);<a name="line.106"></a>
 <span class="sourceLineNo">107</span>            result = executeQuery(stmt);<a name="line.107"></a>
-<span class="sourceLineNo">108</span>            KeyValueStreamListener&lt;Object,Object&gt; listener =<a name="line.108"></a>
-<span class="sourceLineNo">109</span>                    new ColumnKeyValueStreamListener&lt;Object,Object&gt;(opInfo.opType)<a name="line.109"></a>
-<span class="sourceLineNo">110</span>                        .output(context.getRiverMouth());<a name="line.110"></a>
-<span class="sourceLineNo">111</span>                merge(result, listener);<a name="line.111"></a>
+<span class="sourceLineNo">108</span>            KeyValueStreamListener&lt;Object, Object&gt; listener =<a name="line.108"></a>
+<span class="sourceLineNo">109</span>                    new ColumnKeyValueStreamListener&lt;Object, Object&gt;(opInfo.opType)<a name="line.109"></a>
+<span class="sourceLineNo">110</span>                            .output(context.getRiverMouth());<a name="line.110"></a>
+<span class="sourceLineNo">111</span>            merge(result, listener);<a name="line.111"></a>
 <span class="sourceLineNo">112</span>        } catch (Exception e) {<a name="line.112"></a>
 <span class="sourceLineNo">113</span>            throw new IOException(e);<a name="line.113"></a>
 <span class="sourceLineNo">114</span>        } finally {<a name="line.114"></a>
@@ -174,7 +174,7 @@
 <span class="sourceLineNo">166</span>        }<a name="line.166"></a>
 <span class="sourceLineNo">167</span>    }<a name="line.167"></a>
 <span class="sourceLineNo">168</span><a name="line.168"></a>
-<span class="sourceLineNo">169</span>    private static class ColumnKeyValueStreamListener&lt;K,V&gt; extends RiverMouthKeyValueStreamListener&lt;K,V&gt; {<a name="line.169"></a>
+<span class="sourceLineNo">169</span>    private static class ColumnKeyValueStreamListener&lt;K, V&gt; extends RiverMouthKeyValueStreamListener&lt;K, V&gt; {<a name="line.169"></a>
 <span class="sourceLineNo">170</span><a name="line.170"></a>
 <span class="sourceLineNo">171</span>        private String opType;<a name="line.171"></a>
 <span class="sourceLineNo">172</span><a name="line.172"></a>

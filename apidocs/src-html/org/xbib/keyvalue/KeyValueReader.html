@@ -7,11 +7,11 @@
 <body>
 <div class="sourceContainer">
 <pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
-<span class="sourceLineNo">002</span> * Licensed to J?rg Prante and xbib under one or more contributor <a name="line.2"></a>
+<span class="sourceLineNo">002</span> * Licensed to Jörg Prante and xbib under one or more contributor <a name="line.2"></a>
 <span class="sourceLineNo">003</span> * license agreements. See the NOTICE.txt file distributed with this work<a name="line.3"></a>
 <span class="sourceLineNo">004</span> * for additional information regarding copyright ownership.<a name="line.4"></a>
 <span class="sourceLineNo">005</span> *<a name="line.5"></a>
-<span class="sourceLineNo">006</span> * Copyright (C) 2012 J?rg Prante and xbib<a name="line.6"></a>
+<span class="sourceLineNo">006</span> * Copyright (C) 2012 Jörg Prante and xbib<a name="line.6"></a>
 <span class="sourceLineNo">007</span> * <a name="line.7"></a>
 <span class="sourceLineNo">008</span> * This program is free software; you can redistribute it and/or modify <a name="line.8"></a>
 <span class="sourceLineNo">009</span> * it under the terms of the GNU Affero General Public License as published <a name="line.9"></a>
@@ -58,7 +58,7 @@
 <span class="sourceLineNo">050</span>    public KeyValueReader(Reader reader) throws IOException {<a name="line.50"></a>
 <span class="sourceLineNo">051</span>        this(reader, '=');<a name="line.51"></a>
 <span class="sourceLineNo">052</span>    }<a name="line.52"></a>
-<span class="sourceLineNo">053</span>    <a name="line.53"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
 <span class="sourceLineNo">054</span>    public KeyValueReader(Reader reader, char delimiter) throws IOException {<a name="line.54"></a>
 <span class="sourceLineNo">055</span>        super(reader);<a name="line.55"></a>
 <span class="sourceLineNo">056</span>        this.atStart = true;<a name="line.56"></a>
@@ -99,7 +99,7 @@
 <span class="sourceLineNo">091</span>        if (line != null) {<a name="line.91"></a>
 <span class="sourceLineNo">092</span>            int pos = line.indexOf(delimiter);<a name="line.92"></a>
 <span class="sourceLineNo">093</span>            if (pos &gt; 0) {<a name="line.93"></a>
-<span class="sourceLineNo">094</span>                keyValue(line.substring(0, pos), line.substring(pos+1));<a name="line.94"></a>
+<span class="sourceLineNo">094</span>                keyValue(line.substring(0, pos), line.substring(pos + 1));<a name="line.94"></a>
 <span class="sourceLineNo">095</span>            }<a name="line.95"></a>
 <span class="sourceLineNo">096</span>        }<a name="line.96"></a>
 <span class="sourceLineNo">097</span>        return line;<a name="line.97"></a>
