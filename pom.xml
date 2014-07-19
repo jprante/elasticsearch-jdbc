@@ -108,23 +108,7 @@
             <type>jar</type>
             <scope>test</scope>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.2</version>
-            <type>jar</type>
-            <optional>true</optional>
-        </dependency>
 
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.2</version>
-            <type>jar</type>
-            <optional>true</optional>
-        </dependency>
--->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
