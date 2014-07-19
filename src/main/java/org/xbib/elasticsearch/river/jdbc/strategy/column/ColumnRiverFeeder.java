@@ -9,14 +9,12 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.indices.IndexMissingException;
-import org.xbib.elasticsearch.action.river.state.RiverState;
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
 import org.xbib.pipeline.PipelineRequest;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Map;
 
 public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
@@ -31,6 +29,17 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
     @SuppressWarnings("rawtypes")
     public ColumnRiverFeeder(ColumnRiverFeeder feeder) {
         super(feeder);
+    }
+
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public PipelineProvider<P> pipelineProvider() {
+        return new PipelineProvider<P>() {
+            @Override
+            public P get() {
+                return (P) new ColumnRiverFeeder(ColumnRiverFeeder.this);
+            }
+        };
     }
 
     @Override
@@ -52,50 +61,12 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
     }
 
     @Override
-    public void executeTask(Map<String, Object> map) throws Exception {
-        logger.info("processing map {}", map);
-        createRiverContext("jdbc", getName(), map);
-        if (riverState == null) {
-            riverState = new RiverState();
-        }
-        riverState.load(ingest.client());
-        // increment state counter
-        Long counter = riverState.getCounter() + 1;
-        this.riverState = riverState.setCounter(counter)
-                .setEnabled(true)
-                .setActive(true)
-                .setTimestamp(new Date());
-        riverState.save(ingest.client());
-        if (logger.isDebugEnabled()) {
-            logger.debug("state saved before fetch");
-        }
-        // set the job number to the state counter
-        riverContext.job(Long.toString(counter));
-        if (logger.isDebugEnabled()) {
-            logger.debug("trying to fetch ...");
-        }
-
-        // column river specific code here
+    protected void fetch() throws Exception {
         TimeValue lastRunTime = readLastRunTimeFromCustomInfo();
         TimeValue currentTime = new TimeValue(new java.util.Date().getTime());
         writeTimesToJdbcSettings(lastRunTime, currentTime);
         riverContext.getRiverSource().fetch();
         writeCustomInfo(currentTime.millis());
-
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("fetched, flushing");
-        }
-        riverContext.getRiverMouth().flush();
-        if (logger.isDebugEnabled()) {
-            logger.debug("flushed");
-        }
-        riverContext.getRiverSource().closeReading();
-        riverContext.getRiverSource().closeWriting();
-        this.riverState = riverState
-                .setActive(false)
-                .setTimestamp(new Date());
-        riverState.save(ingest.client());
     }
 
     private TimeValue readLastRunTimeFromCustomInfo() throws IOException {
@@ -139,17 +110,6 @@ public class ColumnRiverFeeder<T, R extends PipelineRequest, P extends Pipeline<
         Map<String, Object> settings = riverContext.getRiverSettings();
         settings.put(ColumnRiverFlow.LAST_RUN_TIME, lastRunTime);
         settings.put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, currentTime);
-    }
-
-    @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public PipelineProvider<P> pipelineProvider() {
-        return new PipelineProvider<P>() {
-            @Override
-            public P get() {
-                return (P) new ColumnRiverFeeder(ColumnRiverFeeder.this);
-            }
-        };
     }
 
 }

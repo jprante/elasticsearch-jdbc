@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.2.1.1</version>
+    <version>1.2.2.0</version>
 
     <packaging>jar</packaging>
 
@@ -73,8 +73,8 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compile.version>1.7</java.compile.version>
-        <elasticsearch.version>1.2.1</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>1.2.1.0</org.xbib.elasticsearch.support.version>
+        <elasticsearch.version>1.2.2</elasticsearch.version>
+        <org.xbib.elasticsearch.support.version>1.2.2.0</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -108,7 +108,7 @@
             <type>jar</type>
             <scope>test</scope>
         </dependency>
-
+<!--
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -124,7 +124,7 @@
             <type>jar</type>
             <optional>true</optional>
         </dependency>
-
+-->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>

@@ -136,7 +136,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             return;
         }
         createRiverContext(getType(), getName(), map);
-        startBulk();
+        beforeTask();
         if (riverState == null) {
             riverState = new RiverState();
         }
@@ -149,108 +149,16 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setActive(true)
                 .setTimestamp(new Date());
         riverState.save(ingest.client());
-        if (logger.isDebugEnabled()) {
-            logger.debug("state saved before fetch");
-        }
+        logger.debug("state saved before fetch");
         // set the job number to the state counter
         riverContext.job(Long.toString(counter));
-        if (logger.isDebugEnabled()) {
-            logger.debug("trying to fetch ...");
-        }
-        riverContext.getRiverSource().fetch();
-        if (logger.isDebugEnabled()) {
-            logger.debug("fetched, flushing");
-        }
+        logger.debug("trying to fetch ...");
+        fetch();
+        logger.debug("fetched, flushing");
         riverContext.getRiverMouth().flush();
-        if (logger.isDebugEnabled()) {
-            logger.debug("flushed");
-        }
+        logger.debug("flushed");
         // we don't know if this is the last run. Stop bulk for now, make indexed documents visible for search
-        stopBulk();
-
-    }
-
-    protected void createRiverContext(String riverType, String riverName, Map<String, Object> mySettings) throws IOException {
-        String strategy = XContentMapValues.nodeStringValue(mySettings.get("strategy"), "simple");
-
-        String url = XContentMapValues.nodeStringValue(mySettings.get("url"), null);
-        String user = XContentMapValues.nodeStringValue(mySettings.get("user"), null);
-        String password = XContentMapValues.nodeStringValue(mySettings.get("password"), null);
-        List<SQLCommand> sql = SQLCommand.parse(mySettings);
-        String rounding = XContentMapValues.nodeStringValue(mySettings.get("rounding"), null);
-        int scale = XContentMapValues.nodeIntegerValue(mySettings.get("scale"), 2);
-        boolean autocommit = XContentMapValues.nodeBooleanValue(mySettings.get("autocommit"), false);
-        int fetchsize = url != null && url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
-                XContentMapValues.nodeIntegerValue(mySettings.get("fetchsize"), 10);
-        int maxrows = XContentMapValues.nodeIntegerValue(mySettings.get("max_rows"), 0);
-        int maxretries = XContentMapValues.nodeIntegerValue(mySettings.get("max_retries"), 3);
-        TimeValue maxretrywait = XContentMapValues.nodeTimeValue(mySettings.get("max_retries_wait"),
-                TimeValue.timeValueSeconds(30));
-        String locale = XContentMapValues.nodeStringValue(mySettings.get("locale"),
-                LocaleUtil.fromLocale(Locale.getDefault()));
-        String resultSetType = XContentMapValues.nodeStringValue(mySettings.get("resultset_type"),
-                "TYPE_FORWARD_ONLY");
-        String resultSetConcurrency = XContentMapValues.nodeStringValue(mySettings.get("resultset_concurrency"),
-                "CONCUR_UPDATABLE");
-        boolean shouldIgnoreNull = XContentMapValues.nodeBooleanValue(mySettings.get("ignore_null_values"), false);
-        String timezone = XContentMapValues.nodeStringValue(mySettings.get("timezone"), TimeZone.getDefault().getID());
-        boolean shouldPrepareDatabaseMetadata = XContentMapValues.nodeBooleanValue(mySettings.get("prepare_database_metadata"), false);
-        boolean shouldPrepareResultSetMetadata = XContentMapValues.nodeBooleanValue(mySettings.get("prepare_resultset_metadata"), false);
-
-        RiverSource riverSource = RiverServiceLoader.findRiverSource(strategy);
-        logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
-        RiverMouth riverMouth = RiverServiceLoader.findRiverMouth(strategy);
-        logger.debug("found river mouth class {} for strategy {}", riverMouth.getClass().getName(), strategy);
-        RiverFlow riverFlow = RiverServiceLoader.findRiverFlow(strategy);
-        logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
-
-        defaultIndex = XContentMapValues.nodeStringValue(mySettings.get("index"), "jdbc");
-        String defaultType = XContentMapValues.nodeStringValue(mySettings.get("type"), "jdbc");
-        boolean timeWindowed = XContentMapValues.nodeBooleanValue(mySettings.get("index_timewindow"), false);
-
-        logger.info("river default index/type {}/{} (index_timewindow={})", defaultIndex, defaultType, timeWindowed);
-
-        if (mySettings.containsKey("index_settings")) {
-            ingest.setSettings(settingsBuilder().put(new JsonSettingsLoader()
-                    .load(jsonBuilder().map((Map<String, Object>) mySettings.get("index_settings")).string()))
-                    .build());
-        }
-        if (mySettings.containsKey("type_mapping")) {
-            ingest.addMapping(defaultType,
-                    jsonBuilder().map((Map<String, Object>) mySettings.get("type_mapping")).string());
-        }
-
-        riverSource.setUrl(url)
-                .setUser(user)
-                .setPassword(password)
-                .setTimeZone(TimeZone.getTimeZone(timezone));
-        riverMouth.setTimeWindowed(timeWindowed)
-                .setIndex(defaultIndex)
-                .setType(defaultType)
-                .setIngest(ingest);
-        riverFlow.setFeeder(this);
-        this.riverContext = new RiverContext()
-                .setRiverName(riverName)
-                .setRiverSettings(mySettings)
-                .setRiverSource(riverSource)
-                .setRiverMouth(riverMouth)
-                .setRiverFlow(riverFlow)
-                .setLocale(locale)
-                .setRounding(rounding)
-                .setScale(scale)
-                .setStatements(sql)
-                .setAutoCommit(autocommit)
-                .setMaxRows(maxrows)
-                .setFetchSize(fetchsize)
-                .setRetries(maxretries)
-                .setMaxRetryWait(maxretrywait)
-                .setResultSetType(resultSetType)
-                .setResultSetConcurrency(resultSetConcurrency)
-                .shouldIgnoreNull(shouldIgnoreNull)
-                .shouldPrepareDatabaseMetadata(shouldPrepareDatabaseMetadata)
-                .shouldPrepareResultSetMetadata(shouldPrepareResultSetMetadata)
-                .contextualize();
-        logger.trace("JDBC feeder ready to start, context is {}", riverContext);
+        afterTask();
     }
 
     /**
@@ -283,7 +191,100 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         }
     }
 
-    private void startBulk() {
+    /**
+     * Create a river context for this feed.
+     * @param riverType the river type (mostly "jdbc")
+     * @param riverName the river instance name
+     * @param feedSettings the
+     * @throws IOException
+     */
+    protected void createRiverContext(String riverType, String riverName, Map<String, Object> feedSettings) throws IOException {
+        String strategy = XContentMapValues.nodeStringValue(feedSettings.get("strategy"), "simple");
+
+        String url = XContentMapValues.nodeStringValue(feedSettings.get("url"), null);
+        String user = XContentMapValues.nodeStringValue(feedSettings.get("user"), null);
+        String password = XContentMapValues.nodeStringValue(feedSettings.get("password"), null);
+        List<SQLCommand> sql = SQLCommand.parse(feedSettings);
+        String rounding = XContentMapValues.nodeStringValue(feedSettings.get("rounding"), null);
+        int scale = XContentMapValues.nodeIntegerValue(feedSettings.get("scale"), 2);
+        boolean autocommit = XContentMapValues.nodeBooleanValue(feedSettings.get("autocommit"), false);
+        int fetchsize = url != null && url.startsWith("jdbc:mysql") ? Integer.MIN_VALUE :
+                XContentMapValues.nodeIntegerValue(feedSettings.get("fetchsize"), 10);
+        int maxrows = XContentMapValues.nodeIntegerValue(feedSettings.get("max_rows"), 0);
+        int maxretries = XContentMapValues.nodeIntegerValue(feedSettings.get("max_retries"), 3);
+        TimeValue maxretrywait = XContentMapValues.nodeTimeValue(feedSettings.get("max_retries_wait"),
+                TimeValue.timeValueSeconds(30));
+        String locale = XContentMapValues.nodeStringValue(feedSettings.get("locale"),
+                LocaleUtil.fromLocale(Locale.getDefault()));
+        String resultSetType = XContentMapValues.nodeStringValue(feedSettings.get("resultset_type"),
+                "TYPE_FORWARD_ONLY");
+        String resultSetConcurrency = XContentMapValues.nodeStringValue(feedSettings.get("resultset_concurrency"),
+                "CONCUR_UPDATABLE");
+        boolean shouldIgnoreNull = XContentMapValues.nodeBooleanValue(feedSettings.get("ignore_null_values"), false);
+        String timezone = XContentMapValues.nodeStringValue(feedSettings.get("timezone"), TimeZone.getDefault().getID());
+        boolean shouldPrepareDatabaseMetadata = XContentMapValues.nodeBooleanValue(feedSettings.get("prepare_database_metadata"), false);
+        boolean shouldPrepareResultSetMetadata = XContentMapValues.nodeBooleanValue(feedSettings.get("prepare_resultset_metadata"), false);
+
+        RiverSource riverSource = RiverServiceLoader.findRiverSource(strategy);
+        logger.debug("found river source class {} for strategy {}", riverSource.getClass().getName(), strategy);
+        RiverMouth riverMouth = RiverServiceLoader.findRiverMouth(strategy);
+        logger.debug("found river mouth class {} for strategy {}", riverMouth.getClass().getName(), strategy);
+        RiverFlow riverFlow = RiverServiceLoader.findRiverFlow(strategy);
+        logger.debug("found river flow class {} for strategy {}", riverFlow.getClass().getName(), strategy);
+
+        defaultIndex = XContentMapValues.nodeStringValue(feedSettings.get("index"), "jdbc");
+        String defaultType = XContentMapValues.nodeStringValue(feedSettings.get("type"), "jdbc");
+        boolean timeWindowed = XContentMapValues.nodeBooleanValue(feedSettings.get("index_timewindow"), false);
+
+        logger.info("river default index/type {}/{} (index_timewindow={})", defaultIndex, defaultType, timeWindowed);
+
+        if (feedSettings.containsKey("index_settings")) {
+            ingest.setSettings(settingsBuilder().put(new JsonSettingsLoader()
+                    .load(jsonBuilder().map((Map<String, Object>) feedSettings.get("index_settings")).string()))
+                    .build());
+        }
+        if (feedSettings.containsKey("type_mapping")) {
+            ingest.addMapping(defaultType,
+                    jsonBuilder().map((Map<String, Object>) feedSettings.get("type_mapping")).string());
+        }
+
+        riverSource.setUrl(url)
+                .setUser(user)
+                .setPassword(password)
+                .setTimeZone(TimeZone.getTimeZone(timezone));
+        riverMouth.setTimeWindowed(timeWindowed)
+                .setIndex(defaultIndex)
+                .setType(defaultType)
+                .setIngest(ingest);
+        riverFlow.setFeeder(this);
+        this.riverContext = new RiverContext()
+                .setRiverName(riverName)
+                .setRiverSettings(feedSettings)
+                .setRiverSource(riverSource)
+                .setRiverMouth(riverMouth)
+                .setRiverFlow(riverFlow)
+                .setLocale(locale)
+                .setRounding(rounding)
+                .setScale(scale)
+                .setStatements(sql)
+                .setAutoCommit(autocommit)
+                .setMaxRows(maxrows)
+                .setFetchSize(fetchsize)
+                .setRetries(maxretries)
+                .setMaxRetryWait(maxretrywait)
+                .setResultSetType(resultSetType)
+                .setResultSetConcurrency(resultSetConcurrency)
+                .shouldIgnoreNull(shouldIgnoreNull)
+                .shouldPrepareDatabaseMetadata(shouldPrepareDatabaseMetadata)
+                .shouldPrepareResultSetMetadata(shouldPrepareResultSetMetadata)
+                .contextualize();
+        logger.trace("JDBC feeder ready to start, context is {}", riverContext);
+    }
+
+    /**
+     * Before a river task (or river run) starts, this method is called.
+     */
+    protected void beforeTask() {
         try {
             if (!ingest.client().admin().indices().prepareExists(defaultIndex).execute().actionGet().isExists()) {
                 logger.info("creating index {} and enabling bulk mode", defaultIndex);
@@ -295,7 +296,19 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         }
     }
 
-    private void stopBulk() {
+    /**
+     * After river context and state setup, when data should be fetched from river source, this method is called.
+     * The default is to invoke the fetch() method of the river source.
+     * @throws Exception
+     */
+    protected void fetch() throws Exception {
+        riverContext.getRiverSource().fetch();
+    }
+
+    /**
+     * After the river task has completed a single run, this method is called.
+     */
+    protected void afterTask() {
         State state = ingest.getState();
         if (state.indices() != null && !state.indices().isEmpty()) {
             for (String index : ImmutableSet.copyOf(state.indices())) {

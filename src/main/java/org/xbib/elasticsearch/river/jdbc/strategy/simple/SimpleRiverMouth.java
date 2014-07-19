@@ -136,7 +136,7 @@ public class SimpleRiverMouth implements RiverMouth {
             logger.trace("adding bulk index action {}", request.source().toUtf8());
         }
         if (ingest != null) {
-            ingest.index(request);
+            ingest.bulkIndex(request);
         }
     }
 
@@ -169,19 +169,20 @@ public class SimpleRiverMouth implements RiverMouth {
             logger.trace("adding bulk delete action {}/{}/{}", request.index(), request.type(), request.id());
         }
         if (ingest != null) {
-            ingest.delete(request);
+            ingest.bulkDelete(request);
         }
     }
 
     @Override
     public void flush() throws IOException {
         if (ingest != null) {
-            ingest.flush();
+            ingest.flushIngest();
             // wait for all outstanding bulk requests before continue with river
             try {
                 ingest.waitForResponses(TimeValue.timeValueSeconds(60));
             } catch (InterruptedException e) {
-                // ignore
+                Thread.currentThread().interrupt();
+                logger.warn("interrupted while waiting for responses");
             }
         }
     }
