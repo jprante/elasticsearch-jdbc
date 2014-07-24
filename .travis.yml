@@ -1,1 +1,2 @@
 language: java
+script: ./bin/travis/run-tests.sh
