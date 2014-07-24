@@ -1,7 +1,0 @@
-org.xbib.elasticsearch.plugin.feeder.jdbc
-org.xbib.elasticsearch.plugin.jdbc
-org.xbib.elasticsearch.plugin.river.jdbc
-org.xbib.elasticsearch.river.jdbc
-org.xbib.elasticsearch.river.jdbc.strategy.column
-org.xbib.elasticsearch.river.jdbc.strategy.simple
-org.xbib.keyvalue
