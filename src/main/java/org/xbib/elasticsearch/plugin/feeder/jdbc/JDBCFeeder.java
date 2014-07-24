@@ -61,6 +61,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     public JDBCFeeder(JDBCFeeder feeder) {
         super(feeder);
+        this.name = feeder.getName();
     }
 
     @Override

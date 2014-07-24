@@ -54,13 +54,14 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
         RiverFlow flow = new ColumnRiverFlow();
         flow.setRiverContext(context);
         flow.getFeeder()
+                .setName(context.getRiverName())
                 .setRiverState(new RiverState())
                 .setSpec(spec)
                 .setSettings(settings)
                 .setClient(client)
                 .run();
-        // we can no longer test this, as _river index is always deleted between test runs!
-        //assertLastRiverRunTimeExists(client);
+        client.admin().indices().refresh(Requests.refreshRequest("_river")).actionGet();
+        assertLastRiverRunTimeExists(client);
     }
 
     @Test()
