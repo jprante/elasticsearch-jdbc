@@ -11,9 +11,11 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
-import org.xbib.elasticsearch.action.river.execute.RunnableRiver;
-import org.xbib.elasticsearch.action.river.state.RiverState;
-import org.xbib.elasticsearch.action.river.state.StatefulRiver;
+import org.xbib.elasticsearch.action.river.jdbc.execute.RunnableRiver;
+import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
+import org.xbib.elasticsearch.action.river.jdbc.state.StatefulRiver;
+import org.xbib.elasticsearch.action.river.jdbc.state.put.PutRiverStateRequestBuilder;
+import org.xbib.elasticsearch.action.river.jdbc.state.put.PutRiverStateResponse;
 import org.xbib.elasticsearch.plugin.feeder.Feeder;
 import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;
 import org.xbib.elasticsearch.plugin.jdbc.RiverServiceLoader;
@@ -75,13 +77,17 @@ public class JDBCRiver extends AbstractRiverComponent implements RunnableRiver, 
     @Override
     public void start() {
         feeder.setClient(client);
-        feeder.setRiverState(new RiverState()
-                        .setEnabled(true)
-                        .setStarted(new Date())
-                        .setName(riverName.getName())
-                        .setType(riverName.getType())
-                        .setCoordinates("_river", riverName.getName(), "_custom")
-        );
+
+        feeder.setRiverState(new RiverState(riverName.getName(), riverName.getType())
+                .setEnabled(true)
+                .setStarted(new Date()));
+        PutRiverStateRequestBuilder putRiverStateRequestBuilder = new PutRiverStateRequestBuilder(client.admin().cluster())
+                .setRiverName(riverName.getName())
+                .setRiverType(riverName.getType())
+                .setRiverState(feeder.getRiverState());
+        PutRiverStateResponse putRiverStateResponse = putRiverStateRequestBuilder.execute().actionGet();
+        logger.info("saving river state at start: {} -> {}", feeder.getRiverState(), putRiverStateResponse.isAcknowledged());
+
         this.riverThread = EsExecutors.daemonThreadFactory(settings.globalSettings(),
                 "river(" + riverName().getType() + "/" + riverName().getName() + ")")
                 .newThread(feeder);
@@ -95,12 +101,8 @@ public class JDBCRiver extends AbstractRiverComponent implements RunnableRiver, 
         }
         closed = true;
         logger.info("closing river({}/{})", riverName.getType(), riverName.getName());
-        try {
-            feeder.getRiverState().setEnabled(false).save(client);
-            feeder.shutdown();
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
+        logger.info("river state at close: {}", feeder.getRiverState());
+        feeder.shutdown();
         if (riverThread != null) {
             riverThread.interrupt();
         }

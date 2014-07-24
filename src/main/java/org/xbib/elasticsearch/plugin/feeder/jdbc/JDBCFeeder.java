@@ -7,7 +7,10 @@ import org.elasticsearch.common.settings.loader.JsonSettingsLoader;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.xbib.elasticsearch.action.river.state.RiverState;
+import org.xbib.elasticsearch.action.river.jdbc.state.get.GetRiverStateRequestBuilder;
+import org.xbib.elasticsearch.action.river.jdbc.state.get.GetRiverStateResponse;
+import org.xbib.elasticsearch.action.river.jdbc.state.put.PutRiverStateRequestBuilder;
+import org.xbib.elasticsearch.action.river.jdbc.state.put.PutRiverStateResponse;
 import org.xbib.elasticsearch.plugin.feeder.AbstractFeeder;
 import org.xbib.elasticsearch.plugin.feeder.Feeder;
 import org.xbib.elasticsearch.plugin.jdbc.LocaleUtil;
@@ -19,7 +22,6 @@ import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.support.client.State;
 import org.xbib.elasticsearch.support.client.bulk.BulkTransportClient;
-import org.xbib.elasticsearch.support.client.ingest.IngestTransportClient;
 import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
 import org.xbib.pipeline.PipelineRequest;
@@ -61,6 +63,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     public JDBCFeeder(JDBCFeeder feeder) {
         super(feeder);
+        this.name = feeder.getName();
     }
 
     @Override
@@ -108,9 +111,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                     Runtime.getRuntime().availableProcessors());
             ByteSizeValue maxvolume = settings.getAsBytesSize("maxbulkvolume", ByteSizeValue.parseBytesSizeValue("10m"));
             TimeValue maxrequestwait = settings.getAsTime("maxrequestwait", TimeValue.timeValueSeconds(60));
-            ingest = "ingest".equals(settings.get("client")) ?
-                    new IngestTransportClient()
-                    : new BulkTransportClient();
+            ingest = new BulkTransportClient();
             ingest.maxActionsPerBulkRequest(maxbulkactions)
                     .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                     .maxVolumePerBulkRequest(maxvolume)
@@ -137,19 +138,24 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         }
         createRiverContext(getType(), getName(), map);
         beforeTask();
-        if (riverState == null) {
-            riverState = new RiverState();
-        }
-        riverState.load(ingest.client());
+        logger.debug("fetching river state");
+        GetRiverStateRequestBuilder getRiverStateRequestBuilder = new GetRiverStateRequestBuilder(ingest.client().admin().cluster())
+                .setRiverName(getName()).setRiverType(getType());
+        GetRiverStateResponse getRiverStateResponse = getRiverStateRequestBuilder.execute().actionGet();
+        riverState = getRiverStateResponse.getState();
+        logger.debug("got river state");
         riverState.setCustom(riverContext.asMap());
-        // increment state counter
         Long counter = riverState.getCounter() + 1;
         this.riverState = riverState.setCounter(counter)
                 .setEnabled(true)
                 .setActive(true)
                 .setTimestamp(new Date());
-        riverState.save(ingest.client());
-        logger.debug("state saved before fetch");
+        PutRiverStateRequestBuilder putRiverStateRequestBuilder = new PutRiverStateRequestBuilder(ingest.client().admin().cluster())
+                .setRiverName(getName())
+                .setRiverType(getType())
+                .setRiverState(riverState);
+        PutRiverStateResponse putRiverStateResponse = putRiverStateRequestBuilder.execute().actionGet();
+        logger.debug("state saved before fetch: {}", putRiverStateResponse.isAcknowledged());
         // set the job number to the state counter
         riverContext.job(Long.toString(counter));
         logger.debug("trying to fetch ...");
@@ -172,13 +178,13 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         super.close();
         if (riverContext != null) {
             riverContext.getRiverSource().closeReading();
-            logger.info("reading connection closed");
+            logger.debug("reading connection closed");
             riverContext.getRiverSource().closeWriting();
-            logger.info("writing connection closed");
+            logger.debug("writing connection closed");
             try {
-                logger.info("river mouth closing");
+                logger.debug("river mouth closing");
                 riverContext.getRiverMouth().close();
-                logger.info("river mouth closed");
+                logger.debug("river mouth closed");
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
             }
@@ -186,15 +192,20 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                     .setEnabled(false)
                     .setActive(false)
                     .setTimestamp(new Date());
-            riverState.save(ingest.client());
-            logger.info("river state saved");
+            PutRiverStateRequestBuilder putRiverStateRequestBuilder = new PutRiverStateRequestBuilder(ingest.client().admin().cluster())
+                    .setRiverName(getName())
+                    .setRiverType(getType())
+                    .setRiverState(riverState);
+            PutRiverStateResponse putRiverStateResponse = putRiverStateRequestBuilder.execute().actionGet();
+            logger.debug("state saved after close: {}", putRiverStateResponse.isAcknowledged());
         }
     }
 
     /**
      * Create a river context for this feed.
-     * @param riverType the river type (mostly "jdbc")
-     * @param riverName the river instance name
+     *
+     * @param riverType    the river type (mostly "jdbc")
+     * @param riverName    the river instance name
      * @param feedSettings the
      * @throws IOException
      */
@@ -299,6 +310,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     /**
      * After river context and state setup, when data should be fetched from river source, this method is called.
      * The default is to invoke the fetch() method of the river source.
+     *
      * @throws Exception
      */
     protected void fetch() throws Exception {

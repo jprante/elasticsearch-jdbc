@@ -13,7 +13,7 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.xbib.elasticsearch.action.river.state.RiverState;
+import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
@@ -54,13 +54,13 @@ public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
         RiverFlow flow = new ColumnRiverFlow();
         flow.setRiverContext(context);
         flow.getFeeder()
+                .setName(context.getRiverName())
                 .setRiverState(new RiverState())
                 .setSpec(spec)
                 .setSettings(settings)
                 .setClient(client)
                 .run();
-        // we can no longer test this, as _river index is always deleted between test runs!
-        //assertLastRiverRunTimeExists(client);
+        assertLastRiverRunTimeExists(client);
     }
 
     @Test()

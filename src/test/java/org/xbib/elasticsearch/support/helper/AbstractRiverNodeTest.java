@@ -4,7 +4,6 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -18,12 +17,10 @@ import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.xbib.elasticsearch.action.river.state.RiverState;
-import org.xbib.elasticsearch.action.river.state.RiverStateAction;
-import org.xbib.elasticsearch.action.river.state.RiverStateRequest;
-import org.xbib.elasticsearch.action.river.state.RiverStateResponse;
+import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.support.river.RiverHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -128,13 +125,6 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         source.closeWriting();
         logger.info("stopped");
 
-        try {
-            client("1").admin().indices().deleteMapping(new DeleteMappingRequest()
-                    .indices(new String[]{"_river"}).types("my_jdbc_river")).actionGet();
-            logger.info("river deleted");
-        } catch (Exception e) {
-            logger.warn(e.getMessage());
-        }
         // delete test index
         try {
             client("1").admin().indices().delete(new DeleteIndexRequest(index)).actionGet();
@@ -142,7 +132,13 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         } catch (IndexMissingException e) {
             logger.warn(e.getMessage());
         }
-
+        try {
+            client("1").admin().indices().deleteMapping(new DeleteMappingRequest()
+                    .indices(new String[]{"_river"}).types("my_jdbc_river")).actionGet();
+            logger.info("river my_jdbc_river deleted");
+        } catch (Exception e) {
+            logger.warn(e.getMessage());
+        }
         stopNodes();
     }
 
@@ -161,9 +157,9 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
             client("1").index(indexRequest).actionGet();
             client("1").admin().indices().prepareRefresh("_river").execute().actionGet();
             logger.info("river is created");
-            waitForRiverEnabled(client("1"), "my_jdbc_river", 15);
+            RiverHelper.waitForRiverEnabled(client("1").admin().cluster(), "my_jdbc_river", "jdbc", 15);
             logger.info("river is enabled");
-            waitForRiverActive(client("1"), "my_jdbc_river", 15);
+            RiverHelper.waitForActiveRiver(client("1").admin().cluster(), "my_jdbc_river", "jdbc",  15);
             logger.info("river is active");
         } catch (InterruptedException e) {
             logger.error(e.getMessage());
@@ -172,9 +168,16 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         }
     }
 
-    protected void waitForInactiveRiver() throws InterruptedException, IOException {
-        waitForRiverInactive(client("1"), "my_jdbc_river", 30);
+    public void waitForInactiveRiver() {
+        try {
+            RiverHelper.waitForInactiveRiver(client("1").admin().cluster(), "my_jdbc_river", "jdbc", 15);
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage());
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
         logger.info("river is inactive");
+
     }
 
     protected RiverSettings riverSettings(String resource)
@@ -259,103 +262,5 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         }
         br.close();
     }
-
-    public static void waitForRiverEnabled(Client client, String riverName, int seconds) throws InterruptedException, IOException {
-        RiverStateRequest riverStateRequest = new RiverStateRequest()
-                .setRiverName(riverName);
-        RiverStateResponse riverStateResponse = client
-                .execute(RiverStateAction.INSTANCE, riverStateRequest).actionGet();
-        logger.info("enabled? riverStateResponse={}", riverStateResponse.getStates());
-        while (seconds-- > 0 && !isEnabled(riverName, riverStateResponse)) {
-            Thread.sleep(1000L);
-            try {
-                riverStateResponse = client.execute(RiverStateAction.INSTANCE, riverStateRequest).actionGet();
-                logger.info("enabled? riverStateResponse={}", riverStateResponse.getStates());
-            } catch (IndexMissingException e) {
-                // ignore
-            }
-        }
-    }
-
-    private static boolean isEnabled(String riverName, RiverStateResponse riverStateResponse) {
-        if (riverStateResponse == null) {
-            return false;
-        }
-        if (riverStateResponse.getStates() == null) {
-            return false;
-        }
-        if (riverStateResponse.getStates().isEmpty()) {
-            return false;
-        }
-        for (RiverState state : riverStateResponse.getStates()) {
-            if (state.getName().equals(riverName)) {
-                return state.isEnabled();
-            }
-        }
-        return false;
-    }
-
-    public static void waitForRiverActive(Client client, String riverName, int seconds) throws InterruptedException, IOException {
-        RiverStateRequest riverStateRequest = new RiverStateRequest()
-                .setRiverName(riverName);
-        RiverStateResponse riverStateResponse = client
-                .execute(RiverStateAction.INSTANCE, riverStateRequest).actionGet();
-
-        logger.info("active? riverStateResponse={}", riverStateResponse.getStates());
-        seconds *= 10;
-        while (seconds-- > 0 && !isActive(riverName, riverStateResponse)) {
-            Thread.sleep(100L);
-            try {
-                riverStateResponse = client.execute(RiverStateAction.INSTANCE, riverStateRequest).actionGet();
-                logger.info("active? riverStateResponse={}", riverStateResponse.getStates());
-            } catch (IndexMissingException e) {
-                //
-            }
-        }
-        if (seconds < 0) {
-            throw new IOException("timeout waiting for active river");
-        }
-    }
-
-    public static void waitForRiverInactive(Client client, String riverName, int seconds) throws InterruptedException, IOException {
-        RiverStateRequest riverStateRequest = new RiverStateRequest()
-                .setRiverName(riverName);
-        RiverStateResponse riverStateResponse = client
-                .execute(RiverStateAction.INSTANCE, riverStateRequest).actionGet();
-
-        logger.info("inactive? riverStateResponse={}", riverStateResponse.getStates());
-        seconds *= 10;
-        while (seconds-- > 0 && isActive(riverName, riverStateResponse)) {
-            Thread.sleep(100L);
-            try {
-                riverStateResponse = client.execute(RiverStateAction.INSTANCE, riverStateRequest).actionGet();
-                logger.info("inactive? riverStateResponse={}", riverStateResponse.getStates());
-            } catch (IndexMissingException e) {
-                //
-            }
-        }
-        if (seconds < 0) {
-            throw new IOException("timeout waiting for inactive river");
-        }
-    }
-
-    private static boolean isActive(String riverName, RiverStateResponse riverStateResponse) {
-        if (riverStateResponse == null) {
-            return false;
-        }
-        if (riverStateResponse.getStates() == null) {
-            return false;
-        }
-        if (riverStateResponse.getStates().isEmpty()) {
-            return false;
-        }
-        for (RiverState state : riverStateResponse.getStates()) {
-            if (state.getName().equals(riverName)) {
-                return state.isActive();
-            }
-        }
-        return false;
-    }
-
 
 }

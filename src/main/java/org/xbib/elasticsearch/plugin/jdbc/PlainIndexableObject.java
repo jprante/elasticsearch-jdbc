@@ -159,10 +159,11 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
 
     /**
      * Check if the map is empty, after optional null value removal.
+     *
      * @param map the map to check
      * @return true if map is empty, false if not
      */
-    protected boolean checkCollapsedMapLength(Map<String,Object> map) {
+    protected boolean checkCollapsedMapLength(Map<String, Object> map) {
         int exists = 0;
         for (Map.Entry<String, Object> k : map.entrySet()) {
             Object o = k.getValue();

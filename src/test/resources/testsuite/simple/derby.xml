@@ -54,6 +54,7 @@
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverScheduleTests"/>
         </classes>
     </test>
+
 <!--
     <test name="Stored Procedure River Tests">
         <parameter name="create" value="derby/create-ordertables.sql"/>

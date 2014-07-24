@@ -21,7 +21,7 @@ public class SQLCommand {
 
     private String sql;
 
-    private static final Pattern STATEMENT_PATTERN = Pattern.compile("^\\s*(update|insert)",Pattern.CASE_INSENSITIVE);
+    private static final Pattern STATEMENT_PATTERN = Pattern.compile("^\\s*(update|insert)", Pattern.CASE_INSENSITIVE);
 
     private List<Object> params = new LinkedList<Object>();
 
