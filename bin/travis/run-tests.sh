@@ -1,3 +1,3 @@
-mvn clean -P test-derby
-mvn clean -P test-h2
-mvn clean -P test-hsqldb
+mvn clean test -P test-derby
+mvn clean test -P test-h2
+mvn clean test -P test-hsqldb
