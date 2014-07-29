@@ -68,6 +68,17 @@ public interface RiverSource {
      * @return this river source
      */
     RiverSource setPassword(String password);
+    
+    /**
+     * Trinet: Ssl support
+     * @param ssl
+     * @return
+     */
+    RiverSource setSsl(boolean ssl);
+    RiverSource setKeyStore(String keyStore);
+    RiverSource setKeyStorePassword(String keyStorePassword);
+    RiverSource setTrustStore(String strustStore);
+    RiverSource setTrustStorePassword(String trustStorePassword);
 
 
     /**

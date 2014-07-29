@@ -258,11 +258,27 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             ingest.addMapping(defaultType,
                     jsonBuilder().map((Map<String, Object>) feedSettings.get("type_mapping")).string());
         }
+        
+        /**
+         * Trinet: support ssl
+         */
+        boolean ssl = XContentMapValues.nodeBooleanValue(feedSettings.get("ssl"), Boolean.FALSE);
+        String keyStore = XContentMapValues.nodeStringValue(feedSettings.get("key_store"), null);
+        String keyStorePassword = XContentMapValues.nodeStringValue(feedSettings.get("key_store_password"), null);        
+        String trustStore = XContentMapValues.nodeStringValue(feedSettings.get("trust_store"), null);
+        String trustStorePassword = XContentMapValues.nodeStringValue(feedSettings.get("trust_store_password"), null);                
+
 
         riverSource.setUrl(url)
                 .setUser(user)
                 .setPassword(password)
-                .setTimeZone(TimeZone.getTimeZone(timezone));
+                .setTimeZone(TimeZone.getTimeZone(timezone))
+		        .setSsl(ssl)
+		        .setKeyStore(keyStore)
+		        .setKeyStorePassword(keyStorePassword)
+		        .setTrustStore(trustStore)
+		        .setTrustStorePassword(trustStorePassword)
+		        .setTimeZone(TimeZone.getTimeZone(timezone));
         riverMouth.setTimeWindowed(timeWindowed)
                 .setIndex(defaultIndex)
                 .setType(defaultType)
