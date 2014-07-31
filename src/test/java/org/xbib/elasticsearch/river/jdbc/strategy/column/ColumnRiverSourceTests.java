@@ -88,22 +88,11 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
         final int updatedRecordsInTimeRangeWithOverlap = 1;
-
         testColumnRiver(new MockRiverMouth(), riverResource, sql, new ProductFixture[] {
-            ProductFixture
-            .size(newRecordsOutOfTimeRange)
-            .createdAt(oldTimestamp()),
-            ProductFixture
-            .size(newRecordsInTimeRange)
-            .createdAt(okTimestamp()),
-            ProductFixture
-            .size(updatedRecordsInTimeRange)
-            .createdAt(oldTimestamp())
-            .updatedAt(okTimestamp()),
-            ProductFixture
-            .size(updatedRecordsInTimeRangeWithOverlap)
-            .createdAt(oldTimestamp())
-            .updatedAt(overlapTimestamp()),
+            ProductFixture.size(newRecordsOutOfTimeRange).createdAt(oldTimestamp()),
+            ProductFixture.size(newRecordsInTimeRange).createdAt(okTimestamp()),
+            ProductFixture.size(updatedRecordsInTimeRange).createdAt(oldTimestamp()).updatedAt(okTimestamp()),
+            ProductFixture.size(updatedRecordsInTimeRangeWithOverlap).createdAt(oldTimestamp()).updatedAt(overlapTimestamp()),
         }, newRecordsInTimeRange + updatedRecordsInTimeRange + updatedRecordsInTimeRangeWithOverlap);
     }
 
@@ -113,13 +102,9 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
         testColumnRiver(new MockRiverMouth(), riverResource, sql, new ProductFixture[]{
-                new ProductFixture(newRecordsOutOfTimeRange)
-                        .createdAt(oldTimestamp()),
-                new ProductFixture(newRecordsInTimeRange)
-                        .createdAt(okTimestamp()),
-                new ProductFixture(updatedRecordsInTimeRange)
-                        .createdAt(oldTimestamp())
-                        .updatedAt(okTimestamp()),
+                new ProductFixture(newRecordsOutOfTimeRange).createdAt(oldTimestamp()),
+                new ProductFixture(newRecordsInTimeRange).createdAt(okTimestamp()),
+                new ProductFixture(updatedRecordsInTimeRange).createdAt(oldTimestamp()).updatedAt(okTimestamp()),
         }, newRecordsInTimeRange + updatedRecordsInTimeRange);
     }
 

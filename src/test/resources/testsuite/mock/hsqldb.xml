@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite" verbose="1">
+<suite name="River Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="stopurl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="driver" value="org.hsqldb.jdbcDriver"/>
     <parameter name="user" value="sa"/>
     <parameter name="password" value=""/>
 
-    <test name="Simple JDBC River Source Data Tests">
+    <test name="RiverTests">
         <parameter name="create" value="hsqldb/create-ordertables.sql"/>
         <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
         <parameter name="sql1"

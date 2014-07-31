@@ -1,6 +1,7 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
@@ -67,7 +68,13 @@ public class SimpleRiverSource implements RiverSource {
 
     protected Connection writeConnection;
 
-    protected Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+    protected Locale locale;
+
+    protected TimeZone timezone;
+
+    protected Calendar calendar;
+
+    protected DateTimeZone dateTimeZone;
 
     protected ESLogger logger() {
         return logger;
@@ -104,6 +111,61 @@ public class SimpleRiverSource implements RiverSource {
     public SimpleRiverSource setPassword(String password) {
         this.password = password;
         return this;
+    }
+
+
+    @Override
+    public SimpleRiverSource setLocale(Locale locale) {
+        this.locale = locale;
+        Locale.setDefault(locale); // for JDBC drivers internals
+        if (timezone == null) {
+            timezone = TimeZone.getTimeZone("UTC");
+        }
+        this.calendar = Calendar.getInstance(timezone, locale);
+        logger().debug("calendar timezone for JDBC timestamps = {}", calendar.getTimeZone().getDisplayName());
+        return this;
+    }
+
+    @Override
+    public Locale getLocale() {
+        if (locale == null) {
+            setLocale(Locale.getDefault());
+        }
+        return locale;
+    }
+
+    @Override
+    public SimpleRiverSource setTimeZone(TimeZone timezone) {
+        this.timezone = timezone;
+        TimeZone.setDefault(timezone); // for JDBC drivers internals
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        this.calendar = Calendar.getInstance(timezone, locale);
+        logger().debug("calendar timezone for JDBC timestamps = {}", calendar.getTimeZone().getDisplayName());
+
+        // for formatting fetched JDBC time values
+        this.dateTimeZone = DateTimeZone.forTimeZone(timezone);
+        return this;
+    }
+
+    @Override
+    public TimeZone getTimeZone() {
+        if (timezone == null) {
+            setTimeZone(TimeZone.getDefault());
+        }
+        return timezone;
+    }
+
+    //private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
+    /*public static String formatDateISO(long millis) {
+        return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
+    }*/
+
+    public String formatDate(long millis) {
+        return new DateTime(millis).withZone(dateTimeZone).toString();
+        //return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
     }
 
     /**
@@ -199,17 +261,6 @@ public class SimpleRiverSource implements RiverSource {
         return writeConnection;
     }
 
-    @Override
-    public SimpleRiverSource setTimeZone(TimeZone timezone) {
-        this.calendar = Calendar.getInstance(timezone);
-        return this;
-    }
-
-    @Override
-    public TimeZone getTimeZone() {
-        return calendar.getTimeZone();
-    }
-
     /**
      * River cycle fetch. Issue a series of SQL statements.
      *
@@ -218,27 +269,19 @@ public class SimpleRiverSource implements RiverSource {
      */
     @Override
     public void fetch() throws SQLException, IOException {
-        if (logger().isDebugEnabled()) {
-            logger().debug("fetching, {} SQL commands", context.getStatements().size());
-        }
+       logger().debug("fetching, {} SQL commands", context.getStatements().size());
         context.setLastStartDate(new java.util.Date().getTime());
         try {
             for (SQLCommand command : context.getStatements()) {
                 context.setLastExecutionStartDate(new java.util.Date().getTime());
                 if (command.isCallable()) {
-                    if (logger().isDebugEnabled()) {
-                        logger().debug("executing callable SQL: {}", command);
-                    }
+                    logger().debug("executing callable SQL: {}", command);
                     executeCallable(command);
                 } else if (!command.getParameters().isEmpty()) {
-                    if (logger().isDebugEnabled()) {
-                        logger().debug("executing SQL with params: {}", command);
-                    }
+                    logger().debug("executing SQL with params: {}", command);
                     executeWithParameter(command);
                 } else {
-                    if (logger().isDebugEnabled()) {
-                        logger().debug("executing SQL without params: {}", command);
-                    }
+                    logger().debug("executing SQL without params: {}", command);
                     execute(command);
                 }
                 context.setLastExecutionEndDate(new java.util.Date().getTime());
@@ -380,12 +423,10 @@ public class SimpleRiverSource implements RiverSource {
             rows++;
         }
         context.setLastRowCount(rows);
-        if (logger().isDebugEnabled()) {
-            if (rows > 0) {
-                logger().debug("merged {} rows", rows);
-            } else {
-                logger().debug("no rows merged ");
-            }
+        if (rows > 0) {
+            logger().debug("merged {} rows", rows);
+        } else {
+            logger().debug("no rows merged ");
         }
         afterRows(results, listener);
     }
@@ -629,9 +670,7 @@ public class SimpleRiverSource implements RiverSource {
         for (int i = 1; i <= columns; i++) {
             try {
                 Object value = parseType(results, i, metadata.getColumnType(i), locale);
-                if (logger().isTraceEnabled()) {
-                    logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
-                }
+                logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
                 values.add(value);
                 context.getLastRow().put("$row." + metadata.getColumnLabel(i), value);
             } catch (ParseException e) {
@@ -708,12 +747,6 @@ public class SimpleRiverSource implements RiverSource {
             logger().warn("while closing write connection: " + e.getMessage());
         }
         return this;
-    }
-
-    private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-
-    public static String formatDateISO(long millis) {
-        return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
     }
 
     private void prepare(final DatabaseMetaData metaData) throws SQLException {
@@ -806,28 +839,20 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     private void bind(PreparedStatement statement, int i, Object value) throws SQLException {
+        logger().debug("bind: value = {}", value);
         if (value == null) {
             statement.setNull(i, Types.VARCHAR);
         } else if (value instanceof String) {
             String s = (String) value;
-            if (logger().isDebugEnabled()) {
-                logger().debug("bind: value = {}", s);
-            }
             if ("$now".equals(s)) {
                 Timestamp t = new Timestamp(new java.util.Date().getTime());
-                if (logger().isDebugEnabled()) {
-                    logger().debug("setting $now to {}", t);
-                }
+                logger().debug("setting $now to {}", t);
                 statement.setTimestamp(i, t, calendar);
             } else if ("$job".equals(s)) {
-                if (logger().isDebugEnabled()) {
-                    logger().debug("setting $job to {}", context.job());
-                }
+                logger().debug("setting $job to {}", context.job());
                 statement.setString(i, context.job());
             } else if ("$count".equals(s)) {
-                if (logger().isDebugEnabled()) {
-                    logger().debug("setting $count to {}", context.getLastRowCount());
-                }
+                logger().debug("setting $count to {}", context.getLastRowCount());
                 statement.setLong(i, context.getLastRowCount());
             } else if ("$last.sql.start".equals(s)) {
                 if (context.getLastExecutionStartDate() == 0L) {
@@ -1124,24 +1149,24 @@ public class SimpleRiverSource implements RiverSource {
              */
             case Types.DATE: {
                 try {
-                    Date d = result.getDate(i);
-                    return d != null ? formatDateISO(d.getTime()) : null;
+                    Date d = result.getDate(i, calendar);
+                    return d != null ? formatDate(d.getTime()) : null;
                 } catch (SQLException e) {
                     return null;
                 }
             }
             case Types.TIME: {
                 try {
-                    Time t = result.getTime(i);
-                    return t != null ? formatDateISO(t.getTime()) : null;
+                    Time t = result.getTime(i, calendar);
+                    return t != null ? formatDate(t.getTime()) : null;
                 } catch (SQLException e) {
                     return null;
                 }
             }
             case Types.TIMESTAMP: {
                 try {
-                    Timestamp t = result.getTimestamp(i);
-                    return t != null ? formatDateISO(t.getTime()) : null;
+                    Timestamp t = result.getTimestamp(i, calendar);
+                    return t != null ? formatDate(t.getTime()) : null;
                 } catch (SQLException e) {
                     // java.sql.SQLException: Cannot convert value '0000-00-00 00:00:00' from column ... to TIMESTAMP.
                     return null;

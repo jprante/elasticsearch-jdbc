@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite" verbose="1">
-    <parameter name="starturl" value="jdbc:h2:target/test?TRACE_LEVEL_FILE=target/trace"/>
-    <parameter name="stopurl" value="jdbc:h2:target/test?TRACE_LEVEL_FILE=target/trace"/>
+<suite name="River Test Suite (column strategy - h2)" verbose="1">
+    <parameter name="starturl" value="jdbc:h2:./target/test"/>
+    <parameter name="stopurl" value="jdbc:h2:./target/test"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="Column JDBC River Target Tests">
+    <test name="River data tests (column strategy - h2)">
         <parameter name="create" value="h2/create-producttables.sql"/>
         <parameter name="delete" value="h2/delete-producttables.sql"/>
         <parameter name="river-existedWhereClause" value="h2/river-existedWhereClause.json"/>
@@ -22,7 +22,7 @@
                     value="update &quot;products&quot; set &quot;deleted_at&quot;=? where &quot;id&quot;=?" />
         <classes>
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+            <!-- <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/> -->
         </classes>
     </test>
 </suite>

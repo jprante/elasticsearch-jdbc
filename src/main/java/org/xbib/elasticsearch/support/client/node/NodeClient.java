@@ -118,13 +118,11 @@ public class NodeClient implements Ingest {
                 state.getSubmitted().inc(n);
                 state.getCurrentIngestNumDocs().inc(n);
                 state.getTotalIngestSizeInBytes().inc(request.estimatedSizeInBytes());
-                if (logger.isInfoEnabled()) {
-                    logger.info("before bulk [{}] [actions={}] [bytes={}] [concurrent requests={}]",
+                logger.debug("before bulk [{}] [actions={}] [bytes={}] [concurrent requests={}]",
                             executionId,
                             request.numberOfActions(),
                             request.estimatedSizeInBytes(),
                             l);
-                }
             }
 
             @Override
@@ -141,14 +139,12 @@ public class NodeClient implements Ingest {
                         state.getFailed().inc(1);
                     }
                 }
-                if (logger.isInfoEnabled()) {
-                    logger.info("after bulk [{}] [succeeded={}] [failed={}] [{}ms] [concurrent requests={}]",
+                logger.debug("after bulk [{}] [succeeded={}] [failed={}] [{}ms] [concurrent requests={}]",
                             executionId,
                             state.getSucceeded().count(),
                             state.getFailed().count(),
                             response.getTook().millis(),
                             l);
-                }
                 if (n > 0) {
                     logger.error("bulk [{}] failed with {} failed items, failure message = {}",
                             executionId, n, response.buildFailureMessage());
@@ -306,7 +302,7 @@ public class NodeClient implements Ingest {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
-        logger.info("flushing bulk processor");
+        logger.debug("flushing bulk processor");
         BulkProcessorHelper.flush(bulkProcessor);
         return this;
     }
@@ -377,18 +373,18 @@ public class NodeClient implements Ingest {
     public synchronized void shutdown() {
         try {
             if (bulkProcessor != null) {
-                logger.info("closing bulk processor...");
+                logger.debug("closing bulk processor...");
                 bulkProcessor.close();
             }
             if (state != null && state.indices() != null && !state.indices().isEmpty()) {
-                logger.info("stopping bulk mode for indices {}...", state.indices());
+                logger.debug("stopping bulk mode for indices {}...", state.indices());
                 for (String index : ImmutableSet.copyOf(state.indices())) {
                     stopBulk(index);
                 }
             }
-            logger.info("shutting down...");
+            logger.debug("shutting down...");
             client.close();
-            logger.info("shutting down completed");
+            logger.debug("shutting down completed");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

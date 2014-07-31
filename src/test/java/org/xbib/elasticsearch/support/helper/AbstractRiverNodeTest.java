@@ -17,7 +17,7 @@ import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
+import org.xbib.elasticsearch.plugin.jdbc.LocaleUtil;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.support.river.RiverHelper;
@@ -30,9 +30,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
@@ -66,12 +70,14 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         source = getRiverSource()
                 .setUrl(starturl)
                 .setUser(user)
-                .setPassword(password);
+                .setPassword(password)
+                .setLocale(Locale.getDefault())
+                .setTimeZone(TimeZone.getDefault());
         context = getRiverContext()
                 .setRiverSource(source)
                 .setRetries(1)
                 .setMaxRetryWait(TimeValue.timeValueSeconds(5))
-                .setLocale("en");
+                .setLocale(Locale.ROOT);
         context.contextualize();
         logger.info("create table {}", resourceName);
         if (resourceName == null || "".equals(resourceName)) {
@@ -113,7 +119,9 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         source = getRiverSource()
                 .setUrl(stopurl)
                 .setUser(user)
-                .setPassword(password);
+                .setPassword(password)
+                .setLocale(Locale.getDefault())
+                .setTimeZone(TimeZone.getDefault());
         try {
             logger.info("connecting to stop URL...");
             // activate stop URL
@@ -201,6 +209,27 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
         source.closeWriting();
     }
 
+    protected void createTimestampedLogs(String sql, int size, String locale, String timezone)
+            throws SQLException {
+        Connection connection = source.getConnectionForWriting();
+        Locale l = LocaleUtil.toLocale(locale);
+        TimeZone t = TimeZone.getTimeZone(timezone);
+        source.setTimeZone(t).setLocale(l);
+        Calendar cal = Calendar.getInstance(t, l);
+        // half of log in the past, half of it in the future
+        cal.add(Calendar.HOUR, -(size/2));
+        for (int i = 0; i < size; i++) {
+            Timestamp modified = new Timestamp(cal.getTimeInMillis());
+            String message = "Hello world";
+            add(connection, sql, modified, message);
+            cal.add(Calendar.HOUR, 1);
+        }
+        if (!connection.getAutoCommit()) {
+            connection.commit();
+        }
+        source.closeWriting();
+    }
+
     private void add(Connection connection, String sql, final String name, final long amount, final double price)
             throws SQLException {
         PreparedStatement stmt = connection.prepareStatement(sql);
@@ -208,6 +237,17 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
             add(name);
             add(amount);
             add(price);
+        }};
+        source.bind(stmt, params);
+        stmt.execute();
+    }
+
+    private void add(Connection connection, String sql, final Timestamp ts, final String message)
+            throws SQLException {
+        PreparedStatement stmt = connection.prepareStatement(sql);
+        List<Object> params = new ArrayList<Object>() {{
+            add(ts);
+            add(message);
         }};
         source.bind(stmt, params);
         stmt.execute();

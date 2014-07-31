@@ -9,5 +9,10 @@
         <Root level="info">
             <AppenderRef ref="Console" />
         </Root>
+        <!--
+        <Logger name="NodeClient" level="OFF">
+            <AppenderRef ref="Console" />
+        </Logger>
+        -->
     </Loggers>
 </configuration>

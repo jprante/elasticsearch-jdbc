@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="Elasticsearch JDBC River Test Suite" verbose="1">
+<suite name="River Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="driver" value="com.mysql.jdbc.Driver"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="Simple JDBC River Source Data Tests">
+    <test name="River Source Data Tests">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1"

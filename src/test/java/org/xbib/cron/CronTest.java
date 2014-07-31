@@ -68,5 +68,21 @@ public class CronTest {
                         "lastdayOfMonth: false\n" +
                         "years: *\n"
         );
+
+        // comma test
+        expression = new CronExpression("0 5,35 * * * ?");
+        assertEquals(expression.getExpressionSummary(),
+                "seconds: 0\n" +
+                        "minutes: 5,35\n" +
+                        "hours: *\n" +
+                        "daysOfMonth: *\n" +
+                        "months: *\n" +
+                        "daysOfWeek: ?\n" +
+                        "lastdayOfWeek: false\n" +
+                        "nearestWeekday: false\n" +
+                        "NthDayOfWeek: 0\n" +
+                        "lastdayOfMonth: false\n" +
+                        "years: *\n"
+        );
     }
 }

@@ -216,6 +216,21 @@ public interface RiverSource {
     RiverSource closeWriting();
 
     /**
+     * Set the locale for JDBC
+     *
+     * @param locale locale
+     * @return this river source
+     */
+    RiverSource setLocale(Locale locale);
+
+    /**
+     * Get the current locale
+     *
+     * @return the time zone
+     */
+    Locale getLocale();
+
+    /**
      * Set the timezone for JDBC setTimestamp() calls with calendar object.
      *
      * @param timeZone the time zone

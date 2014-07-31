@@ -262,6 +262,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         riverSource.setUrl(url)
                 .setUser(user)
                 .setPassword(password)
+                .setLocale(LocaleUtil.toLocale(locale))
                 .setTimeZone(TimeZone.getTimeZone(timezone));
         riverMouth.setTimeWindowed(timeWindowed)
                 .setIndex(defaultIndex)
@@ -274,7 +275,7 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                 .setRiverSource(riverSource)
                 .setRiverMouth(riverMouth)
                 .setRiverFlow(riverFlow)
-                .setLocale(locale)
+                .setLocale(LocaleUtil.toLocale(locale))
                 .setRounding(rounding)
                 .setScale(scale)
                 .setStatements(sql)
