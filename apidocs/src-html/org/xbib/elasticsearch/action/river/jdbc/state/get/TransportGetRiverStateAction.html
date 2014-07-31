@@ -70,14 +70,16 @@
 <span class="sourceLineNo">062</span>                RiverName name = entry.getKey();<a name="line.62"></a>
 <span class="sourceLineNo">063</span>                if (("*".equals(riverName) || name.getName().equals(riverName)) &amp;&amp; ("*".equals(riverType) || name.getType().equals(riverType)) &amp;&amp; entry.getValue() instanceof StatefulRiver) {<a name="line.63"></a>
 <span class="sourceLineNo">064</span>                    StatefulRiver river = (StatefulRiver) entry.getValue();<a name="line.64"></a>
-<span class="sourceLineNo">065</span>                    builder.add(river.getRiverState());<a name="line.65"></a>
-<span class="sourceLineNo">066</span>                }<a name="line.66"></a>
-<span class="sourceLineNo">067</span>            }<a name="line.67"></a>
-<span class="sourceLineNo">068</span>            listener.onResponse(new GetRiverStateResponse(request, builder.build()));<a name="line.68"></a>
-<span class="sourceLineNo">069</span>        }<a name="line.69"></a>
-<span class="sourceLineNo">070</span>    }<a name="line.70"></a>
-<span class="sourceLineNo">071</span><a name="line.71"></a>
-<span class="sourceLineNo">072</span>}<a name="line.72"></a>
+<span class="sourceLineNo">065</span>                    if (river.getRiverState() != null) {<a name="line.65"></a>
+<span class="sourceLineNo">066</span>                        builder.add(river.getRiverState());<a name="line.66"></a>
+<span class="sourceLineNo">067</span>                    }<a name="line.67"></a>
+<span class="sourceLineNo">068</span>                }<a name="line.68"></a>
+<span class="sourceLineNo">069</span>            }<a name="line.69"></a>
+<span class="sourceLineNo">070</span>            listener.onResponse(new GetRiverStateResponse(request, builder.build()));<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        }<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>}<a name="line.74"></a>
 
 
 

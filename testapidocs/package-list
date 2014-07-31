@@ -1,3 +1,4 @@
+org.xbib.cron
 org.xbib.elasticsearch.river.jdbc
 org.xbib.elasticsearch.river.jdbc.strategy.column
 org.xbib.elasticsearch.river.jdbc.strategy.mock

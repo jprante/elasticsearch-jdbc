@@ -30,7 +30,7 @@
 <span class="sourceLineNo">022</span>    }<a name="line.22"></a>
 <span class="sourceLineNo">023</span><a name="line.23"></a>
 <span class="sourceLineNo">024</span>    /**<a name="line.24"></a>
-<span class="sourceLineNo">025</span>     * Product table star select, scheduled for more than one run<a name="line.25"></a>
+<span class="sourceLineNo">025</span>     * Product table star select, scheduled for more than two runs<a name="line.25"></a>
 <span class="sourceLineNo">026</span>     * @param riverResource the river resource<a name="line.26"></a>
 <span class="sourceLineNo">027</span>     * @param sql the SQL statement<a name="line.27"></a>
 <span class="sourceLineNo">028</span>     * @throws Exception if test fails<a name="line.28"></a>
@@ -40,13 +40,34 @@
 <span class="sourceLineNo">032</span>    public void testSimpleSchedule(String riverResource, String sql) throws Exception {<a name="line.32"></a>
 <span class="sourceLineNo">033</span>        createRandomProducts(sql, 100);<a name="line.33"></a>
 <span class="sourceLineNo">034</span>        createRiver(riverResource);<a name="line.34"></a>
-<span class="sourceLineNo">035</span>        Thread.sleep(12500L);<a name="line.35"></a>
+<span class="sourceLineNo">035</span>        Thread.sleep(12500L); // run more than twice<a name="line.35"></a>
 <span class="sourceLineNo">036</span>        client("1").admin().indices().prepareRefresh(index).execute().actionGet();<a name="line.36"></a>
-<span class="sourceLineNo">037</span>        assertThat(client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits(),<a name="line.37"></a>
-<span class="sourceLineNo">038</span>                greaterThan(100L));<a name="line.38"></a>
+<span class="sourceLineNo">037</span>        long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        assertThat(hits, greaterThan(100L));<a name="line.38"></a>
 <span class="sourceLineNo">039</span>    }<a name="line.39"></a>
 <span class="sourceLineNo">040</span><a name="line.40"></a>
-<span class="sourceLineNo">041</span>}<a name="line.41"></a>
+<span class="sourceLineNo">041</span>    /**<a name="line.41"></a>
+<span class="sourceLineNo">042</span>     * Test read and write of timestamps in a table. We create 100 timestamps over hour interval,<a name="line.42"></a>
+<span class="sourceLineNo">043</span>     * current timestamp $now is in the center.<a name="line.43"></a>
+<span class="sourceLineNo">044</span>     * Selecting timestamps from $now, there should be at least 50 rows/hits per run, if $now works.<a name="line.44"></a>
+<span class="sourceLineNo">045</span>     *<a name="line.45"></a>
+<span class="sourceLineNo">046</span>     * @param riverResource the river JSON resource<a name="line.46"></a>
+<span class="sourceLineNo">047</span>     * @param sql the sql statement to select timestamps<a name="line.47"></a>
+<span class="sourceLineNo">048</span>     * @throws Exception<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     */<a name="line.49"></a>
+<span class="sourceLineNo">050</span>    @Test<a name="line.50"></a>
+<span class="sourceLineNo">051</span>    @Parameters({"river7", "sql2"})<a name="line.51"></a>
+<span class="sourceLineNo">052</span>    public void testTimestamps(String riverResource, String sql) throws Exception {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>        createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem"); // TODO make timezone/locale configurable<a name="line.53"></a>
+<span class="sourceLineNo">054</span>        createRiver(riverResource);<a name="line.54"></a>
+<span class="sourceLineNo">055</span>        Thread.sleep(12500L); // ensure at least two runs<a name="line.55"></a>
+<span class="sourceLineNo">056</span>        client("1").admin().indices().prepareRefresh(index).execute().actionGet();<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        // just an estimation, at least two runs should deliver 50 hits each.<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        assertThat(hits, greaterThan(99L));<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    }<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>}<a name="line.62"></a>
 
 
 
