@@ -111,12 +111,14 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
                     Runtime.getRuntime().availableProcessors());
             ByteSizeValue maxvolume = settings.getAsBytesSize("maxbulkvolume", ByteSizeValue.parseBytesSizeValue("10m"));
             TimeValue maxrequestwait = settings.getAsTime("maxrequestwait", TimeValue.timeValueSeconds(60));
-            ingest = new BulkTransportClient();
+            BulkTransportClient ingest = new BulkTransportClient();
+            URI connSpec = URI.create(settings.get("elasticsearch"));
             ingest.maxActionsPerBulkRequest(maxbulkactions)
                     .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                     .maxVolumePerBulkRequest(maxvolume)
-                    .maxRequestWait(maxrequestwait);
-            ingest.newClient(URI.create(settings.get("elasticsearch")));
+                    .maxRequestWait(maxrequestwait)
+                    .newClient(connSpec, clientSettings(connSpec));
+            this.ingest = ingest;
         }
         // create queue
         super.beforeRun();

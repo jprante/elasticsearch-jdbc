@@ -14,6 +14,7 @@ import org.xbib.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
 import org.xbib.elasticsearch.support.client.Ingest;
 import org.xbib.elasticsearch.support.client.node.NodeClient;
+import org.xbib.io.URIUtil;
 import org.xbib.pipeline.AbstractPipeline;
 import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineException;
@@ -25,6 +26,7 @@ import org.xbib.pipeline.simple.SimplePipelineExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -409,5 +411,20 @@ public abstract class AbstractFeeder<T, R extends PipelineRequest, P extends Pip
     public abstract PipelineProvider<P> pipelineProvider();
 
     public abstract void executeTask(Map<String, Object> map) throws Exception;
+
+    public Settings clientSettings(URI connectionSpec) {
+        return settingsBuilder()
+                .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder". See also module load skipping in JDBCRiverPlugin
+                .put("network.server", false) // this is not a server
+                .put("node.client", true) // this is an Elasticearch client
+                .put("cluster.name", URIUtil.parseQueryString(connectionSpec).get("es.cluster.name")) // specified remote ES cluster
+                .put("client.transport.sniff", false) // we do not sniff (should be configurable)
+                .put("client.transport.ignore_cluster_name", false) // respect cluster name setting
+                .put("client.transport.ping_timeout", "30s") // large ping timeout (should not be required)
+                .put("client.transport.nodes_sampler_interval", "30s") // only for sniff sampling
+                .put("path.plugins", ".dontexist") // pointing to a non-exiting folder means, this disables loading site plugins
+                // we do not need to change class path settings when using the "feeder" name trick
+                .build();
+    }
 
 }

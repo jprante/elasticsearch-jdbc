@@ -6,9 +6,6 @@ import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-
 public class RiverScheduleTests extends AbstractRiverNodeTest {
 
     @Override
@@ -35,7 +32,7 @@ public class RiverScheduleTests extends AbstractRiverNodeTest {
         Thread.sleep(12500L); // run more than twice
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
-        assertThat(hits, greaterThan(100L));
+        assertTrue(hits > 100L);
     }
 
     /**
@@ -56,7 +53,7 @@ public class RiverScheduleTests extends AbstractRiverNodeTest {
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
         // just an estimation, at least two runs should deliver 50 hits each.
-        assertThat(hits, greaterThan(99L));
+        assertTrue(hits > 99L);
     }
 
 }

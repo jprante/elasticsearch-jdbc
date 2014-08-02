@@ -7,6 +7,7 @@ import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.ack.ClusterStateUpdateResponse;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.inject.Injector;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
@@ -14,14 +15,14 @@ import org.xbib.elasticsearch.action.river.jdbc.state.RiverStateService;
 
 public class TransportPutRiverStateAction extends TransportMasterNodeOperationAction<PutRiverStateRequest, PutRiverStateResponse> {
 
-    private final RiverStateService riverStateService;
+    private final Injector injector;
 
     @Inject
     public TransportPutRiverStateAction(Settings settings, ThreadPool threadPool,
                                         ClusterService clusterService, TransportService transportService,
-                                        RiverStateService riverStateService) {
+                                        Injector injector) {
         super(settings, PutRiverStateAction.NAME, transportService, clusterService, threadPool);
-        this.riverStateService = riverStateService;
+        this.injector = injector;
     }
 
     @Override
@@ -41,6 +42,7 @@ public class TransportPutRiverStateAction extends TransportMasterNodeOperationAc
 
     @Override
     protected void masterOperation(PutRiverStateRequest request, ClusterState state, final ActionListener<PutRiverStateResponse> listener) throws ElasticsearchException {
+        RiverStateService riverStateService = injector.getInstance(RiverStateService.class);
         riverStateService.registerRiver(new RiverStateService.RegisterRiverStateRequest("put_river_state[" + request.getRiverName() + "]", request.getRiverName(), request.getRiverType())
                 .riverState(request.getRiverState())
                 .masterNodeTimeout(request.masterNodeTimeout())

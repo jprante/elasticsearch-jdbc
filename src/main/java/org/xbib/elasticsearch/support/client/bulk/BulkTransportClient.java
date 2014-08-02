@@ -97,15 +97,6 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
     }
 
     /**
-     * Create a new client
-     *
-     * @return this client
-     */
-    public BulkTransportClient newClient() {
-        return this.newClient(findURI());
-    }
-
-    /**
      * Create new client
      * The URI describes host and port of the node the client should connect to,
      * with the parameter <tt>es.cluster.name</tt> for the cluster name.

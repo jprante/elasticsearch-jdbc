@@ -65,7 +65,11 @@ public abstract class AbstractNodeTestHelper extends Assert {
 
     public void startNodes() throws Exception {
         setClusterName();
+
+        // we need more than one node, for the river state actions to test
         startNode("1");
+        startNode("2");
+
         // find node address
         NodesInfoRequest nodesInfoRequest = new NodesInfoRequest().transport(true);
         NodesInfoResponse response = client("1").admin().cluster().nodesInfo(nodesInfoRequest).actionGet();

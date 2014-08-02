@@ -3,6 +3,7 @@ package org.xbib.elasticsearch.plugin.river.jdbc;
 import org.elasticsearch.action.ActionModule;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.inject.Module;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.AbstractPlugin;
 import org.elasticsearch.rest.RestModule;
 import org.elasticsearch.river.RiversModule;
@@ -24,8 +25,11 @@ import static org.elasticsearch.common.collect.Lists.newArrayList;
 
 public class JDBCRiverPlugin extends AbstractPlugin {
 
+    private final Settings settings;
+
     @Inject
-    public JDBCRiverPlugin() {
+    public JDBCRiverPlugin(Settings settings) {
+        this.settings = settings;
     }
 
     @Override
@@ -43,7 +47,10 @@ public class JDBCRiverPlugin extends AbstractPlugin {
     @Override
     public Collection<Class<? extends Module>> modules() {
         Collection<Class<? extends Module>> modules = newArrayList();
-        modules.add(RiverStateModule.class);
+        // if we are in "feeder" node mode, we skip initiating the server-side only river state module
+        if (!"feeder".equals(settings.get("name"))) {
+            modules.add(RiverStateModule.class);
+        }
         return modules;
     }
 

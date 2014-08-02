@@ -7,6 +7,7 @@ import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.ack.ClusterStateUpdateResponse;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.inject.Injector;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
@@ -14,14 +15,14 @@ import org.xbib.elasticsearch.action.river.jdbc.state.RiverStateService;
 
 public class TransportDeleteRiverStateAction extends TransportMasterNodeOperationAction<DeleteRiverStateRequest, DeleteRiverStateResponse> {
 
-    private final RiverStateService riverStateService;
+    private final Injector injector;
 
     @Inject
     public TransportDeleteRiverStateAction(Settings settings, ThreadPool threadPool,
                                            ClusterService clusterService, TransportService transportService,
-                                           RiverStateService riverStateService) {
+                                           Injector injector) {
         super(settings, DeleteRiverStateAction.NAME, transportService, clusterService, threadPool);
-        this.riverStateService = riverStateService;
+        this.injector = injector;
     }
 
     @Override
@@ -41,6 +42,7 @@ public class TransportDeleteRiverStateAction extends TransportMasterNodeOperatio
 
     @Override
     protected void masterOperation(DeleteRiverStateRequest request, ClusterState state, final ActionListener<DeleteRiverStateResponse> listener) throws ElasticsearchException {
+        RiverStateService riverStateService = injector.getInstance(RiverStateService.class);
         riverStateService.unregisterRiver(new RiverStateService.UnregisterRiverStateRequest("delete_river_state[" + request.getRiverName() + "]", request.getRiverName())
                 .masterNodeTimeout(request.masterNodeTimeout())
                 .ackTimeout(request.ackTimeout()), new ActionListener<ClusterStateUpdateResponse>() {
