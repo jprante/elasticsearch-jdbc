@@ -23,6 +23,7 @@ public class RestRiverGetStateAction extends BaseRestHandler {
     @Inject
     public RestRiverGetStateAction(Settings settings, Client client, RestController controller) {
         super(settings, client);
+
         controller.registerHandler(RestRequest.Method.GET, "/_river/jdbc/{riverName}/_state", this);
     }
 
@@ -31,10 +32,7 @@ public class RestRiverGetStateAction extends BaseRestHandler {
         String riverName = request.param("riverName");
         String riverType = "jdbc";
         GetRiverStateRequest riverStateRequest = new GetRiverStateRequest();
-        riverStateRequest.setRiverName(riverName)
-                .setRiverType(riverType)
-                .masterNodeTimeout(request.paramAsTime("master_timeout", riverStateRequest.masterNodeTimeout()))
-                .local(request.paramAsBoolean("local", riverStateRequest.local()));
+        riverStateRequest.setRiverName(riverName).setRiverType(riverType);
         client.admin().cluster().execute(GetRiverStateAction.INSTANCE, riverStateRequest, new RestBuilderListener<GetRiverStateResponse>(channel) {
 
             @Override
@@ -42,12 +40,12 @@ public class RestRiverGetStateAction extends BaseRestHandler {
                 builder.startObject();
                 builder.startArray("state");
                 for (RiverState state : getRiverStateResponse.getStates()) {
-                    builder.startObject();
-                    builder.field("name", state.getName());
-                    builder.field("type", state.getType());
-                    builder.field("settings", state.getSettings().getAsMap());
-                    builder.field("custom", state.getCustom());
-                    builder.endObject();
+                    builder.startObject()
+                        .field("name", state.getName())
+                        .field("type", state.getType())
+                        .field("settings", state.getSettings().getAsMap())
+                        .field("map").map(state.getMap())
+                        .endObject();
                 }
                 builder.endArray().endObject();
                 return new BytesRestResponse(OK, builder);

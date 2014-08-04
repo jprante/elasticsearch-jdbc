@@ -13,7 +13,7 @@ import org.xbib.cron.CronExpression;
 import org.xbib.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
 import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.node.NodeClient;
+import org.xbib.elasticsearch.support.client.node.BulkNodeClient;
 import org.xbib.io.URIUtil;
 import org.xbib.pipeline.AbstractPipeline;
 import org.xbib.pipeline.Pipeline;
@@ -200,7 +200,7 @@ public abstract class AbstractFeeder<T, R extends PipelineRequest, P extends Pip
                 Runtime.getRuntime().availableProcessors());
         ByteSizeValue maxvolume = settings.getAsBytesSize("maxbulkvolume", ByteSizeValue.parseBytesSizeValue("10m"));
         TimeValue maxrequestwait = settings.getAsTime("maxrequestwait", TimeValue.timeValueSeconds(60));
-        this.ingest = new NodeClient()
+        this.ingest = new BulkNodeClient()
                 .maxActionsPerBulkRequest(maxbulkactions)
                 .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                 .maxRequestWait(maxrequestwait)

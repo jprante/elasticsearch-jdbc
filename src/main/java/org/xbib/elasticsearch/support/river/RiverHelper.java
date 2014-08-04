@@ -20,10 +20,6 @@ public class RiverHelper {
     private RiverHelper() {
     }
 
-    public static void waitForRiverEnabled(ClusterAdminClient client, String riverName, String riverType) throws InterruptedException, IOException {
-        waitForRiverEnabled(client, riverName, riverType, 15);
-    }
-
     public static void waitForRiverEnabled(ClusterAdminClient client, String riverName, String riverType, int seconds) throws InterruptedException, IOException {
         GetRiverStateRequest riverStateRequest = new GetRiverStateRequest()
                 .setRiverName(riverName)
@@ -58,10 +54,6 @@ public class RiverHelper {
         return false;
     }
 
-    public static void waitForActiveRiver(ClusterAdminClient client, String riverName, String riverType) throws InterruptedException, IOException {
-        waitForInactiveRiver(client, riverName, riverType, 30);
-    }
-
     public static void waitForActiveRiver(ClusterAdminClient client, String riverName, String riverType, int seconds) throws InterruptedException, IOException {
         GetRiverStateRequest riverStateRequest = new GetRiverStateRequest()
                 .setRiverName(riverName)
@@ -79,10 +71,6 @@ public class RiverHelper {
         if (seconds < 0) {
             throw new IOException("timeout waiting for active river");
         }
-    }
-
-    public static void waitForInactiveRiver(ClusterAdminClient client, String riverName, String riverType) throws InterruptedException, IOException {
-        waitForInactiveRiver(client, riverName, riverType, 30);
     }
 
     public static void waitForInactiveRiver(ClusterAdminClient client, String riverName, String riverType, int seconds) throws InterruptedException, IOException {

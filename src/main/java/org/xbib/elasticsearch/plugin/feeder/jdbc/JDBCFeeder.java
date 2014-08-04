@@ -58,9 +58,16 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
      */
     private String defaultIndex;
 
+    /**
+     * Constructor
+     */
     public JDBCFeeder() {
     }
 
+    /**
+     * Constructor for execution from pipeline
+     * @param feeder the feeder to inherit from
+     */
     public JDBCFeeder(JDBCFeeder feeder) {
         super(feeder);
         this.name = feeder.getName();
@@ -82,11 +89,20 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         return "jdbc";
     }
 
+    /**
+     * The name of the feeder
+     * @param name the feeder name
+     * @return this feeder
+     */
     public Feeder<T, R, P> setName(String name) {
         this.name = name;
         return this;
     }
 
+    /**
+     * Get name of feeder
+     * @return the name
+     */
     public String getName() {
         return name;
     }
@@ -146,7 +162,6 @@ public class JDBCFeeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         GetRiverStateResponse getRiverStateResponse = getRiverStateRequestBuilder.execute().actionGet();
         riverState = getRiverStateResponse.getState();
         logger.debug("got river state");
-        riverState.setCustom(riverContext.asMap());
         Long counter = riverState.getCounter() + 1;
         this.riverState = riverState.setCounter(counter)
                 .setEnabled(true)

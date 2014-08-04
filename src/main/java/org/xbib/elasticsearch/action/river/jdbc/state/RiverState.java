@@ -12,6 +12,9 @@ import java.util.Map;
 
 import static org.elasticsearch.common.collect.Maps.newHashMap;
 
+/**
+ * A river state represents a point in time when a river has a defined behavior with a set of parameters
+ */
 public class RiverState implements Streamable, Comparable<RiverState> {
 
     /**
@@ -29,7 +32,7 @@ public class RiverState implements Streamable, Comparable<RiverState> {
     /**
      * A custom map for more information about the river
      */
-    private Map<String, Object> custom = newHashMap();
+    private Map<String, Object> map = newHashMap();
 
     public RiverState() {
     }
@@ -47,51 +50,6 @@ public class RiverState implements Streamable, Comparable<RiverState> {
         return type;
     }
 
-    public RiverState setStarted(Date started) {
-        custom.put("started", started);
-        return this;
-    }
-
-    public Date getStarted() {
-        return (Date) custom.get("started");
-    }
-
-    public RiverState setCounter(Long counter) {
-        custom.put("counter", counter);
-        return this;
-    }
-
-    public Long getCounter() {
-        return custom.containsKey("counter") ? (Long) custom.get("counter") : 0L;
-    }
-
-    public RiverState setTimestamp(Date timestamp) {
-        custom.put("timestamp", timestamp);
-        return this;
-    }
-
-    public Date getTimestamp() {
-        return (Date) custom.get("timestamp");
-    }
-
-    public RiverState setEnabled(Boolean enabled) {
-        custom.put("enabled", enabled);
-        return this;
-    }
-
-    public Boolean isEnabled() {
-        return (Boolean) custom.get("enabled");
-    }
-
-    public RiverState setActive(Boolean active) {
-        custom.put("active", active);
-        return this;
-    }
-
-    public Boolean isActive() {
-        return custom.containsKey("active") ? (Boolean) custom.get("active") : false;
-    }
-
     public RiverState setSettings(Settings settings) {
         this.settings = settings;
         return this;
@@ -101,13 +59,68 @@ public class RiverState implements Streamable, Comparable<RiverState> {
         return settings;
     }
 
+    public RiverState setMap(Map<String,Object> map) {
+        this.map = map;
+        return this;
+    }
+
+    public Map<String, Object> getMap() {
+        return map;
+    }
+
+    public RiverState setStarted(Date started) {
+        map.put("started", started);
+        return this;
+    }
+
+    public Date getStarted() {
+        return (Date) map.get("started");
+    }
+
+    public RiverState setCounter(Long counter) {
+        map.put("counter", counter);
+        return this;
+    }
+
+    public Long getCounter() {
+        return map.containsKey("counter") ? (Long) map.get("counter") : 0L;
+    }
+
+    public RiverState setTimestamp(Date timestamp) {
+        map.put("timestamp", timestamp);
+        return this;
+    }
+
+    public Date getTimestamp() {
+        return (Date) map.get("timestamp");
+    }
+
+    public RiverState setEnabled(Boolean enabled) {
+        map.put("enabled", enabled);
+        return this;
+    }
+
+    public Boolean isEnabled() {
+        return (Boolean) map.get("enabled");
+    }
+
+    public RiverState setActive(Boolean active) {
+        map.put("active", active);
+        return this;
+    }
+
+    public Boolean isActive() {
+        return map.containsKey("active") ? (Boolean) map.get("active") : false;
+    }
+
+
     public RiverState setCustom(Map<String, Object> custom) {
-        custom.put("custom", custom);
+        this.map.put("custom", custom);
         return this;
     }
 
     public Map<String, Object> getCustom() {
-        return (Map<String, Object>) custom.get("custom");
+        return (Map<String, Object>) this.map.get("custom");
     }
 
     @Override
@@ -115,7 +128,7 @@ public class RiverState implements Streamable, Comparable<RiverState> {
         this.name = in.readOptionalString();
         this.type = in.readOptionalString();
         ImmutableSettings.readSettingsFromStream(in);
-        custom = in.readMap();
+        map = in.readMap();
     }
 
     @Override
@@ -123,7 +136,7 @@ public class RiverState implements Streamable, Comparable<RiverState> {
         out.writeOptionalString(name);
         out.writeOptionalString(type);
         ImmutableSettings.writeSettingsToStream(settings, out);
-        out.writeMap(custom);
+        out.writeMap(map);
     }
 
     @Override
@@ -133,6 +146,6 @@ public class RiverState implements Streamable, Comparable<RiverState> {
 
     @Override
     public String toString() {
-        return "[name="+name+",type="+type+",settings="+settings.getAsMap()+",custom="+custom+"]";
+        return "[name="+name+",type="+type+",settings="+settings.getAsMap()+",map="+map+"]";
     }
 }

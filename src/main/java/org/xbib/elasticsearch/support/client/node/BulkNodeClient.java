@@ -34,9 +34,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Node client support
  */
-public class NodeClient implements Ingest {
+public class BulkNodeClient implements Ingest {
 
-    private final static ESLogger logger = ESLoggerFactory.getLogger(NodeClient.class.getSimpleName());
+    private final static ESLogger logger = ESLoggerFactory.getLogger(BulkNodeClient.class.getSimpleName());
 
     private int maxActionsPerBulkRequest = 100;
 
@@ -61,53 +61,53 @@ public class NodeClient implements Ingest {
     private Throwable throwable;
 
     @Override
-    public NodeClient shards(int shards) {
+    public BulkNodeClient shards(int shards) {
         configHelper.setting("index.number_of_shards", shards);
         return this;
     }
 
     @Override
-    public NodeClient replica(int replica) {
+    public BulkNodeClient replica(int replica) {
         configHelper.setting("index.number_of_replica", replica);
         return this;
     }
 
     @Override
-    public NodeClient maxActionsPerBulkRequest(int maxActionsPerBulkRequest) {
+    public BulkNodeClient maxActionsPerBulkRequest(int maxActionsPerBulkRequest) {
         this.maxActionsPerBulkRequest = maxActionsPerBulkRequest;
         return this;
     }
 
     @Override
-    public NodeClient maxConcurrentBulkRequests(int maxConcurrentBulkRequests) {
+    public BulkNodeClient maxConcurrentBulkRequests(int maxConcurrentBulkRequests) {
         this.maxConcurrentBulkRequests = maxConcurrentBulkRequests;
         return this;
     }
 
     @Override
-    public NodeClient maxVolumePerBulkRequest(ByteSizeValue maxVolume) {
+    public BulkNodeClient maxVolumePerBulkRequest(ByteSizeValue maxVolume) {
         this.maxVolume = maxVolume;
         return this;
     }
 
     @Override
-    public NodeClient maxRequestWait(TimeValue timeValue) {
+    public BulkNodeClient maxRequestWait(TimeValue timeValue) {
         // ignore, not implemented
         return this;
     }
 
     @Override
-    public NodeClient flushIngestInterval(TimeValue flushInterval) {
+    public BulkNodeClient flushIngestInterval(TimeValue flushInterval) {
         this.flushInterval = flushInterval;
         return this;
     }
 
     @Override
-    public NodeClient newClient(URI uri) {
+    public BulkNodeClient newClient(URI uri) {
         throw new UnsupportedOperationException();
     }
 
-    public NodeClient newClient(Client client) {
+    public BulkNodeClient newClient(Client client) {
         this.client = client;
         this.state = new State();
         BulkProcessor.Listener listener = new BulkProcessor.Listener() {
@@ -190,7 +190,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient putMapping(String index) {
+    public BulkNodeClient putMapping(String index) {
         if (client == null) {
             logger.warn("no client for put mapping");
             return this;
@@ -200,7 +200,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient deleteMapping(String index, String type) {
+    public BulkNodeClient deleteMapping(String index, String type) {
         if (client == null) {
             logger.warn("no client for delete mapping");
             return this;
@@ -210,7 +210,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient index(String index, String type, String id, String source) {
+    public BulkNodeClient index(String index, String type, String id, String source) {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -232,7 +232,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient bulkIndex(IndexRequest indexRequest) {
+    public BulkNodeClient bulkIndex(IndexRequest indexRequest) {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -254,7 +254,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient delete(String index, String type, String id) {
+    public BulkNodeClient delete(String index, String type, String id) {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -276,7 +276,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient bulkDelete(DeleteRequest deleteRequest) {
+    public BulkNodeClient bulkDelete(DeleteRequest deleteRequest) {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -298,7 +298,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient flushIngest() {
+    public BulkNodeClient flushIngest() {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -308,7 +308,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient waitForResponses(TimeValue maxWaitTime) throws InterruptedException {
+    public BulkNodeClient waitForResponses(TimeValue maxWaitTime) throws InterruptedException {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -317,7 +317,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient startBulk(String index) throws IOException {
+    public BulkNodeClient startBulk(String index) throws IOException {
         if (state == null) {
             return this;
         }
@@ -329,7 +329,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient stopBulk(String index) throws IOException {
+    public BulkNodeClient stopBulk(String index) throws IOException {
         if (state == null) {
             return this;
         }
@@ -341,13 +341,13 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient flush(String index) {
+    public BulkNodeClient flush(String index) {
         ClientHelper.flush(client, index);
         return this;
     }
 
     @Override
-    public NodeClient refresh(String index) {
+    public BulkNodeClient refresh(String index) {
         ClientHelper.refresh(client, index);
         return this;
     }
@@ -359,7 +359,7 @@ public class NodeClient implements Ingest {
 
 
     @Override
-    public NodeClient waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {
+    public BulkNodeClient waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {
         ClientHelper.waitForCluster(client, status, timeout);
         return this;
     }
@@ -391,7 +391,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient newIndex(String index) {
+    public BulkNodeClient newIndex(String index) {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
@@ -423,7 +423,7 @@ public class NodeClient implements Ingest {
     }
 
     @Override
-    public NodeClient deleteIndex(String index) {
+    public BulkNodeClient deleteIndex(String index) {
         if (closed) {
             throw new ElasticsearchIllegalStateException("client is closed");
         }
