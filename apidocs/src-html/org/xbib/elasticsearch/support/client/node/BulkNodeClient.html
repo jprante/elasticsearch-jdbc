@@ -42,9 +42,9 @@
 <span class="sourceLineNo">034</span>/**<a name="line.34"></a>
 <span class="sourceLineNo">035</span> * Node client support<a name="line.35"></a>
 <span class="sourceLineNo">036</span> */<a name="line.36"></a>
-<span class="sourceLineNo">037</span>public class NodeClient implements Ingest {<a name="line.37"></a>
+<span class="sourceLineNo">037</span>public class BulkNodeClient implements Ingest {<a name="line.37"></a>
 <span class="sourceLineNo">038</span><a name="line.38"></a>
-<span class="sourceLineNo">039</span>    private final static ESLogger logger = ESLoggerFactory.getLogger(NodeClient.class.getSimpleName());<a name="line.39"></a>
+<span class="sourceLineNo">039</span>    private final static ESLogger logger = ESLoggerFactory.getLogger(BulkNodeClient.class.getSimpleName());<a name="line.39"></a>
 <span class="sourceLineNo">040</span><a name="line.40"></a>
 <span class="sourceLineNo">041</span>    private int maxActionsPerBulkRequest = 100;<a name="line.41"></a>
 <span class="sourceLineNo">042</span><a name="line.42"></a>
@@ -69,53 +69,53 @@
 <span class="sourceLineNo">061</span>    private Throwable throwable;<a name="line.61"></a>
 <span class="sourceLineNo">062</span><a name="line.62"></a>
 <span class="sourceLineNo">063</span>    @Override<a name="line.63"></a>
-<span class="sourceLineNo">064</span>    public NodeClient shards(int shards) {<a name="line.64"></a>
+<span class="sourceLineNo">064</span>    public BulkNodeClient shards(int shards) {<a name="line.64"></a>
 <span class="sourceLineNo">065</span>        configHelper.setting("index.number_of_shards", shards);<a name="line.65"></a>
 <span class="sourceLineNo">066</span>        return this;<a name="line.66"></a>
 <span class="sourceLineNo">067</span>    }<a name="line.67"></a>
 <span class="sourceLineNo">068</span><a name="line.68"></a>
 <span class="sourceLineNo">069</span>    @Override<a name="line.69"></a>
-<span class="sourceLineNo">070</span>    public NodeClient replica(int replica) {<a name="line.70"></a>
+<span class="sourceLineNo">070</span>    public BulkNodeClient replica(int replica) {<a name="line.70"></a>
 <span class="sourceLineNo">071</span>        configHelper.setting("index.number_of_replica", replica);<a name="line.71"></a>
 <span class="sourceLineNo">072</span>        return this;<a name="line.72"></a>
 <span class="sourceLineNo">073</span>    }<a name="line.73"></a>
 <span class="sourceLineNo">074</span><a name="line.74"></a>
 <span class="sourceLineNo">075</span>    @Override<a name="line.75"></a>
-<span class="sourceLineNo">076</span>    public NodeClient maxActionsPerBulkRequest(int maxActionsPerBulkRequest) {<a name="line.76"></a>
+<span class="sourceLineNo">076</span>    public BulkNodeClient maxActionsPerBulkRequest(int maxActionsPerBulkRequest) {<a name="line.76"></a>
 <span class="sourceLineNo">077</span>        this.maxActionsPerBulkRequest = maxActionsPerBulkRequest;<a name="line.77"></a>
 <span class="sourceLineNo">078</span>        return this;<a name="line.78"></a>
 <span class="sourceLineNo">079</span>    }<a name="line.79"></a>
 <span class="sourceLineNo">080</span><a name="line.80"></a>
 <span class="sourceLineNo">081</span>    @Override<a name="line.81"></a>
-<span class="sourceLineNo">082</span>    public NodeClient maxConcurrentBulkRequests(int maxConcurrentBulkRequests) {<a name="line.82"></a>
+<span class="sourceLineNo">082</span>    public BulkNodeClient maxConcurrentBulkRequests(int maxConcurrentBulkRequests) {<a name="line.82"></a>
 <span class="sourceLineNo">083</span>        this.maxConcurrentBulkRequests = maxConcurrentBulkRequests;<a name="line.83"></a>
 <span class="sourceLineNo">084</span>        return this;<a name="line.84"></a>
 <span class="sourceLineNo">085</span>    }<a name="line.85"></a>
 <span class="sourceLineNo">086</span><a name="line.86"></a>
 <span class="sourceLineNo">087</span>    @Override<a name="line.87"></a>
-<span class="sourceLineNo">088</span>    public NodeClient maxVolumePerBulkRequest(ByteSizeValue maxVolume) {<a name="line.88"></a>
+<span class="sourceLineNo">088</span>    public BulkNodeClient maxVolumePerBulkRequest(ByteSizeValue maxVolume) {<a name="line.88"></a>
 <span class="sourceLineNo">089</span>        this.maxVolume = maxVolume;<a name="line.89"></a>
 <span class="sourceLineNo">090</span>        return this;<a name="line.90"></a>
 <span class="sourceLineNo">091</span>    }<a name="line.91"></a>
 <span class="sourceLineNo">092</span><a name="line.92"></a>
 <span class="sourceLineNo">093</span>    @Override<a name="line.93"></a>
-<span class="sourceLineNo">094</span>    public NodeClient maxRequestWait(TimeValue timeValue) {<a name="line.94"></a>
+<span class="sourceLineNo">094</span>    public BulkNodeClient maxRequestWait(TimeValue timeValue) {<a name="line.94"></a>
 <span class="sourceLineNo">095</span>        // ignore, not implemented<a name="line.95"></a>
 <span class="sourceLineNo">096</span>        return this;<a name="line.96"></a>
 <span class="sourceLineNo">097</span>    }<a name="line.97"></a>
 <span class="sourceLineNo">098</span><a name="line.98"></a>
 <span class="sourceLineNo">099</span>    @Override<a name="line.99"></a>
-<span class="sourceLineNo">100</span>    public NodeClient flushIngestInterval(TimeValue flushInterval) {<a name="line.100"></a>
+<span class="sourceLineNo">100</span>    public BulkNodeClient flushIngestInterval(TimeValue flushInterval) {<a name="line.100"></a>
 <span class="sourceLineNo">101</span>        this.flushInterval = flushInterval;<a name="line.101"></a>
 <span class="sourceLineNo">102</span>        return this;<a name="line.102"></a>
 <span class="sourceLineNo">103</span>    }<a name="line.103"></a>
 <span class="sourceLineNo">104</span><a name="line.104"></a>
 <span class="sourceLineNo">105</span>    @Override<a name="line.105"></a>
-<span class="sourceLineNo">106</span>    public NodeClient newClient(URI uri) {<a name="line.106"></a>
+<span class="sourceLineNo">106</span>    public BulkNodeClient newClient(URI uri) {<a name="line.106"></a>
 <span class="sourceLineNo">107</span>        throw new UnsupportedOperationException();<a name="line.107"></a>
 <span class="sourceLineNo">108</span>    }<a name="line.108"></a>
 <span class="sourceLineNo">109</span><a name="line.109"></a>
-<span class="sourceLineNo">110</span>    public NodeClient newClient(Client client) {<a name="line.110"></a>
+<span class="sourceLineNo">110</span>    public BulkNodeClient newClient(Client client) {<a name="line.110"></a>
 <span class="sourceLineNo">111</span>        this.client = client;<a name="line.111"></a>
 <span class="sourceLineNo">112</span>        this.state = new State();<a name="line.112"></a>
 <span class="sourceLineNo">113</span>        BulkProcessor.Listener listener = new BulkProcessor.Listener() {<a name="line.113"></a>
@@ -198,7 +198,7 @@
 <span class="sourceLineNo">190</span>    }<a name="line.190"></a>
 <span class="sourceLineNo">191</span><a name="line.191"></a>
 <span class="sourceLineNo">192</span>    @Override<a name="line.192"></a>
-<span class="sourceLineNo">193</span>    public NodeClient putMapping(String index) {<a name="line.193"></a>
+<span class="sourceLineNo">193</span>    public BulkNodeClient putMapping(String index) {<a name="line.193"></a>
 <span class="sourceLineNo">194</span>        if (client == null) {<a name="line.194"></a>
 <span class="sourceLineNo">195</span>            logger.warn("no client for put mapping");<a name="line.195"></a>
 <span class="sourceLineNo">196</span>            return this;<a name="line.196"></a>
@@ -208,7 +208,7 @@
 <span class="sourceLineNo">200</span>    }<a name="line.200"></a>
 <span class="sourceLineNo">201</span><a name="line.201"></a>
 <span class="sourceLineNo">202</span>    @Override<a name="line.202"></a>
-<span class="sourceLineNo">203</span>    public NodeClient deleteMapping(String index, String type) {<a name="line.203"></a>
+<span class="sourceLineNo">203</span>    public BulkNodeClient deleteMapping(String index, String type) {<a name="line.203"></a>
 <span class="sourceLineNo">204</span>        if (client == null) {<a name="line.204"></a>
 <span class="sourceLineNo">205</span>            logger.warn("no client for delete mapping");<a name="line.205"></a>
 <span class="sourceLineNo">206</span>            return this;<a name="line.206"></a>
@@ -218,7 +218,7 @@
 <span class="sourceLineNo">210</span>    }<a name="line.210"></a>
 <span class="sourceLineNo">211</span><a name="line.211"></a>
 <span class="sourceLineNo">212</span>    @Override<a name="line.212"></a>
-<span class="sourceLineNo">213</span>    public NodeClient index(String index, String type, String id, String source) {<a name="line.213"></a>
+<span class="sourceLineNo">213</span>    public BulkNodeClient index(String index, String type, String id, String source) {<a name="line.213"></a>
 <span class="sourceLineNo">214</span>        if (closed) {<a name="line.214"></a>
 <span class="sourceLineNo">215</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.215"></a>
 <span class="sourceLineNo">216</span>        }<a name="line.216"></a>
@@ -240,7 +240,7 @@
 <span class="sourceLineNo">232</span>    }<a name="line.232"></a>
 <span class="sourceLineNo">233</span><a name="line.233"></a>
 <span class="sourceLineNo">234</span>    @Override<a name="line.234"></a>
-<span class="sourceLineNo">235</span>    public NodeClient bulkIndex(IndexRequest indexRequest) {<a name="line.235"></a>
+<span class="sourceLineNo">235</span>    public BulkNodeClient bulkIndex(IndexRequest indexRequest) {<a name="line.235"></a>
 <span class="sourceLineNo">236</span>        if (closed) {<a name="line.236"></a>
 <span class="sourceLineNo">237</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.237"></a>
 <span class="sourceLineNo">238</span>        }<a name="line.238"></a>
@@ -262,7 +262,7 @@
 <span class="sourceLineNo">254</span>    }<a name="line.254"></a>
 <span class="sourceLineNo">255</span><a name="line.255"></a>
 <span class="sourceLineNo">256</span>    @Override<a name="line.256"></a>
-<span class="sourceLineNo">257</span>    public NodeClient delete(String index, String type, String id) {<a name="line.257"></a>
+<span class="sourceLineNo">257</span>    public BulkNodeClient delete(String index, String type, String id) {<a name="line.257"></a>
 <span class="sourceLineNo">258</span>        if (closed) {<a name="line.258"></a>
 <span class="sourceLineNo">259</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.259"></a>
 <span class="sourceLineNo">260</span>        }<a name="line.260"></a>
@@ -284,7 +284,7 @@
 <span class="sourceLineNo">276</span>    }<a name="line.276"></a>
 <span class="sourceLineNo">277</span><a name="line.277"></a>
 <span class="sourceLineNo">278</span>    @Override<a name="line.278"></a>
-<span class="sourceLineNo">279</span>    public NodeClient bulkDelete(DeleteRequest deleteRequest) {<a name="line.279"></a>
+<span class="sourceLineNo">279</span>    public BulkNodeClient bulkDelete(DeleteRequest deleteRequest) {<a name="line.279"></a>
 <span class="sourceLineNo">280</span>        if (closed) {<a name="line.280"></a>
 <span class="sourceLineNo">281</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.281"></a>
 <span class="sourceLineNo">282</span>        }<a name="line.282"></a>
@@ -306,7 +306,7 @@
 <span class="sourceLineNo">298</span>    }<a name="line.298"></a>
 <span class="sourceLineNo">299</span><a name="line.299"></a>
 <span class="sourceLineNo">300</span>    @Override<a name="line.300"></a>
-<span class="sourceLineNo">301</span>    public NodeClient flushIngest() {<a name="line.301"></a>
+<span class="sourceLineNo">301</span>    public BulkNodeClient flushIngest() {<a name="line.301"></a>
 <span class="sourceLineNo">302</span>        if (closed) {<a name="line.302"></a>
 <span class="sourceLineNo">303</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.303"></a>
 <span class="sourceLineNo">304</span>        }<a name="line.304"></a>
@@ -316,7 +316,7 @@
 <span class="sourceLineNo">308</span>    }<a name="line.308"></a>
 <span class="sourceLineNo">309</span><a name="line.309"></a>
 <span class="sourceLineNo">310</span>    @Override<a name="line.310"></a>
-<span class="sourceLineNo">311</span>    public NodeClient waitForResponses(TimeValue maxWaitTime) throws InterruptedException {<a name="line.311"></a>
+<span class="sourceLineNo">311</span>    public BulkNodeClient waitForResponses(TimeValue maxWaitTime) throws InterruptedException {<a name="line.311"></a>
 <span class="sourceLineNo">312</span>        if (closed) {<a name="line.312"></a>
 <span class="sourceLineNo">313</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.313"></a>
 <span class="sourceLineNo">314</span>        }<a name="line.314"></a>
@@ -325,7 +325,7 @@
 <span class="sourceLineNo">317</span>    }<a name="line.317"></a>
 <span class="sourceLineNo">318</span><a name="line.318"></a>
 <span class="sourceLineNo">319</span>    @Override<a name="line.319"></a>
-<span class="sourceLineNo">320</span>    public NodeClient startBulk(String index) throws IOException {<a name="line.320"></a>
+<span class="sourceLineNo">320</span>    public BulkNodeClient startBulk(String index) throws IOException {<a name="line.320"></a>
 <span class="sourceLineNo">321</span>        if (state == null) {<a name="line.321"></a>
 <span class="sourceLineNo">322</span>            return this;<a name="line.322"></a>
 <span class="sourceLineNo">323</span>        }<a name="line.323"></a>
@@ -337,7 +337,7 @@
 <span class="sourceLineNo">329</span>    }<a name="line.329"></a>
 <span class="sourceLineNo">330</span><a name="line.330"></a>
 <span class="sourceLineNo">331</span>    @Override<a name="line.331"></a>
-<span class="sourceLineNo">332</span>    public NodeClient stopBulk(String index) throws IOException {<a name="line.332"></a>
+<span class="sourceLineNo">332</span>    public BulkNodeClient stopBulk(String index) throws IOException {<a name="line.332"></a>
 <span class="sourceLineNo">333</span>        if (state == null) {<a name="line.333"></a>
 <span class="sourceLineNo">334</span>            return this;<a name="line.334"></a>
 <span class="sourceLineNo">335</span>        }<a name="line.335"></a>
@@ -349,13 +349,13 @@
 <span class="sourceLineNo">341</span>    }<a name="line.341"></a>
 <span class="sourceLineNo">342</span><a name="line.342"></a>
 <span class="sourceLineNo">343</span>    @Override<a name="line.343"></a>
-<span class="sourceLineNo">344</span>    public NodeClient flush(String index) {<a name="line.344"></a>
+<span class="sourceLineNo">344</span>    public BulkNodeClient flush(String index) {<a name="line.344"></a>
 <span class="sourceLineNo">345</span>        ClientHelper.flush(client, index);<a name="line.345"></a>
 <span class="sourceLineNo">346</span>        return this;<a name="line.346"></a>
 <span class="sourceLineNo">347</span>    }<a name="line.347"></a>
 <span class="sourceLineNo">348</span><a name="line.348"></a>
 <span class="sourceLineNo">349</span>    @Override<a name="line.349"></a>
-<span class="sourceLineNo">350</span>    public NodeClient refresh(String index) {<a name="line.350"></a>
+<span class="sourceLineNo">350</span>    public BulkNodeClient refresh(String index) {<a name="line.350"></a>
 <span class="sourceLineNo">351</span>        ClientHelper.refresh(client, index);<a name="line.351"></a>
 <span class="sourceLineNo">352</span>        return this;<a name="line.352"></a>
 <span class="sourceLineNo">353</span>    }<a name="line.353"></a>
@@ -367,7 +367,7 @@
 <span class="sourceLineNo">359</span><a name="line.359"></a>
 <span class="sourceLineNo">360</span><a name="line.360"></a>
 <span class="sourceLineNo">361</span>    @Override<a name="line.361"></a>
-<span class="sourceLineNo">362</span>    public NodeClient waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {<a name="line.362"></a>
+<span class="sourceLineNo">362</span>    public BulkNodeClient waitForCluster(ClusterHealthStatus status, TimeValue timeout) throws IOException {<a name="line.362"></a>
 <span class="sourceLineNo">363</span>        ClientHelper.waitForCluster(client, status, timeout);<a name="line.363"></a>
 <span class="sourceLineNo">364</span>        return this;<a name="line.364"></a>
 <span class="sourceLineNo">365</span>    }<a name="line.365"></a>
@@ -399,7 +399,7 @@
 <span class="sourceLineNo">391</span>    }<a name="line.391"></a>
 <span class="sourceLineNo">392</span><a name="line.392"></a>
 <span class="sourceLineNo">393</span>    @Override<a name="line.393"></a>
-<span class="sourceLineNo">394</span>    public NodeClient newIndex(String index) {<a name="line.394"></a>
+<span class="sourceLineNo">394</span>    public BulkNodeClient newIndex(String index) {<a name="line.394"></a>
 <span class="sourceLineNo">395</span>        if (closed) {<a name="line.395"></a>
 <span class="sourceLineNo">396</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.396"></a>
 <span class="sourceLineNo">397</span>        }<a name="line.397"></a>
@@ -431,7 +431,7 @@
 <span class="sourceLineNo">423</span>    }<a name="line.423"></a>
 <span class="sourceLineNo">424</span><a name="line.424"></a>
 <span class="sourceLineNo">425</span>    @Override<a name="line.425"></a>
-<span class="sourceLineNo">426</span>    public NodeClient deleteIndex(String index) {<a name="line.426"></a>
+<span class="sourceLineNo">426</span>    public BulkNodeClient deleteIndex(String index) {<a name="line.426"></a>
 <span class="sourceLineNo">427</span>        if (closed) {<a name="line.427"></a>
 <span class="sourceLineNo">428</span>            throw new ElasticsearchIllegalStateException("client is closed");<a name="line.428"></a>
 <span class="sourceLineNo">429</span>        }<a name="line.429"></a>

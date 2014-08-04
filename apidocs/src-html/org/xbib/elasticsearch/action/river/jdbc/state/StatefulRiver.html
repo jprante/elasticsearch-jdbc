@@ -10,10 +10,13 @@
 <span class="sourceLineNo">002</span><a name="line.2"></a>
 <span class="sourceLineNo">003</span>import org.elasticsearch.river.River;<a name="line.3"></a>
 <span class="sourceLineNo">004</span><a name="line.4"></a>
-<span class="sourceLineNo">005</span>public interface StatefulRiver extends River {<a name="line.5"></a>
-<span class="sourceLineNo">006</span><a name="line.6"></a>
-<span class="sourceLineNo">007</span>    RiverState getRiverState();<a name="line.7"></a>
-<span class="sourceLineNo">008</span>}<a name="line.8"></a>
+<span class="sourceLineNo">005</span>/**<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * A stateful river is an extension of a river with a river state<a name="line.6"></a>
+<span class="sourceLineNo">007</span> */<a name="line.7"></a>
+<span class="sourceLineNo">008</span>public interface StatefulRiver extends River {<a name="line.8"></a>
+<span class="sourceLineNo">009</span><a name="line.9"></a>
+<span class="sourceLineNo">010</span>    RiverState getRiverState();<a name="line.10"></a>
+<span class="sourceLineNo">011</span>}<a name="line.11"></a>
 
 
 
