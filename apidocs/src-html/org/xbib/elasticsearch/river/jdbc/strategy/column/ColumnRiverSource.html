@@ -114,7 +114,7 @@
 <span class="sourceLineNo">106</span>            KeyValueStreamListener&lt;Object, Object&gt; listener =<a name="line.106"></a>
 <span class="sourceLineNo">107</span>                    new ColumnKeyValueStreamListener&lt;Object, Object&gt;(opInfo.opType)<a name="line.107"></a>
 <span class="sourceLineNo">108</span>                            .output(context.getRiverMouth());<a name="line.108"></a>
-<span class="sourceLineNo">109</span>            merge(result, listener);<a name="line.109"></a>
+<span class="sourceLineNo">109</span>            merge(command, result, listener);<a name="line.109"></a>
 <span class="sourceLineNo">110</span>        } catch (Exception e) {<a name="line.110"></a>
 <span class="sourceLineNo">111</span>            throw new IOException(e);<a name="line.111"></a>
 <span class="sourceLineNo">112</span>        } finally {<a name="line.112"></a>

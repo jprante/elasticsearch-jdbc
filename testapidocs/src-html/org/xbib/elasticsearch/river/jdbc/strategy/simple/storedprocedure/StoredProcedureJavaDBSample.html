@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.river.jdbc.strategy.simple.storedprocedure;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import java.sql.Connection;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import java.sql.DriverManager;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import java.sql.PreparedStatement;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import java.sql.ResultSet;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import java.sql.SQLException;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import java.sql.Statement;<a name="line.8"></a>
+<span class="sourceLineNo">009</span><a name="line.9"></a>
+<span class="sourceLineNo">010</span>public class StoredProcedureJavaDBSample {<a name="line.10"></a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span>    public static void showSuppliers(ResultSet[] rs)<a name="line.12"></a>
+<span class="sourceLineNo">013</span>            throws SQLException {<a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14"></a>
+<span class="sourceLineNo">015</span>        Connection con = DriverManager.getConnection("jdbc:default:connection");<a name="line.15"></a>
+<span class="sourceLineNo">016</span>        Statement stmt = null;<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>        String query =<a name="line.18"></a>
+<span class="sourceLineNo">019</span>                "select SUPPLIERS.SUP_NAME, " +<a name="line.19"></a>
+<span class="sourceLineNo">020</span>                        "COFFEES.COF_NAME " +<a name="line.20"></a>
+<span class="sourceLineNo">021</span>                        "from SUPPLIERS, COFFEES " +<a name="line.21"></a>
+<span class="sourceLineNo">022</span>                        "where SUPPLIERS.SUP_ID = " +<a name="line.22"></a>
+<span class="sourceLineNo">023</span>                        "COFFEES.SUP_ID " +<a name="line.23"></a>
+<span class="sourceLineNo">024</span>                        "order by SUP_NAME";<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>        stmt = con.createStatement();<a name="line.26"></a>
+<span class="sourceLineNo">027</span>        rs[0] = stmt.executeQuery(query);<a name="line.27"></a>
+<span class="sourceLineNo">028</span>    }<a name="line.28"></a>
+<span class="sourceLineNo">029</span><a name="line.29"></a>
+<span class="sourceLineNo">030</span>    public static void getSupplierOfCoffee(String coffeeName, String[] supplierName)<a name="line.30"></a>
+<span class="sourceLineNo">031</span>            throws SQLException {<a name="line.31"></a>
+<span class="sourceLineNo">032</span><a name="line.32"></a>
+<span class="sourceLineNo">033</span>        Connection con = DriverManager.getConnection("jdbc:default:connection");<a name="line.33"></a>
+<span class="sourceLineNo">034</span>        PreparedStatement pstmt = null;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>        ResultSet rs = null;<a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span>        String query =<a name="line.37"></a>
+<span class="sourceLineNo">038</span>                "select SUPPLIERS.SUP_NAME " +<a name="line.38"></a>
+<span class="sourceLineNo">039</span>                        "from SUPPLIERS, COFFEES " +<a name="line.39"></a>
+<span class="sourceLineNo">040</span>                        "where " +<a name="line.40"></a>
+<span class="sourceLineNo">041</span>                        "SUPPLIERS.SUP_ID = COFFEES.SUP_ID " +<a name="line.41"></a>
+<span class="sourceLineNo">042</span>                        "and ? = COFFEES.COF_NAME";<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>        pstmt = con.prepareStatement(query);<a name="line.44"></a>
+<span class="sourceLineNo">045</span>        pstmt.setString(1, coffeeName);<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        rs = pstmt.executeQuery();<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>        if (rs.next()) {<a name="line.48"></a>
+<span class="sourceLineNo">049</span>            supplierName[0] = rs.getString(1);<a name="line.49"></a>
+<span class="sourceLineNo">050</span>        } else {<a name="line.50"></a>
+<span class="sourceLineNo">051</span>            supplierName[0] = null;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        }<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>}<a name="line.55"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

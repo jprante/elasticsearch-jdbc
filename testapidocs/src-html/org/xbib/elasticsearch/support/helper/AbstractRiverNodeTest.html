@@ -161,157 +161,158 @@
 <span class="sourceLineNo">153</span>    protected void createRiver(String resource) {<a name="line.153"></a>
 <span class="sourceLineNo">154</span>        try {<a name="line.154"></a>
 <span class="sourceLineNo">155</span>            waitForYellow("1");<a name="line.155"></a>
-<span class="sourceLineNo">156</span>            Map&lt;String, Object&gt; map = XContentHelper.convertToMap(Streams.copyToByteArray(getClass().getResourceAsStream(resource)), false).v2();<a name="line.156"></a>
-<span class="sourceLineNo">157</span>            XContentBuilder builder = jsonBuilder()<a name="line.157"></a>
-<span class="sourceLineNo">158</span>                    .startObject()<a name="line.158"></a>
-<span class="sourceLineNo">159</span>                    .field("type", "jdbc")<a name="line.159"></a>
-<span class="sourceLineNo">160</span>                    .field("jdbc", map.get("jdbc"))<a name="line.160"></a>
-<span class="sourceLineNo">161</span>                    .endObject();<a name="line.161"></a>
-<span class="sourceLineNo">162</span>            logger.debug("river spec = {}", builder.string());<a name="line.162"></a>
-<span class="sourceLineNo">163</span>            IndexRequest indexRequest = Requests.indexRequest("_river").type("my_jdbc_river").id("_meta")<a name="line.163"></a>
-<span class="sourceLineNo">164</span>                    .source(builder.string());<a name="line.164"></a>
-<span class="sourceLineNo">165</span>            client("1").index(indexRequest).actionGet();<a name="line.165"></a>
-<span class="sourceLineNo">166</span>            client("1").admin().indices().prepareRefresh("_river").execute().actionGet();<a name="line.166"></a>
-<span class="sourceLineNo">167</span>            logger.info("river is created");<a name="line.167"></a>
-<span class="sourceLineNo">168</span>            RiverHelper.waitForRiverEnabled(client("1").admin().cluster(), "my_jdbc_river", "jdbc", 15);<a name="line.168"></a>
-<span class="sourceLineNo">169</span>            logger.info("river is enabled");<a name="line.169"></a>
-<span class="sourceLineNo">170</span>            RiverHelper.waitForActiveRiver(client("1").admin().cluster(), "my_jdbc_river", "jdbc",  15);<a name="line.170"></a>
-<span class="sourceLineNo">171</span>            logger.info("river is active");<a name="line.171"></a>
-<span class="sourceLineNo">172</span>        } catch (InterruptedException e) {<a name="line.172"></a>
-<span class="sourceLineNo">173</span>            logger.error(e.getMessage());<a name="line.173"></a>
-<span class="sourceLineNo">174</span>        } catch (IOException e) {<a name="line.174"></a>
-<span class="sourceLineNo">175</span>            logger.error(e.getMessage());<a name="line.175"></a>
-<span class="sourceLineNo">176</span>        }<a name="line.176"></a>
-<span class="sourceLineNo">177</span>    }<a name="line.177"></a>
-<span class="sourceLineNo">178</span><a name="line.178"></a>
-<span class="sourceLineNo">179</span>    public void waitForInactiveRiver() {<a name="line.179"></a>
-<span class="sourceLineNo">180</span>        try {<a name="line.180"></a>
-<span class="sourceLineNo">181</span>            RiverHelper.waitForInactiveRiver(client("1").admin().cluster(), "my_jdbc_river", "jdbc", 15);<a name="line.181"></a>
-<span class="sourceLineNo">182</span>        } catch (InterruptedException e) {<a name="line.182"></a>
-<span class="sourceLineNo">183</span>            logger.error(e.getMessage());<a name="line.183"></a>
-<span class="sourceLineNo">184</span>        } catch (IOException e) {<a name="line.184"></a>
-<span class="sourceLineNo">185</span>            logger.error(e.getMessage());<a name="line.185"></a>
-<span class="sourceLineNo">186</span>        }<a name="line.186"></a>
-<span class="sourceLineNo">187</span>        logger.info("river is inactive");<a name="line.187"></a>
-<span class="sourceLineNo">188</span><a name="line.188"></a>
-<span class="sourceLineNo">189</span>    }<a name="line.189"></a>
-<span class="sourceLineNo">190</span><a name="line.190"></a>
-<span class="sourceLineNo">191</span>    protected RiverSettings riverSettings(String resource)<a name="line.191"></a>
-<span class="sourceLineNo">192</span>            throws IOException {<a name="line.192"></a>
-<span class="sourceLineNo">193</span>        InputStream in = getClass().getResourceAsStream(resource);<a name="line.193"></a>
-<span class="sourceLineNo">194</span>        return new RiverSettings(ImmutableSettings.settingsBuilder().build(),<a name="line.194"></a>
-<span class="sourceLineNo">195</span>                XContentHelper.convertToMap(Streams.copyToByteArray(in), false).v2());<a name="line.195"></a>
-<span class="sourceLineNo">196</span>    }<a name="line.196"></a>
-<span class="sourceLineNo">197</span><a name="line.197"></a>
-<span class="sourceLineNo">198</span>    protected void createRandomProducts(String sql, int size)<a name="line.198"></a>
-<span class="sourceLineNo">199</span>            throws SQLException {<a name="line.199"></a>
-<span class="sourceLineNo">200</span>        Connection connection = source.getConnectionForWriting();<a name="line.200"></a>
-<span class="sourceLineNo">201</span>        for (int i = 0; i &lt; size; i++) {<a name="line.201"></a>
-<span class="sourceLineNo">202</span>            long amount = Math.round(Math.random() * 1000);<a name="line.202"></a>
-<span class="sourceLineNo">203</span>            double price = (Math.random() * 10000) / 100.00;<a name="line.203"></a>
-<span class="sourceLineNo">204</span>            add(connection, sql, UUID.randomUUID().toString().substring(0, 32), amount, price);<a name="line.204"></a>
-<span class="sourceLineNo">205</span>        }<a name="line.205"></a>
-<span class="sourceLineNo">206</span>        if (!connection.getAutoCommit()) {<a name="line.206"></a>
-<span class="sourceLineNo">207</span>            connection.commit();<a name="line.207"></a>
-<span class="sourceLineNo">208</span>        }<a name="line.208"></a>
-<span class="sourceLineNo">209</span>        source.closeWriting();<a name="line.209"></a>
-<span class="sourceLineNo">210</span>    }<a name="line.210"></a>
-<span class="sourceLineNo">211</span><a name="line.211"></a>
-<span class="sourceLineNo">212</span>    protected void createTimestampedLogs(String sql, int size, String locale, String timezone)<a name="line.212"></a>
-<span class="sourceLineNo">213</span>            throws SQLException {<a name="line.213"></a>
-<span class="sourceLineNo">214</span>        Connection connection = source.getConnectionForWriting();<a name="line.214"></a>
-<span class="sourceLineNo">215</span>        Locale l = LocaleUtil.toLocale(locale);<a name="line.215"></a>
-<span class="sourceLineNo">216</span>        TimeZone t = TimeZone.getTimeZone(timezone);<a name="line.216"></a>
-<span class="sourceLineNo">217</span>        source.setTimeZone(t).setLocale(l);<a name="line.217"></a>
-<span class="sourceLineNo">218</span>        Calendar cal = Calendar.getInstance(t, l);<a name="line.218"></a>
-<span class="sourceLineNo">219</span>        // half of log in the past, half of it in the future<a name="line.219"></a>
-<span class="sourceLineNo">220</span>        cal.add(Calendar.HOUR, -(size/2));<a name="line.220"></a>
-<span class="sourceLineNo">221</span>        for (int i = 0; i &lt; size; i++) {<a name="line.221"></a>
-<span class="sourceLineNo">222</span>            Timestamp modified = new Timestamp(cal.getTimeInMillis());<a name="line.222"></a>
-<span class="sourceLineNo">223</span>            String message = "Hello world";<a name="line.223"></a>
-<span class="sourceLineNo">224</span>            add(connection, sql, modified, message);<a name="line.224"></a>
-<span class="sourceLineNo">225</span>            cal.add(Calendar.HOUR, 1);<a name="line.225"></a>
-<span class="sourceLineNo">226</span>        }<a name="line.226"></a>
-<span class="sourceLineNo">227</span>        if (!connection.getAutoCommit()) {<a name="line.227"></a>
-<span class="sourceLineNo">228</span>            connection.commit();<a name="line.228"></a>
-<span class="sourceLineNo">229</span>        }<a name="line.229"></a>
-<span class="sourceLineNo">230</span>        source.closeWriting();<a name="line.230"></a>
-<span class="sourceLineNo">231</span>    }<a name="line.231"></a>
-<span class="sourceLineNo">232</span><a name="line.232"></a>
-<span class="sourceLineNo">233</span>    private void add(Connection connection, String sql, final String name, final long amount, final double price)<a name="line.233"></a>
-<span class="sourceLineNo">234</span>            throws SQLException {<a name="line.234"></a>
-<span class="sourceLineNo">235</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.235"></a>
-<span class="sourceLineNo">236</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {{<a name="line.236"></a>
-<span class="sourceLineNo">237</span>            add(name);<a name="line.237"></a>
-<span class="sourceLineNo">238</span>            add(amount);<a name="line.238"></a>
-<span class="sourceLineNo">239</span>            add(price);<a name="line.239"></a>
-<span class="sourceLineNo">240</span>        }};<a name="line.240"></a>
-<span class="sourceLineNo">241</span>        source.bind(stmt, params);<a name="line.241"></a>
-<span class="sourceLineNo">242</span>        stmt.execute();<a name="line.242"></a>
-<span class="sourceLineNo">243</span>    }<a name="line.243"></a>
-<span class="sourceLineNo">244</span><a name="line.244"></a>
-<span class="sourceLineNo">245</span>    private void add(Connection connection, String sql, final Timestamp ts, final String message)<a name="line.245"></a>
-<span class="sourceLineNo">246</span>            throws SQLException {<a name="line.246"></a>
-<span class="sourceLineNo">247</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.247"></a>
-<span class="sourceLineNo">248</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {{<a name="line.248"></a>
-<span class="sourceLineNo">249</span>            add(ts);<a name="line.249"></a>
-<span class="sourceLineNo">250</span>            add(message);<a name="line.250"></a>
-<span class="sourceLineNo">251</span>        }};<a name="line.251"></a>
-<span class="sourceLineNo">252</span>        source.bind(stmt, params);<a name="line.252"></a>
-<span class="sourceLineNo">253</span>        stmt.execute();<a name="line.253"></a>
-<span class="sourceLineNo">254</span>    }<a name="line.254"></a>
-<span class="sourceLineNo">255</span><a name="line.255"></a>
-<span class="sourceLineNo">256</span>    protected void createRandomProductsJob(String sql, int size)<a name="line.256"></a>
-<span class="sourceLineNo">257</span>            throws SQLException {<a name="line.257"></a>
-<span class="sourceLineNo">258</span>        Connection connection = source.getConnectionForWriting();<a name="line.258"></a>
-<span class="sourceLineNo">259</span>        for (int i = 0; i &lt; size; i++) {<a name="line.259"></a>
-<span class="sourceLineNo">260</span>            long amount = Math.round(Math.random() * 1000);<a name="line.260"></a>
-<span class="sourceLineNo">261</span>            double price = (Math.random() * 10000) / 100.00;<a name="line.261"></a>
-<span class="sourceLineNo">262</span>            add(connection, sql, "1", UUID.randomUUID().toString().substring(0, 32), amount, price);<a name="line.262"></a>
-<span class="sourceLineNo">263</span>        }<a name="line.263"></a>
-<span class="sourceLineNo">264</span>        if (!connection.getAutoCommit()) {<a name="line.264"></a>
-<span class="sourceLineNo">265</span>            connection.commit();<a name="line.265"></a>
-<span class="sourceLineNo">266</span>        }<a name="line.266"></a>
-<span class="sourceLineNo">267</span>        source.closeWriting();<a name="line.267"></a>
-<span class="sourceLineNo">268</span>    }<a name="line.268"></a>
-<span class="sourceLineNo">269</span><a name="line.269"></a>
-<span class="sourceLineNo">270</span>    private void add(Connection connection, String sql, final String job, final String name, final long amount, final double price)<a name="line.270"></a>
-<span class="sourceLineNo">271</span>            throws SQLException {<a name="line.271"></a>
-<span class="sourceLineNo">272</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.272"></a>
-<span class="sourceLineNo">273</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {<a name="line.273"></a>
-<span class="sourceLineNo">274</span>            {<a name="line.274"></a>
-<span class="sourceLineNo">275</span>                add(job);<a name="line.275"></a>
-<span class="sourceLineNo">276</span>                add(name);<a name="line.276"></a>
-<span class="sourceLineNo">277</span>                add(amount);<a name="line.277"></a>
-<span class="sourceLineNo">278</span>                add(price);<a name="line.278"></a>
-<span class="sourceLineNo">279</span>            }<a name="line.279"></a>
-<span class="sourceLineNo">280</span>        };<a name="line.280"></a>
-<span class="sourceLineNo">281</span>        source.bind(stmt, params);<a name="line.281"></a>
-<span class="sourceLineNo">282</span>        stmt.execute();<a name="line.282"></a>
-<span class="sourceLineNo">283</span>    }<a name="line.283"></a>
-<span class="sourceLineNo">284</span><a name="line.284"></a>
-<span class="sourceLineNo">285</span>    private void sqlScript(Connection connection, String resourceName) throws Exception {<a name="line.285"></a>
-<span class="sourceLineNo">286</span>        InputStream in = getClass().getResourceAsStream(resourceName);<a name="line.286"></a>
-<span class="sourceLineNo">287</span>        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));<a name="line.287"></a>
-<span class="sourceLineNo">288</span>        String sql;<a name="line.288"></a>
-<span class="sourceLineNo">289</span>        while ((sql = br.readLine()) != null) {<a name="line.289"></a>
-<span class="sourceLineNo">290</span><a name="line.290"></a>
-<span class="sourceLineNo">291</span>            try {<a name="line.291"></a>
-<span class="sourceLineNo">292</span>                logger.trace("executing {}", sql);<a name="line.292"></a>
-<span class="sourceLineNo">293</span>                Statement p = connection.createStatement();<a name="line.293"></a>
-<span class="sourceLineNo">294</span>                p.execute(sql);<a name="line.294"></a>
-<span class="sourceLineNo">295</span>                p.close();<a name="line.295"></a>
-<span class="sourceLineNo">296</span>            } catch (SQLException e) {<a name="line.296"></a>
-<span class="sourceLineNo">297</span>                // ignore<a name="line.297"></a>
-<span class="sourceLineNo">298</span>                logger.error(sql + " failed. Reason: " + e.getMessage());<a name="line.298"></a>
-<span class="sourceLineNo">299</span>            } finally {<a name="line.299"></a>
-<span class="sourceLineNo">300</span>                connection.commit();<a name="line.300"></a>
-<span class="sourceLineNo">301</span>            }<a name="line.301"></a>
-<span class="sourceLineNo">302</span>        }<a name="line.302"></a>
-<span class="sourceLineNo">303</span>        br.close();<a name="line.303"></a>
-<span class="sourceLineNo">304</span>    }<a name="line.304"></a>
-<span class="sourceLineNo">305</span><a name="line.305"></a>
-<span class="sourceLineNo">306</span>}<a name="line.306"></a>
+<span class="sourceLineNo">156</span>            byte[] b = Streams.copyToByteArray(getClass().getResourceAsStream(resource));<a name="line.156"></a>
+<span class="sourceLineNo">157</span>            Map&lt;String, Object&gt; map = XContentHelper.convertToMap(b, false).v2();<a name="line.157"></a>
+<span class="sourceLineNo">158</span>            XContentBuilder builder = jsonBuilder()<a name="line.158"></a>
+<span class="sourceLineNo">159</span>                    .startObject()<a name="line.159"></a>
+<span class="sourceLineNo">160</span>                    .field("type", "jdbc")<a name="line.160"></a>
+<span class="sourceLineNo">161</span>                    .field("jdbc", map.get("jdbc"))<a name="line.161"></a>
+<span class="sourceLineNo">162</span>                    .endObject();<a name="line.162"></a>
+<span class="sourceLineNo">163</span>            logger.debug("river spec = {}", builder.string());<a name="line.163"></a>
+<span class="sourceLineNo">164</span>            IndexRequest indexRequest = Requests.indexRequest("_river").type("my_jdbc_river").id("_meta")<a name="line.164"></a>
+<span class="sourceLineNo">165</span>                    .source(builder.string());<a name="line.165"></a>
+<span class="sourceLineNo">166</span>            client("1").index(indexRequest).actionGet();<a name="line.166"></a>
+<span class="sourceLineNo">167</span>            client("1").admin().indices().prepareRefresh("_river").execute().actionGet();<a name="line.167"></a>
+<span class="sourceLineNo">168</span>            logger.info("river is created");<a name="line.168"></a>
+<span class="sourceLineNo">169</span>            RiverHelper.waitForRiverEnabled(client("1").admin().cluster(), "my_jdbc_river", "jdbc", 15);<a name="line.169"></a>
+<span class="sourceLineNo">170</span>            logger.info("river is enabled");<a name="line.170"></a>
+<span class="sourceLineNo">171</span>            RiverHelper.waitForActiveRiver(client("1").admin().cluster(), "my_jdbc_river", "jdbc",  15);<a name="line.171"></a>
+<span class="sourceLineNo">172</span>            logger.info("river is active");<a name="line.172"></a>
+<span class="sourceLineNo">173</span>        } catch (InterruptedException e) {<a name="line.173"></a>
+<span class="sourceLineNo">174</span>            logger.error(e.getMessage());<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        } catch (IOException e) {<a name="line.175"></a>
+<span class="sourceLineNo">176</span>            logger.error(e.getMessage());<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        }<a name="line.177"></a>
+<span class="sourceLineNo">178</span>    }<a name="line.178"></a>
+<span class="sourceLineNo">179</span><a name="line.179"></a>
+<span class="sourceLineNo">180</span>    public void waitForInactiveRiver() {<a name="line.180"></a>
+<span class="sourceLineNo">181</span>        try {<a name="line.181"></a>
+<span class="sourceLineNo">182</span>            RiverHelper.waitForInactiveRiver(client("1").admin().cluster(), "my_jdbc_river", "jdbc", 15);<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        } catch (InterruptedException e) {<a name="line.183"></a>
+<span class="sourceLineNo">184</span>            logger.error(e.getMessage());<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        } catch (IOException e) {<a name="line.185"></a>
+<span class="sourceLineNo">186</span>            logger.error(e.getMessage());<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        }<a name="line.187"></a>
+<span class="sourceLineNo">188</span>        logger.info("river is inactive");<a name="line.188"></a>
+<span class="sourceLineNo">189</span><a name="line.189"></a>
+<span class="sourceLineNo">190</span>    }<a name="line.190"></a>
+<span class="sourceLineNo">191</span><a name="line.191"></a>
+<span class="sourceLineNo">192</span>    protected RiverSettings riverSettings(String resource)<a name="line.192"></a>
+<span class="sourceLineNo">193</span>            throws IOException {<a name="line.193"></a>
+<span class="sourceLineNo">194</span>        InputStream in = getClass().getResourceAsStream(resource);<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        return new RiverSettings(ImmutableSettings.settingsBuilder().build(),<a name="line.195"></a>
+<span class="sourceLineNo">196</span>                XContentHelper.convertToMap(Streams.copyToByteArray(in), false).v2());<a name="line.196"></a>
+<span class="sourceLineNo">197</span>    }<a name="line.197"></a>
+<span class="sourceLineNo">198</span><a name="line.198"></a>
+<span class="sourceLineNo">199</span>    protected void createRandomProducts(String sql, int size)<a name="line.199"></a>
+<span class="sourceLineNo">200</span>            throws SQLException {<a name="line.200"></a>
+<span class="sourceLineNo">201</span>        Connection connection = source.getConnectionForWriting();<a name="line.201"></a>
+<span class="sourceLineNo">202</span>        for (int i = 0; i &lt; size; i++) {<a name="line.202"></a>
+<span class="sourceLineNo">203</span>            long amount = Math.round(Math.random() * 1000);<a name="line.203"></a>
+<span class="sourceLineNo">204</span>            double price = (Math.random() * 10000) / 100.00;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>            add(connection, sql, UUID.randomUUID().toString().substring(0, 32), amount, price);<a name="line.205"></a>
+<span class="sourceLineNo">206</span>        }<a name="line.206"></a>
+<span class="sourceLineNo">207</span>        if (!connection.getAutoCommit()) {<a name="line.207"></a>
+<span class="sourceLineNo">208</span>            connection.commit();<a name="line.208"></a>
+<span class="sourceLineNo">209</span>        }<a name="line.209"></a>
+<span class="sourceLineNo">210</span>        source.closeWriting();<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    }<a name="line.211"></a>
+<span class="sourceLineNo">212</span><a name="line.212"></a>
+<span class="sourceLineNo">213</span>    protected void createTimestampedLogs(String sql, int size, String locale, String timezone)<a name="line.213"></a>
+<span class="sourceLineNo">214</span>            throws SQLException {<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        Connection connection = source.getConnectionForWriting();<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        Locale l = LocaleUtil.toLocale(locale);<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        TimeZone t = TimeZone.getTimeZone(timezone);<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        source.setTimeZone(t).setLocale(l);<a name="line.218"></a>
+<span class="sourceLineNo">219</span>        Calendar cal = Calendar.getInstance(t, l);<a name="line.219"></a>
+<span class="sourceLineNo">220</span>        // half of log in the past, half of it in the future<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        cal.add(Calendar.HOUR, -(size/2));<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        for (int i = 0; i &lt; size; i++) {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>            Timestamp modified = new Timestamp(cal.getTimeInMillis());<a name="line.223"></a>
+<span class="sourceLineNo">224</span>            String message = "Hello world";<a name="line.224"></a>
+<span class="sourceLineNo">225</span>            add(connection, sql, modified, message);<a name="line.225"></a>
+<span class="sourceLineNo">226</span>            cal.add(Calendar.HOUR, 1);<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        }<a name="line.227"></a>
+<span class="sourceLineNo">228</span>        if (!connection.getAutoCommit()) {<a name="line.228"></a>
+<span class="sourceLineNo">229</span>            connection.commit();<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        }<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        source.closeWriting();<a name="line.231"></a>
+<span class="sourceLineNo">232</span>    }<a name="line.232"></a>
+<span class="sourceLineNo">233</span><a name="line.233"></a>
+<span class="sourceLineNo">234</span>    private void add(Connection connection, String sql, final String name, final long amount, final double price)<a name="line.234"></a>
+<span class="sourceLineNo">235</span>            throws SQLException {<a name="line.235"></a>
+<span class="sourceLineNo">236</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.236"></a>
+<span class="sourceLineNo">237</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {{<a name="line.237"></a>
+<span class="sourceLineNo">238</span>            add(name);<a name="line.238"></a>
+<span class="sourceLineNo">239</span>            add(amount);<a name="line.239"></a>
+<span class="sourceLineNo">240</span>            add(price);<a name="line.240"></a>
+<span class="sourceLineNo">241</span>        }};<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        source.bind(stmt, params);<a name="line.242"></a>
+<span class="sourceLineNo">243</span>        stmt.execute();<a name="line.243"></a>
+<span class="sourceLineNo">244</span>    }<a name="line.244"></a>
+<span class="sourceLineNo">245</span><a name="line.245"></a>
+<span class="sourceLineNo">246</span>    private void add(Connection connection, String sql, final Timestamp ts, final String message)<a name="line.246"></a>
+<span class="sourceLineNo">247</span>            throws SQLException {<a name="line.247"></a>
+<span class="sourceLineNo">248</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.248"></a>
+<span class="sourceLineNo">249</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {{<a name="line.249"></a>
+<span class="sourceLineNo">250</span>            add(ts);<a name="line.250"></a>
+<span class="sourceLineNo">251</span>            add(message);<a name="line.251"></a>
+<span class="sourceLineNo">252</span>        }};<a name="line.252"></a>
+<span class="sourceLineNo">253</span>        source.bind(stmt, params);<a name="line.253"></a>
+<span class="sourceLineNo">254</span>        stmt.execute();<a name="line.254"></a>
+<span class="sourceLineNo">255</span>    }<a name="line.255"></a>
+<span class="sourceLineNo">256</span><a name="line.256"></a>
+<span class="sourceLineNo">257</span>    protected void createRandomProductsJob(String sql, int size)<a name="line.257"></a>
+<span class="sourceLineNo">258</span>            throws SQLException {<a name="line.258"></a>
+<span class="sourceLineNo">259</span>        Connection connection = source.getConnectionForWriting();<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        for (int i = 0; i &lt; size; i++) {<a name="line.260"></a>
+<span class="sourceLineNo">261</span>            long amount = Math.round(Math.random() * 1000);<a name="line.261"></a>
+<span class="sourceLineNo">262</span>            double price = (Math.random() * 10000) / 100.00;<a name="line.262"></a>
+<span class="sourceLineNo">263</span>            add(connection, sql, "1", UUID.randomUUID().toString().substring(0, 32), amount, price);<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        }<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        if (!connection.getAutoCommit()) {<a name="line.265"></a>
+<span class="sourceLineNo">266</span>            connection.commit();<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        }<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        source.closeWriting();<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    }<a name="line.269"></a>
+<span class="sourceLineNo">270</span><a name="line.270"></a>
+<span class="sourceLineNo">271</span>    private void add(Connection connection, String sql, final String job, final String name, final long amount, final double price)<a name="line.271"></a>
+<span class="sourceLineNo">272</span>            throws SQLException {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        PreparedStatement stmt = connection.prepareStatement(sql);<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        List&lt;Object&gt; params = new ArrayList&lt;Object&gt;() {<a name="line.274"></a>
+<span class="sourceLineNo">275</span>            {<a name="line.275"></a>
+<span class="sourceLineNo">276</span>                add(job);<a name="line.276"></a>
+<span class="sourceLineNo">277</span>                add(name);<a name="line.277"></a>
+<span class="sourceLineNo">278</span>                add(amount);<a name="line.278"></a>
+<span class="sourceLineNo">279</span>                add(price);<a name="line.279"></a>
+<span class="sourceLineNo">280</span>            }<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        };<a name="line.281"></a>
+<span class="sourceLineNo">282</span>        source.bind(stmt, params);<a name="line.282"></a>
+<span class="sourceLineNo">283</span>        stmt.execute();<a name="line.283"></a>
+<span class="sourceLineNo">284</span>    }<a name="line.284"></a>
+<span class="sourceLineNo">285</span><a name="line.285"></a>
+<span class="sourceLineNo">286</span>    private void sqlScript(Connection connection, String resourceName) throws Exception {<a name="line.286"></a>
+<span class="sourceLineNo">287</span>        InputStream in = getClass().getResourceAsStream(resourceName);<a name="line.287"></a>
+<span class="sourceLineNo">288</span>        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));<a name="line.288"></a>
+<span class="sourceLineNo">289</span>        String sql;<a name="line.289"></a>
+<span class="sourceLineNo">290</span>        while ((sql = br.readLine()) != null) {<a name="line.290"></a>
+<span class="sourceLineNo">291</span><a name="line.291"></a>
+<span class="sourceLineNo">292</span>            try {<a name="line.292"></a>
+<span class="sourceLineNo">293</span>                logger.trace("executing {}", sql);<a name="line.293"></a>
+<span class="sourceLineNo">294</span>                Statement p = connection.createStatement();<a name="line.294"></a>
+<span class="sourceLineNo">295</span>                p.execute(sql);<a name="line.295"></a>
+<span class="sourceLineNo">296</span>                p.close();<a name="line.296"></a>
+<span class="sourceLineNo">297</span>            } catch (SQLException e) {<a name="line.297"></a>
+<span class="sourceLineNo">298</span>                // ignore<a name="line.298"></a>
+<span class="sourceLineNo">299</span>                logger.error(sql + " failed. Reason: " + e.getMessage());<a name="line.299"></a>
+<span class="sourceLineNo">300</span>            } finally {<a name="line.300"></a>
+<span class="sourceLineNo">301</span>                connection.commit();<a name="line.301"></a>
+<span class="sourceLineNo">302</span>            }<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        }<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        br.close();<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    }<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>}<a name="line.307"></a>
 
 
 
