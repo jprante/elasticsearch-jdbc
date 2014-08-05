@@ -43,6 +43,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static org.elasticsearch.common.collect.Lists.newLinkedList;
+
 /**
  * Simple river source.
  * <p/>
@@ -383,21 +385,22 @@ public class SimpleRiverSource implements RiverSource {
             if (!command.getParameters().isEmpty()) {
                 bind(statement, command.getParameters());
             }
-            if (!command.getResults().isEmpty()) {
-                register(statement, command.getResults());
+            if (!command.getRegister().isEmpty()) {
+                register(statement, command.getRegister());
             }
             boolean hasRows = statement.execute();
             RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                     .output(context.getRiverMouth());
-            if (!hasRows) {
-                // merge from registered params
-                merge(statement, command, listener);
-            } else {
+            if (hasRows) {
+                logger.debug("callable execution created result set");
                 while (hasRows) {
-                    // merge result set
+                    // merge result set, but use register
                     merge(statement.getResultSet(), listener);
                     hasRows = statement.getMoreResults();
                 }
+            } else {
+                // no result set, merge from registered params only
+                merge(statement, command, listener);
             }
         } finally {
             close(statement);
@@ -442,17 +445,22 @@ public class SimpleRiverSource implements RiverSource {
     @SuppressWarnings({"unchecked"})
     public void merge(CallableStatement statement, SQLCommand command, KeyValueStreamListener listener)
             throws SQLException, IOException {
-        Map<String, Object> map = command.getResults();
+        Map<String, Object> map = command.getRegister();
         if (map.isEmpty()) {
+            // no register given, return without doing anything
             return;
         }
-        List<String> keys = new LinkedList<String>();
-        List<Object> values = new LinkedList<Object>();
+        List<String> keys = newLinkedList();
+        List<Object> values = newLinkedList();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            keys.add(entry.getKey());
-            Map<String, Object> m = (Map<String, Object>) entry.getValue();
-            values.add(statement.getObject((Integer) m.get("pos")));
+            String k = entry.getKey();
+            Map<String, Object> v = (Map<String, Object>) entry.getValue();
+            Integer pos = (Integer) v.get("pos"); // the parameter position of the value
+            String field = (String) v.get("field"); // the field for indexing the value (if not key name)
+            keys.add(field != null ? field : k);
+            values.add(statement.getObject(pos));
         }
+        logger.trace("merge callable statement result: keys={} values={}", keys, values);
         listener.keys(keys);
         listener.values(values);
         listener.end();
@@ -532,11 +540,18 @@ public class SimpleRiverSource implements RiverSource {
             return this;
         }
         for (Map.Entry<String, Object> me : values.entrySet()) {
-            // { "fieldname" : { "pos": n, "type" : "VARCHAR" }, ... }
+            // { "key" : { "pos": n, "type" : "VARCHAR", "field" : "fieldname" }, ... }
             Map<String, Object> m = (Map<String, Object>) me.getValue();
             Integer n = (Integer) m.get("pos");
             String type = (String) m.get("type");
-            register(statement, n, type);
+            if (n != null && type != null) {
+                logger.info("n={} type={}", n, toJDBCType(type));
+                try {
+                    statement.registerOutParameter(n, toJDBCType(type));
+                } catch (Throwable t) {
+                    logger.warn("can't register out parameter " + n + " of type " + type);
+                }
+            }
         }
         return this;
     }
@@ -936,10 +951,6 @@ public class SimpleRiverSource implements RiverSource {
         } else {
             statement.setObject(i, value);
         }
-    }
-
-    private void register(CallableStatement statement, Integer pos, String type) throws SQLException {
-        statement.registerOutParameter(pos, toJDBCType(type));
     }
 
     /**

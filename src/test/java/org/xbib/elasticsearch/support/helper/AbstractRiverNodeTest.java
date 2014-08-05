@@ -153,7 +153,8 @@ public abstract class AbstractRiverNodeTest extends AbstractNodeTestHelper {
     protected void createRiver(String resource) {
         try {
             waitForYellow("1");
-            Map<String, Object> map = XContentHelper.convertToMap(Streams.copyToByteArray(getClass().getResourceAsStream(resource)), false).v2();
+            byte[] b = Streams.copyToByteArray(getClass().getResourceAsStream(resource));
+            Map<String, Object> map = XContentHelper.convertToMap(b, false).v2();
             XContentBuilder builder = jsonBuilder()
                     .startObject()
                     .field("type", "jdbc")

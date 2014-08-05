@@ -10,7 +10,7 @@
             <AppenderRef ref="Console" />
         </Root>
         <!--
-        <Logger name="NodeClient" level="OFF">
+        <Logger name="BulkNodeClient" level="INFO">
             <AppenderRef ref="Console" />
         </Logger>
         -->

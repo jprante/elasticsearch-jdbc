@@ -54,4 +54,15 @@
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverScheduleTests"/>
         </classes>
     </test>
+
+    <test name="River Stored Procedure Tests (simple strategy - mysql)">
+        <parameter name="create" value="mysql/create-suppliertables.sql"/>
+        <parameter name="delete" value="mysql/delete-suppliertables.sql"/>
+        <parameter name="river8" value="mysql/river-8.json"/>
+        <parameter name="river9" value="mysql/river-9.json"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverStoredProcedureTests"/>
+        </classes>
+    </test>
+
 </suite>
