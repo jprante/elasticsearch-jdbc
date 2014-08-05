@@ -106,7 +106,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
             KeyValueStreamListener<Object, Object> listener =
                     new ColumnKeyValueStreamListener<Object, Object>(opInfo.opType)
                             .output(context.getRiverMouth());
-            merge(result, listener);
+            merge(command, result, listener);
         } catch (Exception e) {
             throw new IOException(e);
         } finally {

@@ -11,7 +11,7 @@
                      "Colombian"
                 ],
                 "register" : {
-                     "supplierName" : { "pos" : 2, "type" : "varchar", "field" : "mySupplier" }
+                     "mySupplierName" : { "pos" : 2, "type" : "varchar" }
                 }
             }
         ],

@@ -322,7 +322,7 @@ public class SimpleRiverSource implements RiverSource {
                     RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                             .output(context.getRiverMouth())
                             .shouldIgnoreNull(context.shouldIgnoreNull());
-                    merge(results, listener);
+                    merge(command, results, listener);
                 }
             } else {
                 // use write connection
@@ -356,7 +356,7 @@ public class SimpleRiverSource implements RiverSource {
                 RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                         .output(context.getRiverMouth())
                         .shouldIgnoreNull(context.shouldIgnoreNull());
-                merge(results, listener);
+                merge(command, results, listener);
             } else {
                 statement = prepareUpdate(command.getSQL());
                 bind(statement, command.getParameters());
@@ -395,12 +395,12 @@ public class SimpleRiverSource implements RiverSource {
                 logger.debug("callable execution created result set");
                 while (hasRows) {
                     // merge result set, but use register
-                    merge(statement.getResultSet(), listener);
+                    merge(command, statement.getResultSet(), listener);
                     hasRows = statement.getMoreResults();
                 }
             } else {
                 // no result set, merge from registered params only
-                merge(statement, command, listener);
+                merge(command, statement, listener);
             }
         } finally {
             close(statement);
@@ -415,14 +415,14 @@ public class SimpleRiverSource implements RiverSource {
      * @throws SQLException when SQL execution gives an error
      * @throws IOException  when input/output error occurs
      */
-    public void merge(ResultSet results, KeyValueStreamListener listener)
+    public void merge(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
         if (listener == null) {
             return;
         }
-        beforeRows(results, listener);
+        beforeRows(command, results, listener);
         long rows = 0L;
-        while (nextRow(results, listener)) {
+        while (nextRow(command, results, listener)) {
             rows++;
         }
         context.setLastRowCount(rows);
@@ -431,40 +431,10 @@ public class SimpleRiverSource implements RiverSource {
         } else {
             logger().debug("no rows merged ");
         }
-        afterRows(results, listener);
+        afterRows(command, results, listener);
     }
 
-    /**
-     * Merge key/values from registered params of a callable statement
-     *
-     * @param statement callable statement
-     * @param listener  the value listener
-     * @throws SQLException when SQL execution gives an error
-     * @throws IOException  when input/output error occurs
-     */
-    @SuppressWarnings({"unchecked"})
-    public void merge(CallableStatement statement, SQLCommand command, KeyValueStreamListener listener)
-            throws SQLException, IOException {
-        Map<String, Object> map = command.getRegister();
-        if (map.isEmpty()) {
-            // no register given, return without doing anything
-            return;
-        }
-        List<String> keys = newLinkedList();
-        List<Object> values = newLinkedList();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String k = entry.getKey();
-            Map<String, Object> v = (Map<String, Object>) entry.getValue();
-            Integer pos = (Integer) v.get("pos"); // the parameter position of the value
-            String field = (String) v.get("field"); // the field for indexing the value (if not key name)
-            keys.add(field != null ? field : k);
-            values.add(statement.getObject(pos));
-        }
-        logger.trace("merge callable statement result: keys={} values={}", keys, values);
-        listener.keys(keys);
-        listener.values(values);
-        listener.end();
-    }
+
 
     /**
      * Prepare a query statement
@@ -526,6 +496,38 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     /**
+     * Merge key/values from registered params of a callable statement
+     *
+     * @param statement callable statement
+     * @param listener  the value listener
+     * @throws SQLException when SQL execution gives an error
+     * @throws IOException  when input/output error occurs
+     */
+    @SuppressWarnings({"unchecked"})
+    public void merge(SQLCommand command, CallableStatement statement, KeyValueStreamListener listener)
+            throws SQLException, IOException {
+        Map<String, Object> map = command.getRegister();
+        if (map.isEmpty()) {
+            // no register given, return without doing anything
+            return;
+        }
+        List<String> keys = newLinkedList();
+        List<Object> values = newLinkedList();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String k = entry.getKey();
+            Map<String, Object> v = (Map<String, Object>) entry.getValue();
+            Integer pos = (Integer) v.get("pos"); // the parameter position of the value
+            String field = (String) v.get("field"); // the field for indexing the value (if not key name)
+            keys.add(field != null ? field : k);
+            values.add(statement.getObject(pos));
+        }
+        logger.trace("merge callable statement result: keys={} values={}", keys, values);
+        listener.keys(keys);
+        listener.values(values);
+        listener.end();
+    }
+
+    /**
      * Register variables in callable statement
      *
      * @param statement callable statement
@@ -545,7 +547,7 @@ public class SimpleRiverSource implements RiverSource {
             Integer n = (Integer) m.get("pos");
             String type = (String) m.get("type");
             if (n != null && type != null) {
-                logger.info("n={} type={}", n, toJDBCType(type));
+                logger.debug("n={} type={}", n, toJDBCType(type));
                 try {
                     statement.registerOutParameter(n, toJDBCType(type));
                 } catch (Throwable t) {
@@ -617,9 +619,18 @@ public class SimpleRiverSource implements RiverSource {
         return this;
     }
 
+    public void beforeRows(ResultSet results, KeyValueStreamListener listener)
+            throws SQLException, IOException {
+        beforeRows(null, results, listener);
+    }
+
+
     /**
      * Before rows are read, let the KeyValueStreamListener know about the keys.
+     * If the SQL command was a callable statement and a register is there, look into the register map
+     * for the key names, not in the result set metadata.
      *
+     * @param command the SQL command that created this result set
      * @param results  the result set
      * @param listener the key/value stream listener
      * @throws SQLException when SQL execution gives an error
@@ -627,22 +638,34 @@ public class SimpleRiverSource implements RiverSource {
      */
     @Override
     @SuppressWarnings({"unchecked"})
-    public void beforeRows(ResultSet results, KeyValueStreamListener listener)
+    public void beforeRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
-        ResultSetMetaData metadata = results.getMetaData();
-        int columns = metadata.getColumnCount();
         List<String> keys = new LinkedList();
-        for (int i = 1; i <= columns; i++) {
-            keys.add(metadata.getColumnLabel(i));
+        if (command != null && command.isCallable() && !command.getRegister().isEmpty()) {
+            for (Map.Entry<String,Object> me : command.getRegister().entrySet()) {
+                keys.add(me.getKey());
+            }
+        } else {
+            ResultSetMetaData metadata = results.getMetaData();
+            int columns = metadata.getColumnCount();
+            for (int i = 1; i <= columns; i++) {
+                keys.add(metadata.getColumnLabel(i));
+            }
         }
         listener.begin();
         listener.keys(keys);
+    }
+
+    public boolean nextRow(ResultSet results, KeyValueStreamListener listener)
+            throws SQLException, IOException {
+        return nextRow(null, results, listener);
     }
 
     /**
      * Get next row and prepare the values for processing. The labels of each
      * columns are used for the ValueListener as paths for JSON object merging.
      *
+     * @param command the SQL command that created this result set
      * @param results  the result set
      * @param listener the listener
      * @return true if row exists and was processed, false otherwise
@@ -650,32 +673,38 @@ public class SimpleRiverSource implements RiverSource {
      * @throws IOException  when input/output error occurs
      */
     @Override
-    public boolean nextRow(ResultSet results, KeyValueStreamListener listener)
+    public boolean nextRow(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         if (results.next() && (context.getRiverFlow() == null || !context.getRiverFlow().getFeeder().isInterrupted())) {
-            processRow(results, listener);
+            processRow(command, results, listener);
             return true;
         }
         return false;
+    }
+
+    public void afterRows(ResultSet results, KeyValueStreamListener listener)
+            throws SQLException, IOException {
+        afterRows(null, results, listener);
     }
 
     /**
      * After the rows keys and values, let the listener know about the end of
      * the result set.
      *
+     * @param command the SQL command that created this result set
      * @param results  the result set
      * @param listener the key/value stream listener
      * @throws SQLException when SQL execution gives an error
      * @throws IOException  when input/output error occurs
      */
     @Override
-    public void afterRows(ResultSet results, KeyValueStreamListener listener)
+    public void afterRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         listener.end();
     }
 
     @SuppressWarnings({"unchecked"})
-    private void processRow(ResultSet results, KeyValueStreamListener listener)
+    private void processRow(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         Locale locale = context != null ? context.getLocale() != null ? context.getLocale() : Locale.getDefault() : Locale.getDefault();
         List<Object> values = new LinkedList<Object>();

@@ -27,18 +27,21 @@ public class RiverStoredProcedureTests extends AbstractRiverNodeTest {
         createRiver(riverResource);
         waitForInactiveRiver();
         assertHits("1", 5);
+        logger.info("got the five hits");
     }
 
     @Test
     @Parameters({"river9"})
-    public void testRegisterStoredProcedure(String riverResource)
-            throws Exception {
+    public void testRegisterStoredProcedure(String riverResource) throws Exception {
         createRiver(riverResource);
         waitForInactiveRiver();
         assertHits("1", 1);
+        logger.info("got the hit");
         SearchResponse response = client("1").prepareSearch("my_jdbc_river_index")
                 .setQuery(QueryBuilders.matchAllQuery()).execute().actionGet();
-        assertEquals("{supplierName=Acme, Inc.}", response.getHits().getHits()[0].getSource().toString());
+        String resp = response.getHits().getHits()[0].getSource().toString();
+        logger.info("resp={}", resp);
+        assertEquals("{mySupplierName=Acme, Inc.}", resp);
     }
 
 }

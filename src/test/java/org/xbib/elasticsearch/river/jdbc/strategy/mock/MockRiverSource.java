@@ -1,6 +1,7 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.keyvalue.KeyValueStreamListener;
 
@@ -108,12 +109,27 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
+    public void beforeRows(SQLCommand command, ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     public boolean nextRow(ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
+    public boolean nextRow(SQLCommand command, ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     public void afterRows(ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void afterRows(SQLCommand command, ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
