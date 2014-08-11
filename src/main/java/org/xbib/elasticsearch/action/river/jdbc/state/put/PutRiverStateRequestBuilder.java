@@ -3,12 +3,13 @@ package org.xbib.elasticsearch.action.river.jdbc.state.put;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.master.AcknowledgedRequestBuilder;
 import org.elasticsearch.client.ClusterAdminClient;
+import org.elasticsearch.client.internal.InternalGenericClient;
 import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
 
-public class PutRiverStateRequestBuilder extends AcknowledgedRequestBuilder<PutRiverStateRequest, PutRiverStateResponse, PutRiverStateRequestBuilder, ClusterAdminClient> {
+public class PutRiverStateRequestBuilder extends AcknowledgedRequestBuilder<PutRiverStateRequest, PutRiverStateResponse, PutRiverStateRequestBuilder> {
 
     public PutRiverStateRequestBuilder(ClusterAdminClient client) {
-        super(client, new PutRiverStateRequest());
+        super((InternalGenericClient)client, new PutRiverStateRequest());
     }
 
     public PutRiverStateRequestBuilder setRiverName(String riverName) {
@@ -28,6 +29,6 @@ public class PutRiverStateRequestBuilder extends AcknowledgedRequestBuilder<PutR
 
     @Override
     protected void doExecute(ActionListener<PutRiverStateResponse> listener) {
-        client.execute(PutRiverStateAction.INSTANCE, request, listener);
+        ((ClusterAdminClient)client).execute(PutRiverStateAction.INSTANCE, request, listener);
     }
 }

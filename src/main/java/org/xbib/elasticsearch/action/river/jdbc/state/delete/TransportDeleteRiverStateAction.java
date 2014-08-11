@@ -21,8 +21,13 @@ public class TransportDeleteRiverStateAction extends TransportMasterNodeOperatio
     public TransportDeleteRiverStateAction(Settings settings, ThreadPool threadPool,
                                            ClusterService clusterService, TransportService transportService,
                                            Injector injector) {
-        super(settings, DeleteRiverStateAction.NAME, transportService, clusterService, threadPool);
+        super(settings, transportService, clusterService, threadPool);
         this.injector = injector;
+    }
+
+    @Override
+    public String transportAction() {
+        return DeleteRiverStateAction.NAME;
     }
 
     @Override
@@ -45,7 +50,7 @@ public class TransportDeleteRiverStateAction extends TransportMasterNodeOperatio
         RiverStateService riverStateService = injector.getInstance(RiverStateService.class);
         riverStateService.unregisterRiver(new RiverStateService.UnregisterRiverStateRequest("delete_river_state[" + request.getRiverName() + "]", request.getRiverName())
                 .masterNodeTimeout(request.masterNodeTimeout())
-                .ackTimeout(request.ackTimeout()), new ActionListener<ClusterStateUpdateResponse>() {
+                .ackTimeout(request.timeout()), new ActionListener<ClusterStateUpdateResponse>() {
             @Override
             public void onResponse(ClusterStateUpdateResponse clusterStateUpdateResponse) {
                 listener.onResponse(new DeleteRiverStateResponse(clusterStateUpdateResponse.isAcknowledged()));

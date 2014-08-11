@@ -7,15 +7,18 @@ import org.elasticsearch.cluster.ClusterChangedEvent;
 import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.ClusterStateListener;
+import org.elasticsearch.cluster.ClusterStateUpdateTask;
 import org.elasticsearch.cluster.ack.ClusterStateUpdateRequest;
 import org.elasticsearch.cluster.ack.ClusterStateUpdateResponse;
 import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.regex.Regex;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.TimeValue;
 
 import java.util.List;
 import java.util.Map;
@@ -76,11 +79,7 @@ public class RiverStateService extends AbstractComponent implements ClusterState
      */
     public void registerRiver(final RegisterRiverStateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
         final RiverState newRiverMetaData = request.riverState;
-        clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
-            @Override
-            protected ClusterStateUpdateResponse newResponse(boolean acknowledged) {
-                return new ClusterStateUpdateResponse(acknowledged);
-            }
+        clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask() {
 
             @Override
             public ClusterState execute(ClusterState currentState) {
@@ -118,12 +117,36 @@ public class RiverStateService extends AbstractComponent implements ClusterState
             @Override
             public void onFailure(String source, Throwable t) {
                 logger.warn("failed to create river state [{}]", t, request.name);
-                super.onFailure(source, t);
+                listener.onFailure(t);
             }
 
             @Override
             public boolean mustAck(DiscoveryNode discoveryNode) {
-                return discoveryNode.masterNode();
+                return true;
+            }
+
+            @Override
+            public void onAllNodesAcked(@Nullable Throwable t) {
+                listener.onResponse(new ClusterStateUpdateResponse(true));
+            }
+
+            @Override
+            public void onAckTimeout() {
+                listener.onResponse(new ClusterStateUpdateResponse(false));
+            }
+
+            @Override
+            public TimeValue ackTimeout() {
+                return request.ackTimeout();
+            }
+
+            @Override
+            public TimeValue timeout() {
+                return request.masterNodeTimeout();
+            }
+
+            @Override
+            public void clusterStateProcessed(String source, ClusterState oldState, ClusterState newState) {
             }
         });
     }
@@ -134,11 +157,7 @@ public class RiverStateService extends AbstractComponent implements ClusterState
      * @param listener listener for cluster state updates
      */
     public void unregisterRiver(final UnregisterRiverStateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
-        clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
-            @Override
-            protected ClusterStateUpdateResponse newResponse(boolean acknowledged) {
-                return new ClusterStateUpdateResponse(acknowledged);
-            }
+        clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask() {
 
             @Override
             public ClusterState execute(ClusterState currentState) {
@@ -165,8 +184,38 @@ public class RiverStateService extends AbstractComponent implements ClusterState
             }
 
             @Override
+            public void onFailure(String source, Throwable t) {
+                logger.warn("failed to delete river state [{}]", t, request.name);
+                listener.onFailure(t);
+            }
+
+            @Override
             public boolean mustAck(DiscoveryNode discoveryNode) {
-                return discoveryNode.masterNode();
+                return true;
+            }
+
+            @Override
+            public void onAllNodesAcked(@Nullable Throwable t) {
+                listener.onResponse(new ClusterStateUpdateResponse(true));
+            }
+
+            @Override
+            public void onAckTimeout() {
+                listener.onResponse(new ClusterStateUpdateResponse(false));
+            }
+
+            @Override
+            public TimeValue ackTimeout() {
+                return request.ackTimeout();
+            }
+
+            @Override
+            public TimeValue timeout() {
+                return request.masterNodeTimeout();
+            }
+
+            @Override
+            public void clusterStateProcessed(String source, ClusterState oldState, ClusterState newState) {
             }
         });
     }

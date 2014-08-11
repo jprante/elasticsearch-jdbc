@@ -29,8 +29,13 @@ public class TransportGetRiverStateAction extends TransportMasterNodeReadOperati
     public TransportGetRiverStateAction(Settings settings, ThreadPool threadPool,
                                         ClusterService clusterService, TransportService transportService,
                                         Injector injector) {
-        super(settings, GetRiverStateAction.NAME, transportService, clusterService, threadPool);
+        super(settings, transportService, clusterService, threadPool);
         this.injector = injector;
+    }
+
+    @Override
+    public String transportAction() {
+        return GetRiverStateAction.NAME;
     }
 
     @Override

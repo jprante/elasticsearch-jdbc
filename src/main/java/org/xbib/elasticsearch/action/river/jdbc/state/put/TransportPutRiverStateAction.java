@@ -21,8 +21,13 @@ public class TransportPutRiverStateAction extends TransportMasterNodeOperationAc
     public TransportPutRiverStateAction(Settings settings, ThreadPool threadPool,
                                         ClusterService clusterService, TransportService transportService,
                                         Injector injector) {
-        super(settings, PutRiverStateAction.NAME, transportService, clusterService, threadPool);
+        super(settings, transportService, clusterService, threadPool);
         this.injector = injector;
+    }
+
+    @Override
+    public String transportAction() {
+        return PutRiverStateAction.NAME;
     }
 
     @Override
@@ -46,7 +51,7 @@ public class TransportPutRiverStateAction extends TransportMasterNodeOperationAc
         riverStateService.registerRiver(new RiverStateService.RegisterRiverStateRequest("put_river_state[" + request.getRiverName() + "]", request.getRiverName(), request.getRiverType())
                 .riverState(request.getRiverState())
                 .masterNodeTimeout(request.masterNodeTimeout())
-                .ackTimeout(request.ackTimeout()), new ActionListener<ClusterStateUpdateResponse>() {
+                .ackTimeout(request.timeout()), new ActionListener<ClusterStateUpdateResponse>() {
             @Override
             public void onResponse(ClusterStateUpdateResponse clusterStateUpdateResponse) {
                 listener.onResponse(new PutRiverStateResponse(clusterStateUpdateResponse.isAcknowledged()));

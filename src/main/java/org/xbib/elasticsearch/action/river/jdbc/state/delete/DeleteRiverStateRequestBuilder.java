@@ -3,11 +3,12 @@ package org.xbib.elasticsearch.action.river.jdbc.state.delete;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.master.AcknowledgedRequestBuilder;
 import org.elasticsearch.client.ClusterAdminClient;
+import org.elasticsearch.client.internal.InternalGenericClient;
 
-public class DeleteRiverStateRequestBuilder extends AcknowledgedRequestBuilder<DeleteRiverStateRequest, DeleteRiverStateResponse, DeleteRiverStateRequestBuilder, ClusterAdminClient> {
+public class DeleteRiverStateRequestBuilder extends AcknowledgedRequestBuilder<DeleteRiverStateRequest, DeleteRiverStateResponse, DeleteRiverStateRequestBuilder> {
 
     public DeleteRiverStateRequestBuilder(ClusterAdminClient client) {
-        super(client, new DeleteRiverStateRequest());
+        super((InternalGenericClient)client, new DeleteRiverStateRequest());
     }
 
     public DeleteRiverStateRequestBuilder setRiverName(String riverName) {
@@ -17,6 +18,6 @@ public class DeleteRiverStateRequestBuilder extends AcknowledgedRequestBuilder<D
 
     @Override
     protected void doExecute(ActionListener<DeleteRiverStateResponse> listener) {
-        client.execute(DeleteRiverStateAction.INSTANCE, request, listener);
+        ((ClusterAdminClient)client).execute(DeleteRiverStateAction.INSTANCE, request, listener);
     }
 }

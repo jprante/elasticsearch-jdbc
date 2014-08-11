@@ -31,7 +31,7 @@ public class RestRiverExecuteAction extends BaseRestHandler {
     }
 
     @Override
-    public void handleRequest(final RestRequest request, final RestChannel channel, final Client client) {
+    public void handleRequest(final RestRequest request, final RestChannel channel) {
         String riverName = request.param("riverName");
         String riverType = "jdbc";
         RiverExecuteRequest riverExecuteRequest = new RiverExecuteRequest()

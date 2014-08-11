@@ -28,7 +28,7 @@ public class RestRiverGetStateAction extends BaseRestHandler {
     }
 
     @Override
-    public void handleRequest(RestRequest request, RestChannel channel, Client client) {
+    public void handleRequest(RestRequest request, RestChannel channel) {
         String riverName = request.param("riverName");
         String riverType = "jdbc";
         GetRiverStateRequest riverStateRequest = new GetRiverStateRequest();
