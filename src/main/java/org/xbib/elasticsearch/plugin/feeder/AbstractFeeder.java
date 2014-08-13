@@ -286,16 +286,17 @@ public abstract class AbstractFeeder<T, R extends PipelineRequest, P extends Pip
     public Feeder<T, R, P> afterRun() throws IOException {
         try {
             if (executor != null) {
-                logger.info("shutting down executor");
+                logger.debug("shutting down executor");
                 executor.shutdown();
                 executor = null;
             }
+            if (ingest != null) {
+                ingest.flushIngest();
+                ingest.waitForResponses(TimeValue.timeValueSeconds(30));
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.warn("executor shutdown interrupted");
-        }
-        if (ingest != null) {
-            ingest.flushIngest();
+            logger.warn("after run interrupted");
         }
         return this;
     }
