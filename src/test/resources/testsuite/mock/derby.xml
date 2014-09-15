@@ -7,7 +7,7 @@
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="River Mock Tests (mock strategy - derby)">
+    <test name="River Tests (mock strategy - derby)">
         <parameter name="create" value="derby/create-ordertables.sql"/>
         <parameter name="delete" value="derby/delete-ordertables.sql"/>
         <parameter name="sql1"

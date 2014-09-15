@@ -1,19 +1,24 @@
 #!/bin/sh
 
-# a complete minimalistic geo "push" example for MySQL geo -> Elasticsearch geo search
+# This example shows a complete minimalistic geo push & search example for MySQL -> Elasticsearch
 
+# - install Elasticsearch
+# - run Elasticsearch
 # - install MySQL in /usr/local/mysql
-# - start MySQL on localhost:3306 (default)
-# - prepare a 'test' database in MySQL
-# - create empty user '' with empty password ''
-# - execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
-# - then run this script from $ES_HOME/plugins/jdbc: bash bin/feeder/mysql/geo.sh
+# - start MySQL on localhost:3306
+# - as MySQL root admin, prepare a 'geo' database in MySQL :
+#     CREATE DATABASE geo
+# - as MySQL root admin, create empty user '' with empty password '' :
+#     GRANT ALL PRIVILEGES ON geo.* TO ''@'localhost' IDENTIFIED BY '';
+# - execute SQL in geo.dump
+#     /usr/local/mysql/bin/mysql geo < ./bin/feeder/mysql/geo.dump
+# - then run this script
+#    ./bin/feeder/mysql/geo.sh
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. ${DIR}/../../feeder.in.sh
 
 curl -XDELETE 'localhost:9200/myjdbc'
-
-java="/usr/bin/java"
-#java="/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/java"
-#java="/usr/java/jdk1.8.0/bin/java"
 
 echo '
 {
@@ -46,8 +51,8 @@ echo '
         }
     }
 }
-' | ${java} \
-    -cp $(pwd):$(pwd)/\*:$(pwd)/../../lib/\* \
+' | ${JAVA_HOME}/bin/java \
+    -cp ${ES_JDBC_CLASSPATH} \
     org.xbib.elasticsearch.plugin.feeder.Runner \
     org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder
 
@@ -73,3 +78,25 @@ curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
      }
    }
 }'
+
+# Expected result:
+# {"_shards":{"total":2,"successful":1,"failed":0}}{
+#  "took" : 117,
+#  "timed_out" : false,
+#  "_shards" : {
+#    "total" : 1,
+#    "successful" : 1,
+#    "failed" : 0
+#  },
+#  "hits" : {
+#    "total" : 1,
+#    "max_score" : 1.0,
+#    "hits" : [ {
+#      "_index" : "myjdbc",
+#      "_type" : "mytype",
+#      "_id" : "Dom",
+#      "_score" : 1.0,
+#      "_source":{"city":"Köln","zip":"50667","address":"Domkloster 4","location":{"lat":50.9406645,"lon":6.9599115}}
+#    } ]
+#  }
+# }

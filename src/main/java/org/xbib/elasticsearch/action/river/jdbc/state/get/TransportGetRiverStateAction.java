@@ -62,7 +62,9 @@ public class TransportGetRiverStateAction extends TransportMasterNodeReadOperati
                 RiverName name = entry.getKey();
                 if (("*".equals(riverName) || name.getName().equals(riverName)) && ("*".equals(riverType) || name.getType().equals(riverType)) && entry.getValue() instanceof StatefulRiver) {
                     StatefulRiver river = (StatefulRiver) entry.getValue();
-                    builder.add(river.getRiverState());
+                    if (river.getRiverState() != null) {
+                        builder.add(river.getRiverState());
+                    }
                 }
             }
             listener.onResponse(new GetRiverStateResponse(request, builder.build()));

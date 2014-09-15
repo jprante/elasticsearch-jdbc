@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite" verbose="1">
+<suite name="River Test Suite (column strategy - hsqldb)" verbose="1">
     <parameter name="starturl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="stopurl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="user" value="sa"/>
     <parameter name="password" value=""/>
 
-    <test name="Column JDBC River Target Tests">
+    <test name="River data tests (column strategy - hsqldb)">
         <parameter name="create" value="hsqldb/create-producttables.sql"/>
         <parameter name="delete" value="hsqldb/delete-producttables.sql"/>
         <parameter name="river-existedWhereClause" value="hsqldb/river-existedWhereClause.json"/>
@@ -22,7 +22,7 @@
                     value="update &quot;products&quot; set &quot;deleted_at&quot;=? where &quot;id&quot;=?" />
         <classes>
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+            <!-- <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/> -->
         </classes>
     </test>
 

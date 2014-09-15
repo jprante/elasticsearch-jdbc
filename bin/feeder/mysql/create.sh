@@ -1,8 +1,10 @@
 #!/bin/sh
 
-java="/usr/bin/java"
-#java="/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/java"
-#java="/usr/java/jdk1.8.0/bin/java"
+# This example shows two concurrent feeds from a MySQL database (conncurreny = 2)
+# It is possible to connect to many databases in parallel and fetch data for Elasticsearch.
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. ${DIR}/../../feeder.in.sh
 
 echo '
 {
@@ -39,7 +41,7 @@ echo '
       }
     ]
 }
-' | ${java} \
-    -cp $(pwd):$(pwd)/\*:$(pwd)/../../lib/\* \
+' | ${JAVA_HOME}/bin/java \
+    -cp ${ES_JDBC_CLASSPATH} \
     org.xbib.elasticsearch.plugin.feeder.Runner \
     org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder

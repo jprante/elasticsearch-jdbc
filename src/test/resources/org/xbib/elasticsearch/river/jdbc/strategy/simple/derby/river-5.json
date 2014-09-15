@@ -5,7 +5,7 @@
         "password" : "",
         "sql" : [
             {
-                "statement : "{call count_products(?)}",
+                "statement" : "{call count_products(?)}",
                 "parameter" : [ 1 ],
                 "callable" : true
             }

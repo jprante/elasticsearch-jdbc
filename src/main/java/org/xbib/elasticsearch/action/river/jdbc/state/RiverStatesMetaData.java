@@ -103,7 +103,7 @@ public class RiverStatesMetaData implements MetaData.Custom {
                     }
                     String type = null;
                     Settings settings = ImmutableSettings.EMPTY;
-                    Map<String,Object> custom = newHashMap();
+                    Map<String,Object> map = newHashMap();
                     while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
                         if (token == XContentParser.Token.FIELD_NAME) {
                             String currentFieldName = parser.currentName();
@@ -120,11 +120,11 @@ public class RiverStatesMetaData implements MetaData.Custom {
                                     }
                                     settings = ImmutableSettings.settingsBuilder().put(SettingsLoader.Helper.loadNestedFromMap(parser.mapOrdered())).build();
                                     break;
-                                case "custom":
+                                case "map":
                                     if (parser.nextToken() != XContentParser.Token.START_OBJECT) {
                                         throw new ElasticsearchParseException("failed to parse river [" + name + "], incompatible params");
                                     }
-                                    custom = parser.mapOrdered();
+                                    map = parser.mapOrdered();
                                     break;
                                 default:
                                     throw new ElasticsearchParseException("failed to parse river [" + name + "], unknown field [" + currentFieldName + "]");
@@ -136,7 +136,7 @@ public class RiverStatesMetaData implements MetaData.Custom {
                     if (type == null) {
                         throw new ElasticsearchParseException("failed to parse river [" + name + "], missing river type");
                     }
-                    river.add(new RiverState(name, type).setSettings(settings).setCustom(custom));
+                    river.add(new RiverState(name, type).setSettings(settings).setMap(map));
                 } else {
                     throw new ElasticsearchParseException("failed to parse rivers");
                 }
@@ -159,7 +159,7 @@ public class RiverStatesMetaData implements MetaData.Custom {
                 builder.field(settingEntry.getKey(), settingEntry.getValue());
             }
             builder.endObject();
-            builder.field("custom", river.getCustom());
+            builder.field("map").map(river.getMap());
             builder.endObject();
         }
 

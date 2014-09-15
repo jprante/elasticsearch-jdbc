@@ -43,31 +43,18 @@
         </classes>
     </test>
 
-
-    <test name="Scheduled River Tests">
+    <test name="River Schedule Tests (simple strategy - derby)">
         <parameter name="create" value="derby/create-ordertables.sql"/>
         <parameter name="delete" value="derby/delete-ordertables.sql"/>
         <parameter name="river6" value="derby/river-6.json"/>
+        <parameter name="river7" value="derby/river-7.json"/>
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <parameter name="sql2"
+                   value="insert into &quot;logs&quot; (&quot;modified&quot;, &quot;message&quot;) values(?,?)"/>
         <classes>
             <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverScheduleTests"/>
         </classes>
     </test>
-
-<!--
-    <test name="Stored Procedure River Tests">
-        <parameter name="create" value="derby/create-ordertables.sql"/>
-        <parameter name="delete" value="derby/delete-ordertables.sql"/>
-        <parameter name="river5" value="derby/river-5.json"/>
-        <parameter name="sql1"
-                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
-        <parameter name="sql2"
-                   value="create procedure count_products(IN n INTEGER, OUT result INTEGER) BEGIN select count(*) into result from &quot;products&quot; END"/>
-        <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverStoredProcedureTests"/>
-        </classes>
-    </test>
--->
 
 </suite>

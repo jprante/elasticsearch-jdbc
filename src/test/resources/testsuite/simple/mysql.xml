@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite" verbose="1">
+<suite name="River Test Suite (simple strategy - mysql)" verbose="1">
     <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="JDBC River Source Tests">
+    <test name="River Source Tests (simple strategy - mysql)">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
@@ -18,7 +18,7 @@
         </classes>
     </test>
 
-    <test name="JDBC River Target Data Tests">
+    <test name="River Data Tests (simple strategy - mysql)">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="river1" value="mysql/river-1.json"/>
@@ -30,7 +30,7 @@
         </classes>
     </test>
 
-    <test name="JDBC River Target Job Tests">
+    <test name="River Job Tests (simple strategy - mysql)">
         <parameter name="create" value="mysql/create-jobtables.sql"/>
         <parameter name="delete" value="mysql/delete-jobtables.sql"/>
         <parameter name="river1" value="mysql/jobriver-1.json"/>
@@ -41,5 +41,28 @@
         </classes>
     </test>
 
+    <test name="River Schedule Tests (simple strategy - mysql)">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="river6" value="mysql/river-6.json"/>
+        <parameter name="river7" value="mysql/river-7.json"/>
+        <parameter name="sql1"
+                   value="insert into products (name, amount, price) values(?,?,?)"/>
+        <parameter name="sql2"
+                   value="insert into logs (modified, message) values(?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverScheduleTests"/>
+        </classes>
+    </test>
+
+    <test name="River Stored Procedure Tests (simple strategy - mysql)">
+        <parameter name="create" value="mysql/create-suppliertables.sql"/>
+        <parameter name="delete" value="mysql/delete-suppliertables.sql"/>
+        <parameter name="river8" value="mysql/river-8.json"/>
+        <parameter name="river9" value="mysql/river-9.json"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverStoredProcedureTests"/>
+        </classes>
+    </test>
 
 </suite>

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite" verbose="1">
+<suite name="River Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:oracle:thin:@//127.0.0.1:1521/test?autoReconnect=true"/>
     <parameter name="stopurl" value="jdbc:oracle:thin:@//127.0.0.1:1521/test"/>
     <parameter name="driver" value="oracle.jdbc.driver.OracleDriver"/>
     <parameter name="user" value="test"/>
     <parameter name="password" value="test"/>
 
-    <test name="JDBC River Source Data Tests">
+    <test name="River Tests">
         <parameter name="create" value="oracle/create-ordertables.sql"/>
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
         <parameter name="sql1"

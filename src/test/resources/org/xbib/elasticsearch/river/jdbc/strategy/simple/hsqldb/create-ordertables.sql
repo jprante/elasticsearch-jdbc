@@ -2,6 +2,7 @@ create table employees (name varchar(32), department varchar(32), salary decimal
 create table departments (name varchar(32), country varchar(32))
 create table customers (name varchar(32), country varchar(32))
 create table products (name varchar(32), amount integer, price decimal(22,4))
+create table logs (modified timestamp, message varchar(32))
 create table orders (customer varchar(32), department varchar(32), product varchar(32), quantity integer, created timestamp default '1970-01-01 00:00:00')
 insert into employees (name, department, salary) values('Smith', 'American Fruits', cast('10.500' as decimal(5,2)))
 insert into employees (name, department, salary) values('Jones', 'English Fruits', cast('6.300' as decimal(5,2)))

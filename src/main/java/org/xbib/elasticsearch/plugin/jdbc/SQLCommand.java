@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import static org.elasticsearch.common.collect.Lists.newLinkedList;
+import static org.elasticsearch.common.collect.Maps.newHashMap;
 
 /**
  * The SQL command
@@ -23,9 +25,9 @@ public class SQLCommand {
 
     private static final Pattern STATEMENT_PATTERN = Pattern.compile("^\\s*(update|insert)", Pattern.CASE_INSENSITIVE);
 
-    private List<Object> params = new LinkedList<Object>();
+    private List<Object> params = newLinkedList();
 
-    private Map<String, Object> results = new HashMap<String, Object>();
+    private Map<String, Object> register = newHashMap();
 
     private boolean callable;
 
@@ -80,12 +82,20 @@ public class SQLCommand {
         return p3 < 0 || p1 < p2 && p1 < p3;
     }
 
-    public void setResults(Map<String, Object> results) {
-        this.results = results;
+    /**
+     * A register is for parameters of a callable statement.
+     * @param register a map for registering parameters
+     */
+    public void setRegister(Map<String, Object> register) {
+        this.register = register;
     }
 
-    public Map<String, Object> getResults() {
-        return results;
+    /**
+     * Get the parameters of a callable statement
+     * @return the register map
+     */
+    public Map<String, Object> getRegister() {
+        return register;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -110,7 +120,7 @@ public class SQLCommand {
                         command.setCallable(XContentMapValues.nodeBooleanValue(m.get("callable")));
                     }
                     if (m.containsKey("register")) {
-                        command.setResults(XContentMapValues.nodeMapValue(m.get("register"), null));
+                        command.setRegister(XContentMapValues.nodeMapValue(m.get("register"), null));
                     }
                 } else if (entry instanceof String) {
                     command.setSQL((String) entry);

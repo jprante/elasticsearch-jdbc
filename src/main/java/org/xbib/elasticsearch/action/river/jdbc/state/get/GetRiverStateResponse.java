@@ -46,6 +46,8 @@ public class GetRiverStateResponse extends ActionResponse implements ToXContent 
     @Override
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
+        getRiverStateRequest = new GetRiverStateRequest();
+        getRiverStateRequest.readFrom(in);
         int len = in.readInt();
         ImmutableList.Builder<RiverState> builder = ImmutableList.builder();
         for (int i = 0; i < len; i++) {
@@ -59,6 +61,7 @@ public class GetRiverStateResponse extends ActionResponse implements ToXContent 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
+        getRiverStateRequest.writeTo(out);
         out.writeInt(states.size());
         for (RiverState rs : states) {
             rs.writeTo(out);

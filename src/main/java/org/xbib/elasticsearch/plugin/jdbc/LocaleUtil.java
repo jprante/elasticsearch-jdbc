@@ -41,6 +41,7 @@ public class LocaleUtil {
 
     public static String fromLocale(Locale locale) {
         return locale.getLanguage() +
-                (Strings.isNullOrEmpty(locale.getCountry()) ? "_" + locale.getCountry() : "");
+                (Strings.isNullOrEmpty(locale.getCountry()) ? "_" + locale.getCountry() : "") +
+                (Strings.isNullOrEmpty(locale.getVariant()) ? "_" + locale.getVariant() : "");
     }
 }

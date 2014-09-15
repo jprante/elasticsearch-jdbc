@@ -23,6 +23,9 @@ import java.util.Map;
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 import static org.elasticsearch.common.collect.Maps.newHashMap;
 
+/**
+ * The RiverStateService manages reading and writing of river states in the cluster state
+ */
 public class RiverStateService extends AbstractComponent implements ClusterStateListener {
 
     private final ClusterService clusterService;
@@ -66,6 +69,11 @@ public class RiverStateService extends AbstractComponent implements ClusterState
         }
     }
 
+    /**
+     * Register a new river for river state management
+     * @param request a river state register request
+     * @param listener listener for cluster state update response
+     */
     public void registerRiver(final RegisterRiverStateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
         final RiverState newRiverMetaData = request.riverState;
         clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
@@ -120,19 +128,11 @@ public class RiverStateService extends AbstractComponent implements ClusterState
         });
     }
 
-    private boolean registerRiver(RiverState riverMetaData) {
-        RiverState previous = riverStates.get(riverMetaData.getName());
-        if (previous != null) {
-            if (!previous.getType().equals(riverMetaData.getType()) && previous.getSettings().equals(riverMetaData.getSettings())) {
-                return false;
-            }
-        }
-        Map<String, RiverState> newRiverStates = newHashMap();
-        newRiverStates.put(riverMetaData.getName(), riverMetaData);
-        riverStates = ImmutableMap.copyOf(newRiverStates);
-        return true;
-    }
-
+    /**
+     * Unregister river from river state management
+     * @param request the unregister river state request
+     * @param listener listener for cluster state updates
+     */
     public void unregisterRiver(final UnregisterRiverStateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
         clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
             @Override
@@ -170,6 +170,20 @@ public class RiverStateService extends AbstractComponent implements ClusterState
             }
         });
     }
+
+    private boolean registerRiver(RiverState riverMetaData) {
+        RiverState previous = riverStates.get(riverMetaData.getName());
+        if (previous != null) {
+            if (!previous.getType().equals(riverMetaData.getType()) && previous.getSettings().equals(riverMetaData.getSettings())) {
+                return false;
+            }
+        }
+        Map<String, RiverState> newRiverStates = newHashMap();
+        newRiverStates.put(riverMetaData.getName(), riverMetaData);
+        riverStates = ImmutableMap.copyOf(newRiverStates);
+        return true;
+    }
+
 
     public static class RegisterRiverStateRequest extends ClusterStateUpdateRequest<RegisterRiverStateRequest> {
 

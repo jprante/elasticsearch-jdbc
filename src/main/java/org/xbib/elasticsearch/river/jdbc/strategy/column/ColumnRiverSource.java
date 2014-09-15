@@ -48,9 +48,9 @@ public class ColumnRiverSource extends SimpleRiverSource {
             if (connection != null) {
                 List<OpInfo> opInfos = getOpInfos(connection);
                 Timestamp lastRunTimestamp = getLastRunTimestamp();
-                logger.info("lastRunTimestamp={}", lastRunTimestamp);
+                logger.debug("lastRunTimestamp={}", lastRunTimestamp);
                 for (OpInfo opInfo : opInfos) {
-                    logger.info("opinfo={}", opInfo.toString());
+                    logger.debug("opinfo={}", opInfo.toString());
                     fetch(connection, command, opInfo, lastRunTimestamp);
                 }
             }
@@ -62,10 +62,10 @@ public class ColumnRiverSource extends SimpleRiverSource {
         List<OpInfo> opInfos = new LinkedList<OpInfo>();
         String noDeletedWhereClause = context.columnDeletedAt() != null ?
                 " AND " + quoteColumn(context.columnDeletedAt(), quoteString) + " IS NULL" : "";
-        opInfos.add(new OpInfo("create", quoteColumn(context.columnCreatedAt(), quoteString) + " >= ?" + noDeletedWhereClause));
-        opInfos.add(new OpInfo("index", quoteColumn(context.columnUpdatedAt(), quoteString) + " >= ? AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR " + quoteColumn(context.columnCreatedAt(), quoteString) + " < ?)" + noDeletedWhereClause, 2));
+        opInfos.add(new OpInfo("create", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnCreatedAt(), quoteString) + ")} >= 0" + noDeletedWhereClause));
+        opInfos.add(new OpInfo("index", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?,"+quoteColumn(context.columnUpdatedAt(), quoteString) + ")} >= 0 AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR {fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnCreatedAt(), quoteString) + ")} < 0) " + noDeletedWhereClause, 2));
         if (context.columnDeletedAt() != null) {
-            opInfos.add(new OpInfo("delete", quoteColumn(context.columnDeletedAt(), quoteString) + " >= ?"));
+            opInfos.add(new OpInfo("delete", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnDeletedAt(), quoteString) + ")} >= 0"));
         }
         return opInfos;
     }
@@ -86,7 +86,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
     @SuppressWarnings("rawtypes")
     private Timestamp getLastRunTimestamp() {
         Map settings = (Map) context.getRiverSettings();
-        logger.info("getLastRunTimestamp settings = {}", context.getRiverSettings());
+        logger.debug("getLastRunTimestamp settings = {}", context.getRiverSettings());
         if (settings == null || settings.get(ColumnRiverFlow.LAST_RUN_TIME) == null) {
             return new Timestamp(0);
         }
@@ -98,9 +98,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
         String fullSql = addWhereClauseToSqlQuery(command.getSQL(), opInfo.where);
         PreparedStatement stmt = connection.prepareStatement(fullSql);
         List<Object> params = createQueryParams(command, lastRunTimestamp, opInfo.paramsInWhere);
-        if (logger.isDebugEnabled()) {
-            logger.debug("sql: {}, params {}", fullSql, params);
-        }
+        logger.debug("sql: {}, params {}", fullSql, params);
         ResultSet result = null;
         try {
             bind(stmt, params);
@@ -108,7 +106,7 @@ public class ColumnRiverSource extends SimpleRiverSource {
             KeyValueStreamListener<Object, Object> listener =
                     new ColumnKeyValueStreamListener<Object, Object>(opInfo.opType)
                             .output(context.getRiverMouth());
-            merge(result, listener);
+            merge(command, result, listener);
         } catch (Exception e) {
             throw new IOException(e);
         } finally {
@@ -144,8 +142,8 @@ public class ColumnRiverSource extends SimpleRiverSource {
     }
 
     private static class OpInfo {
-        final String where;
         final String opType;
+        final String where;
         final int paramsInWhere;
 
         public OpInfo(String opType, String where, int paramsInWhere) {

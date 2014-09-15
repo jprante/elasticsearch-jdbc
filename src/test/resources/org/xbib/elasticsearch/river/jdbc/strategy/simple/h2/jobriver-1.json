@@ -1,6 +1,6 @@
 {
     "jdbc" : {
-        "url" : "jdbc:h2:target/test",
+        "url" : "jdbc:h2:./target/test",
         "user" : "",
         "password" : "",
         "sql" : [

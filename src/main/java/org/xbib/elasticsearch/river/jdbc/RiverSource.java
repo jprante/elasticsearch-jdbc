@@ -1,6 +1,7 @@
 package org.xbib.elasticsearch.river.jdbc;
 
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
 import org.xbib.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
@@ -167,6 +168,20 @@ public interface RiverSource {
 
     void beforeRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
+    boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
+
+    void afterRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
+
+    /**
+     * This routine is executed before the result set is evaluated
+     * @param command the SQL command that created this result set
+     * @param results the result set
+     * @param listener listener for the key/value stream generated from the result set
+     * @throws SQLException
+     * @throws IOException
+     */
+    void beforeRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
+
     /**
      * Action for the next row of the result set to be processed
      *
@@ -176,9 +191,18 @@ public interface RiverSource {
      * @throws SQLException when SQL execution gives an error
      * @throws IOException  when input/output error occurs
      */
-    boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
+    boolean nextRow(SQLCommand command, ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
-    void afterRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
+    /**
+     * After the result set is processed, this method is called.
+     *
+     * @param command the SQL command that created this result set
+     * @param results the result set
+     * @param listener listener for the key/value stream generated from the result set
+     * @throws SQLException
+     * @throws IOException
+     */
+    void afterRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
     /**
      * Parse a value in a row column
@@ -225,6 +249,21 @@ public interface RiverSource {
      * @return this river source
      */
     RiverSource closeWriting();
+
+    /**
+     * Set the locale for JDBC
+     *
+     * @param locale locale
+     * @return this river source
+     */
+    RiverSource setLocale(Locale locale);
+
+    /**
+     * Get the current locale
+     *
+     * @return the time zone
+     */
+    Locale getLocale();
 
     /**
      * Set the timezone for JDBC setTimestamp() calls with calendar object.

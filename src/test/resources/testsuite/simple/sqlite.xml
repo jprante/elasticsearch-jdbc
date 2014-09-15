@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="Elasticsearch JDBC River Test Suite" verbose="1">
+<suite name="River Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:sqlite:file::memory:?cache=shared"/>
     <parameter name="stopurl" value="jdbc:sqlite:file::memory:?cache=shared"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="Simple JDBC River Source Tests">
+    <test name="River Source Tests">
         <parameter name="create" value="sqlite/create-ordertables.sql"/>
         <parameter name="delete" value="sqlite/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from &quot;orders&quot;"/>
@@ -21,7 +21,7 @@
         </classes>
     </test>
 
-    <test name="Simple JDBC River Target Data Tests">
+    <test name="River Data Tests">
         <parameter name="create" value="sqlite/create-ordertables.sql"/>
         <parameter name="delete" value="sqlite/delete-ordertables.sql"/>
         <parameter name="river1" value="sqlite/river-1.json"/>
@@ -34,7 +34,7 @@
         </classes>
     </test>
 
-    <test name="Simple JDBC River Job Target Tests">
+    <test name="River Job Tests">
         <parameter name="create" value="sqlite/create-jobtables.sql"/>
         <parameter name="delete" value="sqlite/delete-jobtables.sql"/>
         <parameter name="river1" value="sqlite/jobriver-1.json"/>

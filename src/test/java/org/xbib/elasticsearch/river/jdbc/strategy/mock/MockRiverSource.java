@@ -1,6 +1,7 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.keyvalue.KeyValueStreamListener;
 
@@ -12,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -109,12 +109,27 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
+    public void beforeRows(SQLCommand command, ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     public boolean nextRow(ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
+    public boolean nextRow(SQLCommand command, ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     public void afterRows(ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void afterRows(SQLCommand command, ResultSet result, KeyValueStreamListener listener) throws SQLException, IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -144,13 +159,23 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
+    public RiverSource setLocale(Locale locale) {
+        return this;
+    }
+
+    @Override
+    public Locale getLocale() {
+        return Locale.getDefault();
+    }
+
+    @Override
     public RiverSource setTimeZone(TimeZone timezone) {
         return this;
     }
 
     @Override
     public TimeZone getTimeZone() {
-        return Calendar.getInstance().getTimeZone();
+        return TimeZone.getDefault();
     }
 	@Override
 	public RiverSource setSsl(boolean ssl) {

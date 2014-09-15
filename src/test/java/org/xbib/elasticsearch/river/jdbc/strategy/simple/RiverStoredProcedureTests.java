@@ -1,13 +1,12 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;
-
-import java.sql.Connection;
-import java.sql.Statement;
 
 public class RiverStoredProcedureTests extends AbstractRiverNodeTest {
 
@@ -22,18 +21,27 @@ public class RiverStoredProcedureTests extends AbstractRiverNodeTest {
     }
 
     @Test
-    @Parameters({"river5", "sql1", "sql2"})
-    public void testSimpleStoredProcedure(String riverResource, String sql, String storedProcSQL)
+    @Parameters({"river8"})
+    public void testSimpleStoredProcedure(String riverResource)
             throws Exception {
-        createRandomProducts(sql, 100);
-        // create stored procedure
-        Connection connection = source.getConnectionForWriting();
-        Statement statement = connection.createStatement();
-        statement.execute(storedProcSQL);
-        statement.close();
-        source.closeWriting();
         createRiver(riverResource);
         waitForInactiveRiver();
+        assertHits("1", 5);
+        logger.info("got the five hits");
+    }
+
+    @Test
+    @Parameters({"river9"})
+    public void testRegisterStoredProcedure(String riverResource) throws Exception {
+        createRiver(riverResource);
+        waitForInactiveRiver();
+        assertHits("1", 1);
+        logger.info("got the hit");
+        SearchResponse response = client("1").prepareSearch("my_jdbc_river_index")
+                .setQuery(QueryBuilders.matchAllQuery()).execute().actionGet();
+        String resp = response.getHits().getHits()[0].getSource().toString();
+        logger.info("resp={}", resp);
+        assertEquals("{mySupplierName=Acme, Inc.}", resp);
     }
 
 }

@@ -36,6 +36,7 @@
             <directory>${project.basedir}/src/test/resources</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
+                <include>log4j.properties</include>
                 <include>log4j2.xml</include>
             </includes>
         </fileSet>
