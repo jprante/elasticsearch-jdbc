@@ -177,5 +177,34 @@ public class MockRiverSource implements RiverSource {
     public TimeZone getTimeZone() {
         return TimeZone.getDefault();
     }
+	@Override
+	public RiverSource setSsl(boolean ssl) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource setKeyStore(String keyStore) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource setKeyStorePassword(String keyStorePassword) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource setTrustStore(String strustStore) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public RiverSource setTrustStorePassword(String trustStorePassword) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
 }

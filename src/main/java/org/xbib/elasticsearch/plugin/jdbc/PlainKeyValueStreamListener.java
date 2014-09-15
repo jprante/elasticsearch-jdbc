@@ -3,7 +3,11 @@ package org.xbib.elasticsearch.plugin.jdbc;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.xbib.keyvalue.KeyValueStreamListener;
 
+import com.perform.utils.JsonHelper;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -127,16 +131,66 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         }
         // create current object from values by sequentially merging the values
         for (int i = 0; i < keys.size(); i++) {
-            Map map = null;
-            try {
-                // JSON content?
-                map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
-            } catch (Exception e) {
-                // ignore
-            }
-            Object v = map != null && map.size() > 0 ? map : values.get(i);
-            Map<String, Object> m = merge(current.source(), keys.get(i), v);
-            current.source(m);
+        	if(keys.get(i).toString().startsWith("_json.")) {
+        		//Trinet: support json columns
+        		Object o = values.get(i);
+        		String v = o.toString();
+        		List<HashMap> list = null;
+        		try {
+        			list = JsonHelper.getFromJSONCollection(v, HashMap.class);
+        		} catch(Exception e) {
+        			list = new ArrayList<HashMap>();
+        		}
+        		Map m = merge(current.source(), keys.get(i).toString().replace("_json.", ""), list);
+        		current.source(m);
+        	} else if(keys.get(i).toString().startsWith("_list_string.")) {
+        		//Trinet: support json columns
+        		Object o = values.get(i);
+        		String v = o.toString();
+        		List<String> list = null;
+        		try {
+        			list = JsonHelper.getFromJSONCollection(v, String.class);
+        		} catch(Exception e) {
+        			list = new ArrayList<String>();
+        		}
+        		Map m = merge(current.source(), keys.get(i).toString().replace("_list_string.", ""), list);
+        		current.source(m);
+        	} else if(keys.get(i).toString().startsWith("_list_number.")) {
+        		//Trinet: support json columns
+        		Object o = values.get(i);
+        		String v = o.toString();
+        		List<Double> list = null;
+        		try {
+        			list = JsonHelper.getFromJSONCollection(v, Double.class);
+        		} catch(Exception e) {
+        			list = new ArrayList<Double>();
+        		}
+        		Map m = merge(current.source(), keys.get(i).toString().replace("_list_number.", ""), list);
+        		current.source(m);
+        	} else if(keys.get(i).toString().startsWith("_list_int.")) {
+        		//Trinet: support json columns
+        		Object o = values.get(i);
+        		String v = o.toString();
+        		List<Integer> list = null;
+        		try {
+        			list = JsonHelper.getFromJSONCollection(v, Integer.class);
+        		} catch(Exception e) {
+        			list = new ArrayList<Integer>();
+        		}
+        		Map m = merge(current.source(), keys.get(i).toString().replace("_list_int.", ""), list);
+        		current.source(m);
+        	} else {
+        		Map map = null;
+        		try {
+        			// JSON content?
+        			map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
+        		} catch (Exception e) {
+        			// ignore
+        		}
+        		Object v = map != null && map.size() > 0 ? map : values.get(i);
+        		Map<String, Object> m = merge(current.source(), keys.get(i), v);
+        		current.source(m);
+        	}
         }
         return this;
     }
