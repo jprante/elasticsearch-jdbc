@@ -178,7 +178,16 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
     @SuppressWarnings({"unchecked"})
     protected XContentBuilder toXContent(XContentBuilder builder, Params params, List list) throws IOException {
         builder.startArray();
+        HashValueCalculator hashUtil = new HashValueCalculator();
+        long prev = 0;
+        long current = 0;
         for (Object o : list) {
+            current = hashUtil.calculate(o);
+            if ( current == prev ) {
+                continue;
+            } else {
+                prev = current;
+            }
             if (o instanceof Values) {
                 Values v = (Values) o;
                 v.toXContent(builder, ToXContent.EMPTY_PARAMS);
@@ -233,4 +242,58 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
         return hash;
     }
 
+    /**
+     * Implementing hash calculator on es graph object. it is used to identify same graps in the structure
+     */
+     private class HashValueCalculator  {
+
+         public long calculate(Object o) throws IOException {
+             long hash = 0;
+             if (o instanceof Values) {
+                 Values v = (Values) o;
+                 hash = calculate(v);
+             } else if (o instanceof Map) {
+                 hash = calculate((Map<String, Object>) o);
+             } else if (o instanceof List) {
+                 hash = calculate((List) o);
+             } else {
+                 try {
+                     hash = hash + o.hashCode();
+                 } catch (Exception e) {
+                     throw new IOException("unknown object class:" + o.getClass().getName());
+                 }
+             }
+             return hash;
+         }
+
+         public long calculate(Values values) throws IOException {
+             long hash = 0;
+             if ( values != null && !values.isNull() ) {
+                 for ( Object o : values.getValues()) {
+                    hash = hash + o.hashCode();
+                 }
+             }
+             return hash;
+         }
+
+        public long calculate(List list) throws IOException {
+            long hash = 0;
+            for (Object o : list) {
+               hash = hash + calculate(o);
+            }
+            return hash;
+        }
+
+        public long calculate(Map<String, Object> map) throws IOException {
+            long hash = 0;
+            for (Map.Entry<String, Object> k : map.entrySet()) {
+                Object o = k.getValue();
+                if (ignoreNull && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
+                    continue;
+                }
+                hash = hash + calculate(o);
+            }
+            return hash;
+        }
+    }
 }
