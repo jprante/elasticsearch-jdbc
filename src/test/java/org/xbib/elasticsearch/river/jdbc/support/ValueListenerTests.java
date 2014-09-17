@@ -231,6 +231,7 @@ public class ValueListenerTests extends Assert {
         List<String> row1 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3917", "Idris Elba", "9450", "/web/q/g/h/57436356.jpg");
         List<String> row2 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3917", "Idris Elba", "9965", "/web/i/s/q/GS3193626.jpg");
         List<String> row3 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3917", "Idris Elba", "9451", "/web/i/s/q/GS3193626.jpg");
+        List<String> row4 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3918", "Idris Elba", "9451", "/web/i/s/q/GS3193626.jpg");
         MockRiverMouth output = new MockRiverMouth();
         new StringKeyValueStreamListener()
                 .output(output)
@@ -239,9 +240,10 @@ public class ValueListenerTests extends Assert {
                 .values(row1)
                 .values(row2)
                 .values(row3)
+                .values(row4)
                 .end();
         assertEquals(output.data().toString(),
-                "{[null/null/null/4679]->{blog={name=\"Tesla, Abe and Elba\", published=\"2014-01-06 00:00:00\", association=[{id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}], attachment=[{id=\"9450\", name=\"/web/q/g/h/57436356.jpg\"}, {id=\"9965\", name=\"/web/i/s/q/GS3193626.jpg\"}, {id=\"9451\", name=\"/web/i/s/q/GS3193626.jpg\"}]}}={\"blog\":{\"name\":\"Tesla, Abe and Elba\",\"published\":\"2014-01-06 00:00:00\",\"association\":[{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3917\",\"name\":\"Idris Elba\"}],\"attachment\":[{\"id\":\"9450\",\"name\":\"/web/q/g/h/57436356.jpg\"},{\"id\":\"9965\",\"name\":\"/web/i/s/q/GS3193626.jpg\"},{\"id\":\"9451\",\"name\":\"/web/i/s/q/GS3193626.jpg\"}]}}}"
+                "{[null/null/null/4679]->{blog={name=\"Tesla, Abe and Elba\", published=\"2014-01-06 00:00:00\", association=[{id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}, {id=\"3917\", name=\"Idris Elba\"}, {id=\"3918\", name=\"Idris Elba\"}], attachment=[{id=\"9450\", name=\"/web/q/g/h/57436356.jpg\"}, {id=\"9965\", name=\"/web/i/s/q/GS3193626.jpg\"}, {id=\"9451\", name=\"/web/i/s/q/GS3193626.jpg\"}, {id=\"9451\", name=\"/web/i/s/q/GS3193626.jpg\"}]}}={\"blog\":{\"name\":\"Tesla, Abe and Elba\",\"published\":\"2014-01-06 00:00:00\",\"association\":[{\"id\":\"3917\",\"name\":\"Idris Elba\"},{\"id\":\"3918\",\"name\":\"Idris Elba\"}],\"attachment\":[{\"id\":\"9450\",\"name\":\"/web/q/g/h/57436356.jpg\"},{\"id\":\"9965\",\"name\":\"/web/i/s/q/GS3193626.jpg\"},{\"id\":\"9451\",\"name\":\"/web/i/s/q/GS3193626.jpg\"}]}}}"
         );
     }
 
