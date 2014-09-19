@@ -130,17 +130,17 @@ A terminal / console with commands `curl` and `unzip` and Internet access (of co
 
 1. Download elasticsearch (latest version that is compatible with JDBC plugin)
 
-	`curl -OL https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-1.1.0.0.zip`
+	`curl -OL https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.3.2.zip`
 
 2. Unpack zip file into you favorite elasticsearch directory, we call it $ES_HOME
 
 	`cd $ES_HOME`
 
-	`unzip path/to/elasticsearch-1.1.0.0.zip`
+	`unzip path/to/elasticsearch-1.3.2.zip`
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.1.0.2/elasticsearch-river-jdbc-1.1.0.2-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.0.4/elasticsearch-river-jdbc-1.3.0.4-plugin.zip`
 
 4. Download MySQL JDBC driver
 
@@ -889,7 +889,7 @@ Note: if you update the JDBC plugin, old versions of the support plugin are NOT 
    Check for the JDBC version under http://github.com/jprante/elasticsearch-river/jdbc
 
 	    cd $ES_HOME
-	    ./bin/plugin -install river-jdbc -url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.2.0.1/elasticsearch-river-jdbc-1.2.0.1-plugin.zip
+	   ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.0.4/elasticsearch-river-jdbc-1.3.0.4-plugin.zip
 
 4. Download PostgreSQL JDBC driver
 
