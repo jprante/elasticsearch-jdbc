@@ -1,131 +1,114 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.Requests;
+import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.settings.loader.JsonSettingsLoader;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.river.RiverName;
-import org.elasticsearch.river.RiverSettings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.xbib.elasticsearch.action.river.jdbc.state.RiverState;
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
-import org.xbib.elasticsearch.river.jdbc.RiverFlow;
+import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
+import org.xbib.elasticsearch.plugin.jdbc.client.IngestFactory;
+import org.xbib.elasticsearch.plugin.jdbc.client.node.BulkNodeClient;
+import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverSource;
-import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;
 
 import java.io.IOException;
 import java.util.Map;
 
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class ColumnRiverFlowTests extends AbstractRiverNodeTest {
+public class ColumnRiverFlowTests extends AbstractColumnRiverTest {
 
     @Override
-    public RiverSource getRiverSource() {
+    public ColumnRiverSource newRiverSource() {
         return new ColumnRiverSource();
     }
 
     @Override
-    public RiverContext getRiverContext() {
-        return new RiverContext();
+    public ColumnRiverContext newRiverContext() {
+        return new ColumnRiverContext();
     }
 
-    @Test()
+    @Test
     @Parameters({"river-existedWhereClause"})
-    public void testWriteLastRiverRunTimeToCustomRiverInfo(String riverResource) throws IOException {
-        final Client client = client("1");
-        setupContext(new MockRiverSource() {
+    public void testWriteLastRiverRunTime(String riverResource) throws Exception {
+        createRiverContext(new MockRiverSource() {
             @Override
             public void fetch() {
             }
         }, riverResource);
-        Map<String, Object> spec = (Map<String, Object>) riverSettings(riverResource).settings().get("jdbc");
-        Map<String, String> loadedSettings = new JsonSettingsLoader().load(jsonBuilder().map(spec).string());
-        Settings settings = settingsBuilder().put(loadedSettings).build();
-        RiverFlow flow = new ColumnRiverFlow();
-        flow.setRiverContext(context);
-        flow.getFeeder()
-                .setName(context.getRiverName())
-                .setRiverState(new RiverState())
-                .setSpec(spec)
+        Map<String, Object> settingsMap = riverSettings(riverResource).settings();
+        Settings settings = settingsBuilder().put(settingsMap).build();
+        ColumnRiverContext riverContext = new ColumnRiverContext();
+        Map<String, Object> def = (Map<String, Object>) settingsMap.get("jdbc");
+        riverContext.setDefinition(def);
+        ColumnRiverFlow flow = new ColumnRiverFlow();
+        flow.setRiverName(new RiverName("jdbc", "column"))
                 .setSettings(settings)
-                .setClient(client)
-                .run();
-        assertLastRiverRunTimeExists(client);
+                .setClient(client("1"))
+                .setIngestFactory(createIngestFactory(settings, client("1")))
+                .execute(riverContext);
+        assertNotNull(riverContext.getRiverState().getMap().get(ColumnRiverFlow.LAST_RUN_TIME));
     }
 
-    @Test()
+    @Test
     @Parameters({"river-existedWhereClause"})
-    public void testReadLastRiverRunTimeFromCustomRiverInfo(String riverResource) throws IOException {
-        final Client client = client("1");
-        final TimeValue lastRunAt = new TimeValue(600);
-        setupContext(new MockRiverSource() {
+    public void testReadLastRiverRunTime(String riverResource) throws Exception {
+        final DateTime lastRunAt = new DateTime(new DateTime().getMillis() - 600);
+        createRiverContext(new MockRiverSource() {
             @Override
             public void fetch() {
-                assertLastRunDateEquals(lastRunAt);
+                DateTime readlastRunAt = (DateTime) context.getRiverState().getMap().get(ColumnRiverFlow.LAST_RUN_TIME);
+                assertNotNull(readlastRunAt);
+                assertEquals(readlastRunAt, lastRunAt);
+
             }
         }, riverResource);
-        writeLastRunDateToCustomRiverInfo(client, lastRunAt);
-        Map<String, Object> spec = (Map<String, Object>) riverSettings(riverResource).settings().get("jdbc");
-        Map<String, String> loadedSettings = new JsonSettingsLoader().load(jsonBuilder().map(spec).string());
-        Settings settings = settingsBuilder().put(loadedSettings).build();
-        RiverFlow flow = new ColumnRiverFlow();
-        flow.setRiverContext(context);
-        flow.getFeeder()
-                .setRiverState(new RiverState())
-                .setSpec(spec)
+        RiverState riverState = new RiverState();
+        context.setRiverState(riverState);
+        context.getRiverState().getMap().put(ColumnRiverFlow.LAST_RUN_TIME, lastRunAt);
+        Map<String, Object> settingsMap = riverSettings(riverResource).settings();
+        Settings settings = settingsBuilder().put(settingsMap).build();
+        ColumnRiverContext riverContext = new ColumnRiverContext();
+        Map<String, Object> def = (Map<String, Object>) settingsMap.get("jdbc");
+        riverContext.setDefinition(def);
+        ColumnRiverFlow flow = new ColumnRiverFlow();
+        flow.setRiverName(new RiverName("jdbc", "column"))
                 .setSettings(settings)
-                .setClient(client)
-                .run();
+                .setClient(client("1"))
+                .setIngestFactory(createIngestFactory(settings, client("1")))
+                .execute(riverContext);
     }
 
-    private void setupContext(RiverSource riverSource, String riverResource) throws IOException {
-        RiverSettings riverSettings = riverSettings(riverResource);
-        context.setRiverName(new RiverName(index, type).getName());
-        context.setRiverMouth(new MockRiverMouth());
-        context.setRiverSource(riverSource);
-        context.setRiverSettings(riverSettings.settings());
-        context.columnEscape(true);
+    private void createRiverContext(RiverSource riverSource, String riverResource) throws IOException {
+        context.columnEscape(true)
+             .setRiverMouth(new MockRiverMouth())
+             .setRiverSource(riverSource);
     }
 
-    private void assertLastRiverRunTimeExists(Client client) {
-        try {
-            GetResponse get = client.prepareGet("_river",
-                    context.getRiverName(),
-                    ColumnRiverFlow.DOCUMENT).execute().actionGet();
-            logger.info("get response = {}", get.getSourceAsMap());
-            Map map = (Map) get.getSourceAsMap().get("jdbc");
-            assertNotNull(map, "jdbc key not exists in custom info");
-            assertNotNull(map.get(ColumnRiverFlow.LAST_RUN_TIME), "last run time should not be null");
-        } catch (IndexMissingException e) {
-            fail("custom info not found");
-        }
+    private IngestFactory createIngestFactory(final Settings settings, final Client client) {
+        return new IngestFactory() {
+            @Override
+            public Ingest create() {
+                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 100);
+                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
+                        Runtime.getRuntime().availableProcessors() * 2);
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
+                TimeValue maxrequestwait = settings.getAsTime("max_request_wait", TimeValue.timeValueSeconds(60));
+                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
+                return new BulkNodeClient()
+                        .maxActionsPerBulkRequest(maxbulkactions)
+                        .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
+                        .maxRequestWait(maxrequestwait)
+                        .maxVolumePerBulkRequest(maxvolume)
+                        .flushIngestInterval(flushinterval)
+                        .newClient(client);
+            }
+        };
     }
 
-    private void assertLastRunDateEquals(TimeValue expectedLastRunAt) {
-        Map map = (Map) context.getRiverSettings().get("jdbc");
-        assertNotNull(map);
-        assertEquals(map.get(ColumnRiverFlow.LAST_RUN_TIME), expectedLastRunAt);
-    }
-
-    private void writeLastRunDateToCustomRiverInfo(Client client, TimeValue lastRunAt) throws IOException {
-        XContentBuilder builder = XContentFactory.jsonBuilder()
-                .startObject()
-                .startObject("jdbc")
-                .field(ColumnRiverFlow.LAST_RUN_TIME, lastRunAt.millis())
-                .endObject()
-                .endObject();
-        client.prepareIndex().setIndex("_river").setType(context.getRiverName()).setId(ColumnRiverFlow.DOCUMENT)
-                .setSource(builder.string()).execute().actionGet();
-        client.admin().indices().refresh(Requests.refreshRequest("_river")).actionGet();
-    }
 }

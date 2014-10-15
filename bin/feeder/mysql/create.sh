@@ -8,11 +8,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo '
 {
-    "concurrency" : 2,
-    "elasticsearch" : "es://localhost:9300?es.cluster.name=elasticsearch",
-    "client" : "bulk",
-    "jdbc" : [
-      {
+    "elasticsearch" : {
+         "cluster" : "elasticsearch",
+         "host" : "localhost",
+         "port" : 9300
+    },
+    "type" : "jdbc",
+    "jdbc" : {
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
@@ -28,20 +30,9 @@ echo '
                     "number_of_shards" : 1
                 }
             }
-      },
-      {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "sql" : [
-                {
-                    "statement" : "select *, name as _id, \"myproducts\" as _index, \"myproducts\" as _type from products"
-                }
-            ]
       }
-    ]
 }
 ' | ${JAVA_HOME}/bin/java \
     -cp ${ES_JDBC_CLASSPATH} \
-    org.xbib.elasticsearch.plugin.feeder.Runner \
-    org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder
+    org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
+    org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder

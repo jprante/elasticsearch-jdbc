@@ -1,9 +1,8 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
-import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
+import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.CallableStatement;
@@ -21,7 +20,7 @@ import java.util.TimeZone;
 /**
  * @author <a href="piotr.sliwa@zineinc.com">Piotr Śliwa</a>
  */
-public class MockRiverSource implements RiverSource {
+public class MockRiverSource implements RiverSource<MockRiverContext> {
 
     @Override
     public String strategy() {
@@ -29,8 +28,21 @@ public class MockRiverSource implements RiverSource {
     }
 
     @Override
-    public RiverSource setRiverContext(RiverContext context) {
+    public RiverSource<MockRiverContext> newInstance() {
+        return new MockRiverSource();
+    }
+
+    @Override
+    public RiverSource setRiverContext(MockRiverContext context) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void beforeFetch() throws Exception {
+    }
+
+    @Override
+    public void afterFetch() throws Exception {
     }
 
     @Override
@@ -165,7 +177,7 @@ public class MockRiverSource implements RiverSource {
 
     @Override
     public Locale getLocale() {
-        return Locale.getDefault();
+        return Locale.ROOT;
     }
 
     @Override
@@ -176,6 +188,18 @@ public class MockRiverSource implements RiverSource {
     @Override
     public TimeZone getTimeZone() {
         return TimeZone.getDefault();
+    }
+
+    @Override
+    public void suspend() throws Exception {
+    }
+
+    @Override
+    public void resume() throws Exception {
+    }
+
+    @Override
+    public void shutdown() throws IOException {
     }
 
 }

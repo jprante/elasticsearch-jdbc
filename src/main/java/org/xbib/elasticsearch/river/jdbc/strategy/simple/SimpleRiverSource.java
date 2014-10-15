@@ -1,14 +1,28 @@
+/*
+ * Copyright (C) 2014 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
-import org.xbib.elasticsearch.plugin.jdbc.RiverMouthKeyValueStreamListener;
-import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
+import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.util.RiverMouthKeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -28,6 +42,7 @@ import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLRecoverableException;
 import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
@@ -41,24 +56,23 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 
 /**
- * Simple river source.
- * <p/>
+ * Simple river source implementation.
  * The simple river source iterates through a JDBC result set,
  * merges the rows into Elasticsearch documents, and passes them to
  * a bulk indexer.
- * <p/>
  * There are two channels open, one for reading the database, one for writing.
  */
-public class SimpleRiverSource implements RiverSource {
+public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSource<RC> {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverSource.class.getName());
+    private final static ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.SimpleRiverSource");
 
-    protected RiverContext context;
+    protected RC context;
 
     protected String url;
 
@@ -78,9 +92,7 @@ public class SimpleRiverSource implements RiverSource {
 
     protected DateTimeZone dateTimeZone;
 
-    protected ESLogger logger() {
-        return logger;
-    }
+    protected volatile boolean suspended;
 
     @Override
     public String strategy() {
@@ -88,7 +100,12 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     @Override
-    public SimpleRiverSource setRiverContext(RiverContext context) {
+    public SimpleRiverSource<RC> newInstance() {
+        return new SimpleRiverSource<RC>();
+    }
+
+    @Override
+    public SimpleRiverSource setRiverContext(RC context) {
         this.context = context;
         return this;
     }
@@ -115,16 +132,16 @@ public class SimpleRiverSource implements RiverSource {
         return this;
     }
 
-
     @Override
     public SimpleRiverSource setLocale(Locale locale) {
         this.locale = locale;
-        Locale.setDefault(locale); // for JDBC drivers internals
+        // initialize locale for JDBC drivers internals
+        Locale.setDefault(locale);
         if (timezone == null) {
             timezone = TimeZone.getTimeZone("UTC");
         }
         this.calendar = Calendar.getInstance(timezone, locale);
-        logger().debug("calendar timezone for JDBC timestamps = {}", calendar.getTimeZone().getDisplayName());
+        logger.debug("calendar timezone for JDBC timestamps = {}", calendar.getTimeZone().getDisplayName());
         return this;
     }
 
@@ -144,8 +161,7 @@ public class SimpleRiverSource implements RiverSource {
             locale = Locale.getDefault();
         }
         this.calendar = Calendar.getInstance(timezone, locale);
-        logger().debug("calendar timezone for JDBC timestamps = {}", calendar.getTimeZone().getDisplayName());
-
+        logger.debug("calendar timezone for JDBC timestamps = {}", calendar.getTimeZone().getDisplayName());
         // for formatting fetched JDBC time values
         this.dateTimeZone = DateTimeZone.forTimeZone(timezone);
         return this;
@@ -159,15 +175,14 @@ public class SimpleRiverSource implements RiverSource {
         return timezone;
     }
 
-    //private static final String ISO_FORMAT_SECONDS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    @Override
+    public void suspend() {
+        this.suspended = true;
+    }
 
-    /*public static String formatDateISO(long millis) {
-        return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
-    }*/
-
-    public String formatDate(long millis) {
-        return new DateTime(millis).withZone(dateTimeZone).toString();
-        //return new DateTime(millis).toString(ISO_FORMAT_SECONDS);
+    @Override
+    public void resume() {
+        this.suspended = false;
     }
 
     /**
@@ -177,41 +192,50 @@ public class SimpleRiverSource implements RiverSource {
      * @throws SQLException when SQL execution gives an error
      */
     @Override
-    public Connection getConnectionForReading() throws SQLException {
-        boolean cond = readConnection == null || readConnection.isClosed();
+    public synchronized Connection getConnectionForReading() throws SQLException {
+        boolean invalid = readConnection == null || readConnection.isClosed();
         try {
-            cond = cond || !readConnection.isValid(5);
+            invalid = invalid || !readConnection.isValid(5);
         } catch (AbstractMethodError e) {
             // old/buggy JDBC driver
-            logger().debug(e.getMessage());
+            logger.debug(e.getMessage());
         } catch (SQLFeatureNotSupportedException e) {
             // postgresql does not support isValid()
-            logger().debug(e.getMessage());
+            logger.debug(e.getMessage());
         }
-        if (cond) {
-            int retries = context != null ? context.getRetries() : 1;
+        if (invalid) {
+            int retries = context.getRetries();
             while (retries > 0) {
                 retries--;
                 try {
-                    readConnection = DriverManager.getConnection(url, user, password);
-                    if (context.shouldPrepareDatabaseMetadata()) {
-                        prepare(readConnection.getMetaData());
+                    Properties properties = new Properties();
+                    properties.put("user", user);
+                    properties.put("password", password);
+                    if (context.getConnectionProperties() != null) {
+                        properties.putAll(context.getConnectionProperties());
                     }
-                    // required by MySQL for large result streaming
+                    readConnection = DriverManager.getConnection(url, properties);
+                    DatabaseMetaData metaData = readConnection.getMetaData();
+                    if (context.shouldPrepareDatabaseMetadata()) {
+                        prepare(metaData);
+                    }
+                    if (metaData.getTimeDateFunctions().contains("TIMESTAMPDIFF")) {
+                        context.setTimestampDiffSupported(true);
+                    }
+                    // "readonly" is required by MySQL for large result streaming
                     readConnection.setReadOnly(true);
                     // Postgresql cursor mode condition:
                     // fetchsize > 0, no scrollable result set, no auto commit, no holdable cursors over commit
                     // https://github.com/pgjdbc/pgjdbc/blob/master/org/postgresql/jdbc2/AbstractJdbc2Statement.java#L514
                     //readConnection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
-                    if (context != null) {
-                        // many drivers don't like autocommit=true
-                        readConnection.setAutoCommit(context.getAutoCommit());
-                    }
+                    // many drivers don't like autocommit=true
+                    readConnection.setAutoCommit(context.getAutoCommit());
                     return readConnection;
                 } catch (SQLException e) {
-                    logger().error("while opening read connection: " + url + " " + e.getMessage(), e);
+                    logger.error("while opening read connection: " + url + " " + e.getMessage(), e);
                     try {
-                        Thread.sleep(context != null ? context.getMaxRetryWait().millis() : 1000L);
+                        logger.debug("waiting for {} seconds", context.getMaxRetryWait().seconds());
+                        Thread.sleep(context.getMaxRetryWait().millis());
                     } catch (InterruptedException ex) {
                         // do nothing
                     }
@@ -222,38 +246,42 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     /**
-     * Get JDBC connection for writing
+     * Get JDBC connection for writing. FOr executing "update", "insert", callable statements
      *
      * @return the connection
      * @throws SQLException when SQL execution gives an error
      */
     @Override
-    public Connection getConnectionForWriting() throws SQLException {
-        boolean cond = writeConnection == null || writeConnection.isClosed();
+    public synchronized Connection getConnectionForWriting() throws SQLException {
+        boolean invalid = writeConnection == null || writeConnection.isClosed();
         try {
-            cond = cond || !writeConnection.isValid(5);
+            invalid = invalid || !writeConnection.isValid(5);
         } catch (AbstractMethodError e) {
-            // old/buggy JDBC driver
+            // old/buggy JDBC driver do not implement isValid()
         } catch (SQLFeatureNotSupportedException e) {
-            // postgresql does not support isValid()
+            // Example: postgresql does implement but not support isValid()
         }
-        if (cond) {
-            int retries = context != null ? context.getRetries() : 1;
+        if (invalid) {
+            int retries = context.getRetries();
             while (retries > 0) {
                 retries--;
                 try {
-                    writeConnection = DriverManager.getConnection(url, user, password);
-                    if (context != null) {
-                        // many drivers don't like autocommit=true
-                        writeConnection.setAutoCommit(context.getAutoCommit());
+                    Properties properties = new Properties();
+                    properties.put("user", user);
+                    properties.put("password", password);
+                    if (context.getConnectionProperties() != null) {
+                        properties.putAll(context.getConnectionProperties());
                     }
+                    writeConnection = DriverManager.getConnection(url, properties);
+                    // many drivers don't like autocommit=true
+                    writeConnection.setAutoCommit(context.getAutoCommit());
                     return writeConnection;
                 } catch (SQLNonTransientConnectionException e) {
                     // ignore derby drop=true silently
                 } catch (SQLException e) {
-                    logger().error("while opening write connection: " + url + " " + e.getMessage(), e);
+                    logger.error("while opening write connection: " + url + " " + e.getMessage(), e);
                     try {
-                        Thread.sleep(context != null ? context.getMaxRetryWait().millis() : 1000L);
+                        Thread.sleep(context.getMaxRetryWait().millis());
                     } catch (InterruptedException ex) {
                         // do nothing
                     }
@@ -263,38 +291,71 @@ public class SimpleRiverSource implements RiverSource {
         return writeConnection;
     }
 
+    @Override
+    public void beforeFetch() throws Exception {
+        context.setLastStartDate(new DateTime().getMillis());
+    }
+
     /**
-     * River cycle fetch. Issue a series of SQL statements.
+     * River fetch. Issue a series of SQL statements.
      *
      * @throws SQLException when SQL execution gives an error
      * @throws IOException  when input/output error occurs
      */
     @Override
     public void fetch() throws SQLException, IOException {
-       logger().debug("fetching, {} SQL commands", context.getStatements().size());
-        context.setLastStartDate(new java.util.Date().getTime());
+        logger.debug("fetching, {} SQL commands", context.getStatements().size());
         try {
             for (SQLCommand command : context.getStatements()) {
-                context.setLastExecutionStartDate(new java.util.Date().getTime());
-                if (command.isCallable()) {
-                    logger().debug("executing callable SQL: {}", command);
-                    executeCallable(command);
-                } else if (!command.getParameters().isEmpty()) {
-                    logger().debug("executing SQL with params: {}", command);
-                    executeWithParameter(command);
-                } else {
-                    logger().debug("executing SQL without params: {}", command);
-                    execute(command);
+                context.setLastExecutionStartDate(new DateTime().getMillis());
+                try {
+                    if (command.isCallable()) {
+                        logger.debug("{} executing callable SQL: {}", this, command);
+                        executeCallable(command);
+                    } else if (!command.getParameters().isEmpty()) {
+                        logger.debug("{} executing SQL with params: {}", this, command);
+                        executeWithParameter(command);
+                    } else {
+                        logger.debug("{} executing SQL without params: {}", this, command);
+                        execute(command);
+                    }
+                    context.setLastExecutionEndDate(new DateTime().getMillis());
+                } catch (SQLRecoverableException e) {
+                    long millis = context.getMaxRetryWait().getMillis();
+                    logger.warn("retrying after " + millis / 1000 + " seconds, got exception ", e);
+                    Thread.sleep(context.getMaxRetryWait().getMillis());
+                    if (command.isCallable()) {
+                        logger.debug("retrying, executing callable SQL: {}", command);
+                        executeCallable(command);
+                    } else if (!command.getParameters().isEmpty()) {
+                        logger.debug("retrying, executing SQL with params: {}", command);
+                        executeWithParameter(command);
+                    } else {
+                        logger.debug("retrying, executing SQL without params: {}", command);
+                        execute(command);
+                    }
+                    context.setLastExecutionEndDate(new DateTime().getMillis());
                 }
-                context.setLastExecutionEndDate(new java.util.Date().getTime());
             }
         } catch (Exception e) {
             throw new IOException(e);
-        } finally {
-            context.setLastEndDate(new java.util.Date().getTime());
-            closeReading();
-            closeWriting();
         }
+    }
+
+    @Override
+    public void afterFetch() throws Exception {
+        context.setLastEndDate(new DateTime().getMillis());
+        shutdown();
+    }
+
+    @Override
+    public void shutdown() {
+        closeReading();
+        logger.debug("read connection closed");
+        readConnection = null;
+        closeWriting();
+        logger.debug("write connection closed");
+        writeConnection = null;
     }
 
     /**
@@ -314,7 +375,9 @@ public class SimpleRiverSource implements RiverSource {
                 // Postgresql requires direct use of executeQuery(sql) for cursor with fetchsize set.
                 Connection connection = getConnectionForReading();
                 if (connection != null) {
+                    logger.debug("{} using read connection {} for executing query", this, connection);
                     statement = connection.createStatement();
+                    statement.setQueryTimeout(context.getQueryTimeout());
                     results = executeQuery(statement, command.getSQL());
                     if (context.shouldPrepareResultSetMetadata()) {
                         prepare(results.getMetaData());
@@ -328,6 +391,7 @@ public class SimpleRiverSource implements RiverSource {
                 // use write connection
                 Connection connection = getConnectionForWriting();
                 if (connection != null) {
+                    logger.debug("{} using write connection {} for executing insert/update", this, connection);
                     statement = connection.createStatement();
                     executeUpdate(statement, command.getSQL());
                 }
@@ -381,26 +445,30 @@ public class SimpleRiverSource implements RiverSource {
         try {
             // we do not make a difference betwwen read/write and we assume
             // it is safe to use the read connection and query the DB
-            statement = getConnectionForWriting().prepareCall(command.getSQL());
-            if (!command.getParameters().isEmpty()) {
-                bind(statement, command.getParameters());
-            }
-            if (!command.getRegister().isEmpty()) {
-                register(statement, command.getRegister());
-            }
-            boolean hasRows = statement.execute();
-            RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
-                    .output(context.getRiverMouth());
-            if (hasRows) {
-                logger.debug("callable execution created result set");
-                while (hasRows) {
-                    // merge result set, but use register
-                    merge(command, statement.getResultSet(), listener);
-                    hasRows = statement.getMoreResults();
+            Connection connection = getConnectionForWriting();
+            logger.debug("{} using write connection {} for executing callable statement", this, connection);
+            if (connection != null) {
+                statement = connection.prepareCall(command.getSQL());
+                if (!command.getParameters().isEmpty()) {
+                    bind(statement, command.getParameters());
                 }
-            } else {
-                // no result set, merge from registered params only
-                merge(command, statement, listener);
+                if (!command.getRegister().isEmpty()) {
+                    register(statement, command.getRegister());
+                }
+                boolean hasRows = statement.execute();
+                RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
+                        .output(context.getRiverMouth());
+                if (hasRows) {
+                    logger.debug("callable execution created result set");
+                    while (hasRows) {
+                        // merge result set, but use register
+                        merge(command, statement.getResultSet(), listener);
+                        hasRows = statement.getMoreResults();
+                    }
+                } else {
+                    // no result set, merge from registered params only
+                    merge(command, statement, listener);
+                }
             }
         } finally {
             close(statement);
@@ -415,7 +483,7 @@ public class SimpleRiverSource implements RiverSource {
      * @throws SQLException when SQL execution gives an error
      * @throws IOException  when input/output error occurs
      */
-    public void merge(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
+    protected void merge(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException, ParseException {
         if (listener == null) {
             return;
@@ -424,17 +492,26 @@ public class SimpleRiverSource implements RiverSource {
         long rows = 0L;
         while (nextRow(command, results, listener)) {
             rows++;
+            if (context.getMetric() != null) {
+                context.getMetric().mark();
+            }
+            while (suspended) {
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    logger.warn("interrupted");
+                }
+            }
         }
         context.setLastRowCount(rows);
         if (rows > 0) {
-            logger().debug("merged {} rows", rows);
+            logger.debug("merged {} rows", rows);
         } else {
-            logger().debug("no rows merged ");
+            logger.debug("no rows merged ");
         }
         afterRows(command, results, listener);
     }
-
-
 
     /**
      * Prepare a query statement
@@ -449,12 +526,11 @@ public class SimpleRiverSource implements RiverSource {
         if (connection == null) {
             throw new SQLException("can't connect to source " + url);
         }
-        logger().debug("preparing statement with SQL {}", sql);
-        int type =
-                "TYPE_FORWARD_ONLY".equals(context.getResultSetType()) ? ResultSet.TYPE_FORWARD_ONLY :
-                        "TYPE_SCROLL_SENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_SENSITIVE :
-                                "TYPE_SCROLL_INSENSITIVE".equals(context.getResultSetType()) ? ResultSet.TYPE_SCROLL_INSENSITIVE :
-                                        ResultSet.TYPE_FORWARD_ONLY;
+        logger.debug("preparing statement with SQL {}", sql);
+        int type = "TYPE_FORWARD_ONLY".equals(context.getResultSetType()) ?
+                ResultSet.TYPE_FORWARD_ONLY : "TYPE_SCROLL_SENSITIVE".equals(context.getResultSetType()) ?
+                ResultSet.TYPE_SCROLL_SENSITIVE : "TYPE_SCROLL_INSENSITIVE".equals(context.getResultSetType()) ?
+                ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
         int concurrency = "CONCUR_READ_ONLY".equals(context.getResultSetConcurrency()) ?
                 ResultSet.CONCUR_READ_ONLY : ResultSet.CONCUR_UPDATABLE;
         return connection.prepareStatement(sql, type, concurrency);
@@ -486,7 +562,7 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public SimpleRiverSource bind(PreparedStatement statement, List<Object> values) throws SQLException {
         if (values == null) {
-            logger().warn("no values given for bind");
+            logger.warn("no values given for bind");
             return this;
         }
         for (int i = 1; i <= values.size(); i++) {
@@ -504,7 +580,7 @@ public class SimpleRiverSource implements RiverSource {
      * @throws IOException  when input/output error occurs
      */
     @SuppressWarnings({"unchecked"})
-    public void merge(SQLCommand command, CallableStatement statement, KeyValueStreamListener listener)
+    private void merge(SQLCommand command, CallableStatement statement, KeyValueStreamListener listener)
             throws SQLException, IOException {
         Map<String, Object> map = command.getRegister();
         if (map.isEmpty()) {
@@ -619,18 +695,18 @@ public class SimpleRiverSource implements RiverSource {
         return this;
     }
 
+    @Override
     public void beforeRows(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         beforeRows(null, results, listener);
     }
-
 
     /**
      * Before rows are read, let the KeyValueStreamListener know about the keys.
      * If the SQL command was a callable statement and a register is there, look into the register map
      * for the key names, not in the result set metadata.
      *
-     * @param command the SQL command that created this result set
+     * @param command  the SQL command that created this result set
      * @param results  the result set
      * @param listener the key/value stream listener
      * @throws SQLException when SQL execution gives an error
@@ -642,20 +718,25 @@ public class SimpleRiverSource implements RiverSource {
             throws SQLException, IOException {
         List<String> keys = new LinkedList();
         if (command != null && command.isCallable() && !command.getRegister().isEmpty()) {
-            for (Map.Entry<String,Object> me : command.getRegister().entrySet()) {
+            for (Map.Entry<String, Object> me : command.getRegister().entrySet()) {
                 keys.add(me.getKey());
             }
         } else {
             ResultSetMetaData metadata = results.getMetaData();
             int columns = metadata.getColumnCount();
             for (int i = 1; i <= columns; i++) {
-                keys.add(metadata.getColumnLabel(i));
+                if (context.getColumnNameMap() == null) {
+                    keys.add(metadata.getColumnLabel(i));
+                } else {
+                    keys.add(mapColumnName(metadata.getColumnLabel(i)));
+                }
             }
         }
         listener.begin();
         listener.keys(keys);
     }
 
+    @Override
     public boolean nextRow(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         return nextRow(null, results, listener);
@@ -665,7 +746,7 @@ public class SimpleRiverSource implements RiverSource {
      * Get next row and prepare the values for processing. The labels of each
      * columns are used for the ValueListener as paths for JSON object merging.
      *
-     * @param command the SQL command that created this result set
+     * @param command  the SQL command that created this result set
      * @param results  the result set
      * @param listener the listener
      * @return true if row exists and was processed, false otherwise
@@ -675,13 +756,14 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public boolean nextRow(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
-        if (results.next() && (context.getRiverFlow() == null || !context.getRiverFlow().getFeeder().isInterrupted())) {
-            processRow(command, results, listener);
+        if (results.next()) {
+            processRow(results, listener);
             return true;
         }
         return false;
     }
 
+    @Override
     public void afterRows(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         afterRows(null, results, listener);
@@ -691,7 +773,7 @@ public class SimpleRiverSource implements RiverSource {
      * After the rows keys and values, let the listener know about the end of
      * the result set.
      *
-     * @param command the SQL command that created this result set
+     * @param command  the SQL command that created this result set
      * @param results  the result set
      * @param listener the key/value stream listener
      * @throws SQLException when SQL execution gives an error
@@ -704,21 +786,20 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void processRow(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
+    private void processRow(ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
-        Locale locale = context != null ? context.getLocale() != null ? context.getLocale() : Locale.getDefault() : Locale.getDefault();
         List<Object> values = new LinkedList<Object>();
         ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
-        context.getLastRow().clear();
+        context.setLastRow(new HashMap());
         for (int i = 1; i <= columns; i++) {
             try {
                 Object value = parseType(results, i, metadata.getColumnType(i), locale);
-                logger().trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+                logger.trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
                 values.add(value);
                 context.getLastRow().put("$row." + metadata.getColumnLabel(i), value);
             } catch (ParseException e) {
-                logger().warn("parse error for value {}, using null instead", results.getObject(i));
+                logger.warn("parse error for value {}, using null instead", results.getObject(i));
                 values.add(null);
             }
         }
@@ -769,7 +850,7 @@ public class SimpleRiverSource implements RiverSource {
                 readConnection.close();
             }
         } catch (SQLException e) {
-            logger().warn("while closing read connection: " + e.getMessage());
+            logger.warn("while closing read connection: " + e.getMessage());
         }
         return this;
     }
@@ -788,7 +869,7 @@ public class SimpleRiverSource implements RiverSource {
                 writeConnection.close();
             }
         } catch (SQLException e) {
-            logger().warn("while closing write connection: " + e.getMessage());
+            logger.warn("while closing write connection: " + e.getMessage());
         }
         return this;
     }
@@ -850,7 +931,6 @@ public class SimpleRiverSource implements RiverSource {
         context.setLastDatabaseMetadata(m);
     }
 
-
     private void prepare(final ResultSetMetaData metaData) throws SQLException {
         Map<String, Object> m = new HashMap<String, Object>() {
             {
@@ -883,65 +963,63 @@ public class SimpleRiverSource implements RiverSource {
     }
 
     private void bind(PreparedStatement statement, int i, Object value) throws SQLException {
-        logger().debug("bind: value = {}", value);
+        logger.trace("bind: value = {}", value);
         if (value == null) {
             statement.setNull(i, Types.VARCHAR);
         } else if (value instanceof String) {
             String s = (String) value;
             if ("$now".equals(s)) {
-                Timestamp t = new Timestamp(new java.util.Date().getTime());
-                logger().debug("setting $now to {}", t);
+                Timestamp t = new Timestamp(new DateTime().getMillis());
+                logger.trace("setting $now to {}", t);
                 statement.setTimestamp(i, t, calendar);
             } else if ("$job".equals(s)) {
-                logger().debug("setting $job to {}", context.job());
-                statement.setString(i, context.job());
+                logger.trace("setting $job to {}", context.getRiverState().getCounter());
+                statement.setInt(i, context.getRiverState().getCounter());
             } else if ("$count".equals(s)) {
-                logger().debug("setting $count to {}", context.getLastRowCount());
+                logger.trace("setting $count to {}", context.getLastRowCount());
                 statement.setLong(i, context.getLastRowCount());
             } else if ("$last.sql.start".equals(s)) {
                 if (context.getLastExecutionStartDate() == 0L) {
-                    Timestamp riverStarted = context.getRiverFlow() != null ?
-                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
-                    context.setLastExecutionStartDate(riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime());
+                    Timestamp riverStarted = new Timestamp(context.getRiverState().getStarted().getMillis());
+                    context.setLastExecutionStartDate(riverStarted.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastExecutionStartDate()), calendar);
             } else if ("$last.sql.end".equals(s)) {
                 if (context.getLastExecutionEndDate() == 0L) {
-                    Timestamp riverStarted = context.getRiverFlow() != null ?
-                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
-                    context.setLastExecutionEndDate(riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime());
+                    Timestamp riverStarted = context.getRiverState() != null ?
+                            new Timestamp(context.getRiverState().getStarted().getMillis()) : null;
+                    context.setLastExecutionEndDate(riverStarted != null ? riverStarted.getTime() : new DateTime().getMillis());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastExecutionEndDate()), calendar);
             } else if ("$last.sql.sequence.start".equals(s)) {
                 if (context.getLastStartDate() == 0L) {
-                    Timestamp riverStarted = context.getRiverFlow() != null ?
-                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
-                    context.setLastStartDate(riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime());
+                    Timestamp riverStarted = new Timestamp(context.getRiverState().getStarted().getMillis());
+                    context.setLastStartDate(riverStarted.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastStartDate()), calendar);
             } else if ("$last.sql.sequence.end".equals(s)) {
                 if (context.getLastEndDate() == 0L) {
-                    Timestamp riverStarted = context.getRiverFlow() != null ?
-                            new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
-                    context.setLastEndDate(riverStarted != null ? riverStarted.getTime() : new java.util.Date().getTime());
+                    Timestamp riverStarted = context.getRiverState() != null ?
+                            new Timestamp(context.getRiverState().getStarted().getMillis()) : null;
+                    context.setLastEndDate(riverStarted != null ? riverStarted.getTime() : new DateTime().getMillis());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastEndDate()), calendar);
             } else if ("$river.name".equals(s)) {
-                String name = context.getRiverName();
+                String name = context.getRiverState().getName();
                 statement.setString(i, name);
-            } else if ("$river.state.timestamp".equals(s)) {
-                Timestamp timestamp = context.getRiverFlow() != null ?
-                        new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getTimestamp().getTime()) : null;
-                statement.setTimestamp(i, timestamp, calendar);
             } else if ("$river.state.started".equals(s)) {
-                Timestamp started = context.getRiverFlow() != null ?
-                        new Timestamp(context.getRiverFlow().getFeeder().getRiverState().getStarted().getTime()) : null;
+                Timestamp started = new Timestamp(context.getRiverState().getStarted().getMillis());
                 statement.setTimestamp(i, started, calendar);
+            } else if ("$river.state.last_active_begin".equals(s)) {
+                Timestamp timestamp = new Timestamp(context.getRiverState().getLastActiveBegin().getMillis());
+                statement.setTimestamp(i, timestamp, calendar);
+            } else if ("$river.state.last_active_end".equals(s)) {
+                Timestamp timestamp = new Timestamp(context.getRiverState().getLastActiveEnd().getMillis());
+                statement.setTimestamp(i, timestamp, calendar);
             } else if ("$river.state.counter".equals(s)) {
-                Long counter = context.getRiverFlow() != null ?
-                        context.getRiverFlow().getFeeder().getRiverState().getCounter() : null;
+                Integer counter = context.getRiverState().getCounter();
                 if (counter != null) {
-                    statement.setLong(i, counter);
+                    statement.setInt(i, counter);
                 }
             } else if (context.shouldPrepareDatabaseMetadata()) {
                 for (String k : context.getLastDatabaseMetadata().keySet()) {
@@ -996,9 +1074,7 @@ public class SimpleRiverSource implements RiverSource {
     @Override
     public Object parseType(ResultSet result, Integer i, int type, Locale locale)
             throws SQLException, IOException, ParseException {
-        if (logger().isTraceEnabled()) {
-            logger().trace("{} {} {}", i, type, result.getString(i));
-        }
+        logger.trace("i={} type={}", i, type);
         switch (type) {
             /**
              * The JDBC types CHAR, VARCHAR, and LONGVARCHAR are closely
@@ -1025,7 +1101,8 @@ public class SimpleRiverSource implements RiverSource {
             case Types.BINARY:
             case Types.VARBINARY:
             case Types.LONGVARBINARY: {
-                return result.getBytes(i);
+                byte[] b = result.getBytes(i);
+                return context.shouldTreatBinaryAsString() ? (b != null ? new String(b) : null) : b;
             }
             /**
              * The JDBC type ARRAY represents the SQL3 type ARRAY.
@@ -1078,8 +1155,9 @@ public class SimpleRiverSource implements RiverSource {
                     Object o = result.getInt(i);
                     return result.wasNull() ? null : o;
                 } catch (Exception e) {
-                    // PSQLException: Bad value for type int : t
-                    if (e.getMessage().startsWith("Bad value for type int")) {
+                    String exceptionClassName = e.getClass().getName();
+                    // postgresql can not handle boolean, it will throw PSQLException, something like "Bad value for type int : t"
+                    if ("org.postgresql.util.PSQLException".equals(exceptionClassName)) {
                         return "t".equals(result.getString(i));
                     }
                     throw new IOException(e);
@@ -1456,7 +1534,7 @@ public class SimpleRiverSource implements RiverSource {
              * java.util.Map object.
              */
             case Types.DISTINCT: {
-                logger().warn("JDBC type not implemented: {}", type);
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             /**
@@ -1478,19 +1556,19 @@ public class SimpleRiverSource implements RiverSource {
              *
              */
             case Types.STRUCT: {
-                logger().warn("JDBC type not implemented: {}", type);
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.REF: {
-                logger().warn("JDBC type not implemented: {}", type);
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             case Types.ROWID: {
-                logger().warn("JDBC type not implemented: {}", type);
+                logger.warn("JDBC type not implemented: {}", type);
                 return null;
             }
             default: {
-                logger().warn("unknown JDBC type ignored: {}", type);
+                logger.warn("unknown JDBC type ignored: {}", type);
                 return null;
             }
         }
@@ -1565,4 +1643,28 @@ public class SimpleRiverSource implements RiverSource {
         }
         return Types.OTHER;
     }
+
+    private String mapColumnName(String columnName) {
+        // TODO JDK8: StringJoiner
+        Map<String, Object> columnNameMap = context.getColumnNameMap();
+        StringBuilder sb = new StringBuilder();
+        String[] s = columnName.split("\\.");
+        for (int i = 0; i < s.length; i++) {
+            if (i > 0) {
+                sb.append(".");
+            }
+            if (columnNameMap.containsKey(s[i])) {
+                s[i] = columnNameMap.get(s[i]).toString();
+            } else {
+                logger.info("no column map entry for {} in map {}", s[i], columnNameMap);
+            }
+            sb.append(s[i]);
+        }
+        return sb.toString();
+    }
+
+    private String formatDate(long millis) {
+        return new DateTime(millis).withZone(dateTimeZone).toString();
+    }
+
 }

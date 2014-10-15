@@ -1,4 +1,5 @@
 {
+    "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:postgresql://localhost:5432/test",
         "user" : "test",

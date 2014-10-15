@@ -1,6 +1,6 @@
-
 package org.xbib.elasticsearch.river.jdbc.strategy.column;
 
+import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
@@ -8,13 +8,11 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.RiverSettings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
-import org.xbib.elasticsearch.plugin.jdbc.PlainIndexableObject;
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
-import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
-import org.xbib.elasticsearch.river.jdbc.RiverSource;
+import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
+import org.xbib.elasticsearch.plugin.jdbc.util.PlainIndexableObject;
+import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
+import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
-import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -22,68 +20,66 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
+public class ColumnRiverSourceTests extends AbstractColumnRiverTest {
 
     private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverSourceTests.class.getName());
 
     private Random random = new Random();
 
-    private TimeValue LAST_RUN_TIME = new TimeValue(new Date().getTime() - 60 * 60 * 1000);
+    private DateTime LAST_RUN_TIME = new DateTime(new DateTime().getMillis() - 60 * 60 * 1000);
 
     @Override
-    public RiverSource getRiverSource() {
+    public ColumnRiverSource newRiverSource() {
         return new ColumnRiverSource();
     }
 
     @Override
-    public RiverContext getRiverContext() {
-        return new RiverContext();
+    public ColumnRiverContext newRiverContext() {
+        return new ColumnRiverContext();
     }
 
-    @Test()
+    @Test
     @Parameters({"river-existedWhereClause", "sqlInsert"})
-    public void testCreateObjects(String riverResource, String sql)
-            throws SQLException, IOException, InterruptedException {
+    public void testCreateObjects(String riverResource, String sql) throws Exception {
         verifyCreateObjects(riverResource, sql);
     }
 
     @Test
     @Parameters({"river-whereClausePlaceholder", "sqlInsert"})
     public void testCreateObjects_configurationWithWherePlaceholder(String riverResource, String sql)
-            throws SQLException, IOException, InterruptedException {
+            throws Exception {
         verifyCreateObjects(riverResource, sql);
     }
 
-    @Test()
+    @Test
     @Parameters({"river-sqlparams", "sqlInsert"})
     public void testCreateObjects_configurationWithSqlParams(String riverResource, String sql)
-            throws SQLException, IOException, InterruptedException {
+            throws Exception {
         verifyCreateObjects(riverResource, sql);
     }
 
-    @Test()
+    @Test
     @Parameters({"river-sqlForTestDeletions", "sqlInsert"})
     public void testRemoveObjects(String riverResource, String insertSql)
-            throws SQLException, IOException, InterruptedException {
+            throws Exception {
         verifyDeleteObjects(riverResource, insertSql);
     }
 
     @Test
     @Parameters({"river-sqlForTestDeletionsAndWherePlaceholder", "sqlInsert"})
     public void testRemoveObjects_configurationWithWherePlaceholder(String riverResource, String insertSql)
-            throws SQLException, IOException, InterruptedException {
+            throws Exception {
         verifyDeleteObjects(riverResource, insertSql);
     }
 
     @Test
     @Parameters({"river-existedWhereClauseWithOverlap", "sqlInsert"})
     public void testCreateObjects_withLastRunTimeStampOverlap(String riverResource, String sql)
-        throws SQLException, IOException, InterruptedException {
+        throws Exception {
         final int newRecordsOutOfTimeRange = 3;
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
@@ -97,7 +93,7 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
 
     private void verifyCreateObjects(String riverResource, String sql)
-            throws SQLException, IOException, InterruptedException {
+            throws Exception {
         final int newRecordsOutOfTimeRange = 3;
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
@@ -109,7 +105,7 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
 
     private void verifyDeleteObjects(String riverResource, String insertSql)
-            throws IOException, SQLException, InterruptedException {
+            throws Exception {
         MockRiverMouth riverMouth = new MockRiverMouth();
         boolean[] shouldProductsBeDeleted = new boolean[]{true, true, false};
         ProductFixtures productFixtures = createFixturesAndPopulateMouth(shouldProductsBeDeleted, riverMouth);
@@ -152,35 +148,37 @@ public class ColumnRiverSourceTests extends AbstractRiverNodeTest {
     }
 
     private void testColumnRiver(MockRiverMouth riverMouth, String riverResource, String sql, ProductFixture[] fixtures, int expectedHits)
-            throws SQLException, IOException, InterruptedException {
+            throws Exception {
         createData(sql, fixtures);
         context.setRiverMouth(riverMouth);
-        setContextSettings(riverResource);
+        createRiverContext(riverResource);
         source.fetch();
         assertEquals(riverMouth.data().size(), expectedHits);
     }
 
-    private void setContextSettings(String riverResource) throws IOException {
+    private void createRiverContext(String riverResource) throws IOException {
         RiverSettings riverSettings = riverSettings(riverResource);
         Map<String, Object> settings = (Map<String, Object>) riverSettings.settings().get("jdbc");
 
-        riverSettings.settings().put(ColumnRiverFlow.LAST_RUN_TIME, LAST_RUN_TIME);
-        riverSettings.settings().put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, new TimeValue(new Date().getTime()));
+        RiverState riverState = new RiverState();
+        riverState.getMap().put(ColumnRiverFlow.LAST_RUN_TIME, LAST_RUN_TIME);
+        riverState.getMap().put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, new DateTime());
 
-        context.setRiverSettings(riverSettings.settings());
-        context.setStatements(SQLCommand.parse(settings));
-        context.columnCreatedAt(XContentMapValues.nodeStringValue(settings.get("column_created_at"), null));
-        context.columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null));
-        context.columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null));
-        context.columnEscape(true);
-        context.setLastRunTimeStampOverlap(getLastRunTimestampOverlap(riverSettings));
+        context
+            .columnCreatedAt(XContentMapValues.nodeStringValue(settings.get("column_created_at"), null))
+            .columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null))
+            .columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null))
+            .columnEscape(true)
+            .setLastRunTimeStampOverlap(getLastRunTimestampOverlap(riverSettings))
+            .setStatements(SQLCommand.parse(settings))
+            .setRiverState(riverState);
     }
 
     private TimeValue getLastRunTimestampOverlap(RiverSettings riverSettings) {
         TimeValue overlap = TimeValue.timeValueMillis(0);
-        Map<String, Object> jdbcSettingsMap = ((Map<String, Object>) (riverSettings.settings().get("jdbc")));
-        if (jdbcSettingsMap != null && jdbcSettingsMap.containsKey("last_run_timestamp_overlap")) {
-            overlap = XContentMapValues.nodeTimeValue(jdbcSettingsMap.get("last_run_timestamp_overlap"));
+        Map<String, Object> settings = ((Map<String, Object>) (riverSettings.settings().get("jdbc")));
+        if (settings != null && settings.containsKey("last_run_timestamp_overlap")) {
+            overlap = XContentMapValues.nodeTimeValue(settings.get("last_run_timestamp_overlap"));
         }
         return overlap;
     }

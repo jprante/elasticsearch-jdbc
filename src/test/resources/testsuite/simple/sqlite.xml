@@ -17,7 +17,7 @@
         <parameter name="res1" value="{pay_by_quarter=10000}"/>
         <parameter name="res2" value="{pay_by_quarter=[20000,25000]}"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
         </classes>
     </test>
 
@@ -30,7 +30,7 @@
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverDataTests"/>
         </classes>
     </test>
 
@@ -42,7 +42,7 @@
         <parameter name="sql2"
                    value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverJobTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTests"/>
         </classes>
     </test>
 

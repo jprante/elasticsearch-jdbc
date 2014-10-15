@@ -14,7 +14,7 @@
         <parameter name="sql2" value="select * from orders"/>
         <parameter name="sql3" value="select * from products where amount is NULL"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
         </classes>
     </test>
 
@@ -26,7 +26,7 @@
         <parameter name="river3" value="mysql/river-3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverDataTests"/>
         </classes>
     </test>
 
@@ -37,7 +37,7 @@
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverJobTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTests"/>
         </classes>
     </test>
 
@@ -51,7 +51,7 @@
         <parameter name="sql2"
                    value="insert into logs (modified, message) values(?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverScheduleTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverScheduleTests"/>
         </classes>
     </test>
 
@@ -61,7 +61,7 @@
         <parameter name="river8" value="mysql/river-8.json"/>
         <parameter name="river9" value="mysql/river-9.json"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverStoredProcedureTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverStoredProcedureTests"/>
         </classes>
     </test>
 

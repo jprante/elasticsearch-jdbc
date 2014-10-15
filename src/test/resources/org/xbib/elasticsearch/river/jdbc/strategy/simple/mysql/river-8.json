@@ -1,4 +1,5 @@
 {
+    "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",

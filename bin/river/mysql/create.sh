@@ -6,7 +6,6 @@ curl -XPUT '0:9200/_river/my_mysql_river/_meta' -d '{
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
-        "sql" :  "select *, created as _id from orders",
-        "maxbulkactions" : 10
+        "sql" :  "select *, created as _id from orders"
     }
 }'

@@ -11,10 +11,15 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.LocalTransportAddress;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 
 import java.io.IOException;
 import java.util.Map;
@@ -66,7 +71,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
     public void startNodes() throws Exception {
         setClusterName();
 
-        // we need more than one node, for the river state actions to test
+        // we need more than one node, for better resilience of the river state actions
         startNode("1");
         startNode("2");
 
@@ -113,10 +118,33 @@ public abstract class AbstractNodeTestHelper extends Assert {
 
     public void assertHits(String id, int expectedHits) {
         client(id).admin().indices().prepareRefresh(index).execute().actionGet();
-        logger.debug("{} refreshed", index);
         long hitsFound = client(id).prepareSearch(index).setTypes(type).execute().actionGet().getHits().getTotalHits();
         logger.info("{}/{} = {} hits", index, type, hitsFound);
         assertEquals(hitsFound, expectedHits);
+    }
+
+    public void assertTimestampSort(String id, int expectedHits) {
+        client(id).admin().indices().prepareRefresh(index).execute().actionGet();
+        QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
+        SortBuilder sortBuilder = SortBuilders.fieldSort("_timestamp").order(SortOrder.DESC);
+        SearchHits hits = client(id).prepareSearch(index).setTypes(type)
+                .setQuery(queryBuilder)
+                .addSort(sortBuilder)
+                .addFields("_source", "_timestamp")
+                .setSize(expectedHits)
+                .execute().actionGet().getHits();
+        Long prev = Long.MAX_VALUE;
+        for (SearchHit hit : hits) {
+            if (hit.getFields().get("_timestamp") == null) {
+                logger.warn("type mapping was not correctly applied for _timestamp field");
+            }
+            Long curr = hit.getFields().get("_timestamp").getValue();
+            logger.info("timestamp = {}", curr);
+            assertTrue(curr <= prev);
+            prev = curr;
+        }
+        logger.info("{}/{} = {} hits", index, type, hits.getTotalHits());
+        assertEquals(hits.getTotalHits(), expectedHits);
     }
 
     public Client client(String id) {

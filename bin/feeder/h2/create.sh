@@ -6,13 +6,13 @@ java="/usr/bin/java"
 
 echo '
 {
-    "concurrency" : 1,
-    "elasticsearch" : "es://localhost:9300?es.cluster.name=elasticsearch",
-    "client" : "ingest",
-    "index" : "myh2",
-    "type" : "myh2",
-    "jdbc" : [
-      {
+    "elasticsearch" : {
+         "cluster" : "elasticsearch",
+         "host" : "localhost",
+         "port" : 9300
+    },
+    "type" : "jdbc",
+    "jdbc" : {
         "url" : "jdbc:h2:test",
         "user" : "",
         "password" : "",
@@ -20,9 +20,10 @@ echo '
           {
             "statement" : "select *, created as _id, \"myjdbc\" as _index, \"mytype\" as _type from \"orders\""
           }
-        ]
-      }
-    ]
+        ],
+        "index" : "myh2",
+        "type" : "myh2"
+    }
 }
 ' | ${java} \
     -cp $(pwd):$(pwd)/\*:$(pwd)/../../lib/\* \

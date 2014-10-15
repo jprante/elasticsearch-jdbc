@@ -1,33 +1,62 @@
+/*
+ * Copyright (C) 2014 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.river.jdbc.strategy.simple;
 
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.collect.ImmutableSet;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.format.DateTimeFormat;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
-import org.xbib.elasticsearch.plugin.jdbc.ControlKeys;
-import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
+import org.xbib.elasticsearch.plugin.jdbc.client.IngestFactory;
+import org.xbib.elasticsearch.plugin.jdbc.client.Metric;
+import org.xbib.elasticsearch.plugin.jdbc.util.ControlKeys;
+import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.support.client.Ingest;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
- * Simple river mouth
+ * Simple river mouth implementation. This implementation uses bulk processing,
+ * index name housekeeping (with replica/refresh), and metrics. It understands
+ * _version, _routing, _timestamp, _parent, and _ttl metadata.
  */
-public class SimpleRiverMouth implements RiverMouth {
+public class SimpleRiverMouth implements RiverMouth<SimpleRiverContext> {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());
+    private final static ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.SimpleRiverMouth");
 
-    protected RiverContext context;
+    protected SimpleRiverContext context;
+
+    protected IngestFactory ingestFactory;
 
     protected Ingest ingest;
+
+    protected Metric metric;
+
+    protected Settings indexSettings;
+
+    protected Map<String, String> indexMappings;
 
     protected String index;
 
@@ -35,13 +64,7 @@ public class SimpleRiverMouth implements RiverMouth {
 
     protected String id;
 
-    private boolean timeWindowed;
-
-    private volatile boolean closed;
-
-    protected ESLogger logger() {
-        return logger;
-    }
+    protected volatile boolean suspended = false;
 
     @Override
     public String strategy() {
@@ -49,23 +72,94 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setRiverContext(RiverContext context) {
+    public SimpleRiverMouth newInstance() {
+        return new SimpleRiverMouth();
+    }
+
+    @Override
+    public SimpleRiverMouth setRiverContext(SimpleRiverContext context) {
         this.context = context;
         return this;
     }
 
     @Override
-    public SimpleRiverMouth setIngest(Ingest ingest) {
-        this.ingest = ingest;
+    public SimpleRiverMouth setIngestFactory(IngestFactory ingestFactory) {
+        this.ingestFactory = ingestFactory;
+        this.ingest = ingestFactory.create();
+        this.metric = ingest.getMetric();
+        return this;
+    }
+
+    @Override
+    public Metric getMetric() {
+        return metric;
+    }
+
+    @Override
+    public synchronized void beforeFetch() throws IOException {
+        if (ingest == null || ingest.isShutdown()) {
+            ingest = ingestFactory.create();
+        }
+        if (!ingest.client().admin().indices().prepareExists(index).execute().actionGet().isExists()) {
+            logger.info("creating index {} with settings {} and mappings {}",
+                    index, indexSettings != null ? indexSettings.getAsMap() : "{}", indexMappings);
+            ingest.newIndex(index, indexSettings, indexMappings);
+        }
+        ingest.startBulk(index);
+    }
+
+    @Override
+    public synchronized void afterFetch() throws IOException {
+        if (ingest == null || ingest.isShutdown()) {
+            ingest = ingestFactory.create();
+        }
+        flush();
+        ingest.stopBulk(index);
+        ingest.refresh(index);
+        if (metric.indices() != null && !metric.indices().isEmpty()) {
+            for (String index : ImmutableSet.copyOf(metric.indices())) {
+                logger.info("stopping bulk mode for index {} and refreshing...", index);
+                ingest.stopBulk(index);
+                ingest.refresh(index);
+            }
+        }
+        if (!ingest.isShutdown()) {
+            ingest.shutdown();
+        }
+    }
+
+    @Override
+    public synchronized void shutdown() {
+        try {
+            flush();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        if (ingest != null && !ingest.isShutdown()) {
+            // shut down ingest and release ingest resources
+            ingest.shutdown();
+        }
+    }
+
+    @Override
+    public SimpleRiverMouth setIndexSettings(Settings indexSettings) {
+        this.indexSettings = indexSettings;
+        return this;
+    }
+
+    @Override
+    public SimpleRiverMouth setTypeMapping(Map<String, String> typeMapping) {
+        this.indexMappings = typeMapping;
         return this;
     }
 
     @Override
     public SimpleRiverMouth setIndex(String index) {
-        this.index = timeWindowed ? DateTimeFormat.forPattern(index).print(new DateTime()) : index;
+        this.index = index.contains("'") ? DateTimeFormat.forPattern(index).print(new DateTime()) : index;
         return this;
     }
 
+    @Override
     public String getIndex() {
         return index;
     }
@@ -76,6 +170,7 @@ public class SimpleRiverMouth implements RiverMouth {
         return this;
     }
 
+    @Override
     public String getType() {
         return type;
     }
@@ -87,22 +182,20 @@ public class SimpleRiverMouth implements RiverMouth {
     }
 
     @Override
-    public SimpleRiverMouth setTimeWindowed(boolean timeWindowed) {
-        this.timeWindowed = timeWindowed;
-        return this;
-    }
-
-    public boolean isTimeWindowed() {
-        return timeWindowed;
-    }
-
-    @Override
     public String getId() {
         return id;
     }
 
     @Override
     public void index(IndexableObject object, boolean create) throws IOException {
+        try {
+            while (suspended) {
+                Thread.sleep(1000L);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("interrupted");
+        }
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -142,6 +235,14 @@ public class SimpleRiverMouth implements RiverMouth {
 
     @Override
     public void delete(IndexableObject object) {
+        try {
+            while (suspended) {
+                Thread.sleep(1000L);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("interrupted");
+        }
         if (Strings.hasLength(object.index())) {
             this.index = object.index();
         }
@@ -181,15 +282,26 @@ public class SimpleRiverMouth implements RiverMouth {
             try {
                 ingest.waitForResponses(TimeValue.timeValueSeconds(60));
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
                 logger.warn("interrupted while waiting for responses");
+                Thread.currentThread().interrupt();
             }
         }
     }
 
     @Override
-    public void close() throws IOException {
-        // keep open, do not close or shut down ingest object here...  we need it for cleanup
+    public void suspend() {
+        if (ingest != null) {
+            this.suspended = true;
+            ingest.suspend();
+        }
+    }
+
+    @Override
+    public void resume() {
+        if (ingest != null) {
+            this.suspended = false;
+            ingest.resume();
+        }
     }
 
 }

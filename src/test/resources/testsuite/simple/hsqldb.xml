@@ -14,7 +14,7 @@
         <parameter name="sql2" value="select * from orders"/>
         <parameter name="sql3" value="select * from products where amount is null"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverSourceTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSourceTests"/>
         </classes>
     </test>
 
@@ -26,7 +26,7 @@
         <parameter name="river3" value="hsqldb/river-3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverDataTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverDataTests"/>
         </classes>
     </test>
 
@@ -38,7 +38,7 @@
         <parameter name="sql2"
                    value="insert into products (&quot;_job&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverJobTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverJobTests"/>
         </classes>
     </test>
 
@@ -52,7 +52,7 @@
         <parameter name="sql2"
                    value="insert into logs (modified, message) values(?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.RiverScheduleTests"/>
+            <class name="org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverScheduleTests"/>
         </classes>
     </test>
 </suite>

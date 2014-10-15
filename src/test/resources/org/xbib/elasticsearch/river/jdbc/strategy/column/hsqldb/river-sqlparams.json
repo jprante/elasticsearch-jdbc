@@ -1,7 +1,7 @@
 {
+    "type" : "jdbc",
+    "strategy" : "column",
     "jdbc" : {
-        "strategy" : "column",
-        "driver" : "org.hsqldb.jdbcDriver",
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
         "password" : "",
