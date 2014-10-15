@@ -1,8 +1,8 @@
 package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
+import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.CallableStatement;

@@ -8,10 +8,10 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.RiverSettings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
 import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
 import org.xbib.elasticsearch.plugin.jdbc.util.PlainIndexableObject;
 import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
-import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 
 import java.io.IOException;
@@ -79,16 +79,16 @@ public class ColumnRiverSourceTests extends AbstractColumnRiverTest {
     @Test
     @Parameters({"river-existedWhereClauseWithOverlap", "sqlInsert"})
     public void testCreateObjects_withLastRunTimeStampOverlap(String riverResource, String sql)
-        throws Exception {
+            throws Exception {
         final int newRecordsOutOfTimeRange = 3;
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
         final int updatedRecordsInTimeRangeWithOverlap = 1;
-        testColumnRiver(new MockRiverMouth(), riverResource, sql, new ProductFixture[] {
-            ProductFixture.size(newRecordsOutOfTimeRange).createdAt(oldTimestamp()),
-            ProductFixture.size(newRecordsInTimeRange).createdAt(okTimestamp()),
-            ProductFixture.size(updatedRecordsInTimeRange).createdAt(oldTimestamp()).updatedAt(okTimestamp()),
-            ProductFixture.size(updatedRecordsInTimeRangeWithOverlap).createdAt(oldTimestamp()).updatedAt(overlapTimestamp()),
+        testColumnRiver(new MockRiverMouth(), riverResource, sql, new ProductFixture[]{
+                ProductFixture.size(newRecordsOutOfTimeRange).createdAt(oldTimestamp()),
+                ProductFixture.size(newRecordsInTimeRange).createdAt(okTimestamp()),
+                ProductFixture.size(updatedRecordsInTimeRange).createdAt(oldTimestamp()).updatedAt(okTimestamp()),
+                ProductFixture.size(updatedRecordsInTimeRangeWithOverlap).createdAt(oldTimestamp()).updatedAt(overlapTimestamp()),
         }, newRecordsInTimeRange + updatedRecordsInTimeRange + updatedRecordsInTimeRangeWithOverlap);
     }
 
@@ -165,13 +165,13 @@ public class ColumnRiverSourceTests extends AbstractColumnRiverTest {
         riverState.getMap().put(ColumnRiverFlow.CURRENT_RUN_STARTED_TIME, new DateTime());
 
         context
-            .columnCreatedAt(XContentMapValues.nodeStringValue(settings.get("column_created_at"), null))
-            .columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null))
-            .columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null))
-            .columnEscape(true)
-            .setLastRunTimeStampOverlap(getLastRunTimestampOverlap(riverSettings))
-            .setStatements(SQLCommand.parse(settings))
-            .setRiverState(riverState);
+                .columnCreatedAt(XContentMapValues.nodeStringValue(settings.get("column_created_at"), null))
+                .columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null))
+                .columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null))
+                .columnEscape(true)
+                .setLastRunTimeStampOverlap(getLastRunTimestampOverlap(riverSettings))
+                .setStatements(SQLCommand.parse(settings))
+                .setRiverState(riverState);
     }
 
     private TimeValue getLastRunTimestampOverlap(RiverSettings riverSettings) {
@@ -184,11 +184,11 @@ public class ColumnRiverSourceTests extends AbstractColumnRiverTest {
     }
 
     private Timestamp okTimestamp() {
-        return new Timestamp(LAST_RUN_TIME.getMillis() + 60*2*1000);
+        return new Timestamp(LAST_RUN_TIME.getMillis() + 60 * 2 * 1000);
     }
 
     private Timestamp oldTimestamp() {
-        return new Timestamp(LAST_RUN_TIME.getMillis() - 60*2*1000);
+        return new Timestamp(LAST_RUN_TIME.getMillis() - 60 * 2 * 1000);
     }
 
     private Timestamp overlapTimestamp() {

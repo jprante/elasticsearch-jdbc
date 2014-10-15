@@ -86,8 +86,8 @@ public class ColumnRiverFlowTests extends AbstractColumnRiverTest {
 
     private void createRiverContext(RiverSource riverSource, String riverResource) throws IOException {
         context.columnEscape(true)
-             .setRiverMouth(new MockRiverMouth())
-             .setRiverSource(riverSource);
+                .setRiverMouth(new MockRiverMouth())
+                .setRiverSource(riverSource);
     }
 
     private IngestFactory createIngestFactory(final Settings settings, final Client client) {
