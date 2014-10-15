@@ -6,201 +6,313 @@
 </head>
 <body>
 <div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.river.jdbc.strategy.simple;<a name="line.1"></a>
-<span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>import org.elasticsearch.action.delete.DeleteRequest;<a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.elasticsearch.action.index.IndexRequest;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.elasticsearch.client.Requests;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.elasticsearch.common.Strings;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.elasticsearch.common.joda.time.DateTime;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import org.elasticsearch.common.joda.time.format.DateTimeFormat;<a name="line.8"></a>
-<span class="sourceLineNo">009</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.9"></a>
-<span class="sourceLineNo">010</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.10"></a>
-<span class="sourceLineNo">011</span>import org.elasticsearch.common.unit.TimeValue;<a name="line.11"></a>
-<span class="sourceLineNo">012</span>import org.elasticsearch.index.VersionType;<a name="line.12"></a>
-<span class="sourceLineNo">013</span>import org.xbib.elasticsearch.plugin.jdbc.ControlKeys;<a name="line.13"></a>
-<span class="sourceLineNo">014</span>import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;<a name="line.14"></a>
-<span class="sourceLineNo">015</span>import org.xbib.elasticsearch.plugin.jdbc.RiverContext;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import org.xbib.elasticsearch.river.jdbc.RiverMouth;<a name="line.16"></a>
-<span class="sourceLineNo">017</span>import org.xbib.elasticsearch.support.client.Ingest;<a name="line.17"></a>
-<span class="sourceLineNo">018</span><a name="line.18"></a>
-<span class="sourceLineNo">019</span>import java.io.IOException;<a name="line.19"></a>
-<span class="sourceLineNo">020</span><a name="line.20"></a>
-<span class="sourceLineNo">021</span>/**<a name="line.21"></a>
-<span class="sourceLineNo">022</span> * Simple river mouth<a name="line.22"></a>
-<span class="sourceLineNo">023</span> */<a name="line.23"></a>
-<span class="sourceLineNo">024</span>public class SimpleRiverMouth implements RiverMouth {<a name="line.24"></a>
-<span class="sourceLineNo">025</span><a name="line.25"></a>
-<span class="sourceLineNo">026</span>    private final ESLogger logger = ESLoggerFactory.getLogger(SimpleRiverMouth.class.getName());<a name="line.26"></a>
-<span class="sourceLineNo">027</span><a name="line.27"></a>
-<span class="sourceLineNo">028</span>    protected RiverContext context;<a name="line.28"></a>
-<span class="sourceLineNo">029</span><a name="line.29"></a>
-<span class="sourceLineNo">030</span>    protected Ingest ingest;<a name="line.30"></a>
-<span class="sourceLineNo">031</span><a name="line.31"></a>
-<span class="sourceLineNo">032</span>    protected String index;<a name="line.32"></a>
-<span class="sourceLineNo">033</span><a name="line.33"></a>
-<span class="sourceLineNo">034</span>    protected String type;<a name="line.34"></a>
-<span class="sourceLineNo">035</span><a name="line.35"></a>
-<span class="sourceLineNo">036</span>    protected String id;<a name="line.36"></a>
-<span class="sourceLineNo">037</span><a name="line.37"></a>
-<span class="sourceLineNo">038</span>    private boolean timeWindowed;<a name="line.38"></a>
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Copyright (C) 2014 Jörg Prante<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * you may not use this file except in compliance with the License.<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * You may obtain a copy of the License at<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * Unless required by applicable law or agreed to in writing, software<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * See the License for the specific language governing permissions and<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * limitations under the License.<a name="line.14"></a>
+<span class="sourceLineNo">015</span> */<a name="line.15"></a>
+<span class="sourceLineNo">016</span>package org.xbib.elasticsearch.river.jdbc.strategy.simple;<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.elasticsearch.action.delete.DeleteRequest;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.elasticsearch.action.index.IndexRequest;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.elasticsearch.client.Requests;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.elasticsearch.common.Strings;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.elasticsearch.common.collect.ImmutableSet;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.elasticsearch.common.joda.time.DateTime;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.elasticsearch.common.joda.time.format.DateTimeFormat;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.elasticsearch.common.settings.Settings;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.elasticsearch.common.unit.TimeValue;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.elasticsearch.index.VersionType;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.xbib.elasticsearch.plugin.jdbc.client.IngestFactory;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.xbib.elasticsearch.plugin.jdbc.client.Metric;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.xbib.elasticsearch.plugin.jdbc.util.ControlKeys;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.xbib.elasticsearch.river.jdbc.RiverMouth;<a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span>import java.io.IOException;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import java.util.Map;<a name="line.38"></a>
 <span class="sourceLineNo">039</span><a name="line.39"></a>
-<span class="sourceLineNo">040</span>    private volatile boolean closed;<a name="line.40"></a>
-<span class="sourceLineNo">041</span><a name="line.41"></a>
-<span class="sourceLineNo">042</span>    protected ESLogger logger() {<a name="line.42"></a>
-<span class="sourceLineNo">043</span>        return logger;<a name="line.43"></a>
-<span class="sourceLineNo">044</span>    }<a name="line.44"></a>
-<span class="sourceLineNo">045</span><a name="line.45"></a>
-<span class="sourceLineNo">046</span>    @Override<a name="line.46"></a>
-<span class="sourceLineNo">047</span>    public String strategy() {<a name="line.47"></a>
-<span class="sourceLineNo">048</span>        return "simple";<a name="line.48"></a>
-<span class="sourceLineNo">049</span>    }<a name="line.49"></a>
+<span class="sourceLineNo">040</span>/**<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * Simple river mouth implementation. This implementation uses bulk processing,<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * index name housekeeping (with replica/refresh), and metrics. It understands<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * _version, _routing, _timestamp, _parent, and _ttl metadata.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> */<a name="line.44"></a>
+<span class="sourceLineNo">045</span>public class SimpleRiverMouth implements RiverMouth&lt;SimpleRiverContext&gt; {<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>    private final static ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.SimpleRiverMouth");<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>    protected SimpleRiverContext context;<a name="line.49"></a>
 <span class="sourceLineNo">050</span><a name="line.50"></a>
-<span class="sourceLineNo">051</span>    @Override<a name="line.51"></a>
-<span class="sourceLineNo">052</span>    public SimpleRiverMouth setRiverContext(RiverContext context) {<a name="line.52"></a>
-<span class="sourceLineNo">053</span>        this.context = context;<a name="line.53"></a>
-<span class="sourceLineNo">054</span>        return this;<a name="line.54"></a>
-<span class="sourceLineNo">055</span>    }<a name="line.55"></a>
+<span class="sourceLineNo">051</span>    protected IngestFactory ingestFactory;<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>    protected Ingest ingest;<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    protected Metric metric;<a name="line.55"></a>
 <span class="sourceLineNo">056</span><a name="line.56"></a>
-<span class="sourceLineNo">057</span>    @Override<a name="line.57"></a>
-<span class="sourceLineNo">058</span>    public SimpleRiverMouth setIngest(Ingest ingest) {<a name="line.58"></a>
-<span class="sourceLineNo">059</span>        this.ingest = ingest;<a name="line.59"></a>
-<span class="sourceLineNo">060</span>        return this;<a name="line.60"></a>
-<span class="sourceLineNo">061</span>    }<a name="line.61"></a>
+<span class="sourceLineNo">057</span>    protected Settings indexSettings;<a name="line.57"></a>
+<span class="sourceLineNo">058</span><a name="line.58"></a>
+<span class="sourceLineNo">059</span>    protected Map&lt;String, String&gt; indexMappings;<a name="line.59"></a>
+<span class="sourceLineNo">060</span><a name="line.60"></a>
+<span class="sourceLineNo">061</span>    protected String index;<a name="line.61"></a>
 <span class="sourceLineNo">062</span><a name="line.62"></a>
-<span class="sourceLineNo">063</span>    @Override<a name="line.63"></a>
-<span class="sourceLineNo">064</span>    public SimpleRiverMouth setIndex(String index) {<a name="line.64"></a>
-<span class="sourceLineNo">065</span>        this.index = timeWindowed ? DateTimeFormat.forPattern(index).print(new DateTime()) : index;<a name="line.65"></a>
-<span class="sourceLineNo">066</span>        return this;<a name="line.66"></a>
-<span class="sourceLineNo">067</span>    }<a name="line.67"></a>
+<span class="sourceLineNo">063</span>    protected String type;<a name="line.63"></a>
+<span class="sourceLineNo">064</span><a name="line.64"></a>
+<span class="sourceLineNo">065</span>    protected String id;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    protected volatile boolean suspended = false;<a name="line.67"></a>
 <span class="sourceLineNo">068</span><a name="line.68"></a>
-<span class="sourceLineNo">069</span>    public String getIndex() {<a name="line.69"></a>
-<span class="sourceLineNo">070</span>        return index;<a name="line.70"></a>
-<span class="sourceLineNo">071</span>    }<a name="line.71"></a>
-<span class="sourceLineNo">072</span><a name="line.72"></a>
-<span class="sourceLineNo">073</span>    @Override<a name="line.73"></a>
-<span class="sourceLineNo">074</span>    public SimpleRiverMouth setType(String type) {<a name="line.74"></a>
-<span class="sourceLineNo">075</span>        this.type = type;<a name="line.75"></a>
-<span class="sourceLineNo">076</span>        return this;<a name="line.76"></a>
+<span class="sourceLineNo">069</span>    @Override<a name="line.69"></a>
+<span class="sourceLineNo">070</span>    public String strategy() {<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        return "simple";<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>    @Override<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    public SimpleRiverMouth newInstance() {<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        return new SimpleRiverMouth();<a name="line.76"></a>
 <span class="sourceLineNo">077</span>    }<a name="line.77"></a>
 <span class="sourceLineNo">078</span><a name="line.78"></a>
-<span class="sourceLineNo">079</span>    public String getType() {<a name="line.79"></a>
-<span class="sourceLineNo">080</span>        return type;<a name="line.80"></a>
-<span class="sourceLineNo">081</span>    }<a name="line.81"></a>
-<span class="sourceLineNo">082</span><a name="line.82"></a>
-<span class="sourceLineNo">083</span>    @Override<a name="line.83"></a>
-<span class="sourceLineNo">084</span>    public SimpleRiverMouth setId(String id) {<a name="line.84"></a>
-<span class="sourceLineNo">085</span>        this.id = id;<a name="line.85"></a>
-<span class="sourceLineNo">086</span>        return this;<a name="line.86"></a>
-<span class="sourceLineNo">087</span>    }<a name="line.87"></a>
-<span class="sourceLineNo">088</span><a name="line.88"></a>
-<span class="sourceLineNo">089</span>    @Override<a name="line.89"></a>
-<span class="sourceLineNo">090</span>    public SimpleRiverMouth setTimeWindowed(boolean timeWindowed) {<a name="line.90"></a>
-<span class="sourceLineNo">091</span>        this.timeWindowed = timeWindowed;<a name="line.91"></a>
-<span class="sourceLineNo">092</span>        return this;<a name="line.92"></a>
-<span class="sourceLineNo">093</span>    }<a name="line.93"></a>
-<span class="sourceLineNo">094</span><a name="line.94"></a>
-<span class="sourceLineNo">095</span>    public boolean isTimeWindowed() {<a name="line.95"></a>
-<span class="sourceLineNo">096</span>        return timeWindowed;<a name="line.96"></a>
-<span class="sourceLineNo">097</span>    }<a name="line.97"></a>
-<span class="sourceLineNo">098</span><a name="line.98"></a>
-<span class="sourceLineNo">099</span>    @Override<a name="line.99"></a>
-<span class="sourceLineNo">100</span>    public String getId() {<a name="line.100"></a>
-<span class="sourceLineNo">101</span>        return id;<a name="line.101"></a>
-<span class="sourceLineNo">102</span>    }<a name="line.102"></a>
-<span class="sourceLineNo">103</span><a name="line.103"></a>
-<span class="sourceLineNo">104</span>    @Override<a name="line.104"></a>
-<span class="sourceLineNo">105</span>    public void index(IndexableObject object, boolean create) throws IOException {<a name="line.105"></a>
-<span class="sourceLineNo">106</span>        if (Strings.hasLength(object.index())) {<a name="line.106"></a>
-<span class="sourceLineNo">107</span>            setIndex(object.index());<a name="line.107"></a>
-<span class="sourceLineNo">108</span>        }<a name="line.108"></a>
-<span class="sourceLineNo">109</span>        if (Strings.hasLength(object.type())) {<a name="line.109"></a>
-<span class="sourceLineNo">110</span>            setType(object.type());<a name="line.110"></a>
-<span class="sourceLineNo">111</span>        }<a name="line.111"></a>
-<span class="sourceLineNo">112</span>        if (Strings.hasLength(object.id())) {<a name="line.112"></a>
-<span class="sourceLineNo">113</span>            setId(object.id());<a name="line.113"></a>
-<span class="sourceLineNo">114</span>        }<a name="line.114"></a>
-<span class="sourceLineNo">115</span>        IndexRequest request = Requests.indexRequest(this.index)<a name="line.115"></a>
-<span class="sourceLineNo">116</span>                .type(this.type)<a name="line.116"></a>
-<span class="sourceLineNo">117</span>                .id(getId())<a name="line.117"></a>
-<span class="sourceLineNo">118</span>                .source(object.build());<a name="line.118"></a>
-<span class="sourceLineNo">119</span>        if (object.meta(ControlKeys._version.name()) != null) {<a name="line.119"></a>
-<span class="sourceLineNo">120</span>            request.versionType(VersionType.EXTERNAL)<a name="line.120"></a>
-<span class="sourceLineNo">121</span>                    .version(Long.parseLong(object.meta(ControlKeys._version.name())));<a name="line.121"></a>
-<span class="sourceLineNo">122</span>        }<a name="line.122"></a>
-<span class="sourceLineNo">123</span>        if (object.meta(ControlKeys._routing.name()) != null) {<a name="line.123"></a>
-<span class="sourceLineNo">124</span>            request.routing(object.meta(ControlKeys._routing.name()));<a name="line.124"></a>
+<span class="sourceLineNo">079</span>    @Override<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    public SimpleRiverMouth setRiverContext(SimpleRiverContext context) {<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        this.context = context;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        return this;<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    }<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>    @Override<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    public SimpleRiverMouth setIngestFactory(IngestFactory ingestFactory) {<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        this.ingestFactory = ingestFactory;<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        this.ingest = ingestFactory.create();<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        this.metric = ingest.getMetric();<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        return this;<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    }<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>    @Override<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    public Metric getMetric() {<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        return metric;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    }<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    @Override<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    public synchronized void beforeFetch() throws IOException {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        if (ingest == null || ingest.isShutdown()) {<a name="line.100"></a>
+<span class="sourceLineNo">101</span>            ingest = ingestFactory.create();<a name="line.101"></a>
+<span class="sourceLineNo">102</span>        }<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        if (!ingest.client().admin().indices().prepareExists(index).execute().actionGet().isExists()) {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>            logger.info("creating index {} with settings {} and mappings {}",<a name="line.104"></a>
+<span class="sourceLineNo">105</span>                    index, indexSettings != null ? indexSettings.getAsMap() : "{}", indexMappings);<a name="line.105"></a>
+<span class="sourceLineNo">106</span>            ingest.newIndex(index, indexSettings, indexMappings);<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        }<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        ingest.startBulk(index);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    }<a name="line.109"></a>
+<span class="sourceLineNo">110</span><a name="line.110"></a>
+<span class="sourceLineNo">111</span>    @Override<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    public synchronized void afterFetch() throws IOException {<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        if (ingest == null || ingest.isShutdown()) {<a name="line.113"></a>
+<span class="sourceLineNo">114</span>            ingest = ingestFactory.create();<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        }<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        flush();<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        ingest.stopBulk(index);<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        ingest.refresh(index);<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        if (metric.indices() != null &amp;&amp; !metric.indices().isEmpty()) {<a name="line.119"></a>
+<span class="sourceLineNo">120</span>            for (String index : ImmutableSet.copyOf(metric.indices())) {<a name="line.120"></a>
+<span class="sourceLineNo">121</span>                logger.info("stopping bulk mode for index {} and refreshing...", index);<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                ingest.stopBulk(index);<a name="line.122"></a>
+<span class="sourceLineNo">123</span>                ingest.refresh(index);<a name="line.123"></a>
+<span class="sourceLineNo">124</span>            }<a name="line.124"></a>
 <span class="sourceLineNo">125</span>        }<a name="line.125"></a>
-<span class="sourceLineNo">126</span>        if (object.meta(ControlKeys._parent.name()) != null) {<a name="line.126"></a>
-<span class="sourceLineNo">127</span>            request.parent(object.meta(ControlKeys._parent.name()));<a name="line.127"></a>
+<span class="sourceLineNo">126</span>        if (!ingest.isShutdown()) {<a name="line.126"></a>
+<span class="sourceLineNo">127</span>            ingest.shutdown();<a name="line.127"></a>
 <span class="sourceLineNo">128</span>        }<a name="line.128"></a>
-<span class="sourceLineNo">129</span>        if (object.meta(ControlKeys._timestamp.name()) != null) {<a name="line.129"></a>
-<span class="sourceLineNo">130</span>            request.timestamp(object.meta(ControlKeys._timestamp.name()));<a name="line.130"></a>
-<span class="sourceLineNo">131</span>        }<a name="line.131"></a>
-<span class="sourceLineNo">132</span>        if (object.meta(ControlKeys._ttl.name()) != null) {<a name="line.132"></a>
-<span class="sourceLineNo">133</span>            request.ttl(Long.parseLong(object.meta(ControlKeys._ttl.name())));<a name="line.133"></a>
-<span class="sourceLineNo">134</span>        }<a name="line.134"></a>
-<span class="sourceLineNo">135</span>        if (logger.isTraceEnabled()) {<a name="line.135"></a>
-<span class="sourceLineNo">136</span>            logger.trace("adding bulk index action {}", request.source().toUtf8());<a name="line.136"></a>
+<span class="sourceLineNo">129</span>    }<a name="line.129"></a>
+<span class="sourceLineNo">130</span><a name="line.130"></a>
+<span class="sourceLineNo">131</span>    @Override<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    public synchronized void shutdown() {<a name="line.132"></a>
+<span class="sourceLineNo">133</span>        try {<a name="line.133"></a>
+<span class="sourceLineNo">134</span>            flush();<a name="line.134"></a>
+<span class="sourceLineNo">135</span>        } catch (IOException e) {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>            logger.error(e.getMessage(), e);<a name="line.136"></a>
 <span class="sourceLineNo">137</span>        }<a name="line.137"></a>
-<span class="sourceLineNo">138</span>        if (ingest != null) {<a name="line.138"></a>
-<span class="sourceLineNo">139</span>            ingest.bulkIndex(request);<a name="line.139"></a>
-<span class="sourceLineNo">140</span>        }<a name="line.140"></a>
-<span class="sourceLineNo">141</span>    }<a name="line.141"></a>
-<span class="sourceLineNo">142</span><a name="line.142"></a>
-<span class="sourceLineNo">143</span>    @Override<a name="line.143"></a>
-<span class="sourceLineNo">144</span>    public void delete(IndexableObject object) {<a name="line.144"></a>
-<span class="sourceLineNo">145</span>        if (Strings.hasLength(object.index())) {<a name="line.145"></a>
-<span class="sourceLineNo">146</span>            this.index = object.index();<a name="line.146"></a>
-<span class="sourceLineNo">147</span>        }<a name="line.147"></a>
-<span class="sourceLineNo">148</span>        if (Strings.hasLength(object.type())) {<a name="line.148"></a>
-<span class="sourceLineNo">149</span>            this.type = object.type();<a name="line.149"></a>
-<span class="sourceLineNo">150</span>        }<a name="line.150"></a>
-<span class="sourceLineNo">151</span>        if (Strings.hasLength(object.id())) {<a name="line.151"></a>
-<span class="sourceLineNo">152</span>            setId(object.id());<a name="line.152"></a>
-<span class="sourceLineNo">153</span>        }<a name="line.153"></a>
-<span class="sourceLineNo">154</span>        if (getId() == null) {<a name="line.154"></a>
-<span class="sourceLineNo">155</span>            return; // skip if no doc is specified to delete<a name="line.155"></a>
-<span class="sourceLineNo">156</span>        }<a name="line.156"></a>
-<span class="sourceLineNo">157</span>        DeleteRequest request = Requests.deleteRequest(this.index).type(this.type).id(getId());<a name="line.157"></a>
-<span class="sourceLineNo">158</span>        if (object.meta(ControlKeys._version.name()) != null) {<a name="line.158"></a>
-<span class="sourceLineNo">159</span>            request.versionType(VersionType.EXTERNAL)<a name="line.159"></a>
-<span class="sourceLineNo">160</span>                    .version(Long.parseLong(object.meta(ControlKeys._version.name())));<a name="line.160"></a>
-<span class="sourceLineNo">161</span>        }<a name="line.161"></a>
-<span class="sourceLineNo">162</span>        if (object.meta(ControlKeys._routing.name()) != null) {<a name="line.162"></a>
-<span class="sourceLineNo">163</span>            request.routing(object.meta(ControlKeys._routing.name()));<a name="line.163"></a>
-<span class="sourceLineNo">164</span>        }<a name="line.164"></a>
-<span class="sourceLineNo">165</span>        if (object.meta(ControlKeys._parent.name()) != null) {<a name="line.165"></a>
-<span class="sourceLineNo">166</span>            request.parent(object.meta(ControlKeys._parent.name()));<a name="line.166"></a>
-<span class="sourceLineNo">167</span>        }<a name="line.167"></a>
-<span class="sourceLineNo">168</span>        if (logger.isTraceEnabled()) {<a name="line.168"></a>
-<span class="sourceLineNo">169</span>            logger.trace("adding bulk delete action {}/{}/{}", request.index(), request.type(), request.id());<a name="line.169"></a>
-<span class="sourceLineNo">170</span>        }<a name="line.170"></a>
-<span class="sourceLineNo">171</span>        if (ingest != null) {<a name="line.171"></a>
-<span class="sourceLineNo">172</span>            ingest.bulkDelete(request);<a name="line.172"></a>
-<span class="sourceLineNo">173</span>        }<a name="line.173"></a>
-<span class="sourceLineNo">174</span>    }<a name="line.174"></a>
-<span class="sourceLineNo">175</span><a name="line.175"></a>
-<span class="sourceLineNo">176</span>    @Override<a name="line.176"></a>
-<span class="sourceLineNo">177</span>    public void flush() throws IOException {<a name="line.177"></a>
-<span class="sourceLineNo">178</span>        if (ingest != null) {<a name="line.178"></a>
-<span class="sourceLineNo">179</span>            ingest.flushIngest();<a name="line.179"></a>
-<span class="sourceLineNo">180</span>            // wait for all outstanding bulk requests before continue with river<a name="line.180"></a>
-<span class="sourceLineNo">181</span>            try {<a name="line.181"></a>
-<span class="sourceLineNo">182</span>                ingest.waitForResponses(TimeValue.timeValueSeconds(60));<a name="line.182"></a>
-<span class="sourceLineNo">183</span>            } catch (InterruptedException e) {<a name="line.183"></a>
-<span class="sourceLineNo">184</span>                Thread.currentThread().interrupt();<a name="line.184"></a>
-<span class="sourceLineNo">185</span>                logger.warn("interrupted while waiting for responses");<a name="line.185"></a>
-<span class="sourceLineNo">186</span>            }<a name="line.186"></a>
-<span class="sourceLineNo">187</span>        }<a name="line.187"></a>
-<span class="sourceLineNo">188</span>    }<a name="line.188"></a>
-<span class="sourceLineNo">189</span><a name="line.189"></a>
-<span class="sourceLineNo">190</span>    @Override<a name="line.190"></a>
-<span class="sourceLineNo">191</span>    public void close() throws IOException {<a name="line.191"></a>
-<span class="sourceLineNo">192</span>        // keep open, do not close or shut down ingest object here...  we need it for cleanup<a name="line.192"></a>
-<span class="sourceLineNo">193</span>    }<a name="line.193"></a>
-<span class="sourceLineNo">194</span><a name="line.194"></a>
-<span class="sourceLineNo">195</span>}<a name="line.195"></a>
+<span class="sourceLineNo">138</span>        if (ingest != null &amp;&amp; !ingest.isShutdown()) {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>            // shut down ingest and release ingest resources<a name="line.139"></a>
+<span class="sourceLineNo">140</span>            ingest.shutdown();<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        }<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    }<a name="line.142"></a>
+<span class="sourceLineNo">143</span><a name="line.143"></a>
+<span class="sourceLineNo">144</span>    @Override<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    public SimpleRiverMouth setIndexSettings(Settings indexSettings) {<a name="line.145"></a>
+<span class="sourceLineNo">146</span>        this.indexSettings = indexSettings;<a name="line.146"></a>
+<span class="sourceLineNo">147</span>        return this;<a name="line.147"></a>
+<span class="sourceLineNo">148</span>    }<a name="line.148"></a>
+<span class="sourceLineNo">149</span><a name="line.149"></a>
+<span class="sourceLineNo">150</span>    @Override<a name="line.150"></a>
+<span class="sourceLineNo">151</span>    public SimpleRiverMouth setTypeMapping(Map&lt;String, String&gt; typeMapping) {<a name="line.151"></a>
+<span class="sourceLineNo">152</span>        this.indexMappings = typeMapping;<a name="line.152"></a>
+<span class="sourceLineNo">153</span>        return this;<a name="line.153"></a>
+<span class="sourceLineNo">154</span>    }<a name="line.154"></a>
+<span class="sourceLineNo">155</span><a name="line.155"></a>
+<span class="sourceLineNo">156</span>    @Override<a name="line.156"></a>
+<span class="sourceLineNo">157</span>    public SimpleRiverMouth setIndex(String index) {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        this.index = index.contains("'") ? DateTimeFormat.forPattern(index).print(new DateTime()) : index;<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        return this;<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    }<a name="line.160"></a>
+<span class="sourceLineNo">161</span><a name="line.161"></a>
+<span class="sourceLineNo">162</span>    @Override<a name="line.162"></a>
+<span class="sourceLineNo">163</span>    public String getIndex() {<a name="line.163"></a>
+<span class="sourceLineNo">164</span>        return index;<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    }<a name="line.165"></a>
+<span class="sourceLineNo">166</span><a name="line.166"></a>
+<span class="sourceLineNo">167</span>    @Override<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    public SimpleRiverMouth setType(String type) {<a name="line.168"></a>
+<span class="sourceLineNo">169</span>        this.type = type;<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        return this;<a name="line.170"></a>
+<span class="sourceLineNo">171</span>    }<a name="line.171"></a>
+<span class="sourceLineNo">172</span><a name="line.172"></a>
+<span class="sourceLineNo">173</span>    @Override<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    public String getType() {<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        return type;<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    }<a name="line.176"></a>
+<span class="sourceLineNo">177</span><a name="line.177"></a>
+<span class="sourceLineNo">178</span>    @Override<a name="line.178"></a>
+<span class="sourceLineNo">179</span>    public SimpleRiverMouth setId(String id) {<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        this.id = id;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>        return this;<a name="line.181"></a>
+<span class="sourceLineNo">182</span>    }<a name="line.182"></a>
+<span class="sourceLineNo">183</span><a name="line.183"></a>
+<span class="sourceLineNo">184</span>    @Override<a name="line.184"></a>
+<span class="sourceLineNo">185</span>    public String getId() {<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        return id;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>    }<a name="line.187"></a>
+<span class="sourceLineNo">188</span><a name="line.188"></a>
+<span class="sourceLineNo">189</span>    @Override<a name="line.189"></a>
+<span class="sourceLineNo">190</span>    public void index(IndexableObject object, boolean create) throws IOException {<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        try {<a name="line.191"></a>
+<span class="sourceLineNo">192</span>            while (suspended) {<a name="line.192"></a>
+<span class="sourceLineNo">193</span>                Thread.sleep(1000L);<a name="line.193"></a>
+<span class="sourceLineNo">194</span>            }<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        } catch (InterruptedException e) {<a name="line.195"></a>
+<span class="sourceLineNo">196</span>            Thread.currentThread().interrupt();<a name="line.196"></a>
+<span class="sourceLineNo">197</span>            logger.warn("interrupted");<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        }<a name="line.198"></a>
+<span class="sourceLineNo">199</span>        if (Strings.hasLength(object.index())) {<a name="line.199"></a>
+<span class="sourceLineNo">200</span>            setIndex(object.index());<a name="line.200"></a>
+<span class="sourceLineNo">201</span>        }<a name="line.201"></a>
+<span class="sourceLineNo">202</span>        if (Strings.hasLength(object.type())) {<a name="line.202"></a>
+<span class="sourceLineNo">203</span>            setType(object.type());<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        }<a name="line.204"></a>
+<span class="sourceLineNo">205</span>        if (Strings.hasLength(object.id())) {<a name="line.205"></a>
+<span class="sourceLineNo">206</span>            setId(object.id());<a name="line.206"></a>
+<span class="sourceLineNo">207</span>        }<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        IndexRequest request = Requests.indexRequest(this.index)<a name="line.208"></a>
+<span class="sourceLineNo">209</span>                .type(this.type)<a name="line.209"></a>
+<span class="sourceLineNo">210</span>                .id(getId())<a name="line.210"></a>
+<span class="sourceLineNo">211</span>                .source(object.build());<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        if (object.meta(ControlKeys._version.name()) != null) {<a name="line.212"></a>
+<span class="sourceLineNo">213</span>            request.versionType(VersionType.EXTERNAL)<a name="line.213"></a>
+<span class="sourceLineNo">214</span>                    .version(Long.parseLong(object.meta(ControlKeys._version.name())));<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        }<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        if (object.meta(ControlKeys._routing.name()) != null) {<a name="line.216"></a>
+<span class="sourceLineNo">217</span>            request.routing(object.meta(ControlKeys._routing.name()));<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        }<a name="line.218"></a>
+<span class="sourceLineNo">219</span>        if (object.meta(ControlKeys._parent.name()) != null) {<a name="line.219"></a>
+<span class="sourceLineNo">220</span>            request.parent(object.meta(ControlKeys._parent.name()));<a name="line.220"></a>
+<span class="sourceLineNo">221</span>        }<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        if (object.meta(ControlKeys._timestamp.name()) != null) {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>            request.timestamp(object.meta(ControlKeys._timestamp.name()));<a name="line.223"></a>
+<span class="sourceLineNo">224</span>        }<a name="line.224"></a>
+<span class="sourceLineNo">225</span>        if (object.meta(ControlKeys._ttl.name()) != null) {<a name="line.225"></a>
+<span class="sourceLineNo">226</span>            request.ttl(Long.parseLong(object.meta(ControlKeys._ttl.name())));<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        }<a name="line.227"></a>
+<span class="sourceLineNo">228</span>        if (logger.isTraceEnabled()) {<a name="line.228"></a>
+<span class="sourceLineNo">229</span>            logger.trace("adding bulk index action {}", request.source().toUtf8());<a name="line.229"></a>
+<span class="sourceLineNo">230</span>        }<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        if (ingest != null) {<a name="line.231"></a>
+<span class="sourceLineNo">232</span>            ingest.bulkIndex(request);<a name="line.232"></a>
+<span class="sourceLineNo">233</span>        }<a name="line.233"></a>
+<span class="sourceLineNo">234</span>    }<a name="line.234"></a>
+<span class="sourceLineNo">235</span><a name="line.235"></a>
+<span class="sourceLineNo">236</span>    @Override<a name="line.236"></a>
+<span class="sourceLineNo">237</span>    public void delete(IndexableObject object) {<a name="line.237"></a>
+<span class="sourceLineNo">238</span>        try {<a name="line.238"></a>
+<span class="sourceLineNo">239</span>            while (suspended) {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>                Thread.sleep(1000L);<a name="line.240"></a>
+<span class="sourceLineNo">241</span>            }<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        } catch (InterruptedException e) {<a name="line.242"></a>
+<span class="sourceLineNo">243</span>            Thread.currentThread().interrupt();<a name="line.243"></a>
+<span class="sourceLineNo">244</span>            logger.warn("interrupted");<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        }<a name="line.245"></a>
+<span class="sourceLineNo">246</span>        if (Strings.hasLength(object.index())) {<a name="line.246"></a>
+<span class="sourceLineNo">247</span>            this.index = object.index();<a name="line.247"></a>
+<span class="sourceLineNo">248</span>        }<a name="line.248"></a>
+<span class="sourceLineNo">249</span>        if (Strings.hasLength(object.type())) {<a name="line.249"></a>
+<span class="sourceLineNo">250</span>            this.type = object.type();<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        }<a name="line.251"></a>
+<span class="sourceLineNo">252</span>        if (Strings.hasLength(object.id())) {<a name="line.252"></a>
+<span class="sourceLineNo">253</span>            setId(object.id());<a name="line.253"></a>
+<span class="sourceLineNo">254</span>        }<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        if (getId() == null) {<a name="line.255"></a>
+<span class="sourceLineNo">256</span>            return; // skip if no doc is specified to delete<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        }<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        DeleteRequest request = Requests.deleteRequest(this.index).type(this.type).id(getId());<a name="line.258"></a>
+<span class="sourceLineNo">259</span>        if (object.meta(ControlKeys._version.name()) != null) {<a name="line.259"></a>
+<span class="sourceLineNo">260</span>            request.versionType(VersionType.EXTERNAL)<a name="line.260"></a>
+<span class="sourceLineNo">261</span>                    .version(Long.parseLong(object.meta(ControlKeys._version.name())));<a name="line.261"></a>
+<span class="sourceLineNo">262</span>        }<a name="line.262"></a>
+<span class="sourceLineNo">263</span>        if (object.meta(ControlKeys._routing.name()) != null) {<a name="line.263"></a>
+<span class="sourceLineNo">264</span>            request.routing(object.meta(ControlKeys._routing.name()));<a name="line.264"></a>
+<span class="sourceLineNo">265</span>        }<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        if (object.meta(ControlKeys._parent.name()) != null) {<a name="line.266"></a>
+<span class="sourceLineNo">267</span>            request.parent(object.meta(ControlKeys._parent.name()));<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        }<a name="line.268"></a>
+<span class="sourceLineNo">269</span>        if (logger.isTraceEnabled()) {<a name="line.269"></a>
+<span class="sourceLineNo">270</span>            logger.trace("adding bulk delete action {}/{}/{}", request.index(), request.type(), request.id());<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        }<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        if (ingest != null) {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>            ingest.bulkDelete(request);<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        }<a name="line.274"></a>
+<span class="sourceLineNo">275</span>    }<a name="line.275"></a>
+<span class="sourceLineNo">276</span><a name="line.276"></a>
+<span class="sourceLineNo">277</span>    @Override<a name="line.277"></a>
+<span class="sourceLineNo">278</span>    public void flush() throws IOException {<a name="line.278"></a>
+<span class="sourceLineNo">279</span>        if (ingest != null) {<a name="line.279"></a>
+<span class="sourceLineNo">280</span>            ingest.flushIngest();<a name="line.280"></a>
+<span class="sourceLineNo">281</span>            // wait for all outstanding bulk requests before continue with river<a name="line.281"></a>
+<span class="sourceLineNo">282</span>            try {<a name="line.282"></a>
+<span class="sourceLineNo">283</span>                ingest.waitForResponses(TimeValue.timeValueSeconds(60));<a name="line.283"></a>
+<span class="sourceLineNo">284</span>            } catch (InterruptedException e) {<a name="line.284"></a>
+<span class="sourceLineNo">285</span>                logger.warn("interrupted while waiting for responses");<a name="line.285"></a>
+<span class="sourceLineNo">286</span>                Thread.currentThread().interrupt();<a name="line.286"></a>
+<span class="sourceLineNo">287</span>            }<a name="line.287"></a>
+<span class="sourceLineNo">288</span>        }<a name="line.288"></a>
+<span class="sourceLineNo">289</span>    }<a name="line.289"></a>
+<span class="sourceLineNo">290</span><a name="line.290"></a>
+<span class="sourceLineNo">291</span>    @Override<a name="line.291"></a>
+<span class="sourceLineNo">292</span>    public void suspend() {<a name="line.292"></a>
+<span class="sourceLineNo">293</span>        if (ingest != null) {<a name="line.293"></a>
+<span class="sourceLineNo">294</span>            this.suspended = true;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>            ingest.suspend();<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        }<a name="line.296"></a>
+<span class="sourceLineNo">297</span>    }<a name="line.297"></a>
+<span class="sourceLineNo">298</span><a name="line.298"></a>
+<span class="sourceLineNo">299</span>    @Override<a name="line.299"></a>
+<span class="sourceLineNo">300</span>    public void resume() {<a name="line.300"></a>
+<span class="sourceLineNo">301</span>        if (ingest != null) {<a name="line.301"></a>
+<span class="sourceLineNo">302</span>            this.suspended = false;<a name="line.302"></a>
+<span class="sourceLineNo">303</span>            ingest.resume();<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        }<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    }<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>}<a name="line.307"></a>
 
 
 

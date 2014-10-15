@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.action.plugin.jdbc.run;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.elasticsearch.ElasticsearchException;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.elasticsearch.action.support.nodes.NodeOperationRequest;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.elasticsearch.action.support.nodes.NodeOperationResponse;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.elasticsearch.action.support.nodes.TransportNodesOperationAction;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.elasticsearch.cluster.ClusterName;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.elasticsearch.cluster.ClusterService;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.elasticsearch.cluster.node.DiscoveryNode;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import org.elasticsearch.common.collect.ImmutableMap;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import org.elasticsearch.common.inject.Inject;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import org.elasticsearch.common.inject.Injector;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.elasticsearch.common.io.stream.StreamInput;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.elasticsearch.common.io.stream.StreamOutput;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.elasticsearch.common.settings.Settings;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.elasticsearch.node.service.NodeService;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.elasticsearch.river.River;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.elasticsearch.river.RiverName;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.elasticsearch.river.RiversService;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.elasticsearch.threadpool.ThreadPool;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.elasticsearch.transport.TransportService;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.xbib.elasticsearch.plugin.jdbc.execute.RunnableRiver;<a name="line.23"></a>
+<span class="sourceLineNo">024</span><a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.io.IOException;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.lang.reflect.Field;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import java.util.Map;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import java.util.concurrent.atomic.AtomicReferenceArray;<a name="line.28"></a>
+<span class="sourceLineNo">029</span><a name="line.29"></a>
+<span class="sourceLineNo">030</span>public class TransportRunRiverAction extends TransportNodesOperationAction&lt;RunRiverRequest, RunRiverResponse, TransportRunRiverAction.NodeRiverExecuteRequest, TransportRunRiverAction.NodeRiverExecuteResponse&gt; {<a name="line.30"></a>
+<span class="sourceLineNo">031</span><a name="line.31"></a>
+<span class="sourceLineNo">032</span>    private final Injector injector;<a name="line.32"></a>
+<span class="sourceLineNo">033</span><a name="line.33"></a>
+<span class="sourceLineNo">034</span>    @Inject<a name="line.34"></a>
+<span class="sourceLineNo">035</span>    public TransportRunRiverAction(Settings settings, ClusterName clusterName, ThreadPool threadPool,<a name="line.35"></a>
+<span class="sourceLineNo">036</span>                                   ClusterService clusterService, TransportService transportService,<a name="line.36"></a>
+<span class="sourceLineNo">037</span>                                   Injector injector) {<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        super(settings, RunRiverAction.NAME, clusterName, threadPool, clusterService, transportService);<a name="line.38"></a>
+<span class="sourceLineNo">039</span>        this.injector = injector;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>    }<a name="line.40"></a>
+<span class="sourceLineNo">041</span><a name="line.41"></a>
+<span class="sourceLineNo">042</span>    @Override<a name="line.42"></a>
+<span class="sourceLineNo">043</span>    protected String executor() {<a name="line.43"></a>
+<span class="sourceLineNo">044</span>        return ThreadPool.Names.GENERIC;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>    }<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>    @Override<a name="line.47"></a>
+<span class="sourceLineNo">048</span>    protected NodeRiverExecuteResponse nodeOperation(NodeRiverExecuteRequest request) throws ElasticsearchException {<a name="line.48"></a>
+<span class="sourceLineNo">049</span>        RiversService riversService = injector.getInstance(RiversService.class);<a name="line.49"></a>
+<span class="sourceLineNo">050</span>        NodeService nodeService = injector.getInstance(NodeService.class);<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        NodeInfo nodeInfo = nodeService.info(false, true, false, true, false, false, true, false, true);<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        for (Map.Entry&lt;RiverName, River&gt; entry : rivers(riversService).entrySet()) {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>            RiverName name = entry.getKey();<a name="line.53"></a>
+<span class="sourceLineNo">054</span>            if ((request.getRiverName() == null || name.getName().equals(request.getRiverName()))<a name="line.54"></a>
+<span class="sourceLineNo">055</span>                    &amp;&amp; (request.getRiverType() == null || name.getType().equals(request.getRiverType()))<a name="line.55"></a>
+<span class="sourceLineNo">056</span>                    &amp;&amp; entry.getValue() instanceof RunnableRiver) {<a name="line.56"></a>
+<span class="sourceLineNo">057</span>                RunnableRiver river = (RunnableRiver) entry.getValue();<a name="line.57"></a>
+<span class="sourceLineNo">058</span>                river.run();<a name="line.58"></a>
+<span class="sourceLineNo">059</span>                return new NodeRiverExecuteResponse(nodeInfo.getNode()).setExecuted(true);<a name="line.59"></a>
+<span class="sourceLineNo">060</span>            }<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        }<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        return new NodeRiverExecuteResponse(nodeInfo.getNode()).setExecuted(false);<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    }<a name="line.63"></a>
+<span class="sourceLineNo">064</span><a name="line.64"></a>
+<span class="sourceLineNo">065</span>    @Override<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    protected RunRiverRequest newRequest() {<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        return new RunRiverRequest();<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    }<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    @Override<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    protected RunRiverResponse newResponse(RunRiverRequest request, AtomicReferenceArray nodesResponses) {<a name="line.71"></a>
+<span class="sourceLineNo">072</span>        boolean[] b = new boolean[nodesResponses.length()];<a name="line.72"></a>
+<span class="sourceLineNo">073</span>        for (int i = 0; i &lt; nodesResponses.length(); i++) {<a name="line.73"></a>
+<span class="sourceLineNo">074</span>            Object nodesResponse = nodesResponses.get(i);<a name="line.74"></a>
+<span class="sourceLineNo">075</span>            if (nodesResponse instanceof NodeRiverExecuteResponse) {<a name="line.75"></a>
+<span class="sourceLineNo">076</span>                NodeRiverExecuteResponse nodeRiverExecuteResponse = (NodeRiverExecuteResponse) nodesResponse;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>                b[i] = nodeRiverExecuteResponse.isExecuted();<a name="line.77"></a>
+<span class="sourceLineNo">078</span>            }<a name="line.78"></a>
+<span class="sourceLineNo">079</span>        }<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        return new RunRiverResponse().setExecuted(b);<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    }<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>    @Override<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    protected NodeRiverExecuteRequest newNodeRequest() {<a name="line.84"></a>
+<span class="sourceLineNo">085</span>        return new NodeRiverExecuteRequest();<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    }<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>    @Override<a name="line.88"></a>
+<span class="sourceLineNo">089</span>    protected NodeRiverExecuteRequest newNodeRequest(String nodeId, RunRiverRequest request) {<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        return new NodeRiverExecuteRequest(nodeId, request);<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    }<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>    @Override<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    protected NodeRiverExecuteResponse newNodeResponse() {<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        return new NodeRiverExecuteResponse();<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    }<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    @Override<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    protected boolean accumulateExceptions() {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        return false;<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    }<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>    @SuppressWarnings({"unchecked"})<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    public static ImmutableMap&lt;RiverName, River&gt; rivers(RiversService riversService) {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        try {<a name="line.105"></a>
+<span class="sourceLineNo">106</span>            Field field = RiversService.class.getDeclaredField("rivers");<a name="line.106"></a>
+<span class="sourceLineNo">107</span>            if (field != null) {<a name="line.107"></a>
+<span class="sourceLineNo">108</span>                field.setAccessible(true);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>                return (ImmutableMap&lt;RiverName, River&gt;) field.get(riversService);<a name="line.109"></a>
+<span class="sourceLineNo">110</span>            }<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        } catch (Throwable e) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>            // ignore<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        }<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        // if error, do not return anything<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        return ImmutableMap.of();<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    }<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>    class NodeRiverExecuteRequest extends NodeOperationRequest {<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>        private String riverType;<a name="line.120"></a>
+<span class="sourceLineNo">121</span><a name="line.121"></a>
+<span class="sourceLineNo">122</span>        private String riverName;<a name="line.122"></a>
+<span class="sourceLineNo">123</span><a name="line.123"></a>
+<span class="sourceLineNo">124</span>        NodeRiverExecuteRequest() {<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        }<a name="line.125"></a>
+<span class="sourceLineNo">126</span><a name="line.126"></a>
+<span class="sourceLineNo">127</span>        public NodeRiverExecuteRequest(String nodeId, RunRiverRequest request) {<a name="line.127"></a>
+<span class="sourceLineNo">128</span>            super(request, nodeId);<a name="line.128"></a>
+<span class="sourceLineNo">129</span>            this.riverName = request.getRiverName();<a name="line.129"></a>
+<span class="sourceLineNo">130</span>            this.riverType = request.getRiverType();<a name="line.130"></a>
+<span class="sourceLineNo">131</span>        }<a name="line.131"></a>
+<span class="sourceLineNo">132</span><a name="line.132"></a>
+<span class="sourceLineNo">133</span>        public NodeRiverExecuteRequest setRiverType(String riverType) {<a name="line.133"></a>
+<span class="sourceLineNo">134</span>            this.riverType = riverType;<a name="line.134"></a>
+<span class="sourceLineNo">135</span>            return this;<a name="line.135"></a>
+<span class="sourceLineNo">136</span>        }<a name="line.136"></a>
+<span class="sourceLineNo">137</span><a name="line.137"></a>
+<span class="sourceLineNo">138</span>        public String getRiverType() {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>            return riverType;<a name="line.139"></a>
+<span class="sourceLineNo">140</span>        }<a name="line.140"></a>
+<span class="sourceLineNo">141</span><a name="line.141"></a>
+<span class="sourceLineNo">142</span>        public NodeRiverExecuteRequest setRiverName(String riverName) {<a name="line.142"></a>
+<span class="sourceLineNo">143</span>            this.riverName = riverName;<a name="line.143"></a>
+<span class="sourceLineNo">144</span>            return this;<a name="line.144"></a>
+<span class="sourceLineNo">145</span>        }<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>        public String getRiverName() {<a name="line.147"></a>
+<span class="sourceLineNo">148</span>            return riverName;<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        }<a name="line.149"></a>
+<span class="sourceLineNo">150</span><a name="line.150"></a>
+<span class="sourceLineNo">151</span>        @Override<a name="line.151"></a>
+<span class="sourceLineNo">152</span>        public void readFrom(StreamInput in) throws IOException {<a name="line.152"></a>
+<span class="sourceLineNo">153</span>            super.readFrom(in);<a name="line.153"></a>
+<span class="sourceLineNo">154</span>            this.riverName = in.readString();<a name="line.154"></a>
+<span class="sourceLineNo">155</span>            this.riverType = in.readString();<a name="line.155"></a>
+<span class="sourceLineNo">156</span>        }<a name="line.156"></a>
+<span class="sourceLineNo">157</span><a name="line.157"></a>
+<span class="sourceLineNo">158</span>        @Override<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        public void writeTo(StreamOutput out) throws IOException {<a name="line.159"></a>
+<span class="sourceLineNo">160</span>            super.writeTo(out);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>            out.writeString(riverName);<a name="line.161"></a>
+<span class="sourceLineNo">162</span>            out.writeString(riverType);<a name="line.162"></a>
+<span class="sourceLineNo">163</span>        }<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    }<a name="line.164"></a>
+<span class="sourceLineNo">165</span><a name="line.165"></a>
+<span class="sourceLineNo">166</span>    class NodeRiverExecuteResponse extends NodeOperationResponse {<a name="line.166"></a>
+<span class="sourceLineNo">167</span><a name="line.167"></a>
+<span class="sourceLineNo">168</span>        private boolean executed;<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>        NodeRiverExecuteResponse() {<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        }<a name="line.171"></a>
+<span class="sourceLineNo">172</span><a name="line.172"></a>
+<span class="sourceLineNo">173</span>        public NodeRiverExecuteResponse(DiscoveryNode node) {<a name="line.173"></a>
+<span class="sourceLineNo">174</span>            super(node);<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        }<a name="line.175"></a>
+<span class="sourceLineNo">176</span><a name="line.176"></a>
+<span class="sourceLineNo">177</span>        public NodeRiverExecuteResponse setExecuted(boolean b) {<a name="line.177"></a>
+<span class="sourceLineNo">178</span>            this.executed = b;<a name="line.178"></a>
+<span class="sourceLineNo">179</span>            return this;<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        }<a name="line.180"></a>
+<span class="sourceLineNo">181</span><a name="line.181"></a>
+<span class="sourceLineNo">182</span>        public boolean isExecuted() {<a name="line.182"></a>
+<span class="sourceLineNo">183</span>            return executed;<a name="line.183"></a>
+<span class="sourceLineNo">184</span>        }<a name="line.184"></a>
+<span class="sourceLineNo">185</span><a name="line.185"></a>
+<span class="sourceLineNo">186</span>        @Override<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        public void readFrom(StreamInput in) throws IOException {<a name="line.187"></a>
+<span class="sourceLineNo">188</span>            super.readFrom(in);<a name="line.188"></a>
+<span class="sourceLineNo">189</span>            executed = in.readBoolean();<a name="line.189"></a>
+<span class="sourceLineNo">190</span>        }<a name="line.190"></a>
+<span class="sourceLineNo">191</span><a name="line.191"></a>
+<span class="sourceLineNo">192</span>        @Override<a name="line.192"></a>
+<span class="sourceLineNo">193</span>        public void writeTo(StreamOutput out) throws IOException {<a name="line.193"></a>
+<span class="sourceLineNo">194</span>            super.writeTo(out);<a name="line.194"></a>
+<span class="sourceLineNo">195</span>            out.writeBoolean(executed);<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        }<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>    }<a name="line.198"></a>
+<span class="sourceLineNo">199</span>}<a name="line.199"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

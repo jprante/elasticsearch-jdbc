@@ -10,7 +10,7 @@
 <span class="sourceLineNo">002</span><a name="line.2"></a>
 <span class="sourceLineNo">003</span>import org.testng.Assert;<a name="line.3"></a>
 <span class="sourceLineNo">004</span>import org.testng.annotations.Test;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.xbib.elasticsearch.plugin.jdbc.RiverMouthKeyValueStreamListener;<a name="line.5"></a>
+<span class="sourceLineNo">005</span>import org.xbib.elasticsearch.plugin.jdbc.util.RiverMouthKeyValueStreamListener;<a name="line.5"></a>
 <span class="sourceLineNo">006</span>import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;<a name="line.6"></a>
 <span class="sourceLineNo">007</span><a name="line.7"></a>
 <span class="sourceLineNo">008</span>import java.util.Arrays;<a name="line.8"></a>
@@ -357,7 +357,39 @@
 <span class="sourceLineNo">349</span>        );<a name="line.349"></a>
 <span class="sourceLineNo">350</span>    }<a name="line.350"></a>
 <span class="sourceLineNo">351</span><a name="line.351"></a>
-<span class="sourceLineNo">352</span>}<a name="line.352"></a>
+<span class="sourceLineNo">352</span><a name="line.352"></a>
+<span class="sourceLineNo">353</span>    @Test<a name="line.353"></a>
+<span class="sourceLineNo">354</span>    public void testIgnoreNullObject2() throws Exception {<a name="line.354"></a>
+<span class="sourceLineNo">355</span>        List&lt;String&gt; columns = Arrays.asList("_id", "movie.event", "movie.title", "movie.overview", "movie.test");<a name="line.355"></a>
+<span class="sourceLineNo">356</span>        List&lt;Object&gt; row1 = new LinkedList&lt;Object&gt;();<a name="line.356"></a>
+<span class="sourceLineNo">357</span>        row1.add(0);<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        row1.add(123);<a name="line.358"></a>
+<span class="sourceLineNo">359</span>        row1.add(null);<a name="line.359"></a>
+<span class="sourceLineNo">360</span>        row1.add(null);<a name="line.360"></a>
+<span class="sourceLineNo">361</span>        row1.add(null);<a name="line.361"></a>
+<span class="sourceLineNo">362</span>        List&lt;Object&gt; row2 = new LinkedList&lt;Object&gt;();<a name="line.362"></a>
+<span class="sourceLineNo">363</span>        row2.add(1);<a name="line.363"></a>
+<span class="sourceLineNo">364</span>        row2.add(21);<a name="line.364"></a>
+<span class="sourceLineNo">365</span>        row2.add("ABC");<a name="line.365"></a>
+<span class="sourceLineNo">366</span>        row2.add("DEF");<a name="line.366"></a>
+<span class="sourceLineNo">367</span>        row2.add(1212);<a name="line.367"></a>
+<span class="sourceLineNo">368</span>        MockRiverMouth output = new MockRiverMouth();<a name="line.368"></a>
+<span class="sourceLineNo">369</span>        new RiverMouthKeyValueStreamListener&lt;String, Object&gt;()<a name="line.369"></a>
+<span class="sourceLineNo">370</span>                .shouldIgnoreNull(true)<a name="line.370"></a>
+<span class="sourceLineNo">371</span>                .output(output)<a name="line.371"></a>
+<span class="sourceLineNo">372</span>                .begin()<a name="line.372"></a>
+<span class="sourceLineNo">373</span>                .keys(columns)<a name="line.373"></a>
+<span class="sourceLineNo">374</span>                .values(row1)<a name="line.374"></a>
+<span class="sourceLineNo">375</span>                .values(row2)<a name="line.375"></a>
+<span class="sourceLineNo">376</span>                .end();<a name="line.376"></a>
+<span class="sourceLineNo">377</span><a name="line.377"></a>
+<span class="sourceLineNo">378</span>        assertEquals(output.data().toString(),<a name="line.378"></a>
+<span class="sourceLineNo">379</span>            "{[null/null/null/0]-&gt;{movie={event=123, title=null, overview=null, test=null}}={\"movie\":{\"event\":123}}, [null/null/null/1]-&gt;{movie={event=21, title=\"ABC\", overview=\"DEF\", test=1212}}={\"movie\":{\"event\":21,\"title\":\"ABC\",\"overview\":\"DEF\",\"test\":1212}}}"<a name="line.379"></a>
+<span class="sourceLineNo">380</span>        );<a name="line.380"></a>
+<span class="sourceLineNo">381</span><a name="line.381"></a>
+<span class="sourceLineNo">382</span>    }<a name="line.382"></a>
+<span class="sourceLineNo">383</span><a name="line.383"></a>
+<span class="sourceLineNo">384</span>}<a name="line.384"></a>
 
 
 

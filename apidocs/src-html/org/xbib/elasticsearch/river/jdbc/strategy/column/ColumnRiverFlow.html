@@ -6,53 +6,94 @@
 </head>
 <body>
 <div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span>package org.xbib.elasticsearch.river.jdbc.strategy.column;<a name="line.1"></a>
-<span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.3"></a>
-<span class="sourceLineNo">004</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.river.jdbc.RiverFlow;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;<a name="line.7"></a>
-<span class="sourceLineNo">008</span><a name="line.8"></a>
-<span class="sourceLineNo">009</span>/**<a name="line.9"></a>
-<span class="sourceLineNo">010</span> * River flow implementation for the 'column' strategy<a name="line.10"></a>
-<span class="sourceLineNo">011</span> *<a name="line.11"></a>
-<span class="sourceLineNo">012</span> * @author &lt;a href="piotr.sliwa@zineinc.com"&gt;Piotr Śliwa&lt;/a&gt;<a name="line.12"></a>
-<span class="sourceLineNo">013</span> */<a name="line.13"></a>
-<span class="sourceLineNo">014</span>public class ColumnRiverFlow extends SimpleRiverFlow {<a name="line.14"></a>
-<span class="sourceLineNo">015</span><a name="line.15"></a>
-<span class="sourceLineNo">016</span>    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnRiverFlow.class.getName());<a name="line.16"></a>
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Copyright (C) 2014 Jörg Prante<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * you may not use this file except in compliance with the License.<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * You may obtain a copy of the License at<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *      http://www.apache.org/licenses/LICENSE-2.0<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * Unless required by applicable law or agreed to in writing, software<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * See the License for the specific language governing permissions and<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * limitations under the License.<a name="line.14"></a>
+<span class="sourceLineNo">015</span> */<a name="line.15"></a>
+<span class="sourceLineNo">016</span>package org.xbib.elasticsearch.river.jdbc.strategy.column;<a name="line.16"></a>
 <span class="sourceLineNo">017</span><a name="line.17"></a>
-<span class="sourceLineNo">018</span>    public static final String DOCUMENT = "_custom";<a name="line.18"></a>
-<span class="sourceLineNo">019</span><a name="line.19"></a>
-<span class="sourceLineNo">020</span>    public static final String LAST_RUN_TIME = "last_run_time";<a name="line.20"></a>
-<span class="sourceLineNo">021</span><a name="line.21"></a>
-<span class="sourceLineNo">022</span>    public static final String CURRENT_RUN_STARTED_TIME = "current_run_started_time";<a name="line.22"></a>
-<span class="sourceLineNo">023</span><a name="line.23"></a>
-<span class="sourceLineNo">024</span>    protected ESLogger logger() {<a name="line.24"></a>
-<span class="sourceLineNo">025</span>        return logger;<a name="line.25"></a>
-<span class="sourceLineNo">026</span>    }<a name="line.26"></a>
-<span class="sourceLineNo">027</span><a name="line.27"></a>
-<span class="sourceLineNo">028</span>    @Override<a name="line.28"></a>
-<span class="sourceLineNo">029</span>    public String strategy() {<a name="line.29"></a>
-<span class="sourceLineNo">030</span>        return "column";<a name="line.30"></a>
-<span class="sourceLineNo">031</span>    }<a name="line.31"></a>
-<span class="sourceLineNo">032</span><a name="line.32"></a>
-<span class="sourceLineNo">033</span>    @Override<a name="line.33"></a>
-<span class="sourceLineNo">034</span>    public RiverFlow setFeeder(JDBCFeeder feeder) {<a name="line.34"></a>
-<span class="sourceLineNo">035</span>        this.feeder = feeder;<a name="line.35"></a>
-<span class="sourceLineNo">036</span>        return this;<a name="line.36"></a>
-<span class="sourceLineNo">037</span>    }<a name="line.37"></a>
+<span class="sourceLineNo">018</span>import org.elasticsearch.common.joda.time.DateTime;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.elasticsearch.common.unit.TimeValue;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.elasticsearch.common.xcontent.support.XContentMapValues;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.xbib.elasticsearch.river.jdbc.RiverContext;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.xbib.elasticsearch.river.jdbc.RiverMouth;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.xbib.elasticsearch.river.jdbc.RiverSource;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow;<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>import java.io.IOException;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import java.util.Map;<a name="line.30"></a>
+<span class="sourceLineNo">031</span><a name="line.31"></a>
+<span class="sourceLineNo">032</span>/**<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * River flow implementation for the 'column' strategy<a name="line.33"></a>
+<span class="sourceLineNo">034</span> *<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * @author &lt;a href="piotr.sliwa@zineinc.com"&gt;Piotr Śliwa&lt;/a&gt;<a name="line.35"></a>
+<span class="sourceLineNo">036</span> */<a name="line.36"></a>
+<span class="sourceLineNo">037</span>public class ColumnRiverFlow extends SimpleRiverFlow&lt;ColumnRiverContext&gt; {<a name="line.37"></a>
 <span class="sourceLineNo">038</span><a name="line.38"></a>
-<span class="sourceLineNo">039</span>    @Override<a name="line.39"></a>
-<span class="sourceLineNo">040</span>    public JDBCFeeder getFeeder() {<a name="line.40"></a>
-<span class="sourceLineNo">041</span>        if (feeder == null) {<a name="line.41"></a>
-<span class="sourceLineNo">042</span>            this.feeder = new ColumnRiverFeeder();<a name="line.42"></a>
-<span class="sourceLineNo">043</span>        }<a name="line.43"></a>
-<span class="sourceLineNo">044</span>        return feeder;<a name="line.44"></a>
-<span class="sourceLineNo">045</span>    }<a name="line.45"></a>
-<span class="sourceLineNo">046</span><a name="line.46"></a>
-<span class="sourceLineNo">047</span>}<a name="line.47"></a>
+<span class="sourceLineNo">039</span>    private static final ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.ColumnRiverFlow");<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>    public static final String LAST_RUN_TIME = "last_run_time";<a name="line.41"></a>
+<span class="sourceLineNo">042</span><a name="line.42"></a>
+<span class="sourceLineNo">043</span>    public static final String CURRENT_RUN_STARTED_TIME = "current_run_started_time";<a name="line.43"></a>
+<span class="sourceLineNo">044</span><a name="line.44"></a>
+<span class="sourceLineNo">045</span>    @Override<a name="line.45"></a>
+<span class="sourceLineNo">046</span>    public String strategy() {<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        return "column";<a name="line.47"></a>
+<span class="sourceLineNo">048</span>    }<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>    @Override<a name="line.50"></a>
+<span class="sourceLineNo">051</span>    public ColumnRiverFlow newInstance() {<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        return new ColumnRiverFlow();<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    @Override<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public ColumnRiverContext newRiverContext() {<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        return new ColumnRiverContext();<a name="line.57"></a>
+<span class="sourceLineNo">058</span>    }<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>    @Override<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    protected ColumnRiverContext fillRiverContext(ColumnRiverContext riverContext, RiverState state,<a name="line.61"></a>
+<span class="sourceLineNo">062</span>                                                  RiverSource riverSource,<a name="line.62"></a>
+<span class="sourceLineNo">063</span>                                                  RiverMouth riverMouth) throws IOException {<a name="line.63"></a>
+<span class="sourceLineNo">064</span>        ColumnRiverContext context = super.fillRiverContext(riverContext, state, riverSource, riverMouth);<a name="line.64"></a>
+<span class="sourceLineNo">065</span>        // defaults for column strategy<a name="line.65"></a>
+<span class="sourceLineNo">066</span>        Map&lt;String, Object&gt; params = riverContext.getDefinition();<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        String columnCreatedAt = XContentMapValues.nodeStringValue(params.get("created_at"), "created_at");<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        String columnUpdatedAt = XContentMapValues.nodeStringValue(params.get("updated_at"), "updated_at");<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        String columnDeletedAt = XContentMapValues.nodeStringValue(params.get("deleted_at"), null);<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        boolean columnEscape = XContentMapValues.nodeBooleanValue(params.get("column_escape"), true);<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        TimeValue lastRunTimeStampOverlap = XContentMapValues.nodeTimeValue(params.get("last_run_timestamp_overlap"),<a name="line.71"></a>
+<span class="sourceLineNo">072</span>                TimeValue.timeValueSeconds(0));<a name="line.72"></a>
+<span class="sourceLineNo">073</span>        context.columnCreatedAt(columnCreatedAt)<a name="line.73"></a>
+<span class="sourceLineNo">074</span>                .columnUpdatedAt(columnUpdatedAt)<a name="line.74"></a>
+<span class="sourceLineNo">075</span>                .columnDeletedAt(columnDeletedAt)<a name="line.75"></a>
+<span class="sourceLineNo">076</span>                .columnEscape(columnEscape)<a name="line.76"></a>
+<span class="sourceLineNo">077</span>                .setLastRunTimeStampOverlap(lastRunTimeStampOverlap);<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        return context;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    }<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    @Override<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    protected void fetch(RiverContext riverContext) throws Exception {<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        DateTime currentTime = new DateTime();<a name="line.83"></a>
+<span class="sourceLineNo">084</span>        riverContext.getRiverSource().fetch();<a name="line.84"></a>
+<span class="sourceLineNo">085</span>        riverContext.getRiverState().getMap().put(LAST_RUN_TIME, currentTime);<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    }<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>}<a name="line.88"></a>
 
 
 

@@ -11,7 +11,7 @@
 <span class="sourceLineNo">003</span>import org.elasticsearch.common.joda.time.DateTime;<a name="line.3"></a>
 <span class="sourceLineNo">004</span>import org.elasticsearch.common.joda.time.format.DateTimeFormat;<a name="line.4"></a>
 <span class="sourceLineNo">005</span>import org.testng.annotations.Test;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.jdbc.PlainIndexableObject;<a name="line.6"></a>
+<span class="sourceLineNo">006</span>import org.xbib.elasticsearch.plugin.jdbc.util.PlainIndexableObject;<a name="line.6"></a>
 <span class="sourceLineNo">007</span>import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverMouth;<a name="line.7"></a>
 <span class="sourceLineNo">008</span><a name="line.8"></a>
 <span class="sourceLineNo">009</span>import java.io.IOException;<a name="line.9"></a>
@@ -25,7 +25,7 @@
 <span class="sourceLineNo">017</span>        SimpleRiverMouth mouth = new SimpleRiverMouth();<a name="line.17"></a>
 <span class="sourceLineNo">018</span>        // daily index format<a name="line.18"></a>
 <span class="sourceLineNo">019</span>        String index = "'test-'YYYY.MM.dd";<a name="line.19"></a>
-<span class="sourceLineNo">020</span>        mouth.setTimeWindowed(true).setIndex(index);<a name="line.20"></a>
+<span class="sourceLineNo">020</span>        mouth.setIndex(index);<a name="line.20"></a>
 <span class="sourceLineNo">021</span>        mouth.index(new PlainIndexableObject(), false);<a name="line.21"></a>
 <span class="sourceLineNo">022</span>        String dayIndex = DateTimeFormat.forPattern(index).print(new DateTime());<a name="line.22"></a>
 <span class="sourceLineNo">023</span>        assertEquals(mouth.getIndex(), dayIndex);<a name="line.23"></a>

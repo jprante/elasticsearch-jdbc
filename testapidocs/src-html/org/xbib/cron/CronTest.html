@@ -9,91 +9,92 @@
 <pre><span class="sourceLineNo">001</span>package org.xbib.cron;<a name="line.1"></a>
 <span class="sourceLineNo">002</span><a name="line.2"></a>
 <span class="sourceLineNo">003</span>import org.testng.annotations.Test;<a name="line.3"></a>
-<span class="sourceLineNo">004</span><a name="line.4"></a>
-<span class="sourceLineNo">005</span>import static org.testng.Assert.assertEquals;<a name="line.5"></a>
-<span class="sourceLineNo">006</span><a name="line.6"></a>
-<span class="sourceLineNo">007</span>public class CronTest {<a name="line.7"></a>
-<span class="sourceLineNo">008</span><a name="line.8"></a>
-<span class="sourceLineNo">009</span>    @Test<a name="line.9"></a>
-<span class="sourceLineNo">010</span>    public void cron() {<a name="line.10"></a>
-<span class="sourceLineNo">011</span>        CronExpression expression = new CronExpression("0 0 14-6 ? * FRI-MON");<a name="line.11"></a>
-<span class="sourceLineNo">012</span>        assertEquals(expression.getExpressionSummary(),<a name="line.12"></a>
-<span class="sourceLineNo">013</span>                "seconds: 0\n" +<a name="line.13"></a>
-<span class="sourceLineNo">014</span>                        "minutes: 0\n" +<a name="line.14"></a>
-<span class="sourceLineNo">015</span>                        "hours: 0,1,2,3,4,5,6,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.15"></a>
-<span class="sourceLineNo">016</span>                        "daysOfMonth: ?\n" +<a name="line.16"></a>
-<span class="sourceLineNo">017</span>                        "months: *\n" +<a name="line.17"></a>
-<span class="sourceLineNo">018</span>                        "daysOfWeek: 1,2,6,7\n" +<a name="line.18"></a>
-<span class="sourceLineNo">019</span>                        "lastdayOfWeek: false\n" +<a name="line.19"></a>
-<span class="sourceLineNo">020</span>                        "nearestWeekday: false\n" +<a name="line.20"></a>
-<span class="sourceLineNo">021</span>                        "NthDayOfWeek: 0\n" +<a name="line.21"></a>
-<span class="sourceLineNo">022</span>                        "lastdayOfMonth: false\n" +<a name="line.22"></a>
-<span class="sourceLineNo">023</span>                        "years: *\n"<a name="line.23"></a>
-<span class="sourceLineNo">024</span>        );<a name="line.24"></a>
-<span class="sourceLineNo">025</span><a name="line.25"></a>
-<span class="sourceLineNo">026</span>        expression = new CronExpression("0 0 0-23 ? * *");<a name="line.26"></a>
-<span class="sourceLineNo">027</span>        assertEquals(expression.getExpressionSummary(),<a name="line.27"></a>
-<span class="sourceLineNo">028</span>                "seconds: 0\n" +<a name="line.28"></a>
-<span class="sourceLineNo">029</span>                        "minutes: 0\n" +<a name="line.29"></a>
-<span class="sourceLineNo">030</span>                        "hours: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.30"></a>
-<span class="sourceLineNo">031</span>                        "daysOfMonth: ?\n" +<a name="line.31"></a>
-<span class="sourceLineNo">032</span>                        "months: *\n" +<a name="line.32"></a>
-<span class="sourceLineNo">033</span>                        "daysOfWeek: *\n" +<a name="line.33"></a>
-<span class="sourceLineNo">034</span>                        "lastdayOfWeek: false\n" +<a name="line.34"></a>
-<span class="sourceLineNo">035</span>                        "nearestWeekday: false\n" +<a name="line.35"></a>
-<span class="sourceLineNo">036</span>                        "NthDayOfWeek: 0\n" +<a name="line.36"></a>
-<span class="sourceLineNo">037</span>                        "lastdayOfMonth: false\n" +<a name="line.37"></a>
-<span class="sourceLineNo">038</span>                        "years: *\n"<a name="line.38"></a>
-<span class="sourceLineNo">039</span>        );<a name="line.39"></a>
-<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">004</span>import org.xbib.elasticsearch.plugin.jdbc.cron.CronExpression;<a name="line.4"></a>
+<span class="sourceLineNo">005</span><a name="line.5"></a>
+<span class="sourceLineNo">006</span>import static org.testng.Assert.assertEquals;<a name="line.6"></a>
+<span class="sourceLineNo">007</span><a name="line.7"></a>
+<span class="sourceLineNo">008</span>public class CronTest {<a name="line.8"></a>
+<span class="sourceLineNo">009</span><a name="line.9"></a>
+<span class="sourceLineNo">010</span>    @Test<a name="line.10"></a>
+<span class="sourceLineNo">011</span>    public void cron() {<a name="line.11"></a>
+<span class="sourceLineNo">012</span>        CronExpression expression = new CronExpression("0 0 14-6 ? * FRI-MON");<a name="line.12"></a>
+<span class="sourceLineNo">013</span>        assertEquals(expression.getExpressionSummary(),<a name="line.13"></a>
+<span class="sourceLineNo">014</span>                "seconds: 0\n" +<a name="line.14"></a>
+<span class="sourceLineNo">015</span>                        "minutes: 0\n" +<a name="line.15"></a>
+<span class="sourceLineNo">016</span>                        "hours: 0,1,2,3,4,5,6,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.16"></a>
+<span class="sourceLineNo">017</span>                        "daysOfMonth: ?\n" +<a name="line.17"></a>
+<span class="sourceLineNo">018</span>                        "months: *\n" +<a name="line.18"></a>
+<span class="sourceLineNo">019</span>                        "daysOfWeek: 1,2,6,7\n" +<a name="line.19"></a>
+<span class="sourceLineNo">020</span>                        "lastdayOfWeek: false\n" +<a name="line.20"></a>
+<span class="sourceLineNo">021</span>                        "nearestWeekday: false\n" +<a name="line.21"></a>
+<span class="sourceLineNo">022</span>                        "NthDayOfWeek: 0\n" +<a name="line.22"></a>
+<span class="sourceLineNo">023</span>                        "lastdayOfMonth: false\n" +<a name="line.23"></a>
+<span class="sourceLineNo">024</span>                        "years: *\n"<a name="line.24"></a>
+<span class="sourceLineNo">025</span>        );<a name="line.25"></a>
+<span class="sourceLineNo">026</span><a name="line.26"></a>
+<span class="sourceLineNo">027</span>        expression = new CronExpression("0 0 0-23 ? * *");<a name="line.27"></a>
+<span class="sourceLineNo">028</span>        assertEquals(expression.getExpressionSummary(),<a name="line.28"></a>
+<span class="sourceLineNo">029</span>                "seconds: 0\n" +<a name="line.29"></a>
+<span class="sourceLineNo">030</span>                        "minutes: 0\n" +<a name="line.30"></a>
+<span class="sourceLineNo">031</span>                        "hours: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.31"></a>
+<span class="sourceLineNo">032</span>                        "daysOfMonth: ?\n" +<a name="line.32"></a>
+<span class="sourceLineNo">033</span>                        "months: *\n" +<a name="line.33"></a>
+<span class="sourceLineNo">034</span>                        "daysOfWeek: *\n" +<a name="line.34"></a>
+<span class="sourceLineNo">035</span>                        "lastdayOfWeek: false\n" +<a name="line.35"></a>
+<span class="sourceLineNo">036</span>                        "nearestWeekday: false\n" +<a name="line.36"></a>
+<span class="sourceLineNo">037</span>                        "NthDayOfWeek: 0\n" +<a name="line.37"></a>
+<span class="sourceLineNo">038</span>                        "lastdayOfMonth: false\n" +<a name="line.38"></a>
+<span class="sourceLineNo">039</span>                        "years: *\n"<a name="line.39"></a>
+<span class="sourceLineNo">040</span>        );<a name="line.40"></a>
 <span class="sourceLineNo">041</span><a name="line.41"></a>
-<span class="sourceLineNo">042</span>        expression = new CronExpression("0-59 0-59 0-23 ? * *");<a name="line.42"></a>
-<span class="sourceLineNo">043</span>        assertEquals(expression.getExpressionSummary(),<a name="line.43"></a>
-<span class="sourceLineNo">044</span>                "seconds: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59\n" +<a name="line.44"></a>
-<span class="sourceLineNo">045</span>                        "minutes: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59\n" +<a name="line.45"></a>
-<span class="sourceLineNo">046</span>                        "hours: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.46"></a>
-<span class="sourceLineNo">047</span>                        "daysOfMonth: ?\n" +<a name="line.47"></a>
-<span class="sourceLineNo">048</span>                        "months: *\n" +<a name="line.48"></a>
-<span class="sourceLineNo">049</span>                        "daysOfWeek: *\n" +<a name="line.49"></a>
-<span class="sourceLineNo">050</span>                        "lastdayOfWeek: false\n" +<a name="line.50"></a>
-<span class="sourceLineNo">051</span>                        "nearestWeekday: false\n" +<a name="line.51"></a>
-<span class="sourceLineNo">052</span>                        "NthDayOfWeek: 0\n" +<a name="line.52"></a>
-<span class="sourceLineNo">053</span>                        "lastdayOfMonth: false\n" +<a name="line.53"></a>
-<span class="sourceLineNo">054</span>                        "years: *\n"<a name="line.54"></a>
-<span class="sourceLineNo">055</span>        );<a name="line.55"></a>
-<span class="sourceLineNo">056</span><a name="line.56"></a>
-<span class="sourceLineNo">057</span>        expression = new CronExpression("0/5 0-59 0-23 ? * *");<a name="line.57"></a>
-<span class="sourceLineNo">058</span>        assertEquals(expression.getExpressionSummary(),<a name="line.58"></a>
-<span class="sourceLineNo">059</span>                "seconds: 0,5,10,15,20,25,30,35,40,45,50,55\n" +<a name="line.59"></a>
-<span class="sourceLineNo">060</span>                        "minutes: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59\n" +<a name="line.60"></a>
-<span class="sourceLineNo">061</span>                        "hours: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.61"></a>
-<span class="sourceLineNo">062</span>                        "daysOfMonth: ?\n" +<a name="line.62"></a>
-<span class="sourceLineNo">063</span>                        "months: *\n" +<a name="line.63"></a>
-<span class="sourceLineNo">064</span>                        "daysOfWeek: *\n" +<a name="line.64"></a>
-<span class="sourceLineNo">065</span>                        "lastdayOfWeek: false\n" +<a name="line.65"></a>
-<span class="sourceLineNo">066</span>                        "nearestWeekday: false\n" +<a name="line.66"></a>
-<span class="sourceLineNo">067</span>                        "NthDayOfWeek: 0\n" +<a name="line.67"></a>
-<span class="sourceLineNo">068</span>                        "lastdayOfMonth: false\n" +<a name="line.68"></a>
-<span class="sourceLineNo">069</span>                        "years: *\n"<a name="line.69"></a>
-<span class="sourceLineNo">070</span>        );<a name="line.70"></a>
-<span class="sourceLineNo">071</span><a name="line.71"></a>
-<span class="sourceLineNo">072</span>        // comma test<a name="line.72"></a>
-<span class="sourceLineNo">073</span>        expression = new CronExpression("0 5,35 * * * ?");<a name="line.73"></a>
-<span class="sourceLineNo">074</span>        assertEquals(expression.getExpressionSummary(),<a name="line.74"></a>
-<span class="sourceLineNo">075</span>                "seconds: 0\n" +<a name="line.75"></a>
-<span class="sourceLineNo">076</span>                        "minutes: 5,35\n" +<a name="line.76"></a>
-<span class="sourceLineNo">077</span>                        "hours: *\n" +<a name="line.77"></a>
-<span class="sourceLineNo">078</span>                        "daysOfMonth: *\n" +<a name="line.78"></a>
-<span class="sourceLineNo">079</span>                        "months: *\n" +<a name="line.79"></a>
-<span class="sourceLineNo">080</span>                        "daysOfWeek: ?\n" +<a name="line.80"></a>
-<span class="sourceLineNo">081</span>                        "lastdayOfWeek: false\n" +<a name="line.81"></a>
-<span class="sourceLineNo">082</span>                        "nearestWeekday: false\n" +<a name="line.82"></a>
-<span class="sourceLineNo">083</span>                        "NthDayOfWeek: 0\n" +<a name="line.83"></a>
-<span class="sourceLineNo">084</span>                        "lastdayOfMonth: false\n" +<a name="line.84"></a>
-<span class="sourceLineNo">085</span>                        "years: *\n"<a name="line.85"></a>
-<span class="sourceLineNo">086</span>        );<a name="line.86"></a>
-<span class="sourceLineNo">087</span>    }<a name="line.87"></a>
-<span class="sourceLineNo">088</span>}<a name="line.88"></a>
+<span class="sourceLineNo">042</span><a name="line.42"></a>
+<span class="sourceLineNo">043</span>        expression = new CronExpression("0-59 0-59 0-23 ? * *");<a name="line.43"></a>
+<span class="sourceLineNo">044</span>        assertEquals(expression.getExpressionSummary(),<a name="line.44"></a>
+<span class="sourceLineNo">045</span>                "seconds: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59\n" +<a name="line.45"></a>
+<span class="sourceLineNo">046</span>                        "minutes: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59\n" +<a name="line.46"></a>
+<span class="sourceLineNo">047</span>                        "hours: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.47"></a>
+<span class="sourceLineNo">048</span>                        "daysOfMonth: ?\n" +<a name="line.48"></a>
+<span class="sourceLineNo">049</span>                        "months: *\n" +<a name="line.49"></a>
+<span class="sourceLineNo">050</span>                        "daysOfWeek: *\n" +<a name="line.50"></a>
+<span class="sourceLineNo">051</span>                        "lastdayOfWeek: false\n" +<a name="line.51"></a>
+<span class="sourceLineNo">052</span>                        "nearestWeekday: false\n" +<a name="line.52"></a>
+<span class="sourceLineNo">053</span>                        "NthDayOfWeek: 0\n" +<a name="line.53"></a>
+<span class="sourceLineNo">054</span>                        "lastdayOfMonth: false\n" +<a name="line.54"></a>
+<span class="sourceLineNo">055</span>                        "years: *\n"<a name="line.55"></a>
+<span class="sourceLineNo">056</span>        );<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>        expression = new CronExpression("0/5 0-59 0-23 ? * *");<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        assertEquals(expression.getExpressionSummary(),<a name="line.59"></a>
+<span class="sourceLineNo">060</span>                "seconds: 0,5,10,15,20,25,30,35,40,45,50,55\n" +<a name="line.60"></a>
+<span class="sourceLineNo">061</span>                        "minutes: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59\n" +<a name="line.61"></a>
+<span class="sourceLineNo">062</span>                        "hours: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23\n" +<a name="line.62"></a>
+<span class="sourceLineNo">063</span>                        "daysOfMonth: ?\n" +<a name="line.63"></a>
+<span class="sourceLineNo">064</span>                        "months: *\n" +<a name="line.64"></a>
+<span class="sourceLineNo">065</span>                        "daysOfWeek: *\n" +<a name="line.65"></a>
+<span class="sourceLineNo">066</span>                        "lastdayOfWeek: false\n" +<a name="line.66"></a>
+<span class="sourceLineNo">067</span>                        "nearestWeekday: false\n" +<a name="line.67"></a>
+<span class="sourceLineNo">068</span>                        "NthDayOfWeek: 0\n" +<a name="line.68"></a>
+<span class="sourceLineNo">069</span>                        "lastdayOfMonth: false\n" +<a name="line.69"></a>
+<span class="sourceLineNo">070</span>                        "years: *\n"<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        );<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>        // comma test<a name="line.73"></a>
+<span class="sourceLineNo">074</span>        expression = new CronExpression("0 5,35 * * * ?");<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        assertEquals(expression.getExpressionSummary(),<a name="line.75"></a>
+<span class="sourceLineNo">076</span>                "seconds: 0\n" +<a name="line.76"></a>
+<span class="sourceLineNo">077</span>                        "minutes: 5,35\n" +<a name="line.77"></a>
+<span class="sourceLineNo">078</span>                        "hours: *\n" +<a name="line.78"></a>
+<span class="sourceLineNo">079</span>                        "daysOfMonth: *\n" +<a name="line.79"></a>
+<span class="sourceLineNo">080</span>                        "months: *\n" +<a name="line.80"></a>
+<span class="sourceLineNo">081</span>                        "daysOfWeek: ?\n" +<a name="line.81"></a>
+<span class="sourceLineNo">082</span>                        "lastdayOfWeek: false\n" +<a name="line.82"></a>
+<span class="sourceLineNo">083</span>                        "nearestWeekday: false\n" +<a name="line.83"></a>
+<span class="sourceLineNo">084</span>                        "NthDayOfWeek: 0\n" +<a name="line.84"></a>
+<span class="sourceLineNo">085</span>                        "lastdayOfMonth: false\n" +<a name="line.85"></a>
+<span class="sourceLineNo">086</span>                        "years: *\n"<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        );<a name="line.87"></a>
+<span class="sourceLineNo">088</span>    }<a name="line.88"></a>
+<span class="sourceLineNo">089</span>}<a name="line.89"></a>
 
 
 
