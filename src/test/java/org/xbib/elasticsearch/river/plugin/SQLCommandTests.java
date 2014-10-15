@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
+import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 
 public class SQLCommandTests extends Assert {
  		@Test

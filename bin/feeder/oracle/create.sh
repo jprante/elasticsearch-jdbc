@@ -8,9 +8,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo '
 {
-    "concurrency" : 1,
-    "elasticsearch" : "es://localhost:9300?es.cluster.name=elasticsearch",
-    "client" : "bulk",
+    "elasticsearch" : {
+         "cluster" : "elasticsearch",
+         "host" : "localhost",
+         "port" : 9300
+    },
+    "max_bulk_actions" : 20000,
+    "max_concurrent_bulk_requests" : 10,
+    "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:oracle:thin:@//host:1521/sid",
         "user" : "user",

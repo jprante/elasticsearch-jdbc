@@ -8,7 +8,7 @@ import org.testng.ITestResult;
 
 public class Listener implements ITestListener {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(Listener.class.getSimpleName());
+    private final ESLogger logger = ESLoggerFactory.getLogger("test.Listener");
 
     @Override
     public void onTestStart(ITestResult result) {

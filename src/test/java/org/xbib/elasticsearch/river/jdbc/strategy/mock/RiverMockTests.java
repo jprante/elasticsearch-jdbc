@@ -4,14 +4,14 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
+import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverContext;
 import org.xbib.elasticsearch.river.jdbc.support.StringKeyValueStreamListener;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
-import org.xbib.elasticsearch.support.helper.AbstractRiverNodeTest;
-import org.xbib.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.river.jdbc.strategy.simple.AbstractSimpleRiverTest;
+import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -19,18 +19,18 @@ import java.sql.ResultSet;
 import java.util.LinkedList;
 import java.util.List;
 
-public class RiverMockTests extends AbstractRiverNodeTest {
+public class RiverMockTests extends AbstractSimpleRiverTest {
 
     private static final ESLogger logger = ESLoggerFactory.getLogger(RiverMockTests.class.getName());
 
     @Override
-    public RiverSource getRiverSource() {
+    public RiverSource newRiverSource() {
         return new SimpleRiverSource();
     }
 
     @Override
-    public RiverContext getRiverContext() {
-        return new RiverContext();
+    public SimpleRiverContext newRiverContext() {
+        return new SimpleRiverContext();
     }
 
     @Test

@@ -2,18 +2,20 @@ package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.plugin.jdbc.IndexableObject;
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
+import org.elasticsearch.common.settings.Settings;
+import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
+import org.xbib.elasticsearch.plugin.jdbc.client.IngestFactory;
+import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
+import org.xbib.elasticsearch.plugin.jdbc.client.Metric;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
-import org.xbib.elasticsearch.support.client.Ingest;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MockRiverMouth implements RiverMouth {
+public class MockRiverMouth implements RiverMouth<MockRiverContext> {
 
-    private final static ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getName());
+    private final static ESLogger logger = ESLoggerFactory.getLogger(MockRiverMouth.class.getSimpleName());
 
     private Map<IndexableObject, String> data;
 
@@ -22,6 +24,20 @@ public class MockRiverMouth implements RiverMouth {
     @Override
     public String strategy() {
         return "mock";
+    }
+
+    @Override
+    public RiverMouth<MockRiverContext> newInstance() {
+        return new MockRiverMouth();
+    }
+
+    @Override
+    public void beforeFetch() throws Exception {
+    }
+
+    @Override
+    public void afterFetch() throws Exception {
+
     }
 
     public MockRiverMouth() {
@@ -50,12 +66,12 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     @Override
-    public RiverMouth setRiverContext(RiverContext context) {
+    public MockRiverMouth setRiverContext(MockRiverContext context) {
         return this;
     }
 
     @Override
-    public RiverMouth setIngest(Ingest ingester) {
+    public RiverMouth setIngestFactory(IngestFactory ingestFactory) {
         return this;
     }
 
@@ -63,14 +79,30 @@ public class MockRiverMouth implements RiverMouth {
     public RiverMouth setIndex(String index) {
         return this;
     }
+
+    @Override
+    public String getIndex() {
+        return null;
+    }
+
+    @Override
+    public RiverMouth setIndexSettings(Settings indexSettings) {
+        return this;
+    }
+
+    @Override
+    public RiverMouth setTypeMapping(Map<String, String> typeMapping) {
+        return this;
+    }
+
     @Override
     public RiverMouth setType(String type) {
         return this;
     }
 
     @Override
-    public RiverMouth setTimeWindowed(boolean timeWindowed) {
-        return this;
+    public String getType() {
+        return null;
     }
 
     @Override
@@ -88,7 +120,20 @@ public class MockRiverMouth implements RiverMouth {
     }
 
     @Override
-    public void close() {
+    public void shutdown() throws IOException {
+    }
+
+    @Override
+    public void suspend() throws Exception {
+    }
+
+    @Override
+    public void resume() throws Exception {
+    }
+
+    @Override
+    public Metric getMetric() {
+        return null;
     }
 
     public long getCounter() {

@@ -1,8 +1,22 @@
+/*
+ * Copyright (C) 2014 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.river.jdbc;
 
-import org.xbib.elasticsearch.plugin.jdbc.RiverContext;
-import org.xbib.elasticsearch.plugin.jdbc.SQLCommand;
-import org.xbib.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 
 import java.io.IOException;
 import java.sql.CallableStatement;
@@ -20,7 +34,7 @@ import java.util.TimeZone;
 /**
  * The river source models the data producing side
  */
-public interface RiverSource {
+public interface RiverSource<RC extends RiverContext> {
 
     /**
      * The strategy this river source supports.
@@ -30,26 +44,46 @@ public interface RiverSource {
     String strategy();
 
     /**
+     * Create new river source instance
+     *
+     * @return a new river source instance
+     */
+    RiverSource<RC> newInstance();
+
+    /**
      * Set the river context
      *
      * @param context the context
      * @return this river source
      */
-    RiverSource setRiverContext(RiverContext context);
+    RiverSource setRiverContext(RC context);
+
+    /**
+     * Executed before fetch() is executed
+     *
+     * @throws Exception
+     */
+    void beforeFetch() throws Exception;
 
     /**
      * Fetch a data portion from the database and pass it to the river task
      * for firther processing.
      *
-     * @throws SQLException when SQL execution gives an error
-     * @throws IOException  when input/output error occurs
+     * @throws Exception when execution gives an error
      */
-    void fetch() throws SQLException, IOException;
+    void fetch() throws Exception;
 
     /**
-     * Set the driver URL
+     * Executed after fetch() has been executed or threw an exception.
      *
-     * @param url the JDBC URL
+     * @throws Exception
+     */
+    void afterFetch() throws Exception;
+
+    /**
+     * Set JDBC connection URL
+     *
+     * @param url the JDBC connection URL
      * @return this river source
      */
     RiverSource setUrl(String url);
@@ -69,7 +103,6 @@ public interface RiverSource {
      * @return this river source
      */
     RiverSource setPassword(String password);
-
 
     /**
      * Get a connection for reading data
@@ -153,18 +186,52 @@ public interface RiverSource {
      */
     RiverSource executeUpdate(PreparedStatement statement) throws SQLException;
 
+    /**
+     * Execute insert update
+     *
+     * @param statement statement
+     * @param sql       SQL query
+     * @return this river source
+     * @throws SQLException
+     */
     RiverSource executeUpdate(Statement statement, String sql) throws SQLException;
 
+    /**
+     * Executed before rows are fetched from result set
+     *
+     * @param results  the result set
+     * @param listener a result set listener or null
+     * @throws SQLException
+     * @throws IOException
+     */
     void beforeRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
+    /**
+     * Executed when next row is fetched from result set
+     *
+     * @param results  the result set
+     * @param listener a result set listener or null
+     * @return true if next row could be processed, otherwise false
+     * @throws SQLException
+     * @throws IOException
+     */
     boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
+    /**
+     * Executed after all rows have been fetched from result set
+     *
+     * @param results  the result set
+     * @param listener a result set listener or null
+     * @throws SQLException
+     * @throws IOException
+     */
     void afterRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
     /**
      * This routine is executed before the result set is evaluated
-     * @param command the SQL command that created this result set
-     * @param results the result set
+     *
+     * @param command  the SQL command that created this result set
+     * @param results  the result set
      * @param listener listener for the key/value stream generated from the result set
      * @throws SQLException
      * @throws IOException
@@ -185,8 +252,8 @@ public interface RiverSource {
     /**
      * After the result set is processed, this method is called.
      *
-     * @param command the SQL command that created this result set
-     * @param results the result set
+     * @param command  the SQL command that created this result set
+     * @param results  the result set
      * @param listener listener for the key/value stream generated from the result set
      * @throws SQLException
      * @throws IOException
@@ -268,5 +335,26 @@ public interface RiverSource {
      * @return the time zone
      */
     TimeZone getTimeZone();
+
+    /**
+     * Suspend river source
+     *
+     * @throws Exception
+     */
+    void suspend() throws Exception;
+
+    /**
+     * Resume river source
+     *
+     * @throws Exception
+     */
+    void resume() throws Exception;
+
+    /**
+     * Shutdown source
+     *
+     * @throws IOException
+     */
+    void shutdown() throws IOException;
 
 }

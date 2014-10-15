@@ -1,4 +1,5 @@
 {
+    "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:derby:memory:myDB",
         "user" : "",

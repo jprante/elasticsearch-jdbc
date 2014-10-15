@@ -22,17 +22,18 @@ curl -XDELETE 'localhost:9200/myjdbc'
 
 echo '
 {
-    "elasticsearch" : "es://localhost:9300?es.cluster.name=elasticsearch",
+    "elasticsearch" : {
+         "cluster" : "elasticsearch",
+         "host" : "localhost",
+         "port" : 9300
+    },
+    "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
         "locale" : "en_US",
-        "sql" : [
-            {
-                "statement" : "select \"myjdbc\" as _index, \"mytype\" as _type, name as _id, city, zip, address, lat as \"location.lat\", lon as \"location.lon\" from geo"
-            }
-        ],
+        "sql" : "select \"myjdbc\" as _index, \"mytype\" as _type, name as _id, city, zip, address, lat as \"location.lat\", lon as \"location.lon\" from geo",
         "index" : "myjdbc",
         "type" : "mytype",
         "index_settings" : {
@@ -53,8 +54,8 @@ echo '
 }
 ' | ${JAVA_HOME}/bin/java \
     -cp ${ES_JDBC_CLASSPATH} \
-    org.xbib.elasticsearch.plugin.feeder.Runner \
-    org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder
+    org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
+    org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
 
 curl -XGET 'localhost:9200/myjdbc/_refresh'
 

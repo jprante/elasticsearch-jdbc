@@ -2,7 +2,7 @@ package org.xbib.elasticsearch.river.jdbc.support;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.plugin.jdbc.RiverMouthKeyValueStreamListener;
+import org.xbib.elasticsearch.plugin.jdbc.util.RiverMouthKeyValueStreamListener;
 import org.xbib.elasticsearch.river.jdbc.strategy.mock.MockRiverMouth;
 
 import java.util.Arrays;
@@ -347,6 +347,38 @@ public class ValueListenerTests extends Assert {
         assertEquals(output.data().toString(),
                 "{[null/null/null/4679]->{blog={name=\"Joe\", association=[{id=\"3917\", name=\"John\"}, {id=\"4015\", name=\"Jack\"}, {id=null, name=null}]}}={\"blog\":{\"name\":\"Joe\",\"association\":[{\"id\":\"3917\",\"name\":\"John\"},{\"id\":\"4015\",\"name\":\"Jack\"}]}}}"
         );
+    }
+
+
+    @Test
+    public void testIgnoreNullObject2() throws Exception {
+        List<String> columns = Arrays.asList("_id", "movie.event", "movie.title", "movie.overview", "movie.test");
+        List<Object> row1 = new LinkedList<Object>();
+        row1.add(0);
+        row1.add(123);
+        row1.add(null);
+        row1.add(null);
+        row1.add(null);
+        List<Object> row2 = new LinkedList<Object>();
+        row2.add(1);
+        row2.add(21);
+        row2.add("ABC");
+        row2.add("DEF");
+        row2.add(1212);
+        MockRiverMouth output = new MockRiverMouth();
+        new RiverMouthKeyValueStreamListener<String, Object>()
+                .shouldIgnoreNull(true)
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .values(row2)
+                .end();
+
+        assertEquals(output.data().toString(),
+            "{[null/null/null/0]->{movie={event=123, title=null, overview=null, test=null}}={\"movie\":{\"event\":123}}, [null/null/null/1]->{movie={event=21, title=\"ABC\", overview=\"DEF\", test=1212}}={\"movie\":{\"event\":21,\"title\":\"ABC\",\"overview\":\"DEF\",\"test\":1212}}}"
+        );
+
     }
 
 }

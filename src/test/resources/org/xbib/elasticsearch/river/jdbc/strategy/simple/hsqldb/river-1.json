@@ -1,4 +1,5 @@
 {
+    "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
