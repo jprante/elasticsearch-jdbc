@@ -10,19 +10,35 @@ indexing into [Elasticsearch](http://www.elasticsearch.org).
 
 It is implemented as an [Elasticsearch plugin](http://www.elasticsearch.org/guide/reference/modules/plugins.html).
 
-Creating a JDBC river is easy. Install the plugin. Download a JDBC driver jar from your vendor's site
-(for example MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
-Then issue this simple command::
+The JDBC plugin was designed for tabular data. If you have tables with many joins, the JDBC plugin
+is limited in the way to reconstruct deeply nested objects to JSON and process object semantics like object identity.
+Though it would be possible to extend the JDBC plugin with a maaping feature where all the object properties
+could be specified, the current solution is focused on rather simple tabular data streams.
+
+Creating a JDBC river is easy:
+
+- install the plugin
+
+- download a JDBC driver jar from your vendor's site (for example MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
+
+Assuming you have a table of name `orders`, you can issue this simple command from the command line
 
     curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+        "max_bulk_actions" : 10000,
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
+            "fetchsize" : "min",
             "sql" : "select * from orders"
         }
     }'
+
+
+Note: the `max_bulk_actions` is set by default to 100 and have to be enlarged for most use cases, and
+MySQL streaming mode is activated only by setting the row fetch size to Integer.MIN_VALUE, which can be
+achieved by using the string `"min"` for the parameter `fetchsize`.
 
 ## Two flavors: river or feeder
 
@@ -45,15 +61,8 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 | Elasticsearch version    | Plugin     | Release date |
 | ------------------------ | -----------| -------------|
-| 1.3.1                    | 1.3.0.4    | Aug  5, 2014 |
-| 1.3.1                    | 1.3.0.3    | Aug  4, 2014 |
-| 1.3.1                    | 1.3.0.2    | Aug  2, 2014 |
-| 1.3.1                    | 1.3.0.1    | Jul 31, 2014 |
-| 1.3.0                    | 1.3.0.0    | Jul 24, 2014 |
-| 1.2.2                    | 1.2.2.0    | Jul 19, 2014 |
-| 1.2.1                    | 1.2.1.1    | Jun  9, 2014 |
-| 1.2.1                    | 1.2.1.0    | Jun  5, 2014 |
-| 1.1.0                    | 1.1.0.2    | May 19, 2014 |
+| 1.3.4                    | 1.3.4.0    | Oct 15, 2014 |
+| 1.2.4                    | 1.2.4.0    | Oct 15, 2014 |
 
 ## Prerequisites
 
@@ -61,33 +70,23 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.0.4/elasticsearch-river-jdbc-1.3.0.4-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.0/elasticsearch-river-jdbc-1.3.4.0-plugin.zip
 
 Do not forget to restart the node after installing.
 
 If you have installed Elasticsearch with other automation tools, like for example Homebrew,
 you will need to locate your `ES_HOME` directory.  The easiest way to do this is by navigating to
 
-    localhost:9200/_cluster/nodes?settings=true&pretty=true
+    http://localhost:9200/_nodes?settings=true&pretty=true
 
-Change into this directory to invoke the `./bin/plugin` command line tool.
+Change into the home directory to invoke the `./bin/plugin` command line tool.
 
 ## Checksum
 
 | File                                         | SHA1                                     |
 | ---------------------------------------------| -----------------------------------------|
-| elasticsearch-river-jdbc-1.3.0.4-plugin.zip  | dcb412285f6274ef07c05068311dacb745fe8046 |
-| elasticsearch-river-jdbc-1.3.0.3-plugin.zip  | 7e3fe518c716305a7878fddb299f0c263fb5ed4b |
-| elasticsearch-river-jdbc-1.3.0.2-plugin.zip  | 7f87af3055223d15238da9c81ae95ff6ea0ce934 |
-| elasticsearch-river-jdbc-1.3.0.1-plugin.zip  | ee58c51acfb4bc2294939c655ff2f790890808bc |
-| elasticsearch-river-jdbc-1.3.0.0-plugin.zip  | f303bf240e443bbe81ccc614bfad6b4d103eb073 |
-| elasticsearch-river-jdbc-1.2.2.0-plugin.zip  | 2c4085ea3f89c54712e6d2ff99ab4e999f1af2e2 |
-| elasticsearch-river-jdbc-1.2.1.1-plugin.zip  | 68e7e1fdf45d0e5852b21610a84740595223ea11 |
-| elasticsearch-river-jdbc-1.2.1.0-plugin.zip  | a5a953fe71259e21b6311604efda584d8260c7a3 |
-| elasticsearch-river-jdbc-1.2.0.1-plugin.zip  | 3c81488b7fe6aa65576415c6a84df5e36310e382 |
-| elasticsearch-river-jdbc-1.2.0.0-plugin.zip  | 978c5c8aa3aa5082fbf21cdfca4fd8783b4e6431 |
-| elasticsearch-river-jdbc-1.1.0.2-plugin.zip  | 0f3fea12ebccf20324482bb5c144349e97aa3345 |
-| elasticsearch-river-jdbc-1.1.0.1-plugin.zip  | 1065a30897beddd4e37cb63ca40500a02319dbe7 |
+| elasticsearch-river-jdbc-1.3.4.0-plugin.zip  | 1bdbb7e3f7db72cf3f5929c719b8544753492013 |
+| elasticsearch-river-jdbc-1.2.4.0-plugin.zip  | 225256209559229cd79c8c93032fd2413095e8a6 |
 
 ## Project docs
 
@@ -130,25 +129,25 @@ A terminal / console with commands `curl` and `unzip` and Internet access (of co
 
 1. Download elasticsearch (latest version that is compatible with JDBC plugin)
 
-	`curl -OL https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.3.2.zip`
+	`curl -OL https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.3.4.zip`
 
 2. Unpack zip file into you favorite elasticsearch directory, we call it $ES_HOME
 
 	`cd $ES_HOME`
 
-	`unzip path/to/elasticsearch-1.3.2.zip`
+	`unzip path/to/elasticsearch-1.3.4.zip`
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.0.4/elasticsearch-river-jdbc-1.3.0.4-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.0/elasticsearch-river-jdbc-1.3.4.0-plugin.zip`
 
 4. Download MySQL JDBC driver
 
-	`curl -o mysql-connector-java-5.1.28.zip -L 'http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.28.zip/from/http://cdn.mysql.com/'`
+	`curl -o mysql-connector-java-5.1.33.zip -L 'http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.33.zip/from/http://cdn.mysql.com/'`
 
 5. Add MySQL JDBC driver jar to JDBC river plugin directory and set access permission for .jar file (at least chmod 644)
 
-	`cp mysql-connector-java-5.1.28-bin.jar $ES_HOME/plugins/jdbc/`
+	`cp mysql-connector-java-5.1.33-bin.jar $ES_HOME/plugins/jdbc/`
 	`chmod 644 $ES_HOME/plugins/jdbc/`
 
 6. Start elasticsearch from terminal window
@@ -161,28 +160,30 @@ A terminal / console with commands `curl` and `unzip` and Internet access (of co
 
     ```
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+        "max_bulk_actions" : 10000,
 	    "type" : "jdbc",
 	    "jdbc" : {
 	        "url" : "jdbc:mysql://localhost:3306/test",
 	        "user" : "",
 	        "password" : "",
+	        "fetchsize" : "min",
 	        "sql" : "select * from orders"
 	    }
 	}'
 	```
 
 9. The river runs immediately. It will run exactly once. Watch the log on the elasticsearch terminal
-   for the river activity. When the river fetched the data, you can query your elasticsearch node
-   for the data you just indexed with the following command
+   for the river activity, some metric are written each minute. When the river fetched the data, 
+   you can query for the data you just indexed with the following command
 
-	`curl 'localhost:9200/jdbc/_search?pretty&q=*'`
+	`curl 'localhost:9200/jdbc/_search'`
 
 10. Enjoy the result!
 
 11. If you want to stop the `my_jdbc_river` river fetching data from the `orders` table after the
     quick demonstration, use this command
 
-	`curl -XDELETE 'localhost:9200/_river/my_jdbc_river'`
+	`curl -XDELETE 'localhost:9200/_river/my_jdbc_river/'`
 
 Now, if you want more fine-tuning, add a schedule for fetching data regularly,
 you can change the index name, add more SQL statements, tune bulk indexing,
@@ -190,22 +191,19 @@ change the mapping, change the river creation settings.
 
 ## JDBC plugin parameters
 
-Important note: all plugin-related parameters are subsumed in the `jdbc` section of a river delaration.
+JDBC parameters are subsumed in the `jdbc` section of a river delaration.
 For example, if you declare an index for the JDBC plugin, this parameter must be placed within
-the `jdbc` section, not outside of it!
+the `jdbc` section.
 
-    ```
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
 	    "type" : "jdbc",
 	    "jdbc" : {
 	         <all parameters go here>
 	    }
 	}'
-	```
 	
 Example:
 	
-    ```
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
 	    "type" : "jdbc",
 	    "jdbc" : {
@@ -218,9 +216,21 @@ Example:
             ...	         
 	    }
 	}'
-	```
+
+### Parameters outside of the `jdbc` block
 
 `strategy` -the strategy of the JDBC plugin, currently implemented: "simple", "column"
+
+`max_bulk_actions` - the length of each bulk index request submitted
+
+`max_concurrrent_bulk_actions` - the maximum number of concurrent bulk requests
+
+`schedule` - a single or a list of cron expressions for scheduled execution. Syntax is equivalent to the
+Quartz cron expression format (see below).
+
+`threadpoolsize` - the thread pool size of the scheduled executions for `schedule` parameter. If set to `1`, all jobs will be executed serially. Default is `4`.
+
+### Parameters inside of the `jdbc` block
 
 `url` - the JDBC driver URL
 
@@ -286,26 +296,19 @@ Example:
 
 `type_mapping` - optional mapping for the Elasticsearch index type
 
-`maxbulkactions` - the length of each bulk index request submitted
-
-`maxconcurrrentbulkactions` - the maximum number of concurrent bulk requests
-
-`schedule` - a single or a list of cron expressions for scheduled execution. Syntax is equivalent to the
-Quartz cron expression format (see below).
-
-`cronpoolsize` - the thread pool size of the cron job executions for `schedule` parameter. If set to `1`, all jobs will be executed serially. Default is `4`.
-
-## Default parameter settings
+## Overview about the default parameter settings
 
 	{
-	    "jdbc" :{
-	        "strategy" : "simple",
+        "strategy" : "simple",
+        "schedule" : null,
+        "threadpoolsize" : 4,
+        "maxbulkactions" : 1000,
+        "maxconcurrentbulkactions" : 4 * available CPU cores,
+	    "jdbc" : {
 	        "url" : null,
 	        "user" : null,
 	        "password" : null,
 	        "sql" : null,
-	        "schedule" : null,
-	        "cronpoolsize" : 4,
 	        "rounding" : null,
 	        "scale" : 2,
 	        "ignore_null_values" : false,
@@ -320,8 +323,6 @@ Quartz cron expression format (see below).
 	        "type" : "jdbc",
 	        "index_settings" : null,
 	        "type_mapping" : null,
-	        "maxbulkactions" : 1000,
-	        "maxconcurrentbulkactions" : 4 * available CPU cores,
 	    }
 	}
 
@@ -421,22 +422,6 @@ It is very important to note that overuse of overflowing ranges creates ranges t
 and no effort has been made to determine which interpretation CronExpression chooses.
 An example would be "0 0 14-6 ? * FRI-MON".
 
-
-## Obsolete parameters
-
-In older versions of JDBC river, the following parameters were available. They are no longer supported.
-
-`driver` - Class name of JDBC river. Since JDBC plugin requires JDBC Version 4 (or higher), which is
-part of Java 6, this parameter is not used any more.
-
-`poll` - interval for waiting between river invocations. Replaced by `schedule`
-
-`bulk_size` - renamed to `maxbulkactions`
-
-`max_bulk_requests` - renamed to `maxconcurrrentbulkactions`
-
-`bulk_flush_interval` - no longer supported, replaced by internal flush invocations
-
 ## How to start a JDBC feeder
 
 In the `bin/feeder` directory, you find some feeder examples.
@@ -457,9 +442,13 @@ Here is an example of a feeder bash script in `$ES_HOME/plugins/jdbc/bin/feeder/
 
     echo '
     {
+        "elasticsearch" : {
+             "cluster" : "elasticsearch",
+             "host" : "localhost",
+             "port" : 9300
+        },
         "concurrency" : 1,
-        "elasticsearch" : "es://localhost:9300?es.cluster.name=elasticsearch",
-        "client" : "bulk",
+        "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:oracle:thin:@//host:1521/sid",
             "user" : "user",
@@ -477,23 +466,20 @@ Here is an example of a feeder bash script in `$ES_HOME/plugins/jdbc/bin/feeder/
     }
     ' | ${java} \
         -cp $(pwd):$(pwd)/\*:$(pwd)/../../lib/\* \
-        org.xbib.elasticsearch.plugin.feeder.Runner \
-        org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder
+        org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
+        org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
 
 The `jdbc` parameter structure is exactly the same as in a river.
 
-The feeder is invoked by `org.xbib.elasticsearch.plugin.feeder.Runner org.xbib.elasticsearch.plugin.feeder.jdbc.JDBCFeeder`
-and understands some more parameters. In this example, the default parameters are shown.
+The feeder is invoked by `JDBCFeeder` class and understands some more parameters. In this example, 
+the default parameters are shown.
 
-`elasticsearch` - an URI pointing to a host of an Elasticsearch cluster. In `es.cluster.name` you can configure the
-cluster name you want to connect to.
-
-`client` - the value `bulk` enables a transport client with the vanilla BulkProcessor, `ingest` enables a transport client with a customized IngestProcessor (advanced feature, only available with the xbib elasticsearch-support plugin)
+`elasticsearch` - an structure describing cluster, host, and port of a host of an Elasticsearch cluster. 
 
 `concurrency` - how many `jdbc` jobs should be executed in parallel
 
 In the example, you can also see that you can change your favorite `java` executable when
-executing a feed.
+executing a feed. You must use a Java JDK >= 1.7
 
 ## Structured objects
 
@@ -588,7 +574,7 @@ There are column labels with an underscore as prefix that are mapped to special 
 	_type      the type this object should be indexed into
 	_id        the id of this object
 	_version   the version of this object
-	_parent    the parent,
+	_parent    the parent of this object
 	_ttl       the time-to-live of this object
 	_routing   the routing of this object
 
@@ -854,25 +840,9 @@ If you want to extend the JDBC plugin, for example by your custom password authe
 extend the SimpleRiverSource. Then, declare your strategy classes in `META-INF/services`. Add your
 jar to the classpath and add the `strategy` parameter to the river/feeder specifications.
 
+# Examples
 
-## Support plugin
-
-The JDBC plugin comes bundled with the xbib Elasticsearch support plugin. This plugin contains
-various additions to the Elasticsearch core for reuse by other (xbib) plugins too.
-
-The JDBC zip contains the support jar beside the JDBC plugin jar, so it is easy to identify the
-support plugin that is bundled with the JDBC plugin.
-
-Currently, Elasticseach does not use classpath separation between plugins. So unfortunately,
-you must take care  for yourself that you have only one version of each jar in your classpath.
-If you find different versions of the support plugin jar in the folders of your Elasticsearch plugins,
-remove the jars you do not need.
-
-Note: if you update the JDBC plugin, old versions of the support plugin are NOT removed automatically.
-
-# Some real-world examples
-
-## Step by step recipe for setting up the JDBC river with PostgreSQL
+## PostgreSQL
 
 1. Install PostgreSQL
 
@@ -944,7 +914,7 @@ Note: if you update the JDBC plugin, old versions of the support plugin are NOT 
 9. Repeat River creation until the river runs fine.
 
 
-## Step by step recipe for using the JDBC river with MS SQL Server
+## MS SQL Server
 
 1. Download Elasticsearch
 
