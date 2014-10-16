@@ -365,13 +365,13 @@ public class BulkNodeClient implements Ingest {
     }
 
     @Override
-    public BulkNodeClient startBulk(String index) throws IOException {
+    public BulkNodeClient startBulk(String index, long startRefreshInterval, long stopRefreshIterval) throws IOException {
         if (metric == null) {
             return this;
         }
         if (!metric.isBulk(index)) {
-            metric.startBulk(index);
-            ClientHelper.disableRefresh(client, index);
+            metric.setupBulk(index, startRefreshInterval, stopRefreshIterval);
+            ClientHelper.updateIndexSetting(client, index, "refresh_interval", startRefreshInterval);
         }
         return this;
     }
@@ -382,8 +382,8 @@ public class BulkNodeClient implements Ingest {
             return this;
         }
         if (metric.isBulk(index)) {
-            metric.stopBulk(index);
-            ClientHelper.enableRefresh(client, index);
+            ClientHelper.updateIndexSetting(client, index, "refresh_interval", metric.getStopBulkRefreshIntervals().get(index));
+            metric.removeBulk(index);
         }
         return this;
     }

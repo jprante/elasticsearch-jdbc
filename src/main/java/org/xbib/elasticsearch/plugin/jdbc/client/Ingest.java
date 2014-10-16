@@ -191,10 +191,10 @@ public interface Ingest {
      *
      * @return this ingest
      */
-    Ingest startBulk(String index) throws IOException;
+    Ingest startBulk(String index, long startRefreshInterval, long stopRefreshInterval) throws IOException;
 
     /**
-     * Stops bulk mode. Enables refresh.
+     * Stops bulk mode
      *
      * @return this Ingest
      */

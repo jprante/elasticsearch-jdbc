@@ -226,13 +226,13 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
     }
 
     @Override
-    public BulkTransportClient startBulk(String index) throws IOException {
+    public BulkTransportClient startBulk(String index, long startRefreshInterval, long stopRefreshIterval) throws IOException {
         if (metric == null) {
             return this;
         }
         if (!metric.isBulk(index)) {
-            metric.startBulk(index);
-            ClientHelper.disableRefresh(client, index);
+            metric.setupBulk(index, startRefreshInterval, stopRefreshIterval);
+            ClientHelper.updateIndexSetting(client, index, "refresh_interval", startRefreshInterval);
         }
         return this;
     }
@@ -243,8 +243,8 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
             return this;
         }
         if (metric.isBulk(index)) {
-            metric.stopBulk(index);
-            ClientHelper.enableRefresh(client, index);
+            ClientHelper.updateIndexSetting(client, index, "refresh_interval", metric.getStopBulkRefreshIntervals().get(index));
+            metric.removeBulk(index);
         }
         return this;
     }
