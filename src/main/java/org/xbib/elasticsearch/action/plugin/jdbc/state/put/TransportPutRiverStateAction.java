@@ -17,6 +17,7 @@ package org.xbib.elasticsearch.action.plugin.jdbc.state.put;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.support.ActionFilters;
 import org.elasticsearch.action.support.master.TransportMasterNodeOperationAction;
 import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
@@ -38,8 +39,9 @@ public class TransportPutRiverStateAction extends TransportMasterNodeOperationAc
     @Inject
     public TransportPutRiverStateAction(Settings settings, ThreadPool threadPool,
                                         ClusterService clusterService, TransportService transportService,
+                                        ActionFilters actionFilters,
                                         Injector injector) {
-        super(settings, PutRiverStateAction.NAME, transportService, clusterService, threadPool);
+        super(settings, PutRiverStateAction.NAME, transportService, clusterService, threadPool, actionFilters);
         this.injector = injector;
     }
 

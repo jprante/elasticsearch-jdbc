@@ -29,6 +29,7 @@ import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.inject.Injector;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.regex.Regex;
@@ -51,17 +52,20 @@ public class RiverStateService extends AbstractLifecycleComponent<RiverStateServ
 
     private volatile ImmutableMap<RiverName, RiverState> riverStates = ImmutableMap.of();
 
-    private final ClusterService clusterService;
+    private final Injector injector;
+
+    private ClusterService clusterService;
 
     @Inject
-    public RiverStateService(Settings settings, ClusterService clusterService) {
+    public RiverStateService(Settings settings, Injector injector) {
         super(settings);
-        this.clusterService = clusterService;
-        clusterService.add(this);
+        this.injector = injector;
     }
 
     @Override
     protected void doStart() throws ElasticsearchException {
+        this.clusterService = injector.getInstance(ClusterService.class);
+        clusterService.add(this);
     }
 
     @Override

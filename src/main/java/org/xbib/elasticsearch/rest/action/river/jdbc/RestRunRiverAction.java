@@ -39,7 +39,7 @@ public class RestRunRiverAction extends BaseRestHandler {
 
     @Inject
     public RestRunRiverAction(Settings settings, RestController controller, Client client) {
-        super(settings, client);
+        super(settings, controller, client);
 
         controller.registerHandler(Method.POST, "/_river/jdbc/{rivername}/_run", this);
     }

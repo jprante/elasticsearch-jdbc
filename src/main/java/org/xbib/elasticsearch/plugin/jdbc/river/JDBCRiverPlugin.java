@@ -16,6 +16,7 @@
 package org.xbib.elasticsearch.plugin.jdbc.river;
 
 import org.elasticsearch.action.ActionModule;
+import org.elasticsearch.common.component.LifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.inject.Module;
 import org.elasticsearch.common.settings.Settings;
@@ -33,6 +34,7 @@ import org.xbib.elasticsearch.action.plugin.jdbc.state.post.TransportPostRiverSt
 import org.xbib.elasticsearch.action.plugin.jdbc.state.put.PutRiverStateAction;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.put.TransportPutRiverStateAction;
 import org.xbib.elasticsearch.plugin.jdbc.state.RiverStateModule;
+import org.xbib.elasticsearch.plugin.jdbc.state.RiverStateService;
 import org.xbib.elasticsearch.rest.action.river.jdbc.RestRunRiverAction;
 import org.xbib.elasticsearch.rest.action.river.jdbc.RestRiverStateAction;
 
@@ -69,6 +71,16 @@ public class JDBCRiverPlugin extends AbstractPlugin {
             modules.add(RiverStateModule.class);
         }
         return modules;
+    }
+
+    @Override
+    public Collection<Class<? extends LifecycleComponent>> services() {
+        Collection<Class<? extends LifecycleComponent>> services = newArrayList();
+        // if we are in feeder node mode, we skip starting the server-side only river state module
+        if (!"feeder".equals(settings.get("name"))) {
+            services.add(RiverStateService.class);
+        }
+        return services;
     }
 
     public void onModule(RiversModule module) {

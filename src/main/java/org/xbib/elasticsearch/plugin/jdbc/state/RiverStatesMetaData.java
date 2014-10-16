@@ -78,7 +78,7 @@ public class RiverStatesMetaData implements MetaData.Custom {
     /**
      * River state metadata factory
      */
-    public static class Factory implements MetaData.Custom.Factory<RiverStatesMetaData> {
+    public static class Factory extends MetaData.Custom.Factory<RiverStatesMetaData> {
 
         @Override
         public String type() {
@@ -128,11 +128,6 @@ public class RiverStatesMetaData implements MetaData.Custom {
                 riverState.toXContent(builder, params);
             }
             builder.endArray();
-        }
-
-        @Override
-        public boolean isPersistent() {
-            return true;
         }
 
     }

@@ -17,9 +17,11 @@ package org.xbib.elasticsearch.action.plugin.jdbc.state.get;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.support.ActionFilters;
 import org.elasticsearch.action.support.master.TransportMasterNodeReadOperationAction;
 import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
+import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
@@ -30,8 +32,9 @@ public class TransportGetRiverStateAction extends TransportMasterNodeReadOperati
 
     @Inject
     public TransportGetRiverStateAction(Settings settings, ThreadPool threadPool,
-                                        ClusterService clusterService, TransportService transportService) {
-        super(settings, GetRiverStateAction.NAME, transportService, clusterService, threadPool);
+                                        ClusterService clusterService, TransportService transportService,
+                                        ActionFilters actionFilters) {
+        super(settings, GetRiverStateAction.NAME, transportService, clusterService, threadPool, actionFilters);
     }
 
     @Override
@@ -57,6 +60,11 @@ public class TransportGetRiverStateAction extends TransportMasterNodeReadOperati
         RiverStatesMetaData riverStatesMetaData = clusterState.metaData().custom(RiverStatesMetaData.TYPE);
         listener.onResponse(new GetRiverStateResponse(riverStatesMetaData != null ?
                 riverStatesMetaData.getRiverStates(request.getRiverName(), request.getRiverType()) : null));
+    }
+
+    @Override
+    protected ClusterBlockException checkBlock(GetRiverStateRequest request, ClusterState state) {
+        return null;
     }
 
 }

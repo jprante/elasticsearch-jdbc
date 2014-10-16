@@ -17,6 +17,7 @@ package org.xbib.elasticsearch.plugin.jdbc.river;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.inject.Injectors;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.metrics.MeterMetric;
@@ -39,6 +40,7 @@ import org.xbib.elasticsearch.plugin.jdbc.cron.CronExpression;
 import org.xbib.elasticsearch.plugin.jdbc.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.plugin.jdbc.execute.RunnableRiver;
 import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
+import org.xbib.elasticsearch.plugin.jdbc.state.RiverStateService;
 import org.xbib.elasticsearch.plugin.jdbc.state.StatefulRiver;
 import org.xbib.elasticsearch.plugin.jdbc.util.RiverServiceLoader;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
