@@ -45,8 +45,8 @@ public class RestRiverStateAction extends BaseRestHandler {
     private final Client client;
 
     @Inject
-    public RestRiverStateAction(Settings settings, Client client, RestController controller) {
-        super(settings, client);
+    public RestRiverStateAction(Settings settings,  RestController controller, Client client) {
+        super(settings, controller, client);
         this.client = client;
 
         controller.registerHandler(RestRequest.Method.GET,
@@ -85,6 +85,7 @@ public class RestRiverStateAction extends BaseRestHandler {
                 try {
                     channel.sendResponse(new BytesRestResponse(channel, t));
                 } catch (IOException e) {
+                    logger.error(e.getMessage(), e);
                     channel.sendResponse(new BytesRestResponse(RestStatus.INTERNAL_SERVER_ERROR));
                 }
             }
@@ -131,6 +132,7 @@ public class RestRiverStateAction extends BaseRestHandler {
                 try {
                     channel.sendResponse(new BytesRestResponse(channel, t));
                 } catch (IOException e) {
+                    logger.error(e.getMessage(), e);
                     channel.sendResponse(new BytesRestResponse(RestStatus.INTERNAL_SERVER_ERROR));
                 }
             }
@@ -153,6 +155,7 @@ public class RestRiverStateAction extends BaseRestHandler {
                 try {
                     channel.sendResponse(new BytesRestResponse(channel, t));
                 } catch (IOException e) {
+                    logger.error(e.getMessage(), e);
                     channel.sendResponse(new BytesRestResponse(RestStatus.INTERNAL_SERVER_ERROR));
                 }
             }
