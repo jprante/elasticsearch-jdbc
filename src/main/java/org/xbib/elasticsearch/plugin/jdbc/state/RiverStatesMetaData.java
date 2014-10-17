@@ -132,7 +132,7 @@ public class RiverStatesMetaData implements MetaData.Custom {
 
         @Override
         public boolean isPersistent() {
-            return true;
+            return false;
         }
 
     }

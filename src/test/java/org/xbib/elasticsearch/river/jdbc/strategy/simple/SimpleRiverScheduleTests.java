@@ -18,8 +18,9 @@ public class SimpleRiverScheduleTests extends AbstractSimpleRiverTest {
 
     /**
      * Product table star select, scheduled for more than two runs
+     *
      * @param riverResource the river resource
-     * @param sql the SQL statement
+     * @param sql           the SQL statement
      * @throws Exception if test fails
      */
     @Test
@@ -41,7 +42,7 @@ public class SimpleRiverScheduleTests extends AbstractSimpleRiverTest {
      * Selecting timestamps from $now, there should be at least 50 rows/hits per run, if $now works.
      *
      * @param riverResource the river JSON resource
-     * @param sql the sql statement to select timestamps
+     * @param sql           the sql statement to select timestamps
      * @throws Exception
      */
     @Test

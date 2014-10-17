@@ -4,14 +4,14 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
-import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverContext;
-import org.xbib.elasticsearch.river.jdbc.support.StringKeyValueStreamListener;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
-import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
 import org.xbib.elasticsearch.river.jdbc.strategy.simple.AbstractSimpleRiverTest;
-import org.xbib.elasticsearch.plugin.jdbc.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverContext;
+import org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverSource;
+import org.xbib.elasticsearch.river.jdbc.support.StringKeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;

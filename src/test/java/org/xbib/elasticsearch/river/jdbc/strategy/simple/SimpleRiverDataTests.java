@@ -18,6 +18,7 @@ public class SimpleRiverDataTests extends AbstractSimpleRiverTest {
 
     /**
      * Start the river and execute a simple star query
+     *
      * @throws Exception if test fails
      */
     @Test

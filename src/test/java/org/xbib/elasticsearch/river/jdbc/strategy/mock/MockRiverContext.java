@@ -2,8 +2,8 @@ package org.xbib.elasticsearch.river.jdbc.strategy.mock;
 
 import org.elasticsearch.common.metrics.MeterMetric;
 import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
+import org.xbib.elasticsearch.plugin.jdbc.util.SQLCommand;
 import org.xbib.elasticsearch.river.jdbc.RiverContext;
 import org.xbib.elasticsearch.river.jdbc.RiverMouth;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;

@@ -7,6 +7,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.io.Streams;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
@@ -14,13 +15,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateAction;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateRequest;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateResponse;
+import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
 import org.xbib.elasticsearch.plugin.jdbc.util.LocaleUtil;
 import org.xbib.elasticsearch.river.jdbc.RiverContext;
-import org.xbib.elasticsearch.plugin.jdbc.state.RiverState;
 import org.xbib.elasticsearch.river.jdbc.RiverSource;
 import org.xbib.elasticsearch.support.helper.AbstractNodeTestHelper;
 
@@ -166,13 +166,14 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
                 .source(builder.string());
         client("1").index(indexRequest).actionGet();
         client("1").admin().indices().prepareRefresh("_river").execute().actionGet();
-        logger.info("river is created");
+        logger.info("river creation request sent");
     }
 
     public void waitForRiver() throws Exception {
         waitForRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
-        logger.info("river is up");
+        logger.info("river is created");
     }
+
     public void waitForActiveRiver() throws Exception {
         waitForActiveRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
         logger.info("river is active");
@@ -182,13 +183,6 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
         waitForInactiveRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
         logger.info("river is inactive");
     }
-
-    /*protected RiverSettings riverSettings(String resource)
-            throws IOException {
-        InputStream in = getClass().getResourceAsStream(resource);
-        return new RiverSettings(ImmutableSettings.settingsBuilder().build(),
-                XContentHelper.convertToMap(Streams.copyToByteArray(in), false).v2());
-    }*/
 
     protected void createRandomProducts(String sql, int size)
             throws SQLException {
@@ -212,7 +206,7 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
         source.setTimeZone(t).setLocale(l);
         Calendar cal = Calendar.getInstance(t, l);
         // half of log in the past, half of it in the future
-        cal.add(Calendar.HOUR, -(size/2));
+        cal.add(Calendar.HOUR, -(size / 2));
         for (int i = 0; i < size; i++) {
             Timestamp modified = new Timestamp(cal.getTimeInMillis());
             String message = "Hello world";
@@ -306,12 +300,14 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
         GetRiverStateResponse riverStateResponse = client.admin().cluster()
                 .execute(GetRiverStateAction.INSTANCE, riverStateRequest).actionGet();
         logger.debug("waitForRiver {}/{}", riverName, riverType);
+        boolean exists = riverStateResponse.exists(riverName, riverType);
         seconds = 2 * seconds;
-        while (seconds-- > 0 && riverStateResponse.exists(riverName, riverType)) {
+        while (seconds-- > 0 && !exists) {
             Thread.sleep(500L);
             try {
                 riverStateResponse = client.admin().cluster().execute(GetRiverStateAction.INSTANCE, riverStateRequest).actionGet();
-                logger.debug("waitForRiver state={}", riverStateResponse.getRiverState());
+                exists = riverStateResponse.exists(riverName, riverType);
+                logger.debug("waitForRiver exists={} state={}", exists, riverStateResponse.getRiverState());
             } catch (IndexMissingException e) {
                 logger.warn("index missing");
             }

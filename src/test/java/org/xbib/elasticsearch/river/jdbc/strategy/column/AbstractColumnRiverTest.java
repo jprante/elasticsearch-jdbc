@@ -168,6 +168,7 @@ public abstract class AbstractColumnRiverTest extends AbstractNodeTestHelper {
         waitForRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
         logger.info("river is up");
     }
+
     public void waitForActiveRiver() throws Exception {
         waitForActiveRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
         logger.info("river is active");

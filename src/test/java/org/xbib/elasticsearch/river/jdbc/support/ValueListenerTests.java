@@ -376,7 +376,7 @@ public class ValueListenerTests extends Assert {
                 .end();
 
         assertEquals(output.data().toString(),
-            "{[null/null/null/0]->{movie={event=123, title=null, overview=null, test=null}}={\"movie\":{\"event\":123}}, [null/null/null/1]->{movie={event=21, title=\"ABC\", overview=\"DEF\", test=1212}}={\"movie\":{\"event\":21,\"title\":\"ABC\",\"overview\":\"DEF\",\"test\":1212}}}"
+                "{[null/null/null/0]->{movie={event=123, title=null, overview=null, test=null}}={\"movie\":{\"event\":123}}, [null/null/null/1]->{movie={event=21, title=\"ABC\", overview=\"DEF\", test=1212}}={\"movie\":{\"event\":21,\"title\":\"ABC\",\"overview\":\"DEF\",\"test\":1212}}}"
         );
 
     }

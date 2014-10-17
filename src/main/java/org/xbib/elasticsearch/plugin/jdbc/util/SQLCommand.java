@@ -42,6 +42,8 @@ public class SQLCommand {
 
     private List<Object> params = newLinkedList();
 
+    private boolean write;
+
     private Map<String, Object> register = newHashMap();
 
     private boolean callable;
@@ -78,9 +80,21 @@ public class SQLCommand {
         return callable;
     }
 
+    public SQLCommand setWrite(boolean write) {
+        this.write = write;
+        return this;
+    }
+
+    public boolean isWrite() {
+        return write;
+    }
+
     public boolean isQuery() {
         if (sql == null) {
             throw new IllegalArgumentException("no SQL found");
+        }
+        if (write) {
+            return false;
         }
         if (STATEMENT_PATTERN.matcher(sql).find()) {
             return false;
@@ -133,6 +147,9 @@ public class SQLCommand {
                     if (m.containsKey("parameter")) {
                         command.setParameters(XContentMapValues.extractRawValues("parameter", m));
                     }
+                    if (m.containsKey("write")) {
+                        command.setWrite(XContentMapValues.nodeBooleanValue(m.get("write")));
+                    }
                     if (m.containsKey("callable")) {
                         command.setCallable(XContentMapValues.nodeBooleanValue(m.get("callable")));
                     }
@@ -151,7 +168,7 @@ public class SQLCommand {
     }
 
     public String toString() {
-        return "statement=" + sql + " parameter=" + params + " callable=" + callable;
+        return "statement=" + sql + " parameter=" + params + " write=" + write + " callable=" + callable;
     }
 
 }

@@ -105,7 +105,11 @@ public class SimpleRiverMouth implements RiverMouth<SimpleRiverContext> {
                     index, indexSettings != null ? indexSettings.getAsMap() : "{}", indexMappings);
             ingest.newIndex(index, indexSettings, indexMappings);
         }
-        ingest.startBulk(index);
+        long startRefreshInterval = indexSettings != null ?
+                indexSettings.getAsTime("bulk." + index + ".refresh_interval.start", indexSettings.getAsTime("index.refresh_interval", TimeValue.timeValueSeconds(-1))).getMillis() : -1L;
+        long stopRefreshInterval = indexSettings != null ?
+                indexSettings.getAsTime("bulk." + index + ".refresh_interval.stop", indexSettings.getAsTime("index.refresh_interval", TimeValue.timeValueSeconds(1))).getMillis() : 1000L;
+        ingest.startBulk(index, startRefreshInterval, stopRefreshInterval);
     }
 
     @Override

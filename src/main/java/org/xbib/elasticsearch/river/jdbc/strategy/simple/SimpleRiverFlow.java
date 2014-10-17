@@ -239,6 +239,10 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
         if (riverContext == null) {
             return;
         }
+        if (riverContext.getRiverMouth() == null) {
+            logger.warn("no river mouth");
+            return;
+        }
         try {
             riverContext.getRiverMouth().afterFetch();
         } catch (Exception e) {
