@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.4.0.0.Beta1</version>
+    <version>1.4.0.1.Beta1</version>
 
     <packaging>jar</packaging>
 
@@ -160,7 +160,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.17</version>
                 <configuration>
-                    <skipTests>true</skipTests>
                     <properties>
                         <property>
                             <name>listener</name>
@@ -303,7 +302,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skip>false</skip>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -324,7 +322,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -353,7 +350,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -386,7 +382,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -421,7 +416,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -452,7 +446,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -482,7 +475,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -513,7 +505,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
@@ -545,7 +536,6 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>false</skipTests>
                             <workingDirectory>${project.build.directory}</workingDirectory>
                             <systemPropertyVariables>
                                 <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
