@@ -355,7 +355,7 @@ public class ValueListenerTests extends Assert {
         List<String> columns = Arrays.asList("_id", "movie.event", "movie.title", "movie.overview", "movie.test");
         List<Object> row1 = new LinkedList<Object>();
         row1.add(0);
-        row1.add(123);
+        row1.add(null);
         row1.add(null);
         row1.add(null);
         row1.add(null);
@@ -376,7 +376,7 @@ public class ValueListenerTests extends Assert {
                 .end();
 
         assertEquals(output.data().toString(),
-                "{[null/null/null/0]->{movie={event=123, title=null, overview=null, test=null}}={\"movie\":{\"event\":123}}, [null/null/null/1]->{movie={event=21, title=\"ABC\", overview=\"DEF\", test=1212}}={\"movie\":{\"event\":21,\"title\":\"ABC\",\"overview\":\"DEF\",\"test\":1212}}}"
+                "{[null/null/null/0]->{movie={event=null, title=null, overview=null, test=null}}={\"movie\":{}}, [null/null/null/1]->{movie={event=21, title=\"ABC\", overview=\"DEF\", test=1212}}={\"movie\":{\"event\":21,\"title\":\"ABC\",\"overview\":\"DEF\",\"test\":1212}}}"
         );
 
     }
