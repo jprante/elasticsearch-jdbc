@@ -20,16 +20,16 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.rest.BaseRestHandler;
-import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestController;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.RestRequest.Method;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.rest.action.support.RestToXContentListener;
 import org.xbib.elasticsearch.action.plugin.jdbc.run.RunRiverAction;
 import org.xbib.elasticsearch.action.plugin.jdbc.run.RunRiverRequest;
 import org.xbib.elasticsearch.action.plugin.jdbc.run.RunRiverResponse;
+import org.xbib.elasticsearch.rest.action.support.BytesRestResponse;
+import org.xbib.elasticsearch.rest.action.support.RestToXContentListener;
 
 import java.io.IOException;
 
@@ -45,7 +45,7 @@ public class RestRunRiverAction extends BaseRestHandler {
     }
 
     @Override
-    public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
+    public void handleRequest(RestRequest request, RestChannel channel) {
         try {
             String riverName = request.param("rivername");
             String riverType = "jdbc";

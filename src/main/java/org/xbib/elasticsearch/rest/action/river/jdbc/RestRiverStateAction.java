@@ -20,13 +20,13 @@ import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.rest.BaseRestHandler;
-import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestController;
 import org.elasticsearch.rest.RestHandler;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.rest.action.support.RestToXContentListener;
+import org.xbib.elasticsearch.rest.action.support.BytesRestResponse;
+import org.xbib.elasticsearch.rest.action.support.RestToXContentListener;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.delete.DeleteRiverStateAction;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.delete.DeleteRiverStateRequest;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.delete.DeleteRiverStateResponse;
@@ -65,14 +65,14 @@ public class RestRiverStateAction extends BaseRestHandler {
     }
 
     @Override
-    public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
+    public void handleRequest(RestRequest request, RestChannel channel) {
         channel.sendResponse(new BytesRestResponse(RestStatus.NOT_IMPLEMENTED));
     }
 
     class Get implements RestHandler {
 
         @Override
-        public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
+        public void handleRequest(RestRequest request, RestChannel channel) {
             try {
                 String riverName = request.param("rivername");
                 String riverType = "jdbc";
@@ -104,7 +104,7 @@ public class RestRiverStateAction extends BaseRestHandler {
         }
 
         @Override
-        public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
+        public void handleRequest(RestRequest request, RestChannel channel) {
             try {
                 String riverName = request.param("rivername");
                 String riverType = "jdbc";
@@ -140,7 +140,7 @@ public class RestRiverStateAction extends BaseRestHandler {
     class Delete implements RestHandler {
 
         @Override
-        public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
+        public void handleRequest(RestRequest request, RestChannel channel) {
             try {
                 String riverName = request.param("rivername");
                 String riverType = "jdbc";
