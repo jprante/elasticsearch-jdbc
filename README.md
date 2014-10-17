@@ -59,10 +59,16 @@ bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ## Versions
 
-| Elasticsearch version    | Plugin     | Release date |
-| ------------------------ | -----------| -------------|
-| 1.3.4                    | 1.3.4.0    | Oct 15, 2014 |
-| 1.2.4                    | 1.2.4.0    | Oct 15, 2014 |
+| Elasticsearch version | Plugin version | Release date |
+| ----------------------| ---------------| -------------|
+| 1.4.0.Beta1           | 1.4.0.0.Beta1  | Oct 17, 2014 |
+| 1.3.4                 | 1.3.4.1        | Oct 17, 2014 |
+| 1.2.4                 | 1.2.4.1        | Oct 17, 2014 |
+| 1.1.2                 | 1.1.2.0        | Oct 17, 2014 |
+| 1.0.3                 | 1.0.3.0        | Oct 17, 2014 |
+| 0.90.x                | not supported  | |
+| 0.20.x                | not supported  | |
+| 0.19.x                | not supported  | |
 
 ## Prerequisites
 
@@ -83,10 +89,13 @@ Change into the home directory to invoke the `./bin/plugin` command line tool.
 
 ## Checksum
 
-| File                                         | SHA1                                     |
-| ---------------------------------------------| -----------------------------------------|
-| elasticsearch-river-jdbc-1.3.4.0-plugin.zip  | 1bdbb7e3f7db72cf3f5929c719b8544753492013 |
-| elasticsearch-river-jdbc-1.2.4.0-plugin.zip  | 225256209559229cd79c8c93032fd2413095e8a6 |
+| File                                               | SHA1                                     |
+| ---------------------------------------------------| -----------------------------------------|
+| elasticsearch-river-jdbc-1.4.0.0.Beta1-plugin.zip  | 1f33c4aa7a312243a5c4dd3daab6ffacbe8372fa |
+| elasticsearch-river-jdbc-1.3.4.1-plugin.zip        | 7589a3df46af8f1c8c0212d3254d29c4fedb2a98 |
+| elasticsearch-river-jdbc-1.2.4.1-plugin.zip        | b34855bcf08dbb33a748cebee4c5440aa36d722c |
+| elasticsearch-river-jdbc-1.1.2.0-plugin.zip        | 06b83fc1557510ba2108f3d8adb7efa67f740ba1 |
+| elasticsearch-river-jdbc-1.0.3.0-plugin.zip        | caa0a0b05c1c92d30c6acb4fd1c91f181938e43d |
 
 ## Project docs
 
@@ -119,13 +128,15 @@ a separate JVM in the feeder flavor.
 | no standard method of  viewing river activity from within Elasticsearch | feed activity can be monitored by examining separate JVM |
 | about to be deprecated by Elasticsearch core team | Feeder API provided by xbib, using advanced features supported by xbib libraries only. Part of upcoming "gatherer" API to support coordinated data harvesting by multiple ES nodes |
 
-## How to start the JDBC river
+## Step-by-step guide to get a river running
 
 Prerequisites:
 
 A running MySQL database `test`, a table `orders`, and a user without name and password (default user)
 
-A terminal / console with commands `curl` and `unzip` and Internet access (of course)
+A terminal / console with commands `curl` and `unzip` 
+
+Internet access (of course)
 
 1. Download elasticsearch (latest version that is compatible with JDBC plugin)
 
@@ -191,44 +202,80 @@ change the mapping, change the river creation settings.
 
 ## JDBC plugin parameters
 
-JDBC parameters are subsumed in the `jdbc` section of a river delaration.
-For example, if you declare an index for the JDBC plugin, this parameter must be placed within
-the `jdbc` section.
+The general schema of a JDBC river instance declaration is
 
-	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	curl -XPUT 'localhost:9200/_river/<rivername>/_meta' -d '{
+	    <river parameters>
 	    "type" : "jdbc",
 	    "jdbc" : {
-	         <all parameters go here>
+	         <river definition>
 	    }
 	}'
 	
 Example:
 	
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	    "max_bulk_actions" : 1000,
 	    "type" : "jdbc",
 	    "jdbc" : {
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
             "sql" : "select * from orders",
+            "fetchsize" : "min",
             "index" : "myindex",
             "type" : "mytype",
             ...	         
 	    }
 	}'
 
+Multiple river sources are possible if an array is passed to the `jdbc` field.
+These rivers are executed sequentially.
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	     <river parameters>
+	    "type" : "jdbc",
+	    "jdbc" : [ {
+	         <river definition 1>
+	    }, {
+	         <river definition 2>
+	    } ]
+	}'
+
+Concurrency of multi river sources can be controlled by the `concurrency` parameter:
+
+	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+	     <river parameters>
+	    "concurrency" : 2,
+	    "type" : "jdbc",
+	    "jdbc" : [ {
+	         <river definition 1>
+	    }, {
+	         <river definition 2>
+	    } ]
+	}'
+
+
 ### Parameters outside of the `jdbc` block
 
-`strategy` -the strategy of the JDBC plugin, currently implemented: "simple", "column"
-
-`max_bulk_actions` - the length of each bulk index request submitted
-
-`max_concurrrent_bulk_actions` - the maximum number of concurrent bulk requests
+`strategy` - the strategy of the JDBC plugin, currently implemented: `"simple"`, `"column"`
 
 `schedule` - a single or a list of cron expressions for scheduled execution. Syntax is equivalent to the
 Quartz cron expression format (see below).
 
-`threadpoolsize` - the thread pool size of the scheduled executions for `schedule` parameter. If set to `1`, all jobs will be executed serially. Default is `4`.
+`threadpoolsize` - a thread pool size for the scheduled executions for `schedule` parameter. If set to `1`, all jobs will be executed serially. Default is `4`.
+
+`interval` - a time value for the delay between two river runs (default: not set)
+
+`max_bulk_actions` - the length of each bulk index request submitted
+
+`max_concurrrent_bulk_requests` - the maximum number of concurrent bulk requests
+
+`max_bulk_volume` - a byte size parameter for the maximum volume allowed for a bulk request (default: "10m")
+
+`max_request_wait` - a time value for the maximum wait time for a response of a bulk request (default: "60s")
+
+`flush_interval` - a time value for the interval period of flushing index docs to a bulk action (default: "5s")
 
 ### Parameters inside of the `jdbc` block
 
@@ -246,18 +293,25 @@ Quartz cron expression format (see below).
 	        "parameter" : [ "value for a", "value for b", "value for c" ]
 	    },
 	    {
+	        "statement" : "insert into  ... where a = ?, b = ?, c = ?",
+	        "parameter" : [ "value for a", "value for b", "value for c" ],
+	        "write" : "true"
+	    },
+	    {
 	        "statement" : ...
 	    }
 	]
 
 `sql.statement` - the SQL statement
 
-`sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC CallableStatement for stored procedures (default: false).
+`sql.write` - boolean flag, if true, the SQL statement is interpreted as an insert/update statement that needs write access (default: false).
+
+`sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC `CallableStatement` for stored procedures (default: false).
 
 `sql.parameter` - bind parameters for the SQL statement (in order). Some special values can be used with the following meanings:
 
   * `$now` - the current timestamp
-  * `$job` - job ID from context
+  * `$job` - a job counter
   * `$count` - last number of rows merged
   * `$river.name` - the river name
   * `$last.sql.start` - a timestamp value for the time when the last SQL statement started
@@ -276,9 +330,7 @@ Quartz cron expression format (see below).
 
 `scale` -  the precision of parsing numeric values
 
-`ignore_null_values` - if NULL values should be ignored when constructing JSON documents. Default is `false`
-
-`autocommit` -  `true` if each statement should be automatically executed. Default is `false`
+`autocommit` - `true` if each statement should be automatically executed. Default is `false`
 
 `fetchsize` - the fetchsize for large result sets, most drivers use this to control the amount of rows in the buffer while iterating through the result set
 
@@ -286,7 +338,24 @@ Quartz cron expression format (see below).
 
 `max_retries` - the number of retries to (re)connect to a database
 
-`max_retries_wait` - (timev alue) the time that should be waited between retries. Default is "30s"
+`max_retries_wait` - a time value for the time that should be waited between retries. Default is "30s"
+
+`resultset_type` - the JDBC result set type, can be TYPE_FORWARD_ONLY, TYPE_SCROLL_SENSITIVE, TYPE_SCROLL_INSENSITIVE. Default is TYPE_FORWARD_ONLY
+
+`resultset_concurrency` - the JDBC result set concurrency, can be CONCUR_READ_ONLY, CONCUR_UPDATABLE. Default is CONCUR_UPDATABLE
+
+`ignore_null_values` - if NULL values should be ignored when constructing JSON documents. Default is `false`
+
+`prepare_database_metadata` - if the driver metadata should be prepared as parameters for acccess by the river.  Default is `false`
+
+`prepare_resultset_metadata` - if the result set metadata should be prepared as parameters for acccess by the river.  Default is `false`
+
+`column_name_map` - a map of aliases that should be used as a replacement for column names of the database. Useful for Oracle 30 char column name limit. Default is `null`
+
+`query_timeout` - a second value for how long an SQL statement is allowed to be executed before it is considered as lost. Default is `1800`
+
+`connection_properties` - a map for the connection properties for driver connection creation. Default is `null`
+
 
 `index` - the Elasticsearch index used for indexing
 
@@ -301,24 +370,35 @@ Quartz cron expression format (see below).
 	{
         "strategy" : "simple",
         "schedule" : null,
+        "interval" : 0L,
         "threadpoolsize" : 4,
-        "maxbulkactions" : 1000,
-        "maxconcurrentbulkactions" : 4 * available CPU cores,
+        "max_bulk_actions" : 100,
+        "max_concurrent_bulk_requests" : 2 * available CPU cores,
+        "max_bulk_volume" : "10m",
+        "max_request_wait" : "60s",
+        "flush_interval" : "5s",
 	    "jdbc" : {
 	        "url" : null,
 	        "user" : null,
 	        "password" : null,
 	        "sql" : null,
+	        "locale" : Locale.getDefault().toLanguageTag(),
+	        "timezone" : TimeZone.getDefault(),
 	        "rounding" : null,
 	        "scale" : 2,
-	        "ignore_null_values" : false,
 	        "autocommit" : false,
-	        "fetchsize" : 10, /* Integer.MIN for MySQL */
+	        "fetchsize" : 10, 
 	        "max_rows" : 0,
 	        "max_retries" : 3,
 	        "max_retries_wait" : "30s",
-	        "locale" : Locale.getDefault().toLanguageTag(),
-	        "timezone" : TimeZone.getDefault(),
+	        "resultset_type" : "TYPE_FORWARD_ONLY",
+	        "resultset_concurreny" : "CONCUR_UPDATABLE",
+	        "ignore_null_values" : false,
+	        "prepare_database_metadata" : false,
+	        "prepare_resultset_metadata" : false,
+	        "column_name_map" : null,
+	        "query_timeout" : 1800,
+	        "connection_properties" : null,
 	        "index" : "jdbc",
 	        "type" : "jdbc",
 	        "index_settings" : null,
