@@ -17,7 +17,6 @@ package org.xbib.elasticsearch.action.plugin.jdbc.run;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
-import org.elasticsearch.action.support.ActionFilters;
 import org.elasticsearch.action.support.nodes.NodeOperationRequest;
 import org.elasticsearch.action.support.nodes.NodeOperationResponse;
 import org.elasticsearch.action.support.nodes.TransportNodesOperationAction;
@@ -50,9 +49,8 @@ public class TransportRunRiverAction extends TransportNodesOperationAction<RunRi
     @Inject
     public TransportRunRiverAction(Settings settings, ClusterName clusterName, ThreadPool threadPool,
                                    ClusterService clusterService, TransportService transportService,
-                                   ActionFilters actionFilters,
                                    Injector injector) {
-        super(settings, RunRiverAction.NAME, clusterName, threadPool, clusterService, transportService, actionFilters);
+        super(settings, RunRiverAction.NAME, clusterName, threadPool, clusterService, transportService);
         this.injector = injector;
     }
 

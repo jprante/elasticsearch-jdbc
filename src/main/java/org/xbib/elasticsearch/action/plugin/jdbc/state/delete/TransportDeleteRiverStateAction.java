@@ -17,7 +17,6 @@ package org.xbib.elasticsearch.action.plugin.jdbc.state.delete;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.ActionFilters;
 import org.elasticsearch.action.support.master.TransportMasterNodeOperationAction;
 import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
@@ -38,9 +37,8 @@ public class TransportDeleteRiverStateAction extends TransportMasterNodeOperatio
     @Inject
     public TransportDeleteRiverStateAction(Settings settings, ThreadPool threadPool,
                                            ClusterService clusterService, TransportService transportService,
-                                           ActionFilters actionFilters,
                                            Injector injector) {
-        super(settings, DeleteRiverStateAction.NAME, transportService, clusterService, threadPool, actionFilters);
+        super(settings, DeleteRiverStateAction.NAME, transportService, clusterService, threadPool);
         this.injector = injector;
     }
 
