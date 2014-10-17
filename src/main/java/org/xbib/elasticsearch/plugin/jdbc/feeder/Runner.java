@@ -15,8 +15,12 @@
  */
 package org.xbib.elasticsearch.plugin.jdbc.feeder;
 
+import org.xbib.elasticsearch.plugin.jdbc.classloader.uri.URIClassLoader;
+
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 
 /**
  * Stub for loading a Java class and execute it. Isolating the main method from other methods is of advantage
@@ -26,6 +30,15 @@ public class Runner {
 
     public static void main(String[] args) {
         try {
+            // parse environment for ES_HOME
+            String homeFile = System.getenv("ES_HOME");
+            if (homeFile == null) {
+                System.err.println("Warning: ES_HOME not set, using current directory");
+                homeFile = System.getProperty("user.dir");
+            }
+            // add drivers and Elasticsearch libs
+            Thread.currentThread().setContextClassLoader(getClassLoader(Thread.currentThread().getContextClassLoader(),
+                    new File(homeFile)));
             // here we load the "concrete" class we want to execute. Add shutdown hook and pass stdin/stdio/stderr.
             Class clazz = Class.forName(args[0]);
             CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
@@ -41,4 +54,29 @@ public class Runner {
         }
         System.exit(0);
     }
+
+    private static ClassLoader getClassLoader(ClassLoader parent, File home) {
+        URIClassLoader classLoader = new URIClassLoader(parent);
+        // add driver jars from current directory
+        File[] drivers = new File(System.getProperty("user.dir")).listFiles();
+        if (drivers != null) {
+            for (File file : drivers) {
+                if (file.getName().toLowerCase().endsWith(".jar")) {
+                    classLoader.addURI(file.toURI());
+                }
+            }
+        }
+        // add Elasticsearch jars
+        File[] libs = new File(home + "/lib").listFiles();
+        if (libs != null) {
+            for (File file : libs) {
+                if (file.getName().toLowerCase().endsWith(".jar")) {
+                    classLoader.addURI(file.toURI());
+                }
+            }
+        }
+        System.err.println("Classpath: " + Arrays.toString(classLoader.getURIs()));
+        return classLoader;
+    }
+
 }
