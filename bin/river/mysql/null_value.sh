@@ -1,7 +1,7 @@
 #!/bin/sh
 
 /usr/local/mysql/bin/mysql -u root test <<EOT
-drop table test if exists;
+drop table test;
 create table test (
     id integer,
     title varchar(32),
@@ -9,12 +9,18 @@ create table test (
     test integer
 );
 insert into test values (0,NULL,NULL,NULL);
-insert into test values (0,"Krieg der Welten","Eines windigen herbstlichen Nachmittags wird der",1212);
+insert into test values (1,"Krieg der Welten","Eines windigen herbstlichen Nachmittags wird der",1212);
 EOT
+
+echo "deleting river ..."
 
 curl -XDELETE 'localhost:9200/_river/my_test_river/'
 
+echo "deleting index ..."
+
 curl -XDELETE 'localhost:9200/mytest'
+
+echo "river request ..."
 
 curl -XPOST 'localhost:9200/_river/my_test_river/_meta' -d '
 {
