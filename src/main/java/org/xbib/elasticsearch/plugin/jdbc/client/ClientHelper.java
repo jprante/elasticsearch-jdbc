@@ -20,7 +20,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequestBuilder;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
-import org.elasticsearch.action.admin.indices.recovery.RecoveryResponse;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
@@ -70,10 +69,7 @@ public class ClientHelper {
         if (index == null) {
             throw new IOException("unable to waitfor recovery, index not set");
         }
-        RecoveryResponse response = client.admin().indices().prepareRecoveries(index).execute().actionGet();
-        int shards = response.getTotalShards();
-        client.admin().cluster().prepareHealth(index).setWaitForActiveShards(shards).execute().actionGet();
-        return shards;
+        return 0;
     }
 
     public static void waitForCluster(Client client, ClusterHealthStatus status, TimeValue timeout) throws IOException {
