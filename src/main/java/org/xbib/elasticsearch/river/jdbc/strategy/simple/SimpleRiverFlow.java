@@ -315,7 +315,17 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
         if ("min".equals(fetchSizeStr)) {
             fetchsize = Integer.MIN_VALUE; // for MySQL streaming mode
         } else if (fetchSizeStr != null) {
-            fetchsize = Integer.parseInt(fetchSizeStr);
+            try {
+                fetchsize = Integer.parseInt(fetchSizeStr);
+            } catch (Exception e) {
+                // ignore unparseable
+            }
+        } else {
+            // if MySQL, enable streaming mode hack by default
+            String url = XContentMapValues.nodeStringValue(params.get("url"), null);
+            if (url != null && url.startsWith("jdbc:mysql")) {
+                fetchsize = Integer.MIN_VALUE; // for MySQL streaming mode
+            }
         }
         int maxrows = XContentMapValues.nodeIntegerValue(params.get("max_rows"), 0);
         int maxretries = XContentMapValues.nodeIntegerValue(params.get("max_retries"), 3);

@@ -222,7 +222,7 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
         return new IngestFactory() {
             @Override
             public Ingest create() {
-                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 100);
+                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
                 ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));

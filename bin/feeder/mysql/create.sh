@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# This example shows two concurrent feeds from a MySQL database (conncurreny = 2)
-# It is possible to connect to many databases in parallel and fetch data for Elasticsearch.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. ${DIR}/../../feeder.in.sh
+
+# ES_HOME reguired to detect elasticsearch jars
+export ES_HOME=~es/elasticsearch-1.4.0.Beta1
 
 echo '
 {
@@ -13,26 +13,19 @@ echo '
          "host" : "localhost",
          "port" : 9300
     },
+    "max_bulk_actions" : 20000,
     "type" : "jdbc",
     "jdbc" : {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "sql" : [
-                {
-                    "statement" : "select *, created as _id, \"myjdbc\" as _index, \"mytype\" as _type from orders"
-                }
-            ],
-            "index" : "myjdbc",
-            "type" : "mytype",
-            "index_settings" : {
-                "index" : {
-                    "number_of_shards" : 1
-                }
-            }
+        "url" : "jdbc:mysql://localhost:3306/test",
+        "user" : "",
+        "password" : "",
+        "sql" :  "select *, page_id as _id from page",
+        "fetchsize" : "min",
+        "treat_binary_as_string" : true,
+        "index" : "metawiki"
       }
 }
-' | ${JAVA_HOME}/bin/java \
-    -cp ${ES_JDBC_CLASSPATH} \
+' | java \
+    -cp "${DIR}/*" \
     org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
     org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
