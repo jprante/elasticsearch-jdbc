@@ -24,19 +24,17 @@ Creating a JDBC river is easy:
 Assuming you have a table of name `orders`, you can issue this simple command from the command line
 
     curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
-        "max_bulk_actions" : 10000,
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
-            "fetchsize" : "min",
             "sql" : "select * from orders"
         }
     }'
 
 
-Note: the `max_bulk_actions` is set by default to 100 and have to be enlarged for most use cases, and
+Note: the `max_bulk_actions` parameter is set by default to 10000 and have to be enlarged for most use cases, and
 MySQL streaming mode is activated only by setting the row fetch size to Integer.MIN_VALUE, which can be
 achieved by using the string `"min"` for the parameter `fetchsize`.
 
@@ -171,13 +169,11 @@ Internet access (of course)
 
     ```
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
-        "max_bulk_actions" : 10000,
 	    "type" : "jdbc",
 	    "jdbc" : {
 	        "url" : "jdbc:mysql://localhost:3306/test",
 	        "user" : "",
 	        "password" : "",
-	        "fetchsize" : "min",
 	        "sql" : "select * from orders"
 	    }
 	}'
@@ -215,14 +211,12 @@ The general schema of a JDBC river instance declaration is
 Example:
 	
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
-	    "max_bulk_actions" : 1000,
 	    "type" : "jdbc",
 	    "jdbc" : {
             "url" : "jdbc:mysql://localhost:3306/test",
             "user" : "",
             "password" : "",
             "sql" : "select * from orders",
-            "fetchsize" : "min",
             "index" : "myindex",
             "type" : "mytype",
             ...	         
@@ -267,9 +261,9 @@ Quartz cron expression format (see below).
 
 `interval` - a time value for the delay between two river runs (default: not set)
 
-`max_bulk_actions` - the length of each bulk index request submitted
+`max_bulk_actions` - the length of each bulk index request submitted (default: 10000)
 
-`max_concurrrent_bulk_requests` - the maximum number of concurrent bulk requests
+`max_concurrrent_bulk_requests` - the maximum number of concurrent bulk requests (default: 2 * number of CPU cores)
 
 `max_bulk_volume` - a byte size parameter for the maximum volume allowed for a bulk request (default: "10m")
 
@@ -372,7 +366,7 @@ Quartz cron expression format (see below).
         "schedule" : null,
         "interval" : 0L,
         "threadpoolsize" : 4,
-        "max_bulk_actions" : 100,
+        "max_bulk_actions" : 10000,
         "max_concurrent_bulk_requests" : 2 * available CPU cores,
         "max_bulk_volume" : "10m",
         "max_request_wait" : "60s",
@@ -387,7 +381,7 @@ Quartz cron expression format (see below).
 	        "rounding" : null,
 	        "scale" : 2,
 	        "autocommit" : false,
-	        "fetchsize" : 10, 
+	        "fetchsize" : 10, /* MySQL: Integer.MIN */
 	        "max_rows" : 0,
 	        "max_retries" : 3,
 	        "max_retries_wait" : "30s",
@@ -502,24 +496,21 @@ It is very important to note that overuse of overflowing ranges creates ranges t
 and no effort has been made to determine which interpretation CronExpression chooses.
 An example would be "0 0 14-6 ? * FRI-MON".
 
-## How to start a JDBC feeder
+## How to run a standalone JDBC feeder
 
-In the `bin/feeder` directory, you find some feeder examples.
+A feeder can be started from a shell script. For this , the Elasticsearch home directory must be set in
+the environment variable ES_HOME. The JDBC plugin jar must be placed in the same directory of the script,
+together with JDBC river jar(s). 
 
-A feed can be started from the `$ES_HOME/plugins/jdbc` folder. If not already present, you should
-create a `bin` folder so it is easy to maintain feeder script side by side with the river.
-
-The feeder script must include the Elasticsearch core libraries into the classpath. Note the `-cp`
-parameter.
-
-Here is an example of a feeder bash script in `$ES_HOME/plugins/jdbc/bin/feeder/oracle.create.sh`
+Here is an example of a feeder bash script:
 
     #!/bin/sh
 
-    java="/usr/bin/java"
-    #java="/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/java"
-    #java="/usr/java/jdk1.8.0/bin/java"
-
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    
+    # ES_HOME required to detect elasticsearch jars
+    export ES_HOME=~es/elasticsearch-1.4.0.Beta1
+    
     echo '
     {
         "elasticsearch" : {
@@ -527,39 +518,39 @@ Here is an example of a feeder bash script in `$ES_HOME/plugins/jdbc/bin/feeder/
              "host" : "localhost",
              "port" : 9300
         },
-        "concurrency" : 1,
         "type" : "jdbc",
         "jdbc" : {
-            "url" : "jdbc:oracle:thin:@//host:1521/sid",
-            "user" : "user",
-            "password" : "password",
-            "sql" : "select or_id as \"_id\", or_tan as \"tan\" from orders",
-            "index" : "myoracle",
-            "type" : "myoracle",
-            "index_settings" : {
-                "index" : {
-                    "number_of_shards" : 1,
-                    "number_of_replica" : 0
-                }
-            }
-        }
+            "url" : "jdbc:mysql://localhost:3306/test",
+            "user" : "",
+            "password" : "",
+            "sql" :  "select *, page_id as _id from page",
+            "treat_binary_as_string" : true,
+            "index" : "metawiki"
+          }
     }
-    ' | ${java} \
-        -cp $(pwd):$(pwd)/\*:$(pwd)/../../lib/\* \
+    ' | java \
+        -cp "${DIR}/*" \
         org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
         org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
 
-The `jdbc` parameter structure is exactly the same as in a river.
+How does it work?
 
-The feeder is invoked by `JDBCFeeder` class and understands some more parameters. In this example, 
-the default parameters are shown.
+- first the shell script finds out about the directory where the script is placed, and it is placed into a variable `DIR`
 
-`elasticsearch` - an structure describing cluster, host, and port of a host of an Elasticsearch cluster. 
+- second, the location of the Elasticsearch home is exported in a shell variable `ES_HOME`
 
-`concurrency` - how many `jdbc` jobs should be executed in parallel
+- the classpath must be set to `DIR/*` to detect the JDBC plugin jar in the same directory of the script
 
-In the example, you can also see that you can change your favorite `java` executable when
-executing a feed. You must use a Java JDK >= 1.7
+- the "Runner" class is able to expand the classpath over the Elasticsearch jars in `ES_HOME/lib` and looks also in `ES_HOME/plugins/jdbc`
+
+- the "Runner" class invokes the "JDBCFeeder", which reads a JSON file from stdin, which corresponds to a JDBC river definition
+
+- the `elasticsearch` structure specifies the cluster, host, and port of a connection to an Elasticsearch cluster
+
+The `jdbc` parameter structure in the definition is exactly the same as in a river.
+
+It is possible to write an equivalent of this bash script for Windows. 
+If you can send one to me for documentation on this page, I'd be very grateful.
 
 ## Structured objects
 
@@ -812,56 +803,40 @@ in callable statement result sets.
 If there is more than one result sets returned by a callable statement,
 the JDBC plugin enters a loop and iterates through all result sets.
 
-# Monitoring the JDBC river state
+# Monitoring the JDBC plugin state
 
 While a river/feed is running, you can monitor the activity by using the `_state` command.
 
-When running very large data fetches, it might be of interest to find out if the fetch is complete or still running.
+The `_state` command can show the state of a specific river or of all rivers, 
+when an asterisk `*` is used as the river name.
 
-The `_state` command can show the state of a specific river or of all rivers, when an asterisk `*` is used as the river name.
+The river state mechanism is specific to JDBC plugin implementation. It is part of the cluster metadata.
 
-In the result, you can evaluate the field `active`. If set to `true`, the river is actively fetching data from the database.
+In the response, the field `started` will represent the time when the river/feeder was created.
+The field `last_active_begin` will represent the last time when a river/feeder run had begun, and
+the field `last_active_end` is null if th river/feeder runs, or will represent the last time the river/feeder 
+has completed a run.
 
-In the field `timestamp`, the latest state modification of the river is recorded.
+The `map` carries some flags for the river: `aborted`, `suspended`, and a `counter` for the number of
+invocations on this node.
 
 Example:
 
     curl 'localhost:9200/_river/jdbc/*/_state?pretty'
     {
       "state" : [ {
-        "name" : "my_oracle_river",
+        "name" : "feeder",
         "type" : "jdbc",
-        "enabled" : true,
-        "started" : "2014-05-10T20:29:04.260Z",
-        "timestamp" : "2014-05-10T20:52:15.866Z",
-        "counter" : 3,
-        "active" : true,
-        "custom" : {
-          "rivername" : "feeder",
-          "settings" : {
-            "index" : "myoracle",
-            "sql" : [ "select or_id as \"_id\", or_tan as \"tan\" from orders" ],
-            "maxbulkactions" : 10,
-            "type" : "myoracle",
-            "password" : "...",
-            "user" : "...",
-            "url" : "jdbc:oracle:thin:@//localhost:1521/sid"
-          },
-          "locale" : "de_",
-          "job" : null,
-          "sql" : [ "statement=select or_id as \"_id\", or_tan as \"tan\" from orders parameter=[] callable=false" ],
-          "autocommit" : false,
-          "fetchsize" : 10,
-          "maxrows" : 0,
-          "retries" : 3,
-          "maxretrywait" : "30s",
-          "resultsetconcurrency" : "CONCUR_UPDATABLE",
-          "resultsettype" : "TYPE_FORWARD_ONLY",
-          "rounding" : 0,
-          "scale" : 2
+        "started" : "2014-10-18T13:38:14.436Z",
+        "last_active_begin" : "2014-10-18T17:46:47.548Z",
+        "last_active_end" : "2014-10-18T13:42:57.678Z",
+        "map" : {
+          "aborted" : false,
+          "suspended" : false,
+          "counter" : 6
         }
       } ]
-    }
+    }    
 
 
 # Advanced topics
