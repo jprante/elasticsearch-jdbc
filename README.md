@@ -5,6 +5,8 @@ Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons
 # JDBC plugin for Elasticsearch
 ![Travis](https://travis-ci.org/jprante/elasticsearch-river-jdbc.png)
 
+![Follow me on twitter](https://twitter.com/xbib)
+
 The Java Database Connection (JDBC) plugin allows to fetch data from JDBC sources for
 indexing into [Elasticsearch](http://www.elasticsearch.org).
 
@@ -32,28 +34,6 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
             "sql" : "select * from orders"
         }
     }'
-
-
-Note: the `max_bulk_actions` parameter is set by default to 10000 and have to be enlarged for most use cases, and
-MySQL streaming mode is activated only by setting the row fetch size to Integer.MIN_VALUE, which can be
-achieved by using the string `"min"` for the parameter `fetchsize`.
-
-## Two flavors: river or feeder
-
-The plugin can operate as a river in "pull mode" or as a feeder in "push mode".
-In feeder mode, the plugin runs in a separate JVM and can connect to a remote Elasticsearch cluster.
-
-![Architecture](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/jdbc-river-feeder-architecture.png)
-
-The relational data is internally transformed into structured JSON objects for the schema-less
-indexing model of Elasticsearch documents.
-
-![Simple data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/simple-tabular-json-data.png)
-
-Both ends are scalable. The plugin can fetch data from different RDBMS source in parallel, and multithreaded
-bulk mode ensures high throughput when indexing to Elasticsearch.
-
-![Scalable data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/tabular-json-data.png)
 
 ## Recent versions
 
@@ -110,6 +90,23 @@ All feedback is welcome! If you find issues, please post them at
 [Github](https://github.com/jprante/elasticsearch-river-jdbc/issues)
 
 # Documentation
+
+## Two flavors: river or feeder
+
+The plugin can operate as a river in "pull mode" or as a feeder in "push mode".
+In feeder mode, the plugin runs in a separate JVM and can connect to a remote Elasticsearch cluster.
+
+![Architecture](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/jdbc-river-feeder-architecture.png)
+
+The relational data is internally transformed into structured JSON objects for the schema-less
+indexing model of Elasticsearch documents.
+
+![Simple data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/simple-tabular-json-data.png)
+
+Both ends are scalable. The plugin can fetch data from different RDBMS source in parallel, and multithreaded
+bulk mode ensures high throughput when indexing to Elasticsearch.
+
+![Scalable data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/tabular-json-data.png)
 
 ## River or feeder?
 
@@ -843,6 +840,17 @@ Example:
       } ]
     }    
 
+## Suspend
+
+A running river can be suspended with 
+
+    curl 'localhost:9200/_river/jdbc/my_jdbc_river/_suspend'
+
+## Resume
+
+A suspended river can be resumed with
+
+    curl 'localhost:9200/_river/jdbc/my_jdbc_river/_resume'
 
 # Advanced topics
 
@@ -1028,7 +1036,6 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
 - execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
 
 - then run this script: bash bin/river/mysql/geo.sh
-
     ```
     curl -XDELETE 'localhost:9200/_river/my_geo_river/'
     curl -XGET 'localhost:9200/_river/_refresh'
@@ -1066,7 +1073,7 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
     }
     '
     echo "sleeping while river should run..."
-    sleep 45
+    sleep 10
     curl -XDELETE 'localhost:9200/_river/my_geo_river/'
     curl -XGET 'localhost:9200/myjdbc/_refresh'
     curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
@@ -1090,6 +1097,47 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
        }
     }'
     ```
+
+## Oracle column name 30 character limit
+
+Oracle imposes a 30 character limit on column name aliases. This makes it sometimes hard to define columns names for
+Elasticsearch field names. For this, a column name map can be used like this:
+
+    curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:oracle:thin:@//localhost/sid",
+            "user" : "user",
+            "password" : "password",
+            "sql" : "select or_id as \"_id\", or_tan as \"o.t\", or_status as \"o.s\", stages.* from orders, stages where or_id = st_or_id and or_seqno = st_seqno",
+            "column_name_map" : {
+               "o" : "order",
+               "t" : "transaction_id",
+               "s" : "status"
+            }
+        }
+    }'
+
+## Connection properties for JDBC driver
+
+For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL, 
+but in the JDBC connection properties. You can specifiy connection properties like this:
+
+    curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:oracle:thin:@//localhost:1521/sid",
+            "user" : "user",
+            "password" : "password",
+            "sql" : "select ... from ...",
+            "connection_properties" : {
+                "oracle.jdbc.TcpNoDelay" : false,
+                "useFetchSizeWithLongColumn" : false,
+                "oracle.net.CONNECT_TIMEOUT" : 10000,
+                "oracle.jdbc.ReadTimeout" : 50000
+            }
+        }
+    }'
 
 
 # License
