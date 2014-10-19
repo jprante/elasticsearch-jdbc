@@ -40,7 +40,6 @@ import org.xbib.elasticsearch.plugin.jdbc.client.Metric;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Client using the BulkProcessor of Elasticsearch
@@ -62,11 +61,6 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
     private ByteSizeValue maxVolumePerBulkRequest = new ByteSizeValue(10, ByteSizeUnit.MB);
 
     private TimeValue flushInterval = TimeValue.timeValueSeconds(30);
-
-    /**
-     * The concurrent requests
-     */
-    private final AtomicLong concurrentRequestCounter = new AtomicLong(0L);
 
     /**
      * The BulkProcessor
@@ -129,7 +123,8 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
         BulkProcessor.Listener listener = new BulkProcessor.Listener() {
             @Override
             public void beforeBulk(long executionId, BulkRequest request) {
-                long l = concurrentRequestCounter.getAndIncrement();
+                metric.getCurrentIngest().inc();
+                long l = metric.getCurrentIngest().count();
                 if (metric != null) {
                     int n = request.numberOfActions();
                     metric.getSubmitted().inc(n);
@@ -145,7 +140,8 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
 
             @Override
             public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-                long l = concurrentRequestCounter.decrementAndGet();
+                metric.getCurrentIngest().dec();
+                long l = metric.getCurrentIngest().count();
                 if (metric != null) {
                     metric.getSucceeded().inc(response.getItems().length);
                     metric.getTotalIngest().inc(response.getTookInMillis());
@@ -174,7 +170,7 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
 
             @Override
             public void afterBulk(long executionId, BulkRequest requst, Throwable failure) {
-                concurrentRequestCounter.decrementAndGet();
+                metric.getCurrentIngest().dec();
                 throwable = failure;
                 closed = true;
                 logger.error("bulk [" + executionId + "] error", failure);
