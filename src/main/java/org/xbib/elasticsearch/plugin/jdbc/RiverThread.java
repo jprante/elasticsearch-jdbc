@@ -119,10 +119,8 @@ public class RiverThread<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             for (RiverPipeline pipeline : pipelines) {
                 pipeline.setInterrupted(true);
             }
-            if (metricsThread != null) {
-                logger.debug("interrupting metrics thread");
-                metricsThread.interrupt();
-            }
+            closeMetricThread();
+            closeSuspensionThread();
             Thread.currentThread().interrupt();
             logger.warn("interrupted");
         } catch (Throwable t) {
@@ -141,6 +139,11 @@ public class RiverThread<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         if (executor != null) {
             executor.shutdown();
         }
+        closeMetricThread();
+        closeSuspensionThread();
+    }
+
+    private void closeMetricThread() {
         if (metricsThreadPoolExecutor != null) {
             logger.debug("shutting down metrics thread scheduler");
             metricsThreadPoolExecutor.shutdownNow();
@@ -149,6 +152,9 @@ public class RiverThread<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         if (metricsThread != null) {
             metricsThread.interrupt();
         }
+    }
+
+    private void closeSuspensionThread() {
         if (suspensionThreadPoolExecutor != null) {
             logger.debug("shutting down suspension thread scheduler");
             suspensionThreadPoolExecutor.shutdownNow();

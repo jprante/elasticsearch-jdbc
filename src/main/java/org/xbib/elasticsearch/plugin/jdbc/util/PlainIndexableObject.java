@@ -143,10 +143,11 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
      */
     @SuppressWarnings({"unchecked"})
     protected XContentBuilder toXContent(XContentBuilder builder, Params params, Map<String, Object> map) throws IOException {
+        builder.startObject();
         if (checkCollapsedMapLength(map)) {
+            builder.endObject();
             return builder;
         }
-        builder.startObject();
         for (Map.Entry<String, Object> k : map.entrySet()) {
             Object o = k.getValue();
             if (ignoreNull && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
@@ -198,7 +199,9 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
                 Values v = (Values) o;
                 v.toXContent(builder, ToXContent.EMPTY_PARAMS);
             } else if (o instanceof Map) {
-                toXContent(builder, params, (Map<String, Object>) o);
+                if (!checkCollapsedMapLength((Map<String, Object>) o)) {
+                    toXContent(builder, params, (Map<String, Object>) o);
+                }
             } else if (o instanceof List) {
                 toXContent(builder, params, (List) o);
             } else {
