@@ -22,6 +22,7 @@ import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class RunRiverResponse extends NodesOperationResponse implements ToXContent {
 
@@ -41,7 +42,7 @@ public class RunRiverResponse extends NodesOperationResponse implements ToXConte
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.field("executed", executed);
+        builder.field("executed", Arrays.asList(executed));
         return builder;
     }
 

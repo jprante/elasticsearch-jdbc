@@ -15,8 +15,11 @@
  */
 package org.xbib.elasticsearch.plugin.jdbc.feeder;
 
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import org.xbib.elasticsearch.plugin.jdbc.classloader.uri.URIClassLoader;
+
+import java.io.File;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Stub for loading a Java class and execute it. Isolating the main method from other methods is of advantage
@@ -26,19 +29,59 @@ public class Runner {
 
     public static void main(String[] args) {
         try {
-            // here we load the "concrete" class we want to execute. Add shutdown hook and pass stdin/stdio/stderr.
-            Class clazz = Class.forName(args[0]);
-            CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
-            Runtime.getRuntime().addShutdownHook(commandLineInterpreter.shutdownHook());
-            commandLineInterpreter.readFrom(new InputStreamReader(System.in, "UTF-8"))
-                    .writeTo(new OutputStreamWriter(System.out, "UTF-8"))
-                    .errorsTo(System.err)
-                    .start();
+            // parse environment for ES_HOME
+            String homeFile = System.getenv("ES_HOME");
+            if (homeFile == null) {
+                System.err.println("Warning: ES_HOME not set, using current directory");
+                homeFile = System.getProperty("user.dir");
+            }
+            // add drivers and Elasticsearch libs from ES_HOME
+            ClassLoader cl = getClassLoader(new File(homeFile));
+            Thread.currentThread().setContextClassLoader(cl);
+            // here we load the "concrete" class we want to execute
+            Class clazz = cl.loadClass(args[0]);
+            // we can not cast classes, we have different classloaders. Just invoke "exec" method
+            Method execMethod = clazz.getMethod("exec");
+            execMethod.invoke(clazz.newInstance());
         } catch (Throwable e) {
-            // ensure fatal errors are printed to stderr
+            // ensure all errors are printed to stderr
             e.printStackTrace();
             System.exit(1);
         }
         System.exit(0);
     }
+
+    private static ClassLoader getClassLoader(File home) {
+        URIClassLoader classLoader = new URIClassLoader();
+        String[] jars = System.getProperty("java.class.path").split(File.pathSeparator);
+        for (String jar : jars) {
+            File file = new File(jar);
+            // add parent dir if jar
+            if (file.getName().toLowerCase().endsWith(".jar")) {
+                classLoader.addURI(file.getParentFile().toURI());
+            }
+            classLoader.addURI(file.toURI());
+        }
+        // add Elasticsearch jars
+        File[] libs = new File(home + "/lib").listFiles();
+        if (libs != null) {
+            for (File file : libs) {
+                if (file.getName().toLowerCase().endsWith(".jar")) {
+                    classLoader.addURI(file.toURI());
+                }
+            }
+        }
+        // add JDBC plugin jars (if exist)
+        libs = new File(home + "/plugins/jdbc").listFiles();
+        if (libs != null) {
+            for (File file : libs) {
+                if (file.getName().toLowerCase().endsWith(".jar")) {
+                    classLoader.addURI(file.toURI());
+                }
+            }
+        }
+        System.err.println("Classpath: " + Arrays.toString(classLoader.getURIs()));
+        return classLoader;
+    }
+
 }
