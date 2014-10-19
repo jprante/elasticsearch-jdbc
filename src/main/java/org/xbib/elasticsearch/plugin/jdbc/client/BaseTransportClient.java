@@ -204,11 +204,7 @@ public abstract class BaseTransportClient {
                 break;
             }
         }
-        // 10 seconds is used because it is longer than 5 seconds
-        long timeout = settings.getAsTime("timeout", settings.getAsTime("client.transport.ping_timeout",
-                TimeValue.timeValueSeconds(10))).millis();
-        logger.info("configured addresses to connect = {}, waiting for {} to connect ...", addresses,
-                TimeValue.timeValueMillis(timeout).format());
+        logger.info("configured addresses to connect = {} ...", addresses);
         if (client.connectedNodes() != null) {
             List<DiscoveryNode> nodes = client.connectedNodes().asList();
             logger.info("connected nodes = {}", nodes);

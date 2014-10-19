@@ -16,29 +16,4 @@
             </includes>
         </dependencySet>
     </dependencySets>
-    <fileSets>
-        <fileSet>
-            <directory>${project.build.directory}/releases</directory>
-            <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>*-uberjar.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>bin/*.sh</include>
-                <include>bin/**/*.sh</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/src/test/resources</directory>
-            <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>log4j.properties</include>
-                <include>log4j2.xml</include>
-            </includes>
-        </fileSet>
-    </fileSets>
 </assembly>
