@@ -41,6 +41,8 @@ import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
@@ -62,9 +64,9 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 /**
  * Standalone feeder for JDBC
  */
-public class JDBCFeeder implements CommandLineInterpreter {
+public class JDBCFeeder {
 
-    private final static ESLogger logger = ESLoggerFactory.getLogger(JDBCFeeder.class.getSimpleName());
+    private final static ESLogger logger = ESLoggerFactory.getLogger("JDBCFeeder");
 
     /**
      * Register metadata factory in Elasticsearch for being able to decode
@@ -101,10 +103,17 @@ public class JDBCFeeder implements CommandLineInterpreter {
      * Constructor for running this from command line
      */
     public JDBCFeeder() {
+        Runtime.getRuntime().addShutdownHook(shutdownHook());
+    }
+
+    public void exec() throws Exception {
+        readFrom(new InputStreamReader(System.in, "UTF-8"))
+                .writeTo(new OutputStreamWriter(System.out, "UTF-8"))
+                .errorsTo(System.err)
+                .start();
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public JDBCFeeder readFrom(Reader reader) {
         this.reader = reader;
         try {
@@ -145,19 +154,16 @@ public class JDBCFeeder implements CommandLineInterpreter {
         return riverFlow;
     }
 
-    @Override
     public JDBCFeeder writeTo(Writer writer) {
         this.writer = writer;
         return this;
     }
 
-    @Override
     public JDBCFeeder errorsTo(PrintStream printStream) {
         this.printStream = printStream;
         return this;
     }
 
-    @Override
     public JDBCFeeder start() throws Exception {
         this.closed = false;
         if (ingest.getConnectedNodes().isEmpty()) {
@@ -206,7 +212,6 @@ public class JDBCFeeder implements CommandLineInterpreter {
      *
      * @return shutdown thread
      */
-    @Override
     public Thread shutdownHook() {
         return new Thread() {
             public void run() {
@@ -219,7 +224,6 @@ public class JDBCFeeder implements CommandLineInterpreter {
         };
     }
 
-    @Override
     public synchronized void shutdown() throws Exception {
         if (closed) {
             return;
@@ -244,7 +248,7 @@ public class JDBCFeeder implements CommandLineInterpreter {
         return new IngestFactory() {
             @Override
             public Ingest create() {
-                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 100);
+                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
                 ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));

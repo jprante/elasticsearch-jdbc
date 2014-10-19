@@ -53,12 +53,11 @@ public class RestRunRiverAction extends BaseRestHandler {
             runRiverRequest.setRiverName(riverName).setRiverType(riverType);
             client.admin().cluster().execute(RunRiverAction.INSTANCE, runRiverRequest,
                     new RestToXContentListener<RunRiverResponse>(channel));
-            XContentBuilder builder = jsonBuilder().startObject().field("ok", true).endObject();
-            channel.sendResponse(new BytesRestResponse(RestStatus.OK, builder));
         } catch (Throwable t) {
             try {
                 channel.sendResponse(new BytesRestResponse(channel, t));
-            } catch (IOException e1) {
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
                 channel.sendResponse(new BytesRestResponse(RestStatus.INTERNAL_SERVER_ERROR));
             }
         }

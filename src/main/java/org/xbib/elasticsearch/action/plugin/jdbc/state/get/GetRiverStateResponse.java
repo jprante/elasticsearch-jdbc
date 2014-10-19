@@ -29,14 +29,15 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class GetRiverStateResponse extends ActionResponse implements ToXContent {
 
-    private ImmutableList<RiverState> states;
+    private ImmutableList<RiverState> states = ImmutableList.of();
 
     public GetRiverStateResponse() {
-        states = ImmutableList.of();
     }
 
     public GetRiverStateResponse(ImmutableList<RiverState> riverStates) {
-        states = riverStates;
+        if (riverStates != null) {
+            states = riverStates;
+        }
     }
 
     public RiverState getRiverState() {

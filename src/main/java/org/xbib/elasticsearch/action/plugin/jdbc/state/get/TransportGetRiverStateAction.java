@@ -21,6 +21,7 @@ import org.elasticsearch.action.support.master.TransportMasterNodeReadOperationA
 import org.elasticsearch.cluster.ClusterService;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.block.ClusterBlockException;
+import org.elasticsearch.cluster.block.ClusterBlockLevel;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
@@ -67,7 +68,7 @@ public class TransportGetRiverStateAction extends TransportMasterNodeReadOperati
 
     @Override
     protected ClusterBlockException checkBlock(GetRiverStateRequest request, ClusterState state) {
-        return null;
+        return state.blocks().indexBlockedException(ClusterBlockLevel.METADATA, "");
     }
 
 }
