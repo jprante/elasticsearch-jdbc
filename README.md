@@ -754,7 +754,67 @@ will result into the following JSON documents
 	id=<random> {"product":"Apples","created":1338501600000,"department":"German Fruits","quantity":2,"customer":"Good"}
 	id=<random> {"product":"Oranges","created":1338501600000,"department":"English Fruits","quantity":3,"customer":"Bad"}
 
-# Stored procedures or callable statements
+## How to update a table?
+
+The JDBC plugin allows to write data into the database only for maintenance purpose. 
+It does not allow to inverse the river, that is, it not impossible to fill database tables from Elasticsearch 
+indices with this plugin. Think of the river as a one-way street.
+
+Writing back data into the database makes sense for acknowledging fetched data. 
+
+Example:
+
+    {
+        "type" : "jdbc",
+        "jdbc" : {
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+            "sql" : [
+                {
+                    "statement" : "select * from \"products\""
+                },
+                {
+                    "statement" : "delete from \"products\" where \"_job\" = ?",
+                    "parameter" : [ "$job" ]
+                }
+            ],
+            "index" : "my_jdbc_river_index",
+            "type" : "my_jdbc_river_type"
+        }
+    }
+
+In this example, the DB administrator has prepared product rows and attached a `_job` column to it
+to enumerate the product updates incrementally. The assertion is that Elasticsearch should 
+delete all products from the database after they are indexed successfully. The parameter `$job`
+is a counter which counts from the river start. The river state is saved in the cluster state,
+so the counter is persisted throughout the lifetime of the cluster.
+
+## How to select incremental data from a table?
+
+It is recommended to use timestamps in UTC for synchronization. This example fetches
+all product rows which has added since the last river run, using a millisecond resolution
+column `mytimestamp`:
+
+    {
+        "type" : "jdbc",
+        "jdbc" : {
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+            "sql" : [
+                {
+                    "statement" : "select * from \"products\" where \"mytimestamp\" > ?",
+                    "parameter" : [ "$river.state.last_active_begin" ]
+                }
+            ],
+            "index" : "my_jdbc_river_index",
+            "type" : "my_jdbc_river_type"
+        }
+    }
+
+
+## Stored procedures or callable statements
 
 Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates. 
 See also [Using Stored Procedures](http://docs.oracle.com/javase/tutorial/jdbc/basics/storedprocedures.html)
