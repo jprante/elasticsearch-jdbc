@@ -153,7 +153,7 @@ Internet access (of course)
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.0/elasticsearch-river-jdbc-1.3.4.0-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.4/elasticsearch-river-jdbc-1.3.4.4-plugin.zip`
 
 4. Download MySQL JDBC driver
 
