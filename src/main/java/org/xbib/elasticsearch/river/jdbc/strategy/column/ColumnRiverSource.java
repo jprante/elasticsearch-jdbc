@@ -129,7 +129,8 @@ public class ColumnRiverSource<RC extends ColumnRiverContext> extends SimpleRive
             result = executeQuery(stmt);
             KeyValueStreamListener<Object, Object> listener =
                     new ColumnKeyValueStreamListener<Object, Object>(opInfo.opType)
-                            .output(context.getRiverMouth());
+                            .output(context.getRiverMouth())
+                            .shouldIgnoreNull(context.shouldIgnoreNull());
             merge(command, result, listener);
         } catch (Exception e) {
             throw new IOException(e);
