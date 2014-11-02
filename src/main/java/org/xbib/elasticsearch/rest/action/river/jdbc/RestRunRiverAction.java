@@ -18,7 +18,6 @@ package org.xbib.elasticsearch.rest.action.river.jdbc;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.rest.BaseRestHandler;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
@@ -32,8 +31,6 @@ import org.xbib.elasticsearch.action.plugin.jdbc.run.RunRiverRequest;
 import org.xbib.elasticsearch.action.plugin.jdbc.run.RunRiverResponse;
 
 import java.io.IOException;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class RestRunRiverAction extends BaseRestHandler {
 
