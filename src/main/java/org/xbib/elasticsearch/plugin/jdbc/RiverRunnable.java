@@ -36,13 +36,13 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A thread that spawns a single step of river operation.
+ * A runnable that spawns a single step of river operation.
  *
  * @param <T> a pipeline result type
  * @param <R> a pipeline request type
  * @param <P> a pipeline type
  */
-public class RiverThread<T, R extends PipelineRequest, P extends Pipeline<T, R>>
+public class RiverRunnable<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         implements Runnable {
 
     private final static ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.RiverThread");
@@ -63,7 +63,7 @@ public class RiverThread<T, R extends PipelineRequest, P extends Pipeline<T, R>>
 
     private volatile Thread suspensionThread;
 
-    public RiverThread(RiverFlow riverFlow, List<Map<String, Object>> input) {
+    public RiverRunnable(RiverFlow riverFlow, List<Map<String, Object>> input) {
         this.riverFlow = riverFlow;
         this.input = input;
         this.pipelines = new LinkedList<RiverPipeline>();
