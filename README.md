@@ -159,7 +159,7 @@ Internet access (of course)
 5. Add MySQL JDBC driver jar to JDBC river plugin directory and set access permission for .jar file (at least chmod 644)
 
 	`cp mysql-connector-java-5.1.33-bin.jar $ES_HOME/plugins/jdbc/`
-	`chmod 644 $ES_HOME/plugins/jdbc/`
+	`chmod 644 $ES_HOME/plugins/jdbc/*`
 
 6. Start elasticsearch from terminal window
 
