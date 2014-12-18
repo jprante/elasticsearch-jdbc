@@ -28,7 +28,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.RiverName;
-import org.xbib.elasticsearch.plugin.jdbc.RiverThread;
+import org.xbib.elasticsearch.plugin.jdbc.RiverRunnable;
 import org.xbib.elasticsearch.plugin.jdbc.classloader.uri.URIClassLoader;
 import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
 import org.xbib.elasticsearch.plugin.jdbc.client.IngestFactory;
@@ -169,7 +169,7 @@ public class JDBCFeeder {
         if (ingest.getConnectedNodes().isEmpty()) {
             throw new IOException("no nodes connected, can't continue");
         }
-        this.feederThread = new Thread(new RiverThread(riverFlow, definitions));
+        this.feederThread = new Thread(new RiverRunnable(riverFlow, definitions));
         List<Future<?>> futures = schedule(feederThread);
         // wait for all threads to finish
         for (Future<?> future : futures) {

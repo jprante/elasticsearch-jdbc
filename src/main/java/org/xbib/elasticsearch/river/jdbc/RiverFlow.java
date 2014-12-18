@@ -139,4 +139,8 @@ public interface RiverFlow<RC extends RiverContext> {
      */
     Queue<RiverContext> getQueue();
 
+    boolean isMetricThreadEnabled();
+
+    boolean isSuspensionThreadEnabled();
+
 }
