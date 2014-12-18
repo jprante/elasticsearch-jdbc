@@ -116,6 +116,16 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
     }
 
     @Override
+    public boolean isMetricThreadEnabled() {
+        return settings.getAsBoolean("metrics", false);
+    }
+
+    @Override
+    public boolean isSuspensionThreadEnabled() {
+        return settings.getAsBoolean("suspension", false);
+    }
+
+    @Override
     public RiverFlow setIngestFactory(IngestFactory ingestFactory) {
         this.ingestFactory = ingestFactory;
         return this;
@@ -384,7 +394,6 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
         double oneminute = metric.oneMinuteRate();
         double fiveminute = metric.fiveMinuteRate();
         double fifteenminute = metric.fifteenMinuteRate();
-
         long bytes = mouthMetric.getTotalIngestSizeInBytes().count();
         long elapsed = mouthMetric.elapsed() / 1000000;
         String elapsedhuman = DurationFormatUtil.formatDurationWords(elapsed, true, true);

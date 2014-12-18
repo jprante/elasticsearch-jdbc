@@ -20,7 +20,6 @@ import org.xbib.elasticsearch.plugin.jdbc.pipeline.PipelineExecutor;
 import org.xbib.elasticsearch.plugin.jdbc.pipeline.PipelineProvider;
 import org.xbib.elasticsearch.plugin.jdbc.pipeline.PipelineRequest;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -128,12 +127,15 @@ public class SimplePipelineExecutor<T, R extends PipelineRequest, P extends Pipe
     }
 
     @Override
-    public void shutdown() throws IOException {
-        if (executorService == null) {
+    public void shutdown() {
+        if (futures == null) {
             return;
         }
         for (Future<T> future : futures) {
             future.cancel(true);
+        }
+        if (executorService == null) {
+            return;
         }
         executorService.shutdown();
         try {
@@ -141,8 +143,8 @@ public class SimplePipelineExecutor<T, R extends PipelineRequest, P extends Pipe
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             executorService.shutdownNow();
-            throw new IOException("interrupted while shutdown");
         }
     }
 
