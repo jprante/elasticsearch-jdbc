@@ -80,20 +80,26 @@ public class RiverRunnable<T, R extends PipelineRequest, P extends Pipeline<T, R
             riverContext.setDefinition(definition);
             riverFlow.getQueue().offer(riverContext);
         }
-        this.metricsThread = new Thread(new MetricThread());
-        // schedule river metrics thread
-        long metricsInterval = riverFlow.getSettings().getAsTime("metrics_interval", TimeValue.timeValueSeconds(60)).getSeconds();
-        this.metricsThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
-        metricsThreadPoolExecutor.scheduleAtFixedRate(metricsThread, 10L, metricsInterval, TimeUnit.SECONDS);
-        logger.info("scheduled metrics thread at {} seconds", metricsInterval);
-        this.suspensionThread = new Thread(new SuspendThread());
-        // schedule suspension thread
-        long suspensionCheckInterval = TimeValue.timeValueSeconds(1).getSeconds();
-        this.suspensionThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
-        suspensionThreadPoolExecutor.scheduleAtFixedRate(suspensionThread, 10L,
-                suspensionCheckInterval,
-                TimeUnit.SECONDS);
-        logger.info("scheduled suspend check thread at {} seconds", suspensionCheckInterval);
+        if (riverFlow.isMetricThreadEnabled()) {
+            this.metricsThread = new Thread(new MetricThread());
+            metricsThread.setDaemon(true);
+            // schedule river metrics thread
+            long metricsInterval = riverFlow.getSettings().getAsTime("metrics_interval", TimeValue.timeValueSeconds(60)).getSeconds();
+            this.metricsThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
+            metricsThreadPoolExecutor.scheduleAtFixedRate(metricsThread, 10L, metricsInterval, TimeUnit.SECONDS);
+            logger.info("scheduled metrics thread at {} seconds", metricsInterval);
+        }
+        if (riverFlow.isSuspensionThreadEnabled()) {
+            this.suspensionThread = new Thread(new SuspendThread());
+            suspensionThread.setDaemon(true);
+            // schedule suspension thread
+            long suspensionCheckInterval = TimeValue.timeValueSeconds(1).getSeconds();
+            this.suspensionThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
+            suspensionThreadPoolExecutor.scheduleAtFixedRate(suspensionThread, 10L,
+                    suspensionCheckInterval,
+                    TimeUnit.SECONDS);
+            logger.info("scheduled suspend check thread at {} seconds", suspensionCheckInterval);
+        }
     }
 
     @Override
@@ -115,32 +121,23 @@ public class RiverRunnable<T, R extends PipelineRequest, P extends Pipeline<T, R
             executor.prepare()
                     .execute()
                     .waitFor();
+            executor.shutdown();
         } catch (InterruptedException e) {
             for (RiverPipeline pipeline : pipelines) {
                 pipeline.setInterrupted(true);
             }
-            closeMetricThread();
-            closeSuspensionThread();
             Thread.currentThread().interrupt();
             logger.warn("interrupted");
         } catch (Throwable t) {
             logger.error(t.getMessage(), t);
         } finally {
-            try {
-                afterPipelineExecutions();
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+            if (executor != null) {
+                executor.shutdown();
             }
+            closeMetricThread();
+            closeSuspensionThread();
         }
         logger.debug("river flow {} thread is finished", riverFlow);
-    }
-
-    protected void afterPipelineExecutions() throws Exception {
-        if (executor != null) {
-            executor.shutdown();
-        }
-        closeMetricThread();
-        closeSuspensionThread();
     }
 
     private void closeMetricThread() {
