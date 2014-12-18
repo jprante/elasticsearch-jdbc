@@ -2,6 +2,8 @@
 
 Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons Attribution-NoDerivs 3.0 Unported.
 
+[Follow me on twitter](https://twitter.com/xbib)
+
 # JDBC plugin for Elasticsearch
 ![Travis](https://travis-ci.org/jprante/elasticsearch-river-jdbc.png)
 
@@ -33,10 +35,61 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
         }
     }'
 
+## Recent versions
 
-Note: the `max_bulk_actions` parameter is set by default to 10000 and have to be enlarged for most use cases, and
-MySQL streaming mode is activated only by setting the row fetch size to Integer.MIN_VALUE, which can be
-achieved by using the string `"min"` for the parameter `fetchsize`.
+| Release date | Plugin version | Elasticsearch version |
+| -------------| ---------------| ----------------------|
+| Oct 19, 2014 | 1.4.0.3.Beta1  | 1.4.0.Beta1           |
+| Oct 19, 2014 | 1.3.4.4        | 1.3.4                 |
+| Oct 19, 2014 | 1.2.4.2        | 1.2.4                 |
+| Oct 19, 2014 | 1.1.2.1        | 1.1.2                 |
+| Oct 19, 2014 | 1.0.3.1        | 1.0.3                 |
+|              | not supported  | 0.90.x                |
+|              | not supported  | 0.20.x                |
+|              | not supported  | 0.19.x                |
+
+## Prerequisites
+
+- a JDBC driver jar for your database. You should download a driver from the vendor site. Put the jar into JDBC plugin folder.
+
+## Installation
+
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.4/elasticsearch-river-jdbc-1.3.4.4-plugin.zip
+
+Do not forget to restart the node after installing.
+
+If you have installed Elasticsearch with other automation tools, like for example Homebrew,
+you will need to locate your `ES_HOME` directory.  The easiest way to do this is by navigating to
+
+    http://localhost:9200/_nodes?settings=true&pretty=true
+
+Change into the home directory to invoke the `./bin/plugin` command line tool.
+
+## Checksum
+
+| File                                               | SHA1                                     |
+| ---------------------------------------------------| -----------------------------------------|
+| elasticsearch-river-jdbc-1.4.0.3.Beta1-plugin.zip  | 396c32f9961a708fd2ceda77588456c0d4bbadd4 |
+| elasticsearch-river-jdbc-1.4.0.0.Beta1-plugin.zip  | 1f33c4aa7a312243a5c4dd3daab6ffacbe8372fa |
+| elasticsearch-river-jdbc-1.3.4.4-plugin.zip        | ffff5991f4d8d218dd9c1f5725ef16e42a9c3dfd |
+| elasticsearch-river-jdbc-1.3.4.1-plugin.zip        | 7589a3df46af8f1c8c0212d3254d29c4fedb2a98 |
+| elasticsearch-river-jdbc-1.2.4.2-plugin.zip        | 1a16b1cd27eb20d242d757dd84a168cd43ed9025 |
+| elasticsearch-river-jdbc-1.2.4.1-plugin.zip        | b34855bcf08dbb33a748cebee4c5440aa36d722c |
+| elasticsearch-river-jdbc-1.1.2.1-plugin.zip        | 2c666472acb58e982bb4306388e3564e6a39fa94 |
+| elasticsearch-river-jdbc-1.1.2.0-plugin.zip        | 06b83fc1557510ba2108f3d8adb7efa67f740ba1 |
+| elasticsearch-river-jdbc-1.0.3.1-plugin.zip        | 1065a30897beddd4e37cb63ca40500a02319dbe7 |
+| elasticsearch-river-jdbc-1.0.3.0-plugin.zip        | caa0a0b05c1c92d30c6acb4fd1c91f181938e43d |
+
+## Project docs
+
+The Maven project site is available at [Github](http://jprante.github.io/elasticsearch-river-jdbc)
+
+## Issues
+
+All feedback is welcome! If you find issues, please post them at
+[Github](https://github.com/jprante/elasticsearch-river-jdbc/issues)
+
+# Documentation
 
 ## Two flavors: river or feeder
 
@@ -54,57 +107,6 @@ Both ends are scalable. The plugin can fetch data from different RDBMS source in
 bulk mode ensures high throughput when indexing to Elasticsearch.
 
 ![Scalable data stream](https://github.com/jprante/elasticsearch-river-jdbc/raw/master/src/site/resources/tabular-json-data.png)
-
-## Versions
-
-| Elasticsearch version | Plugin version | Release date |
-| ----------------------| ---------------| -------------|
-| 1.4.0.Beta1           | 1.4.0.0.Beta1  | Oct 17, 2014 |
-| 1.3.4                 | 1.3.4.1        | Oct 17, 2014 |
-| 1.2.4                 | 1.2.4.1        | Oct 17, 2014 |
-| 1.1.2                 | 1.1.2.0        | Oct 17, 2014 |
-| 1.0.3                 | 1.0.3.0        | Oct 17, 2014 |
-| 0.90.x                | not supported  | |
-| 0.20.x                | not supported  | |
-| 0.19.x                | not supported  | |
-
-## Prerequisites
-
-- a JDBC driver jar for your database. You should download a driver from the vendor site. Put the jar into JDBC plugin folder.
-
-## Installation
-
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.0/elasticsearch-river-jdbc-1.3.4.0-plugin.zip
-
-Do not forget to restart the node after installing.
-
-If you have installed Elasticsearch with other automation tools, like for example Homebrew,
-you will need to locate your `ES_HOME` directory.  The easiest way to do this is by navigating to
-
-    http://localhost:9200/_nodes?settings=true&pretty=true
-
-Change into the home directory to invoke the `./bin/plugin` command line tool.
-
-## Checksum
-
-| File                                               | SHA1                                     |
-| ---------------------------------------------------| -----------------------------------------|
-| elasticsearch-river-jdbc-1.4.0.0.Beta1-plugin.zip  | 1f33c4aa7a312243a5c4dd3daab6ffacbe8372fa |
-| elasticsearch-river-jdbc-1.3.4.1-plugin.zip        | 7589a3df46af8f1c8c0212d3254d29c4fedb2a98 |
-| elasticsearch-river-jdbc-1.2.4.1-plugin.zip        | b34855bcf08dbb33a748cebee4c5440aa36d722c |
-| elasticsearch-river-jdbc-1.1.2.0-plugin.zip        | 06b83fc1557510ba2108f3d8adb7efa67f740ba1 |
-| elasticsearch-river-jdbc-1.0.3.0-plugin.zip        | caa0a0b05c1c92d30c6acb4fd1c91f181938e43d |
-
-## Project docs
-
-The Maven project site is available at [Github](http://jprante.github.io/elasticsearch-river-jdbc)
-
-## Issues
-
-All feedback is welcome! If you find issues, please post them at
-[Github](https://github.com/jprante/elasticsearch-river-jdbc/issues)
-
-# Documentation
 
 ## River or feeder?
 
@@ -148,7 +150,7 @@ Internet access (of course)
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.0/elasticsearch-river-jdbc-1.3.4.0-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.4/elasticsearch-river-jdbc-1.3.4.4-plugin.zip`
 
 4. Download MySQL JDBC driver
 
@@ -752,7 +754,67 @@ will result into the following JSON documents
 	id=<random> {"product":"Apples","created":1338501600000,"department":"German Fruits","quantity":2,"customer":"Good"}
 	id=<random> {"product":"Oranges","created":1338501600000,"department":"English Fruits","quantity":3,"customer":"Bad"}
 
-# Stored procedures or callable statements
+## How to update a table?
+
+The JDBC plugin allows to write data into the database only for maintenance purpose. 
+It does not allow to inverse the river, that is, it not impossible to fill database tables from Elasticsearch 
+indices with this plugin. Think of the river as a one-way street.
+
+Writing back data into the database makes sense for acknowledging fetched data. 
+
+Example:
+
+    {
+        "type" : "jdbc",
+        "jdbc" : {
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+            "sql" : [
+                {
+                    "statement" : "select * from \"products\""
+                },
+                {
+                    "statement" : "delete from \"products\" where \"_job\" = ?",
+                    "parameter" : [ "$job" ]
+                }
+            ],
+            "index" : "my_jdbc_river_index",
+            "type" : "my_jdbc_river_type"
+        }
+    }
+
+In this example, the DB administrator has prepared product rows and attached a `_job` column to it
+to enumerate the product updates incrementally. The assertion is that Elasticsearch should 
+delete all products from the database after they are indexed successfully. The parameter `$job`
+is a counter which counts from the river start. The river state is saved in the cluster state,
+so the counter is persisted throughout the lifetime of the cluster.
+
+## How to select incremental data from a table?
+
+It is recommended to use timestamps in UTC for synchronization. This example fetches
+all product rows which has added since the last river run, using a millisecond resolution
+column `mytimestamp`:
+
+    {
+        "type" : "jdbc",
+        "jdbc" : {
+	        "url" : "jdbc:mysql://localhost:3306/test",
+	        "user" : "",
+	        "password" : "",
+            "sql" : [
+                {
+                    "statement" : "select * from \"products\" where \"mytimestamp\" > ?",
+                    "parameter" : [ "$river.state.last_active_begin" ]
+                }
+            ],
+            "index" : "my_jdbc_river_index",
+            "type" : "my_jdbc_river_type"
+        }
+    }
+
+
+## Stored procedures or callable statements
 
 Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates. 
 See also [Using Stored Procedures](http://docs.oracle.com/javase/tutorial/jdbc/basics/storedprocedures.html)
@@ -838,6 +900,17 @@ Example:
       } ]
     }    
 
+## Suspend
+
+A running river can be suspended with 
+
+    curl 'localhost:9200/_river/jdbc/my_jdbc_river/_suspend'
+
+## Resume
+
+A suspended river can be resumed with
+
+    curl 'localhost:9200/_river/jdbc/my_jdbc_river/_resume'
 
 # Advanced topics
 
@@ -1023,7 +1096,6 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
 - execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
 
 - then run this script: bash bin/river/mysql/geo.sh
-
     ```
     curl -XDELETE 'localhost:9200/_river/my_geo_river/'
     curl -XGET 'localhost:9200/_river/_refresh'
@@ -1061,7 +1133,7 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
     }
     '
     echo "sleeping while river should run..."
-    sleep 45
+    sleep 10
     curl -XDELETE 'localhost:9200/_river/my_geo_river/'
     curl -XGET 'localhost:9200/myjdbc/_refresh'
     curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
@@ -1085,6 +1157,47 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
        }
     }'
     ```
+
+## Oracle column name 30 character limit
+
+Oracle imposes a 30 character limit on column name aliases. This makes it sometimes hard to define columns names for
+Elasticsearch field names. For this, a column name map can be used like this:
+
+    curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:oracle:thin:@//localhost/sid",
+            "user" : "user",
+            "password" : "password",
+            "sql" : "select or_id as \"_id\", or_tan as \"o.t\", or_status as \"o.s\", stages.* from orders, stages where or_id = st_or_id and or_seqno = st_seqno",
+            "column_name_map" : {
+               "o" : "order",
+               "t" : "transaction_id",
+               "s" : "status"
+            }
+        }
+    }'
+
+## Connection properties for JDBC driver
+
+For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL, 
+but in the JDBC connection properties. You can specifiy connection properties like this:
+
+    curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:oracle:thin:@//localhost:1521/sid",
+            "user" : "user",
+            "password" : "password",
+            "sql" : "select ... from ...",
+            "connection_properties" : {
+                "oracle.jdbc.TcpNoDelay" : false,
+                "useFetchSizeWithLongColumn" : false,
+                "oracle.net.CONNECT_TIMEOUT" : 10000,
+                "oracle.jdbc.ReadTimeout" : 50000
+            }
+        }
+    }'
 
 
 # License

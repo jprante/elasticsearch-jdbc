@@ -31,7 +31,7 @@ import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateRequestBuilder;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateResponse;
-import org.xbib.elasticsearch.plugin.jdbc.RiverThread;
+import org.xbib.elasticsearch.plugin.jdbc.RiverRunnable;
 import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
 import org.xbib.elasticsearch.plugin.jdbc.client.IngestFactory;
 import org.xbib.elasticsearch.plugin.jdbc.client.node.BulkNodeClient;
@@ -141,7 +141,7 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
         closed = false;
         this.riverThread = EsExecutors.daemonThreadFactory(settings.globalSettings(),
                 "river(" + riverName().getType() + "/" + riverName().getName() + ")")
-                .newThread(new RiverThread(riverFlow, definitions));
+                .newThread(new RiverRunnable(riverFlow, definitions));
         this.futures = schedule(riverThread);
         // we do not wait for futures here, instead, we return to Elasticsea
     }
@@ -177,7 +177,7 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
         }
         this.riverThread = EsExecutors.daemonThreadFactory(settings.globalSettings(),
                 "river(" + riverName().getType() + "/" + riverName().getName() + ")")
-                .newThread(new RiverThread(riverFlow, definitions));
+                .newThread(new RiverRunnable(riverFlow, definitions));
         this.threadPoolExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>());
         futures.add(threadPoolExecutor.submit(riverThread));
