@@ -21,7 +21,7 @@ Creating a JDBC river is easy:
 
 - install the plugin
 
-- download a JDBC driver jar from your vendor's site (for example MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/river-jdbc`.
+- download a JDBC driver jar from your vendor's site (for example MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/jdbc`.
 
 Assuming you have a table of name `orders`, you can issue this simple command from the command line
 
@@ -159,7 +159,7 @@ Internet access (of course)
 5. Add MySQL JDBC driver jar to JDBC river plugin directory and set access permission for .jar file (at least chmod 644)
 
 	`cp mysql-connector-java-5.1.33-bin.jar $ES_HOME/plugins/jdbc/`
-	`chmod 644 $ES_HOME/plugins/jdbc/`
+	`chmod 644 $ES_HOME/plugins/jdbc/*`
 
 6. Start elasticsearch from terminal window
 

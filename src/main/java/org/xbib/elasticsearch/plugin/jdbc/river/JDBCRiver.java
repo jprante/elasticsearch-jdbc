@@ -189,7 +189,7 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
         List<Future<?>> futures = newLinkedList();
         if (schedule != null && schedule.length > 0) {
             CronThreadPoolExecutor cronThreadPoolExecutor =
-                    new CronThreadPoolExecutor(settings.getAsInt("threadpoolsize", 4));
+                    new CronThreadPoolExecutor(settings.getAsInt("threadpoolsize", 1));
             for (String cron : schedule) {
                 futures.add(cronThreadPoolExecutor.schedule(thread, new CronExpression(cron)));
             }

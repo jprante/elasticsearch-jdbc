@@ -15,6 +15,9 @@
  */
 package org.xbib.elasticsearch.plugin.jdbc.cron;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+
 import java.util.Date;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
@@ -29,6 +32,9 @@ import java.util.concurrent.TimeUnit;
  * to calculate future execution times for scheduled tasks.
  */
 public class CronThreadPoolExecutor extends ScheduledThreadPoolExecutor implements CronExecutorService {
+
+    private final static ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.CronThreadPoolExecutor");
+
     /**
      * Constructs a new CronThreadPoolExecutor.
      *
@@ -74,11 +80,8 @@ public class CronThreadPoolExecutor extends ScheduledThreadPoolExecutor implemen
         if (task == null) {
             throw new NullPointerException();
         }
-        this.setCorePoolSize(this.getCorePoolSize() + 1);
+        setCorePoolSize(getCorePoolSize() + 1);
         Runnable scheduleTask = new Runnable() {
-            /**
-             * @see Runnable#run()
-             */
             @Override
             public void run() {
                 Date now = new Date();
@@ -92,13 +95,10 @@ public class CronThreadPoolExecutor extends ScheduledThreadPoolExecutor implemen
                         }
                         time = expression.getNextValidTimeAfter(now);
                     }
-                } catch (RejectedExecutionException e) {
-                    //
-                } catch (CancellationException e) {
-                    //
                 } catch (InterruptedException e) {
-                    //
                     Thread.currentThread().interrupt();
+                } catch (RejectedExecutionException | CancellationException e) {
+                    logger.error(e.getMessage(), e);
                 }
             }
         };
