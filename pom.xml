@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.2.4.3</version>
+    <version>1.2.4.4</version>
 
     <packaging>jar</packaging>
 
