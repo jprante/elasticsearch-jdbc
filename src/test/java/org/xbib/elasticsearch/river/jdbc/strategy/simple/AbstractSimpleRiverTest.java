@@ -326,7 +326,8 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
         GetRiverStateResponse riverStateResponse = client.admin().cluster()
                 .execute(GetRiverStateAction.INSTANCE, riverStateRequest).actionGet();
         RiverState riverState = riverStateResponse.getRiverState();
-        long t0 = riverState != null ? riverState.getLastActiveBegin().getMillis() : 0L;
+        long t0 = riverState != null && riverState.getLastActiveBegin() != null ?
+                riverState.getLastActiveBegin().getMillis() : 0L;
         logger.debug("waitForActiveRiver: now={} t0={} t0<now={} state={}", now, t0, t0 < now, riverState);
         seconds = 2 * seconds;
         while (seconds-- > 0 && t0 == 0 && t0 < now) {
@@ -354,8 +355,10 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
         GetRiverStateResponse riverStateResponse = client.admin().cluster()
                 .execute(GetRiverStateAction.INSTANCE, riverStateRequest).actionGet();
         RiverState riverState = riverStateResponse.getRiverState();
-        long t0 = riverState != null ? riverState.getLastActiveBegin().getMillis() : 0L;
-        long t1 = riverState != null ? riverState.getLastActiveEnd().getMillis() : 0L;
+        long t0 = riverState != null && riverState.getLastActiveBegin() != null ?
+                riverState.getLastActiveBegin().getMillis() : 0L;
+        long t1 = riverState != null  && riverState.getLastActiveEnd() != null ?
+                riverState.getLastActiveEnd().getMillis() : 0L;
         logger.debug("waitForInactiveRiver: now={} t0<now={} t1-t0<=0={} state={}", now, t0 < now, t1 - t0 <= 0L, riverState);
         seconds = 2 * seconds;
         while (seconds-- > 0 && t0 < now && t1 - t0 <= 0L) {
@@ -363,8 +366,10 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
             try {
                 riverStateResponse = client.admin().cluster().execute(GetRiverStateAction.INSTANCE, riverStateRequest).actionGet();
                 riverState = riverStateResponse.getRiverState();
-                t0 = riverState != null ? riverState.getLastActiveBegin().getMillis() : 0L;
-                t1 = riverState != null ? riverState.getLastActiveEnd().getMillis() : 0L;
+                t0 = riverState != null && riverState.getLastActiveBegin() != null ?
+                        riverState.getLastActiveBegin().getMillis() : 0L;
+                t1 = riverState != null && riverState.getLastActiveEnd() != null ?
+                        riverState.getLastActiveEnd().getMillis() : 0L;
             } catch (IndexMissingException e) {
                 logger.warn("index missing");
             }
