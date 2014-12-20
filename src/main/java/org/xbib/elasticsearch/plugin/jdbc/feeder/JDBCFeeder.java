@@ -186,7 +186,7 @@ public class JDBCFeeder {
         Long seconds = settings.getAsTime("interval", TimeValue.timeValueSeconds(0)).seconds();
         if (schedule != null && schedule.length > 0) {
             CronThreadPoolExecutor cronThreadPoolExecutor =
-                    new CronThreadPoolExecutor(settings.getAsInt("threadpoolsize", 4));
+                    new CronThreadPoolExecutor(settings.getAsInt("threadpoolsize", 1));
             for (String cron : schedule) {
                 futures.add(cronThreadPoolExecutor.schedule(thread, new CronExpression(cron)));
             }
