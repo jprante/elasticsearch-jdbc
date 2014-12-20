@@ -164,6 +164,7 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
         RiverState riverState = riverStateResponse.getRiverState();
         // if river state was not defined yet, define it now
         if (riverState == null) {
+            logger.debug("river state not found, creating new state");
             riverState = new RiverState()
                     .setName(riverName.getName())
                     .setType(riverName.getType())
@@ -253,16 +254,7 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
             logger.warn("no river mouth");
             return;
         }
-        try {
-            riverContext.getRiverMouth().afterFetch();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        try {
-            riverContext.getRiverSource().afterFetch();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+        // set activity
         RiverState riverState = riverContext.getRiverState()
                 .setLastActive(riverContext.getRiverState().getLastActiveBegin(), new DateTime());
         PostRiverStateRequestBuilder postRiverStateRequestBuilder = new PostRiverStateRequestBuilder(client.admin().cluster())
@@ -274,6 +266,16 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
             logger.warn("post river state not acknowledged: {}/{}", riverName.getName(), riverName.getType());
         }
         logger.debug("after fetch: state posted = {}", riverState);
+        try {
+            riverContext.getRiverMouth().afterFetch();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        try {
+            riverContext.getRiverSource().afterFetch();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     protected RiverSource createRiverSource(Map<String, Object> params) {

@@ -42,11 +42,11 @@ import java.util.Map;
  * index name housekeeping (with replica/refresh), and metrics. It understands
  * _version, _routing, _timestamp, _parent, and _ttl metadata.
  */
-public class SimpleRiverMouth implements RiverMouth<SimpleRiverContext> {
+public class SimpleRiverMouth<RC extends SimpleRiverContext> implements RiverMouth<RC> {
 
     private final static ESLogger logger = ESLoggerFactory.getLogger("river.jdbc.SimpleRiverMouth");
 
-    protected SimpleRiverContext context;
+    protected RC context;
 
     protected IngestFactory ingestFactory;
 
@@ -72,12 +72,12 @@ public class SimpleRiverMouth implements RiverMouth<SimpleRiverContext> {
     }
 
     @Override
-    public SimpleRiverMouth newInstance() {
-        return new SimpleRiverMouth();
+    public SimpleRiverMouth<RC> newInstance() {
+        return new SimpleRiverMouth<RC>();
     }
 
     @Override
-    public SimpleRiverMouth setRiverContext(SimpleRiverContext context) {
+    public SimpleRiverMouth<RC> setRiverContext(RC context) {
         this.context = context;
         return this;
     }
