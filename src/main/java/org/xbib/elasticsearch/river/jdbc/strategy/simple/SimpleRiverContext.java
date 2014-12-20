@@ -110,14 +110,6 @@ public class SimpleRiverContext implements RiverContext {
 
     private long lastRowCount;
 
-    private long lastStartDate;
-
-    private long lastEndDate;
-
-    private long lastExecutionStartDate;
-
-    private long lastExecutionEndDate;
-
     private Map<String, Object> columnNameMap;
 
     private Map<String, Object> lastRow = new HashMap<String, Object>();
@@ -337,39 +329,39 @@ public class SimpleRiverContext implements RiverContext {
     }
 
     public SimpleRiverContext setLastStartDate(long lastStartDate) {
-        this.lastStartDate = lastStartDate;
+        riverState.setLastStartDate(lastStartDate);
         return this;
     }
 
     public long getLastStartDate() {
-        return lastStartDate;
+        return riverState.getLastStartDate();
     }
 
     public SimpleRiverContext setLastEndDate(long lastEndDate) {
-        this.lastEndDate = lastEndDate;
+        riverState.setLastEndDate(lastEndDate);
         return this;
     }
 
     public long getLastEndDate() {
-        return lastEndDate;
+        return riverState.getLastEndDate();
     }
 
     public SimpleRiverContext setLastExecutionStartDate(long lastExecutionStartDate) {
-        this.lastExecutionStartDate = lastExecutionStartDate;
+        riverState.setLastExecutionStartDate(lastExecutionStartDate);
         return this;
     }
 
     public long getLastExecutionStartDate() {
-        return lastExecutionStartDate;
+        return riverState.getLastExecutionStartDate();
     }
 
     public SimpleRiverContext setLastExecutionEndDate(long lastExecutionEndDate) {
-        this.lastExecutionEndDate = lastExecutionEndDate;
+        riverState.setLastExecutionEndDate(lastExecutionEndDate);
         return this;
     }
 
     public long getLastExecutionEndDate() {
-        return lastExecutionEndDate;
+        return riverState.getLastExecutionEndDate();
     }
 
     public SimpleRiverContext setColumnNameMap(Map<String, Object> columnNameMap) {
@@ -473,10 +465,10 @@ public class SimpleRiverContext implements RiverContext {
                     .field("shouldignorenull", shouldIgnoreNull)
                     .field("lastResultSetMetadata", lastResultSetMetadata)
                     .field("lastDatabaseMetadata", lastDatabaseMetadata)
-                    .field("lastStartDate", lastStartDate)
-                    .field("lastEndDate", lastEndDate)
-                    .field("lastExecutionStartDate", lastExecutionStartDate)
-                    .field("lastExecutionEndDate", lastExecutionEndDate)
+                    .field("lastStartDate", riverState.getLastStartDate())
+                    .field("lastEndDate", riverState.getLastEndDate())
+                    .field("lastExecutionStartDate", riverState.getLastExecutionStartDate())
+                    .field("lastExecutionEndDate", riverState.getLastExecutionEndDate())
                     .field("columnNameMap", columnNameMap)
                     .field("lastRow", lastRow)
                     .field("sql", sql)

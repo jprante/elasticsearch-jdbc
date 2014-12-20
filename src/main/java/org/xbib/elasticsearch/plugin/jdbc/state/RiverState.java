@@ -41,8 +41,6 @@ import static org.elasticsearch.common.xcontent.XContentParser.Token.VALUE_NULL;
  */
 public class RiverState implements Streamable, ToXContent, Comparable<RiverState> {
 
-    private final static DateTime EMPTY_DATETIME = new DateTime(0L);
-
     /**
      * The name of the river instance
      */
@@ -61,12 +59,12 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     /*
      * The time of the last river activity
      */
-    private DateTime begin;
+    private DateTime lastActiveBegin;
 
     /*
      * The time when the last river activity ended
      */
-    private DateTime end;
+    private DateTime lastActiveEnd;
 
     /**
      * A custom map for more information about the river
@@ -120,12 +118,8 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
      * @return this state
      */
     public RiverState setLastActive(DateTime begin, DateTime end) {
-        if (begin != null) {
-            this.begin = begin;
-        }
-        if (end != null) {
-            this.end = end;
-        }
+        this.lastActiveBegin = begin;
+        this.lastActiveEnd = end;
         return this;
     }
 
@@ -133,30 +127,14 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
      * @return the begin of the last river activity
      */
     public DateTime getLastActiveBegin() {
-        return begin != null ? begin : EMPTY_DATETIME;
+        return lastActiveBegin;
     }
 
     /**
      * @return the end of the last river activity
      */
     public DateTime getLastActiveEnd() {
-        return end != null ? end : EMPTY_DATETIME;
-    }
-
-    /**
-     * Was the river active at a certain time? Only the last activity can be checked.
-     *
-     * @param instant the time to check
-     * @return true if river was active, false if not
-     */
-    public boolean wasActiveAt(DateTime instant) {
-        return instant != null
-                && begin != null && begin.getMillis() != 0L && begin.isBefore(instant)
-                && (end == null || end.getMillis() == 0L || end.isAfter(instant));
-    }
-
-    public boolean wasInactiveAt(DateTime instant) {
-        return !wasActiveAt(instant);
+        return lastActiveEnd;
     }
 
     public RiverState setCounter(Integer counter) {
@@ -178,19 +156,51 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
         return (Map<String, Object>) this.map.get("custom");
     }
 
-    public boolean isAborted() {
-        return map.containsKey("aborted") ? (Boolean) map.get("aborted") : false;
-    }
-
     public boolean isSuspended() {
         return map.containsKey("suspended") ? (Boolean) map.get("suspended") : false;
+    }
+
+    public RiverState setLastStartDate(long lastStartDate) {
+        this.map.put("lastStartDate", lastStartDate);
+        return this;
+    }
+
+    public long getLastStartDate() {
+        return (long)this.map.get("lastStartDate");
+    }
+
+    public RiverState setLastEndDate(long lastEndDate) {
+        this.map.put("lastEndDate", lastEndDate);
+        return this;
+    }
+
+    public long getLastEndDate() {
+        return (long)this.map.get("lastEndDate");
+    }
+
+    public RiverState setLastExecutionStartDate(long lastExecutionStartDate) {
+        this.map.put("lastExecutionStartDate", lastExecutionStartDate);
+        return this;
+    }
+
+    public long getLastExecutionStartDate() {
+        return (long)this.map.get("lastExecutionStartDate");
+    }
+
+    public RiverState setLastExecutionEndDate(long lastExecutionEndDate) {
+        this.map.put("lastExecutionEndDate", lastExecutionEndDate);
+        return this;
+    }
+
+    public long getLastExecutionEndDate() {
+        return (long)this.map.get("lastExecutionEndDate");
     }
 
     public RiverState fromXContent(XContentParser parser) throws IOException {
         DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateOptionalTimeParser().withZone(DateTimeZone.UTC);
         Long startTimestamp = 0L;
-        Long begin = 0L;
-        Long end = 0L;
+        Long begin = null;
+        Long end = null;
         String name = null;
         String type = null;
         String currentFieldName = null;
@@ -213,11 +223,11 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
                         break;
                     case "last_active_begin":
                         begin = parser.text() != null && !"null".equals(parser.text()) ?
-                                dateTimeFormatter.parseMillis(parser.text()) : 0L;
+                                dateTimeFormatter.parseMillis(parser.text()) : null;
                         break;
                     case "last_active_end":
                         end = parser.text() != null && !"null".equals(parser.text()) ?
-                                dateTimeFormatter.parseMillis(parser.text()) : 0L;
+                                dateTimeFormatter.parseMillis(parser.text()) : null;
                         break;
                 }
             } else if (token == START_OBJECT) {
@@ -228,7 +238,8 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
                 .setName(name)
                 .setType(type)
                 .setStarted(new DateTime(startTimestamp))
-                .setLastActive(new DateTime(begin), new DateTime(end))
+                .setLastActive(begin != null ? new DateTime(begin) : null,
+                        end != null ? new DateTime(end) : null)
                 .setMap(map);
     }
 
@@ -250,9 +261,15 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     public void readFrom(StreamInput in) throws IOException {
         this.name = in.readOptionalString();
         this.type = in.readOptionalString();
-        this.started = new DateTime(in.readLong());
-        this.begin = new DateTime(in.readLong());
-        this.end = new DateTime(in.readLong());
+        if (in.readBoolean()) {
+            this.started = new DateTime(in.readLong());
+        }
+        if (in.readBoolean()) {
+            this.lastActiveBegin = new DateTime(in.readLong());
+        }
+        if (in.readBoolean()) {
+            this.lastActiveEnd = new DateTime(in.readLong());
+        }
         map = in.readMap();
     }
 
@@ -260,9 +277,24 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     public void writeTo(StreamOutput out) throws IOException {
         out.writeOptionalString(name);
         out.writeOptionalString(type);
-        out.writeLong(started != null ? started.getMillis() : 0L);
-        out.writeLong(begin != null ? begin.getMillis() : 0L);
-        out.writeLong(end != null ? end.getMillis() : 0L);
+        if (started != null) {
+            out.writeBoolean(true);
+            out.writeLong(started.getMillis());
+        } else {
+            out.writeBoolean(false);
+        }
+        if (lastActiveBegin != null) {
+            out.writeBoolean(true);
+            out.writeLong(lastActiveBegin.getMillis());
+        } else {
+            out.writeBoolean(false);
+        }
+        if (lastActiveEnd != null) {
+            out.writeBoolean(true);
+            out.writeLong(lastActiveEnd.getMillis());
+        } else {
+            out.writeBoolean(false);
+        }
         out.writeMap(map);
     }
 
