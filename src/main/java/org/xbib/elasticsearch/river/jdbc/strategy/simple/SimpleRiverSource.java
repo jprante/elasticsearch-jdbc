@@ -980,41 +980,46 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
                 statement.setLong(i, context.getLastRowCount());
             } else if ("$last.sql.start".equals(s)) {
                 if (context.getLastExecutionStartDate() == 0L) {
-                    Timestamp riverStarted = new Timestamp(context.getRiverState().getStarted().getMillis());
+                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
                     context.setLastExecutionStartDate(riverStarted.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastExecutionStartDate()), calendar);
             } else if ("$last.sql.end".equals(s)) {
                 if (context.getLastExecutionEndDate() == 0L) {
-                    Timestamp riverStarted = context.getRiverState() != null ?
-                            new Timestamp(context.getRiverState().getStarted().getMillis()) : null;
-                    context.setLastExecutionEndDate(riverStarted != null ? riverStarted.getTime() : new DateTime().getMillis());
+                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
+                    context.setLastExecutionEndDate(riverStarted.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastExecutionEndDate()), calendar);
             } else if ("$last.sql.sequence.start".equals(s)) {
                 if (context.getLastStartDate() == 0L) {
-                    Timestamp riverStarted = new Timestamp(context.getRiverState().getStarted().getMillis());
+                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
                     context.setLastStartDate(riverStarted.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastStartDate()), calendar);
             } else if ("$last.sql.sequence.end".equals(s)) {
                 if (context.getLastEndDate() == 0L) {
-                    Timestamp riverStarted = context.getRiverState() != null ?
-                            new Timestamp(context.getRiverState().getStarted().getMillis()) : null;
-                    context.setLastEndDate(riverStarted != null ? riverStarted.getTime() : new DateTime().getMillis());
+                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
+                    context.setLastEndDate(riverStarted.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastEndDate()), calendar);
             } else if ("$river.name".equals(s)) {
                 String name = context.getRiverState().getName();
                 statement.setString(i, name);
             } else if ("$river.state.started".equals(s)) {
-                Timestamp started = new Timestamp(context.getRiverState().getStarted().getMillis());
-                statement.setTimestamp(i, started, calendar);
+                Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
+                        context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
+                statement.setTimestamp(i, riverStarted, calendar);
             } else if ("$river.state.last_active_begin".equals(s)) {
-                Timestamp timestamp = new Timestamp(context.getRiverState().getLastActiveBegin().getMillis());
+                Timestamp timestamp = new Timestamp(context.getRiverState() != null && context.getRiverState().getLastActiveBegin() != null ?
+                        context.getRiverState().getLastActiveBegin().getMillis() : new DateTime().getMillis());
                 statement.setTimestamp(i, timestamp, calendar);
             } else if ("$river.state.last_active_end".equals(s)) {
-                Timestamp timestamp = new Timestamp(context.getRiverState().getLastActiveEnd().getMillis());
+                Timestamp timestamp = new Timestamp(context.getRiverState() != null && context.getRiverState().getLastActiveEnd() != null ?
+                        context.getRiverState().getLastActiveEnd().getMillis() : new DateTime().getMillis());
                 statement.setTimestamp(i, timestamp, calendar);
             } else if ("$river.state.counter".equals(s)) {
                 Integer counter = context.getRiverState().getCounter();
