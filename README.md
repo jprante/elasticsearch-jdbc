@@ -39,6 +39,11 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
+| Dec 23, 2014 | 1.4.0.6        | 1.4.0                 |
+| Dec 23, 2014 | 1.3.4.7        | 1.3.4                 |
+| Dec 23, 2014 | 1.2.4.5        | 1.2.4                 |
+| Dec 23, 2014 | 1.1.2.4        | 1.1.2                 |
+| Dec 23, 2014 | 1.0.3.4        | 1.0.3                 |
 | Dec 20, 2014 | 1.4.0.5        | 1.4.0                 |
 | Dec 20, 2014 | 1.3.4.6        | 1.3.4                 |
 | Dec 20, 2014 | 1.2.4.4        | 1.2.4                 |
@@ -49,9 +54,6 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 | Oct 19, 2014 | 1.2.4.2        | 1.2.4                 |
 | Oct 19, 2014 | 1.1.2.1        | 1.1.2                 |
 | Oct 19, 2014 | 1.0.3.1        | 1.0.3                 |
-|              | not supported  | 0.90.x                |
-|              | not supported  | 0.20.x                |
-|              | not supported  | 0.19.x                |
 
 ## Prerequisites
 
@@ -70,20 +72,6 @@ you will need to locate your `ES_HOME` directory.  The easiest way to do this is
 
 Change into the home directory to invoke the `./bin/plugin` command line tool.
 
-## Checksum
-
-| File                                               | SHA1                                     |
-| ---------------------------------------------------| -----------------------------------------|
-| elasticsearch-river-jdbc-1.4.0.3.Beta1-plugin.zip  | 396c32f9961a708fd2ceda77588456c0d4bbadd4 |
-| elasticsearch-river-jdbc-1.4.0.0.Beta1-plugin.zip  | 1f33c4aa7a312243a5c4dd3daab6ffacbe8372fa |
-| elasticsearch-river-jdbc-1.3.4.4-plugin.zip        | ffff5991f4d8d218dd9c1f5725ef16e42a9c3dfd |
-| elasticsearch-river-jdbc-1.3.4.1-plugin.zip        | 7589a3df46af8f1c8c0212d3254d29c4fedb2a98 |
-| elasticsearch-river-jdbc-1.2.4.2-plugin.zip        | 1a16b1cd27eb20d242d757dd84a168cd43ed9025 |
-| elasticsearch-river-jdbc-1.2.4.1-plugin.zip        | b34855bcf08dbb33a748cebee4c5440aa36d722c |
-| elasticsearch-river-jdbc-1.1.2.1-plugin.zip        | 2c666472acb58e982bb4306388e3564e6a39fa94 |
-| elasticsearch-river-jdbc-1.1.2.0-plugin.zip        | 06b83fc1557510ba2108f3d8adb7efa67f740ba1 |
-| elasticsearch-river-jdbc-1.0.3.1-plugin.zip        | 1065a30897beddd4e37cb63ca40500a02319dbe7 |
-| elasticsearch-river-jdbc-1.0.3.0-plugin.zip        | caa0a0b05c1c92d30c6acb4fd1c91f181938e43d |
 
 ## Project docs
 
@@ -145,17 +133,17 @@ Internet access (of course)
 
 1. Download elasticsearch (latest version that is compatible with JDBC plugin)
 
-	`curl -OL https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.3.4.zip`
+	`curl -OL https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.2.zip`
 
 2. Unpack zip file into you favorite elasticsearch directory, we call it $ES_HOME
 
 	`cd $ES_HOME`
 
-	`unzip path/to/elasticsearch-1.3.4.zip`
+	`unzip path/to/elasticsearch-1.4.2.zip`
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.4.4/elasticsearch-river-jdbc-1.3.4.4-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.6/elasticsearch-river-jdbc-1.4.0.6-plugin.zip`
 
 4. Download MySQL JDBC driver
 
