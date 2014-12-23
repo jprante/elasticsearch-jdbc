@@ -85,5 +85,20 @@ public class CronTest {
                         "lastdayOfMonth: false\n" +
                         "years: *\n"
         );
+
+        expression = new CronExpression("0/2 * * * * ?");
+        assertEquals(expression.getExpressionSummary(),
+                "seconds: 0\n" +
+                        "minutes: *\n" +
+                        "hours: *\n" +
+                        "daysOfMonth: *\n" +
+                        "months: *\n" +
+                        "daysOfWeek: ?\n" +
+                        "lastdayOfWeek: false\n" +
+                        "nearestWeekday: false\n" +
+                        "NthDayOfWeek: 0\n" +
+                        "lastdayOfMonth: false\n" +
+                        "years: *\n"
+        );
     }
 }
