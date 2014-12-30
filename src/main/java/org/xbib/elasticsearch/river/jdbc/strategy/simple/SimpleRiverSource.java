@@ -377,7 +377,12 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
                 if (connection != null) {
                     logger.debug("{} using read connection {} for executing query", this, connection);
                     statement = connection.createStatement();
-                    statement.setQueryTimeout(context.getQueryTimeout());
+                    try {
+                        statement.setQueryTimeout(context.getQueryTimeout());
+                    } catch (SQLFeatureNotSupportedException e) {
+                        // Postgresql does not support setQueryTimeout()
+                        logger.warn("driver does not support setQueryTimeout(), skipped");
+                    }
                     results = executeQuery(statement, command.getSQL());
                     if (context.shouldPrepareResultSetMetadata()) {
                         prepare(results.getMetaData());
