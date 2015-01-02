@@ -208,13 +208,19 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
             while (retries > 0) {
                 retries--;
                 try {
-                    Properties properties = new Properties();
-                    properties.put("user", user);
-                    properties.put("password", password);
-                    if (context.getConnectionProperties() != null) {
-                        properties.putAll(context.getConnectionProperties());
+                    if (user != null) {
+                        Properties properties = new Properties();
+                        properties.put("user", user);
+                        if (password != null) {
+                            properties.put("password", password);
+                        }
+                        if (context.getConnectionProperties() != null) {
+                            properties.putAll(context.getConnectionProperties());
+                        }
+                        readConnection = DriverManager.getConnection(url, properties);
+                    } else {
+                        readConnection = DriverManager.getConnection(url);
                     }
-                    readConnection = DriverManager.getConnection(url, properties);
                     DatabaseMetaData metaData = readConnection.getMetaData();
                     if (context.shouldPrepareDatabaseMetadata()) {
                         prepare(metaData);
@@ -266,13 +272,19 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
             while (retries > 0) {
                 retries--;
                 try {
-                    Properties properties = new Properties();
-                    properties.put("user", user);
-                    properties.put("password", password);
-                    if (context.getConnectionProperties() != null) {
-                        properties.putAll(context.getConnectionProperties());
+                    if (user != null) {
+                        Properties properties = new Properties();
+                        properties.put("user", user);
+                        if (password != null) {
+                            properties.put("password", password);
+                        }
+                        if (context.getConnectionProperties() != null) {
+                            properties.putAll(context.getConnectionProperties());
+                        }
+                        writeConnection = DriverManager.getConnection(url, properties);
+                    } else {
+                        writeConnection = DriverManager.getConnection(url);
                     }
-                    writeConnection = DriverManager.getConnection(url, properties);
                     // many drivers don't like autocommit=true
                     writeConnection.setAutoCommit(context.getAutoCommit());
                     return writeConnection;
