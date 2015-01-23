@@ -260,7 +260,7 @@ Quartz cron expression format (see below).
 
 `max_bulk_actions` - the length of each bulk index request submitted (default: 10000)
 
-`max_concurrrent_bulk_requests` - the maximum number of concurrent bulk requests (default: 2 * number of CPU cores)
+`max_concurrent_bulk_requests` - the maximum number of concurrent bulk requests (default: 2 * number of CPU cores)
 
 `max_bulk_volume` - a byte size parameter for the maximum volume allowed for a bulk request (default: "10m")
 
