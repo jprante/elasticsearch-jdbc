@@ -39,6 +39,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
+| Jan 25, 2015 | 1.4.0.9        | 1.4.0                 |
 | Jan  2, 2015 | 1.4.0.8        | 1.4.0                 |
 | Dec 30, 2014 | 1.4.0.7        | 1.4.0                 |
 | Dec 23, 2014 | 1.4.0.6        | 1.4.0                 |
@@ -63,7 +64,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.8/elasticsearch-river-jdbc-1.4.0.8-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.9/elasticsearch-river-jdbc-1.4.0.9-plugin.zip
 
 Do not forget to restart the node after installing.
 
