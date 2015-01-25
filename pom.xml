@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
     <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.4.0.6</version>
+    <version>1.4.0.9</version>
 
     <packaging>jar</packaging>
 
@@ -82,6 +82,14 @@
             <version>${elasticsearch.version}</version>
             <type>jar</type>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.xbib.jdbc</groupId>
+            <artifactId>jdbc-driver-csv</artifactId>
+            <version>1.0.0</version>
+            <type>jar</type>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
