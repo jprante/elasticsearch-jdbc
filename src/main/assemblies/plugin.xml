@@ -13,6 +13,7 @@
             <scope>runtime</scope>
             <includes>
                 <include>org.xbib.elasticsearch.plugin</include>
+                <include>org.xbib.jdbc</include>
             </includes>
         </dependencySet>
     </dependencySets>

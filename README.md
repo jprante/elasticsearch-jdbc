@@ -39,6 +39,9 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
+| Jan 25, 2015 | 1.4.0.9        | 1.4.0                 |
+| Jan  2, 2015 | 1.4.0.8        | 1.4.0                 |
+| Dec 30, 2014 | 1.4.0.7        | 1.4.0                 |
 | Dec 23, 2014 | 1.4.0.6        | 1.4.0                 |
 | Dec 23, 2014 | 1.3.4.7        | 1.3.4                 |
 | Dec 23, 2014 | 1.2.4.5        | 1.2.4                 |
@@ -61,7 +64,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.5/elasticsearch-river-jdbc-1.4.0.5-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.9/elasticsearch-river-jdbc-1.4.0.9-plugin.zip
 
 Do not forget to restart the node after installing.
 
@@ -151,7 +154,10 @@ Internet access (of course)
 
 5. Add MySQL JDBC driver jar to JDBC river plugin directory and set access permission for .jar file (at least chmod 644)
 
+	`unzip mysql-connector-java-5.1.33.zip`
+
 	`cp mysql-connector-java-5.1.33-bin.jar $ES_HOME/plugins/jdbc/`
+
 	`chmod 644 $ES_HOME/plugins/jdbc/*`
 
 6. Start elasticsearch from terminal window
