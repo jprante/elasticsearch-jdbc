@@ -39,6 +39,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
+| Feb 19, 2015 | 1.4.0.10       | 1.4.0                 |
 | Jan 25, 2015 | 1.4.0.9        | 1.4.0                 |
 | Jan  2, 2015 | 1.4.0.8        | 1.4.0                 |
 | Dec 30, 2014 | 1.4.0.7        | 1.4.0                 |
@@ -64,7 +65,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.9/elasticsearch-river-jdbc-1.4.0.9-plugin.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.10/elasticsearch-river-jdbc-1.4.0.10.zip
 
 Do not forget to restart the node after installing.
 
@@ -146,7 +147,7 @@ Internet access (of course)
 
 3. Install JDBC plugin
 
-	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.6/elasticsearch-river-jdbc-1.4.0.6-plugin.zip`
+	`./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.4.0.10/elasticsearch-river-jdbc-1.4.0.10.zip`
 
 4. Download MySQL JDBC driver
 
