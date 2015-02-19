@@ -1,0 +1,18 @@
+{
+    "jdbc" :{
+        "url" : "jdbc:oracle:thin:@//localhost:1521/test?autoReconnect=true",
+        "user" : "test",
+        "password" : "test",
+        "sql" : [
+            {
+                "statement" : "select * from \"products\""
+            },
+            {
+                "statement" : "delete from \"products\" where \"_job\" = ?",
+                "parameter" : [ "$job" ]
+            }
+        ],
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

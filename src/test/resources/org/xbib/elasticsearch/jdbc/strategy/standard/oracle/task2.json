@@ -1,0 +1,10 @@
+{
+    "jdbc" : {
+        "url" : "jdbc:oracle:thin:@//localhost:1521/test?autoReconnect=true",
+        "user" : "test",
+        "password" : "test",
+        "sql" : "select * from \"products\"",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:sqlite:file::memory:?cache=shared",
+        "user" : "",
+        "password" : "",
+        "sql" : "select * from \"products\"",
+        "maxrows" : 50,
+        "autocommit" : true,
+        "index" : "my_index",
+        "type" : "my_type",
+        "index_settings" : {
+            "index" : {
+                "number_of_shards" : 2
+            }
+        },
+        "type_mapping" : {
+            "my_type" : {
+                "date_detection" : false,
+                "_timestamp" : { "enabled" : true, "store" : true }
+            }
+        }
+    }
+}

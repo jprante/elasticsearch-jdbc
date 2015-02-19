@@ -1,0 +1,22 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:mysql://localhost:3306/test",
+        "user" : "",
+        "password" : "",
+        "sql" : [
+            {
+                "callable" : true,
+                "statement" : "{call GET_SUPPLIER_OF_COFFEE(?,?)}",
+                "parameter" : [
+                     "Colombian"
+                ],
+                "register" : {
+                     "mySupplierName" : { "pos" : 2, "type" : "varchar" }
+                }
+            }
+        ],
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

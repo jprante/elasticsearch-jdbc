@@ -6,15 +6,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.xbib.elasticsearch.plugin</groupId>
-    <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.4.0.9</version>
+    <artifactId>elasticsearch-plugin-jdbc</artifactId>
+    <version>1.4.4.0</version>
 
     <packaging>jar</packaging>
 
-    <name>elasticsearch-river-jdbc</name>
-    <description>JDBC River for Elasticsearch</description>
+    <name>elasticsearch-plugin-jdbc</name>
+    <description>JDBC Plugin for Elasticsearch</description>
 
-    <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
+    <url>http://github.com/jprante/elasticsearch-plugin-jdbc</url>
 
     <inceptionYear>2012</inceptionYear>
 
@@ -35,14 +35,14 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</connection>
-        <developerConnection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</developerConnection>
-        <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
+        <connection>scm:git:git@github.com:jprante/elasticsearch-plugin-jdbc.git</connection>
+        <developerConnection>scm:git:git@github.com:jprante/elasticsearch-plugin-jdbc.git</developerConnection>
+        <url>http://github.com/jprante/elasticsearch-plugin-jdbc</url>
     </scm>
 
     <issueManagement>
         <system>Github Issue Tracker</system>
-        <url>https://github.com/jprante/elasticsearch-river-jdbc/issues</url>
+        <url>https://github.com/jprante/elasticsearch-plugin-jdbc/issues</url>
     </issueManagement>
 
     <distributionManagement>
@@ -72,7 +72,7 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
-        <elasticsearch.version>1.4.0</elasticsearch.version>
+        <elasticsearch.version>1.4.4</elasticsearch.version>
     </properties>
 
     <dependencies>
@@ -171,7 +171,7 @@
                     <properties>
                         <property>
                             <name>listener</name>
-                            <value>org.xbib.elasticsearch.river.jdbc.Listener</value>
+                            <value>org.xbib.elasticsearch.jdbc.support.TestListener</value>
                         </property>
                     </properties>
                 </configuration>
@@ -570,18 +570,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-
-        <profile>
-            <id>bintray</id>
-            <activation><activeByDefault>false</activeByDefault></activation>
-            <distributionManagement>
-                <repository>
-                    <id>bintray-jprante-elasticsearch-plugins-elasticsearch-river-jdbc</id>
-                    <name>jprante-elasticsearch-plugins-elasticsearch-river-jdcb</name>
-                    <url>https://api.bintray.com/maven/jprante/elasticsearch-plugins/elasticsearch-river-jdbc</url>
-                </repository>
-            </distributionManagement>
         </profile>
 
         <profile>

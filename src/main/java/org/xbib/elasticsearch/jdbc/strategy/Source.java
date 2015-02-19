@@ -1,0 +1,86 @@
+/*
+ * Copyright (C) 2014 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.xbib.elasticsearch.jdbc.strategy;
+
+import java.io.IOException;
+
+public interface Source<C extends Context> {
+
+    /**
+     * The strategy this source supports.
+     *
+     * @return the strategy as a string
+     */
+    String strategy();
+
+    /**
+     * Create new source instance
+     *
+     * @return a new source instance
+     */
+    Source<C> newInstance();
+
+    /**
+     * Set the context
+     *
+     * @param context the context
+     * @return this source
+     */
+    Source<C> setContext(C context);
+
+    /**
+     * Executed before fetch() is executed
+     *
+     * @throws Exception
+     */
+    void beforeFetch() throws Exception;
+
+    /**
+     * Fetch a data portion from the database and pass it to the task
+     * for firther processing.
+     *
+     * @throws Exception when execution gives an error
+     */
+    void fetch() throws Exception;
+
+    /**
+     * Executed after fetch() has been executed or threw an exception.
+     *
+     * @throws Exception
+     */
+    void afterFetch() throws Exception;
+
+    /**
+     * Suspend source
+     *
+     * @throws Exception
+     */
+    void suspend() throws Exception;
+
+    /**
+     * Resume source
+     *
+     * @throws Exception
+     */
+    void resume() throws Exception;
+
+    /**
+     * Shutdown source
+     *
+     * @throws java.io.IOException
+     */
+    void shutdown() throws IOException;
+}
