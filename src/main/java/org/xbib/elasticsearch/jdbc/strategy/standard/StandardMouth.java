@@ -27,12 +27,12 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
-import org.xbib.elasticsearch.jdbc.client.Ingest;
-import org.xbib.elasticsearch.jdbc.client.IngestFactory;
-import org.xbib.elasticsearch.jdbc.client.Metric;
+import org.xbib.elasticsearch.common.client.Ingest;
+import org.xbib.elasticsearch.common.client.IngestFactory;
+import org.xbib.elasticsearch.common.client.Metric;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
-import org.xbib.elasticsearch.jdbc.util.ControlKeys;
-import org.xbib.elasticsearch.jdbc.util.IndexableObject;
+import org.xbib.elasticsearch.common.util.ControlKeys;
+import org.xbib.elasticsearch.common.util.IndexableObject;
 
 import java.io.IOException;
 import java.util.Map;

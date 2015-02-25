@@ -18,7 +18,7 @@ package org.xbib.elasticsearch.jdbc.strategy;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.metrics.MeterMetric;
 import org.elasticsearch.common.settings.Settings;
-import org.xbib.elasticsearch.jdbc.client.IngestFactory;
+import org.xbib.elasticsearch.common.client.IngestFactory;
 
 import java.util.Queue;
 

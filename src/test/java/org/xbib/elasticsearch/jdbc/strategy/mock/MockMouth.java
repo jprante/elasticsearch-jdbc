@@ -3,9 +3,9 @@ package org.xbib.elasticsearch.jdbc.strategy.mock;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.settings.Settings;
-import org.xbib.elasticsearch.jdbc.client.IngestFactory;
-import org.xbib.elasticsearch.jdbc.client.Metric;
-import org.xbib.elasticsearch.jdbc.util.IndexableObject;
+import org.xbib.elasticsearch.common.client.IngestFactory;
+import org.xbib.elasticsearch.common.client.Metric;
+import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
 
 import java.io.IOException;

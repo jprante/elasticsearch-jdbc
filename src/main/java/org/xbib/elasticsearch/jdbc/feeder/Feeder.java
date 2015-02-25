@@ -18,13 +18,13 @@ package org.xbib.elasticsearch.jdbc.feeder;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateRequestBuilder;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateResponse;
-import org.xbib.elasticsearch.jdbc.pipeline.Pipeline;
-import org.xbib.elasticsearch.jdbc.pipeline.PipelineProvider;
-import org.xbib.elasticsearch.jdbc.pipeline.PipelineRequest;
-import org.xbib.elasticsearch.jdbc.pipeline.executor.MetricSimplePipelineExecutor;
-import org.xbib.elasticsearch.jdbc.state.State;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequestBuilder;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
+import org.xbib.elasticsearch.common.pipeline.Pipeline;
+import org.xbib.elasticsearch.common.pipeline.PipelineProvider;
+import org.xbib.elasticsearch.common.pipeline.PipelineRequest;
+import org.xbib.elasticsearch.common.pipeline.executor.MetricSimplePipelineExecutor;
+import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Flow;
 
@@ -169,9 +169,9 @@ public class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
      * At last, all pipeline sources and mouths are resumed.
      */
     public void checkForSuspension() {
-        GetStateRequestBuilder stateRequestBuilder = new GetStateRequestBuilder(flow.getClient().admin().cluster())
+        GetTaskRequestBuilder stateRequestBuilder = new GetTaskRequestBuilder(flow.getClient().admin().cluster())
                 .setName(flow.getName());
-        GetStateResponse stateResponse = stateRequestBuilder.execute().actionGet();
+        GetTaskResponse stateResponse = stateRequestBuilder.execute().actionGet();
         State state = stateResponse.getState();
         if (state.isSuspended()) {
             // suspend all sources and mouths
@@ -195,7 +195,7 @@ public class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             // wait for resume
             try {
                 do {
-                    stateRequestBuilder = new GetStateRequestBuilder(flow.getClient().admin().cluster())
+                    stateRequestBuilder = new GetTaskRequestBuilder(flow.getClient().admin().cluster())
                             .setName(flow.getName());
                     stateResponse = stateRequestBuilder.execute().actionGet();
                     state = stateResponse.getState();

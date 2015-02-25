@@ -22,19 +22,21 @@ import org.elasticsearch.common.inject.Module;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.AbstractPlugin;
 import org.elasticsearch.rest.RestModule;
-import org.xbib.elasticsearch.action.jdbc.execute.ExecuteTaskAction;
-import org.xbib.elasticsearch.action.jdbc.execute.TransportExecuteTaskAction;
-import org.xbib.elasticsearch.action.jdbc.state.delete.DeleteStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.delete.TransportDeleteStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.get.TransportGetStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.post.PostStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.post.TransportPostStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.put.PutStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.put.TransportPutStateAction;
-import org.xbib.elasticsearch.jdbc.state.cluster.StateModule;
-import org.xbib.elasticsearch.jdbc.state.cluster.StateService;
-import org.xbib.elasticsearch.rest.action.jdbc.RestRunAction;
+import org.xbib.elasticsearch.action.jdbc.task.ExecuteTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.TransportExecuteTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.delete.DeleteTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.delete.TransportDeleteTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.get.TransportGetTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.post.TransportPostStateAction;
+import org.xbib.elasticsearch.action.jdbc.task.put.PutStateAction;
+import org.xbib.elasticsearch.action.jdbc.task.put.TransportPutStateAction;
+import org.xbib.elasticsearch.common.state.cluster.StateModule;
+import org.xbib.elasticsearch.common.state.cluster.StateService;
+import org.xbib.elasticsearch.common.task.cluster.ClusterTaskModule;
+import org.xbib.elasticsearch.common.task.cluster.ClusterTaskService;
+import org.xbib.elasticsearch.rest.action.jdbc.RestTaskAction;
 import org.xbib.elasticsearch.rest.action.jdbc.RestStateAction;
 
 import java.util.Collection;
@@ -65,9 +67,10 @@ public class JDBCPlugin extends AbstractPlugin {
     @Override
     public Collection<Class<? extends Module>> modules() {
         Collection<Class<? extends Module>> modules = newArrayList();
-        // if we are in feeder node mode, we skip initiating the server-side only state module
+        // if we are in feeder mode, we skip initiating the server-side only state module
         if (!"feeder".equals(settings.get("name"))) {
             modules.add(StateModule.class);
+            modules.add(ClusterTaskModule.class);
         }
         return modules;
     }
@@ -75,23 +78,24 @@ public class JDBCPlugin extends AbstractPlugin {
     @Override
     public Collection<Class<? extends LifecycleComponent>> services() {
         Collection<Class<? extends LifecycleComponent>> services = newArrayList();
-        // if we are in feeder node mode, we skip starting the server-side only state module
+        // if we are in feeder mode, we skip starting the server-side only state module
         if (!"feeder".equals(settings.get("name"))) {
             services.add(StateService.class);
+            services.add(ClusterTaskService.class);
         }
         return services;
     }
 
     public void onModule(ActionModule module) {
-        module.registerAction(DeleteStateAction.INSTANCE, TransportDeleteStateAction.class);
+        module.registerAction(DeleteTaskAction.INSTANCE, TransportDeleteTaskAction.class);
         module.registerAction(PutStateAction.INSTANCE, TransportPutStateAction.class);
-        module.registerAction(PostStateAction.INSTANCE, TransportPostStateAction.class);
-        module.registerAction(GetStateAction.INSTANCE, TransportGetStateAction.class);
+        module.registerAction(PostTaskAction.INSTANCE, TransportPostStateAction.class);
+        module.registerAction(GetTaskAction.INSTANCE, TransportGetTaskAction.class);
         module.registerAction(ExecuteTaskAction.INSTANCE, TransportExecuteTaskAction.class);
     }
 
     public void onModule(RestModule module) {
-        module.addRestAction(RestRunAction.class);
+        module.addRestAction(RestTaskAction.class);
         module.addRestAction(RestStateAction.class);
     }
 

@@ -2,16 +2,16 @@ package org.xbib.elasticsearch.jdbc.strategy.mock;
 
 import org.elasticsearch.common.metrics.MeterMetric;
 import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.jdbc.state.State;
-import org.xbib.elasticsearch.jdbc.util.SQLCommand;
+import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.jdbc.strategy.Source;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
-import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
+import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.util.List;
 import java.util.Map;
 
-public class MockContext implements Context {
+public class MockContext implements Context<Source,Mouth> {
 
     @Override
     public Context setDefinition(Map<String, Object> definition) {
@@ -34,12 +34,12 @@ public class MockContext implements Context {
     }
 
     @Override
-    public Context setSource(JDBCSource JDBCSource) {
+    public Context setSource(Source source) {
         return this;
     }
 
     @Override
-    public JDBCSource getSource() {
+    public Source getSource() {
         return null;
     }
 

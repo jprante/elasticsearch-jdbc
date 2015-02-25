@@ -17,8 +17,8 @@ package org.xbib.elasticsearch.jdbc.feeder;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.jdbc.pipeline.Pipeline;
-import org.xbib.elasticsearch.jdbc.pipeline.element.ContextPipelineElement;
+import org.xbib.elasticsearch.common.pipeline.Pipeline;
+import org.xbib.elasticsearch.common.pipeline.element.ContextPipelineElement;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Flow;
 

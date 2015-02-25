@@ -2,7 +2,7 @@ package org.xbib.elasticsearch.jdbc.support;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.jdbc.util.MouthKeyValueStreamListener;
+import org.xbib.elasticsearch.common.util.MouthKeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.mock.MockMouth;
 
 import java.util.Arrays;

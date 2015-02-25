@@ -1,7 +1,7 @@
 package org.xbib.elasticsearch.jdbc.strategy.mock;
 
-import org.xbib.elasticsearch.jdbc.keyvalue.KeyValueStreamListener;
-import org.xbib.elasticsearch.jdbc.util.SQLCommand;
+import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.common.util.SQLCommand;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 
 import java.io.IOException;

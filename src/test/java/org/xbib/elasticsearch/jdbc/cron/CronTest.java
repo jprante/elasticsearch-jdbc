@@ -1,7 +1,7 @@
 package org.xbib.elasticsearch.jdbc.cron;
 
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.jdbc.cron.CronExpression;
+import org.xbib.elasticsearch.common.cron.CronExpression;
 
 import static org.testng.Assert.assertEquals;
 

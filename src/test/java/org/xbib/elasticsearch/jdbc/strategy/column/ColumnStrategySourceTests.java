@@ -7,11 +7,11 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.jdbc.state.State;
+import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.jdbc.strategy.mock.MockMouth;
-import org.xbib.elasticsearch.jdbc.util.IndexableObject;
-import org.xbib.elasticsearch.jdbc.util.PlainIndexableObject;
-import org.xbib.elasticsearch.jdbc.util.SQLCommand;
+import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.common.util.PlainIndexableObject;
+import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.io.IOException;
 import java.sql.Connection;

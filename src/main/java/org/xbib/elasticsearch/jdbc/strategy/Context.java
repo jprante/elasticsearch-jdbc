@@ -2,8 +2,8 @@ package org.xbib.elasticsearch.jdbc.strategy;
 
 import org.elasticsearch.common.metrics.MeterMetric;
 import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.jdbc.state.State;
-import org.xbib.elasticsearch.jdbc.util.SQLCommand;
+import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.util.List;
 import java.util.Map;

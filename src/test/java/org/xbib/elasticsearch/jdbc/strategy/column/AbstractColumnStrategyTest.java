@@ -10,10 +10,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateRequest;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateResponse;
-import org.xbib.elasticsearch.jdbc.state.State;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequest;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
+import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.jdbc.support.AbstractNodeTestHelper;
 
 import java.io.BufferedReader;
@@ -187,15 +187,15 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
 
     public static State waitFor(Client client, String name, int seconds)
             throws InterruptedException, IOException {
-        GetStateRequest stateRequest = new GetStateRequest()
+        GetTaskRequest stateRequest = new GetTaskRequest()
                 .setName(name);
-        GetStateResponse stateResponse = client.admin().cluster()
-                .execute(GetStateAction.INSTANCE, stateRequest).actionGet();
+        GetTaskResponse stateResponse = client.admin().cluster()
+                .execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
         logger.info("waitFor {}", name);
         while (seconds-- > 0 && stateResponse.exists(name)) {
             Thread.sleep(1000L);
             try {
-                stateResponse = client.admin().cluster().execute(GetStateAction.INSTANCE, stateRequest).actionGet();
+                stateResponse = client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
                 logger.info("waitFor state={}", stateResponse.getState());
             } catch (IndexMissingException e) {
                 logger.warn("index missing");
@@ -209,10 +209,10 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
 
     public static State waitForActive(Client client, String name, int seconds) throws InterruptedException, IOException {
         long now = System.currentTimeMillis();
-        GetStateRequest stateRequest = new GetStateRequest()
+        GetTaskRequest stateRequest = new GetTaskRequest()
                 .setName(name);
-        GetStateResponse stateResponse = client.admin().cluster()
-                .execute(GetStateAction.INSTANCE, stateRequest).actionGet();
+        GetTaskResponse stateResponse = client.admin().cluster()
+                .execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
         State state = stateResponse.getState();
         long t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
         logger.info("waitForActive: now={} t0={} t0<now={} state={}",
@@ -220,7 +220,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         while (seconds-- > 0 && t0 == 0 && t0 < now) {
             Thread.sleep(1000L);
             try {
-                stateResponse = client.admin().cluster().execute(GetStateAction.INSTANCE, stateRequest).actionGet();
+                stateResponse = client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
                 state = stateResponse.getState();
                 t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
             } catch (IndexMissingException e) {
@@ -237,10 +237,10 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
 
     public static State waitForInactive(Client client, String name, int seconds) throws InterruptedException, IOException {
         long now = System.currentTimeMillis();
-        GetStateRequest stateRequest = new GetStateRequest()
+        GetTaskRequest stateRequest = new GetTaskRequest()
                 .setName(name);
-        GetStateResponse stateResponse = client.admin().cluster()
-                .execute(GetStateAction.INSTANCE, stateRequest).actionGet();
+        GetTaskResponse stateResponse = client.admin().cluster()
+                .execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
         State state = stateResponse.getState();
         long t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
         long t1 = state != null ? state.getLastActiveEnd().getMillis() : 0L;
@@ -249,7 +249,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         while (seconds-- > 0 && t0 < now && t1 - t0 <= 0L) {
             Thread.sleep(1000L);
             try {
-                stateResponse = client.admin().cluster().execute(GetStateAction.INSTANCE, stateRequest).actionGet();
+                stateResponse = client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
                 state = stateResponse.getState();
                 t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
                 t1 = state != null ? state.getLastActiveEnd().getMillis() : 0L;

@@ -18,11 +18,11 @@ package org.xbib.elasticsearch.jdbc.strategy.column;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.xbib.elasticsearch.jdbc.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource;
-import org.xbib.elasticsearch.jdbc.util.IndexableObject;
-import org.xbib.elasticsearch.jdbc.util.MouthKeyValueStreamListener;
-import org.xbib.elasticsearch.jdbc.util.SQLCommand;
+import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.common.util.MouthKeyValueStreamListener;
+import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.io.IOException;
 import java.sql.Connection;

@@ -16,9 +16,9 @@
 package org.xbib.elasticsearch.jdbc.strategy;
 
 import org.elasticsearch.common.settings.Settings;
-import org.xbib.elasticsearch.jdbc.client.IngestFactory;
-import org.xbib.elasticsearch.jdbc.client.Metric;
-import org.xbib.elasticsearch.jdbc.util.IndexableObject;
+import org.xbib.elasticsearch.common.client.IngestFactory;
+import org.xbib.elasticsearch.common.client.Metric;
+import org.xbib.elasticsearch.common.util.IndexableObject;
 
 import java.io.IOException;
 import java.util.Map;

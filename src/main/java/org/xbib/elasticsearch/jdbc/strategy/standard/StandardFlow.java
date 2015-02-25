@@ -25,24 +25,24 @@ import org.elasticsearch.common.settings.loader.JsonSettingsLoader;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateRequestBuilder;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateResponse;
-import org.xbib.elasticsearch.action.jdbc.state.post.PostStateRequestBuilder;
-import org.xbib.elasticsearch.action.jdbc.state.post.PostStateResponse;
-import org.xbib.elasticsearch.action.jdbc.state.put.PutStateRequestBuilder;
-import org.xbib.elasticsearch.action.jdbc.state.put.PutStateResponse;
-import org.xbib.elasticsearch.jdbc.client.IngestFactory;
-import org.xbib.elasticsearch.jdbc.client.Metric;
-import org.xbib.elasticsearch.jdbc.state.State;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequestBuilder;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
+import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskRequestBuilder;
+import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskResponse;
+import org.xbib.elasticsearch.action.jdbc.task.put.PutStateRequestBuilder;
+import org.xbib.elasticsearch.action.jdbc.task.put.PutStateResponse;
+import org.xbib.elasticsearch.common.client.IngestFactory;
+import org.xbib.elasticsearch.common.client.Metric;
+import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Flow;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
-import org.xbib.elasticsearch.jdbc.util.DurationFormatUtil;
-import org.xbib.elasticsearch.jdbc.util.LocaleUtil;
-import org.xbib.elasticsearch.jdbc.util.SQLCommand;
-import org.xbib.elasticsearch.jdbc.util.StrategyLoader;
-import org.xbib.elasticsearch.jdbc.util.VolumeFormatUtil;
+import org.xbib.elasticsearch.common.util.DurationFormatUtil;
+import org.xbib.elasticsearch.common.util.LocaleUtil;
+import org.xbib.elasticsearch.common.util.SQLCommand;
+import org.xbib.elasticsearch.common.util.StrategyLoader;
+import org.xbib.elasticsearch.common.util.VolumeFormatUtil;
 
 import java.io.IOException;
 import java.text.NumberFormat;
@@ -156,9 +156,9 @@ public class StandardFlow<C extends Context> implements Flow<C> {
      */
     protected void beforeFetch(C context) throws Exception {
         logger.debug("before fetch: getting state for {}", name);
-        GetStateRequestBuilder stateRequestBuilder = new GetStateRequestBuilder(client.admin().cluster())
+        GetTaskRequestBuilder stateRequestBuilder = new GetTaskRequestBuilder(client.admin().cluster())
                 .setName(name);
-        GetStateResponse stateResponse = stateRequestBuilder.execute().actionGet();
+        GetTaskResponse stateResponse = stateRequestBuilder.execute().actionGet();
         State state = stateResponse.getState();
         // if state was not defined yet, define it now
         if (state == null) {
@@ -183,11 +183,11 @@ public class StandardFlow<C extends Context> implements Flow<C> {
                 source, mouth, context);
         Integer counter = state.getCounter() + 1;
         context.setState(state.setCounter(counter).setLastActive(new DateTime(), null));
-        PostStateRequestBuilder postStateRequestBuilder = new PostStateRequestBuilder(client.admin().cluster())
+        PostTaskRequestBuilder postStateRequestBuilder = new PostTaskRequestBuilder(client.admin().cluster())
                 .setName(name)
                 .setState(context.getState());
-        PostStateResponse postStateResponse = postStateRequestBuilder.execute().actionGet();
-        if (!postStateResponse.isAcknowledged()) {
+        PostTaskResponse postTaskResponse = postStateRequestBuilder.execute().actionGet();
+        if (!postTaskResponse.isAcknowledged()) {
             logger.warn("post state not acknowledged: {}", name);
         }
         logger.debug("before fetch: state posted = {}", state);
@@ -252,11 +252,11 @@ public class StandardFlow<C extends Context> implements Flow<C> {
         // set activity
         State state = context.getState()
                 .setLastActive(context.getState().getLastActiveBegin(), new DateTime());
-        PostStateRequestBuilder postStateRequestBuilder = new PostStateRequestBuilder(client.admin().cluster())
+        PostTaskRequestBuilder postStateRequestBuilder = new PostTaskRequestBuilder(client.admin().cluster())
                 .setName(name)
                 .setState(state);
-        PostStateResponse postStateResponse = postStateRequestBuilder.execute().actionGet();
-        if (!postStateResponse.isAcknowledged()) {
+        PostTaskResponse postTaskResponse = postStateRequestBuilder.execute().actionGet();
+        if (!postTaskResponse.isAcknowledged()) {
             logger.warn("post state not acknowledged: {}", name);
         }
         logger.debug("after fetch: state posted = {}", state);

@@ -15,7 +15,7 @@
  */
 package org.xbib.elasticsearch.jdbc.feeder;
 
-import org.xbib.elasticsearch.jdbc.classloader.uri.URIClassLoader;
+import org.xbib.elasticsearch.common.classloader.uri.URIClassLoader;
 
 import java.io.File;
 import java.lang.reflect.Method;

@@ -3,7 +3,7 @@ package org.xbib.elasticsearch.jdbc.support;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.format.DateTimeFormat;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.jdbc.util.PlainIndexableObject;
+import org.xbib.elasticsearch.common.util.PlainIndexableObject;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardMouth;
 
 import java.io.IOException;

@@ -27,16 +27,16 @@ import org.elasticsearch.rest.RestHandler;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.rest.action.support.RestToXContentListener;
-import org.xbib.elasticsearch.action.jdbc.state.delete.DeleteStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.delete.DeleteStateRequest;
-import org.xbib.elasticsearch.action.jdbc.state.delete.DeleteStateResponse;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateRequest;
-import org.xbib.elasticsearch.action.jdbc.state.get.GetStateResponse;
-import org.xbib.elasticsearch.action.jdbc.state.post.PostStateAction;
-import org.xbib.elasticsearch.action.jdbc.state.post.PostStateRequest;
-import org.xbib.elasticsearch.action.jdbc.state.post.PostStateResponse;
-import org.xbib.elasticsearch.jdbc.state.State;
+import org.xbib.elasticsearch.action.jdbc.task.delete.DeleteTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.delete.DeleteTaskRequest;
+import org.xbib.elasticsearch.action.jdbc.task.delete.DeleteTaskResponse;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequest;
+import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
+import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskRequest;
+import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskResponse;
+import org.xbib.elasticsearch.common.state.State;
 
 import java.io.IOException;
 
@@ -75,10 +75,10 @@ public class RestStateAction extends BaseRestHandler {
         public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
             try {
                 String name = request.param("name");
-                GetStateRequest stateRequest = new GetStateRequest();
+                GetTaskRequest stateRequest = new GetTaskRequest();
                 stateRequest.setName(name);
-                client.admin().cluster().execute(GetStateAction.INSTANCE, stateRequest,
-                        new RestToXContentListener<GetStateResponse>(channel));
+                client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest,
+                        new RestToXContentListener<GetTaskResponse>(channel));
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
                 try {
@@ -107,24 +107,24 @@ public class RestStateAction extends BaseRestHandler {
         public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
             try {
                 String name = request.param("name");
-                PostStateRequest postStateRequest = new PostStateRequest();
-                postStateRequest.setName(name);
+                PostTaskRequest postTaskRequest = new PostTaskRequest();
+                postTaskRequest.setName(name);
                 if (request.hasContent()) {
                     State state = new State().setName(name);
                     state.setMap(XContentHelper.convertToMap(request.content(), true).v2());
-                    postStateRequest.setState(state);
+                    postTaskRequest.setState(state);
                 }
                 if (abort) {
-                    postStateRequest.setAbort();
+                    postTaskRequest.setAbort();
                 }
                 if (suspend) {
-                    postStateRequest.setSuspend();
+                    postTaskRequest.setSuspend();
                 }
                 if (resume) {
-                    postStateRequest.setResume();
+                    postTaskRequest.setResume();
                 }
-                client.admin().cluster().execute(PostStateAction.INSTANCE, postStateRequest,
-                        new RestToXContentListener<PostStateResponse>(channel));
+                client.admin().cluster().execute(PostTaskAction.INSTANCE, postTaskRequest,
+                        new RestToXContentListener<PostTaskResponse>(channel));
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
                 try {
@@ -143,10 +143,10 @@ public class RestStateAction extends BaseRestHandler {
         public void handleRequest(RestRequest request, RestChannel channel) throws Exception {
             try {
                 String name = request.param("name");
-                DeleteStateRequest stateRequest = new DeleteStateRequest();
+                DeleteTaskRequest stateRequest = new DeleteTaskRequest();
                 stateRequest.setName(name);
-                client.admin().cluster().execute(DeleteStateAction.INSTANCE, stateRequest,
-                        new RestToXContentListener<DeleteStateResponse>(channel));
+                client.admin().cluster().execute(DeleteTaskAction.INSTANCE, stateRequest,
+                        new RestToXContentListener<DeleteTaskResponse>(channel));
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
                 try {
