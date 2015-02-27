@@ -74,16 +74,14 @@ public abstract class BaseIngestTransportClient extends BaseTransportClient
         }
         CreateIndexRequestBuilder createIndexRequestBuilder =
                 new CreateIndexRequestBuilder(client.admin().indices()).setIndex(index);
-        Settings concreteSettings;
-        if (settings == null && getSettings() != null) {
-            concreteSettings = getSettings();
-        } else if (settings != null) {
+        Settings concreteSettings = null;
+        if (settings != null) {
             concreteSettings = settings;
-        } else {
-            concreteSettings = null;
+        } else if (getSettings() != null) {
+            concreteSettings = getSettings();
         }
         if (concreteSettings != null) {
-            createIndexRequestBuilder.setSettings(getSettings());
+            createIndexRequestBuilder.setSettings(concreteSettings);
         }
         if (mappings == null && getMappings() != null) {
             for (String type : getMappings().keySet()) {
