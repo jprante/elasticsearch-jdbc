@@ -357,17 +357,22 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
     @Override
     public void afterFetch() throws Exception {
         context.setLastEndDate(new DateTime().getMillis());
-        shutdown();
+        release();
     }
 
     @Override
-    public void shutdown() {
+    public void release() throws SQLException {
         closeReading();
         logger.debug("read connection closed");
         readConnection = null;
         closeWriting();
         logger.debug("write connection closed");
         writeConnection = null;
+    }
+
+    @Override
+    public void shutdown() throws SQLException {
+        release();
     }
 
     /**
@@ -997,30 +1002,30 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
                 statement.setLong(i, context.getLastRowCount());
             } else if ("$last.sql.start".equals(s)) {
                 if (context.getLastExecutionStartDate() == 0L) {
-                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
-                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
-                    context.setLastExecutionStartDate(riverStarted.getTime());
+                    Timestamp t = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getLastExecutionStartDate() : new DateTime().getMillis());
+                    context.setLastExecutionStartDate(t.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastExecutionStartDate()), calendar);
             } else if ("$last.sql.end".equals(s)) {
                 if (context.getLastExecutionEndDate() == 0L) {
-                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
-                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
-                    context.setLastExecutionEndDate(riverStarted.getTime());
+                    Timestamp t = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getLastExecutionEndDate() : new DateTime().getMillis());
+                    context.setLastExecutionEndDate(t.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastExecutionEndDate()), calendar);
             } else if ("$last.sql.sequence.start".equals(s)) {
                 if (context.getLastStartDate() == 0L) {
-                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
-                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
-                    context.setLastStartDate(riverStarted.getTime());
+                    Timestamp t = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getLastStartDate() : new DateTime().getMillis());
+                    context.setLastStartDate(t.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastStartDate()), calendar);
             } else if ("$last.sql.sequence.end".equals(s)) {
                 if (context.getLastEndDate() == 0L) {
-                    Timestamp riverStarted = new Timestamp(context.getRiverState() != null ?
-                            context.getRiverState().getStarted().getMillis() : new DateTime().getMillis());
-                    context.setLastEndDate(riverStarted.getTime());
+                    Timestamp t = new Timestamp(context.getRiverState() != null ?
+                            context.getRiverState().getLastEndDate() : new DateTime().getMillis());
+                    context.setLastEndDate(t.getTime());
                 }
                 statement.setTimestamp(i, new Timestamp(context.getLastEndDate()), calendar);
             } else if ("$river.name".equals(s)) {

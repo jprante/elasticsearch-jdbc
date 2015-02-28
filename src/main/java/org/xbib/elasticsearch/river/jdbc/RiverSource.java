@@ -351,10 +351,16 @@ public interface RiverSource<RC extends RiverContext> {
     void resume() throws Exception;
 
     /**
+     * Release resources of source
+     * @throws Exception
+     */
+    void release() throws Exception;
+
+    /**
      * Shutdown source
      *
      * @throws IOException
      */
-    void shutdown() throws IOException;
+    void shutdown() throws IOException, SQLException;
 
 }
