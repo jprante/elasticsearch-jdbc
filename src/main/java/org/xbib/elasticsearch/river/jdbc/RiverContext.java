@@ -233,4 +233,6 @@ public interface RiverContext {
      */
     RiverContext release();
 
+    RiverContext shutdown();
+
 }

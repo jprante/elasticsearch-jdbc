@@ -70,7 +70,7 @@ public class RiverRunnable<T, R extends PipelineRequest, P extends Pipeline<T, R
     }
 
     /**
-     * Before the pipelines are executed, put the river defintions on the queue
+     * Before the pipelines are executed, put the river definitions on the queue
      *
      * @throws IOException
      */

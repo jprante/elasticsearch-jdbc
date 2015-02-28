@@ -153,4 +153,8 @@ public class MockRiverContext implements RiverContext {
         return this;
     }
 
+    @Override
+    public RiverContext shutdown() {
+        return this;
+    }
 }

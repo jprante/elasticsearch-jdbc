@@ -357,17 +357,22 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
     @Override
     public void afterFetch() throws Exception {
         context.setLastEndDate(new DateTime().getMillis());
-        shutdown();
+        release();
     }
 
     @Override
-    public void shutdown() {
+    public void release() throws SQLException {
         closeReading();
         logger.debug("read connection closed");
         readConnection = null;
         closeWriting();
         logger.debug("write connection closed");
         writeConnection = null;
+    }
+
+    @Override
+    public void shutdown() throws SQLException {
+        release();
     }
 
     /**

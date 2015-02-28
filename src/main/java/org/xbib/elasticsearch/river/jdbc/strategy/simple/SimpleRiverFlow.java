@@ -68,6 +68,8 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
 
     private RiverName riverName;
 
+    private RC riverContext;
+
     private Settings settings;
 
     private IngestFactory ingestFactory;
@@ -90,7 +92,8 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
 
     @Override
     public RC newRiverContext() {
-        return (RC) new SimpleRiverContext();
+        this.riverContext = (RC) new SimpleRiverContext();
+        return riverContext;
     }
 
     @Override
@@ -379,7 +382,7 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
     }
 
     @Override
-    public void logMetrics(RiverContext riverContext, String cause) {
+    public void logMetrics(RC riverContext, String cause) {
         MeterMetric metric = getMetric();
         if (metric == null) {
             return;
@@ -417,6 +420,10 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
                 VolumeFormatUtil.convertFileSize(avg),
                 formatter.format(mbps)
         );
+    }
+
+    public void shutdown() throws Exception {
+        riverContext.shutdown();
     }
 
 }
