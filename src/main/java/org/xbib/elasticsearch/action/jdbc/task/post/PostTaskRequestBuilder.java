@@ -16,11 +16,11 @@
 package org.xbib.elasticsearch.action.jdbc.task.post;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.master.AcknowledgedRequestBuilder;
+import org.elasticsearch.action.support.nodes.NodesOperationRequestBuilder;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.xbib.elasticsearch.common.state.State;
 
-public class PostTaskRequestBuilder extends AcknowledgedRequestBuilder<PostTaskRequest, PostTaskResponse, PostTaskRequestBuilder, ClusterAdminClient> {
+public class PostTaskRequestBuilder extends NodesOperationRequestBuilder<PostTaskRequest, PostTaskResponse, PostTaskRequestBuilder> {
 
     public PostTaskRequestBuilder(ClusterAdminClient client) {
         super(client, new PostTaskRequest());

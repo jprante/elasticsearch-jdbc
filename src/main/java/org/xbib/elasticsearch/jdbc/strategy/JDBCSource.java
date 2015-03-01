@@ -163,7 +163,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @param statement statement
      * @param sql       SQL query
      * @return this source
-     * @throws SQLException
+     * @throws SQLException when SQL execution fails
      */
     JDBCSource<C> executeUpdate(Statement statement, String sql) throws SQLException;
 
@@ -172,8 +172,8 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      *
      * @param results  the result set
      * @param listener a result set listener or null
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when result set fails
+     * @throws IOException when method fails
      */
     void beforeRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
@@ -183,8 +183,8 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @param results  the result set
      * @param listener a result set listener or null
      * @return true if next row could be processed, otherwise false
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when result set fails
+     * @throws IOException when method fails
      */
     boolean nextRow(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
@@ -193,8 +193,8 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      *
      * @param results  the result set
      * @param listener a result set listener or null
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when result set fails
+     * @throws IOException when method fails
      */
     void afterRows(ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
@@ -204,14 +204,15 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @param command  the SQL command that created this result set
      * @param results  the result set
      * @param listener listener for the key/value stream generated from the result set
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException when result set fails
+     * @throws IOException when method fails
      */
     void beforeRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
     /**
      * Action for the next row of the result set to be processed
      *
+     * @param command  the SQL command that created this result set
      * @param results  result
      * @param listener listener
      * @return true if next row exists
@@ -226,8 +227,8 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @param command  the SQL command that created this result set
      * @param results  the result set
      * @param listener listener for the key/value stream generated from the result set
-     * @throws SQLException
-     * @throws IOException
+     * @throws SQLException  when SQL execution gives an error
+     * @throws IOException   when input/output error occurs
      */
     void afterRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener) throws SQLException, IOException;
 
@@ -278,7 +279,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
     JDBCSource<C> closeWriting();
 
     /**
-     * Set the locale for JDBC
+     * Set the locale for JDBC driver
      *
      * @param locale locale
      * @return this source
@@ -293,7 +294,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
     Locale getLocale();
 
     /**
-     * Set the timezone for JDBC setTimestamp() calls with calendar object.
+     * Set the timezone for setTimestamp() calls with calendar object.
      *
      * @param timeZone the time zone
      * @return this source
@@ -301,7 +302,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
     JDBCSource<C> setTimeZone(TimeZone timeZone);
 
     /**
-     * Get the current timezone of this source for the JDBC setTimestamp() call
+     * Get the current timezone of this source for the setTimestamp() call
      *
      * @return the time zone
      */

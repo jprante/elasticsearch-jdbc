@@ -35,58 +35,72 @@ public interface ResourceHandle {
     /**
      * Return the name of the resource. The name is a "/"-separated path
      * name that identifies the resource.
+     * @return the name
      */
     String getName();
 
     /**
      * Returns the URL of the resource.
+     * @return the URL
      */
     URL getUrl();
 
     /**
-     * Does this resource refer to a directory.  Directory resources are commly used
+     * Does this resource refer to a directory.  Directory resources are commonly used
      * as the basis for a URL in client application.  A directory resource has 0 bytes for it's content.
+     * @return true if directory
      */
     boolean isDirectory();
 
     /**
      * Returns the CodeSource URL for the class or resource.
+     * @return the code source URL
      */
     URL getCodeSourceUrl();
 
     /**
-     * Returns and InputStream for reading this resource data.
+     * Returns an InputStream for reading this resource data.
+     * @return the input stream if input stream fails
+     * @throws java.io.IOException if input stream fails
      */
     InputStream getInputStream() throws IOException;
 
     /**
      * Returns the length of this resource data, or -1 if unknown.
+     * @return the content length
      */
     int getContentLength();
 
     /**
      * Returns this resource data as an array of bytes.
+     * @return the bytes
+     * @throws java.io.IOException if resource data bytes fail
      */
     byte[] getBytes() throws IOException;
 
     /**
      * Returns the Manifest of the JAR file from which this resource
      * was loaded, or null if none.
+     * @return the manifest
+     * @throws java.io.IOException if manifest fails
      */
     Manifest getManifest() throws IOException;
 
     /**
      * Return the Certificates of the resource, or null if none.
+     * @return the certificates
      */
     Certificate[] getCertificates();
 
     /**
      * Return the Attributes of the resource, or null if none.
+     * @return the attributes
+     * @throws java.io.IOException if attributes fail
      */
     Attributes getAttributes() throws IOException;
 
     /**
-     * Closes a connection to the resource indentified by this handle. Releases
+     * Closes a connection to the resource identified by this handle. Releases
      * any I/O objects associated with the handle.
      */
     void close();

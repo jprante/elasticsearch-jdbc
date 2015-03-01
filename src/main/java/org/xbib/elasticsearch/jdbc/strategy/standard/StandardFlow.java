@@ -153,6 +153,8 @@ public class StandardFlow<C extends Context> implements Flow<C> {
 
     /**
      * Before a task starts, this method is called
+     * @param context the context
+     * @throws java.lang.Exception if this method fails
      */
     protected void beforeFetch(C context) throws Exception {
         logger.debug("before fetch: getting state for {}", name);
@@ -187,9 +189,6 @@ public class StandardFlow<C extends Context> implements Flow<C> {
                 .setName(name)
                 .setState(context.getState());
         PostTaskResponse postTaskResponse = postStateRequestBuilder.execute().actionGet();
-        if (!postTaskResponse.isAcknowledged()) {
-            logger.warn("post state not acknowledged: {}", name);
-        }
         logger.debug("before fetch: state posted = {}", state);
         // call source "before fetch"
         try {
@@ -208,8 +207,8 @@ public class StandardFlow<C extends Context> implements Flow<C> {
     /**
      * After context and state setup, when data should be fetched from source, this method is called.
      * The default is to invoke the fetch() method of the source.
-     *
-     * @throws Exception
+     *@param context the context
+     * @throws Exception if fetch fails
      */
     protected void fetch(Context context) throws Exception {
         context.getSource().fetch();
@@ -240,6 +239,8 @@ public class StandardFlow<C extends Context> implements Flow<C> {
 
     /**
      * After the task has completed a single run, this method is called.
+     * @param context the context
+     * @throws java.lang.Exception if this method fails
      */
     protected void afterFetch(Context context) throws Exception {
         if (context == null) {
@@ -256,9 +257,6 @@ public class StandardFlow<C extends Context> implements Flow<C> {
                 .setName(name)
                 .setState(state);
         PostTaskResponse postTaskResponse = postStateRequestBuilder.execute().actionGet();
-        if (!postTaskResponse.isAcknowledged()) {
-            logger.warn("post state not acknowledged: {}", name);
-        }
         logger.debug("after fetch: state posted = {}", state);
         try {
             context.getMouth().afterFetch();

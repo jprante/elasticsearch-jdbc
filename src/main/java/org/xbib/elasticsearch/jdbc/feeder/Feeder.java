@@ -70,11 +70,12 @@ public class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
     }
 
     /**
-     * Before the pipelines are executed, put the defintions on the queue
+     * Before the pipelines are executed, prepare something.
      *
-     * @throws IOException
+     * @throws IOException if this method fails
      */
     protected void beforePipelineExecutions() throws IOException {
+        // fill queue
         for (Map<String, Object> definition : input) {
             Context context = flow.newContext();
             context.setDefinition(definition);

@@ -26,7 +26,7 @@ import java.util.Queue;
  * A Flow is the controlling component for creating contexts
  * which can be processed independently from each other.
  *
- * @param <C>
+ * @param <C> the context class
  */
 public interface Flow<C extends Context> {
 
@@ -96,6 +96,7 @@ public interface Flow<C extends Context> {
     /**
      * Log metrics
      *
+     * @param context the context
      * @param cause the cause why metrics are logged
      */
     void logMetrics(Context context, String cause);
@@ -103,7 +104,8 @@ public interface Flow<C extends Context> {
     /**
      * Execute this flow
      *
-     * @throws Exception
+     * @param context the context
+     * @throws Exception when execution failed
      */
     void execute(C context) throws Exception;
 
