@@ -131,7 +131,7 @@ Prerequisites:
 
 A running MySQL database `test`, a table `orders`, and a user without name and password (default user)
 
-A terminal / console with commands `curl` and `unzip` 
+A terminal / console with commands `curl` and `unzip`
 
 Internet access (of course)
 
@@ -182,7 +182,7 @@ Internet access (of course)
 	```
 
 9. The river runs immediately. It will run exactly once. Watch the log on the elasticsearch terminal
-   for the river activity, some metric are written each minute. When the river fetched the data, 
+   for the river activity, some metric are written each minute. When the river fetched the data,
    you can query for the data you just indexed with the following command
 
 	`curl 'localhost:9200/jdbc/_search'`
@@ -209,9 +209,9 @@ The general schema of a JDBC river instance declaration is
 	         <river definition>
 	    }
 	}'
-	
+
 Example:
-	
+
 	curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
 	    "type" : "jdbc",
 	    "jdbc" : {
@@ -221,7 +221,7 @@ Example:
             "sql" : "select * from orders",
             "index" : "myindex",
             "type" : "mytype",
-            ...	         
+            ...
 	    }
 	}'
 
@@ -415,7 +415,7 @@ Example of a `schedule` paramter:
 
 This executes JDBC river every minute, every hour, all the days in the week/month/year.
 
-The following documentation about the syntax of the cron expression is copied from the Quartz 
+The following documentation about the syntax of the cron expression is copied from the Quartz
 scheduler javadoc page.
 
 Cron expressions provide the ability to specify complex time combinations such as
@@ -502,17 +502,17 @@ An example would be "0 0 14-6 ? * FRI-MON".
 
 A feeder can be started from a shell script. For this , the Elasticsearch home directory must be set in
 the environment variable ES_HOME. The JDBC plugin jar must be placed in the same directory of the script,
-together with JDBC river jar(s). 
+together with JDBC river jar(s).
 
 Here is an example of a feeder bash script:
 
     #!/bin/sh
 
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    
+
     # ES_HOME required to detect elasticsearch jars
     export ES_HOME=~es/elasticsearch-1.4.0.Beta1
-    
+
     echo '
     {
         "elasticsearch" : {
@@ -535,15 +535,59 @@ Here is an example of a feeder bash script:
         org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
         org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
 
+Here's an example of a Windows batch script:
+```
+@echo off
+
+SETLOCAL
+
+if NOT DEFINED ES_HOME goto err
+
+set DIR=%~dp0
+
+set FEEDER_CLASSPATH=%DIR%/lib/*;%DIR%/plugins/jdbc/*
+ECHO %FEEDER_CLASSPATH%
+
+echo {^
+    "elasticsearch" : {^
+         "cluster" : "elasticsearch",^
+         "host" : "localhost",^
+         "port" : 9300,^
+         "type" : "jdbc",^
+         "schedule" : "0 0 * * * *"^
+    },^
+    "jdbc" : {^
+        "url": "jdbc:mysql://localhost:3306/test",^
+        "user" : "",^
+        "password" : "",^
+        "sql":"select *, page_id as _id from page",^
+        "treat_binary_as_string" : true,^
+        "index" : "metawiki",^
+      }^
+}^ | "%JAVA_HOME%\bin\java" -cp "%FEEDER_CLASSPATH%" "org.xbib.elasticsearch.plugin.jdbc.feeder.Runner" "org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder"
+goto finally
+
+:err
+echo JAVA_HOME and ES_HOME environment variable must be set!
+pause
+
+
+:finally
+
+ENDLOCAL
+```
+
 How does it work?
 
 - first the shell script finds out about the directory where the script is placed, and it is placed into a variable `DIR`
+  - ``NOTE`` - the script assumes that it is placed in the `ES_HOME` location so that that it has the `lib` and `plugins` sub folders where the required `jar` files will be found
 
 - second, the location of the Elasticsearch home is exported in a shell variable `ES_HOME`
 
 - the classpath must be set to `DIR/*` to detect the JDBC plugin jar in the same directory of the script
 
 - the "Runner" class is able to expand the classpath over the Elasticsearch jars in `ES_HOME/lib` and looks also in `ES_HOME/plugins/jdbc`
+  - The Windows batch file version specifically adds these two sub folders as Windows does not recursively search for `jar` files
 
 - the "Runner" class invokes the "JDBCFeeder", which reads a JSON file from stdin, which corresponds to a JDBC river definition
 
@@ -551,7 +595,7 @@ How does it work?
 
 The `jdbc` parameter structure in the definition is exactly the same as in a river.
 
-It is possible to write an equivalent of this bash script for Windows. 
+It is possible to write an equivalent of this bash script for Windows.
 If you can send one to me for documentation on this page, I'd be very grateful.
 
 ## Structured objects
@@ -756,11 +800,11 @@ will result into the following JSON documents
 
 ## How to update a table?
 
-The JDBC plugin allows to write data into the database only for maintenance purpose. 
-It does not allow to inverse the river, that is, it not impossible to fill database tables from Elasticsearch 
+The JDBC plugin allows to write data into the database only for maintenance purpose.
+It does not allow to inverse the river, that is, it not impossible to fill database tables from Elasticsearch
 indices with this plugin. Think of the river as a one-way street.
 
-Writing back data into the database makes sense for acknowledging fetched data. 
+Writing back data into the database makes sense for acknowledging fetched data.
 
 Example:
 
@@ -785,7 +829,7 @@ Example:
     }
 
 In this example, the DB administrator has prepared product rows and attached a `_job` column to it
-to enumerate the product updates incrementally. The assertion is that Elasticsearch should 
+to enumerate the product updates incrementally. The assertion is that Elasticsearch should
 delete all products from the database after they are indexed successfully. The parameter `$job`
 is a counter which counts from the river start. The river state is saved in the cluster state,
 so the counter is persisted throughout the lifetime of the cluster.
@@ -816,19 +860,19 @@ column `mytimestamp`:
 
 ## Stored procedures or callable statements
 
-Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates. 
+Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates.
 See also [Using Stored Procedures](http://docs.oracle.com/javase/tutorial/jdbc/basics/storedprocedures.html)
 from where the example is taken.
 
     create procedure GET_SUPPLIER_OF_COFFEE(
-        IN coffeeName varchar(32), 
-        OUT supplierName varchar(40)) 
-        begin 
-            select SUPPLIERS.SUP_NAME into supplierName 
-            from SUPPLIERS, COFFEES 
-            where SUPPLIERS.SUP_ID = COFFEES.SUP_ID 
-            and coffeeName = COFFEES.COF_NAME; 
-            select supplierName; 
+        IN coffeeName varchar(32),
+        OUT supplierName varchar(40))
+        begin
+            select SUPPLIERS.SUP_NAME into supplierName
+            from SUPPLIERS, COFFEES
+            where SUPPLIERS.SUP_ID = COFFEES.SUP_ID
+            and coffeeName = COFFEES.COF_NAME;
+            select supplierName;
         end
 
 Now it is possible to call the procedure from the JDBC plugin and index the result in Elasticsearch.
@@ -869,14 +913,14 @@ the JDBC plugin enters a loop and iterates through all result sets.
 
 While a river/feed is running, you can monitor the activity by using the `_state` command.
 
-The `_state` command can show the state of a specific river or of all rivers, 
+The `_state` command can show the state of a specific river or of all rivers,
 when an asterisk `*` is used as the river name.
 
 The river state mechanism is specific to JDBC plugin implementation. It is part of the cluster metadata.
 
 In the response, the field `started` will represent the time when the river/feeder was created.
 The field `last_active_begin` will represent the last time when a river/feeder run had begun, and
-the field `last_active_end` is null if th river/feeder runs, or will represent the last time the river/feeder 
+the field `last_active_end` is null if th river/feeder runs, or will represent the last time the river/feeder
 has completed a run.
 
 The `map` carries some flags for the river: `aborted`, `suspended`, and a `counter` for the number of
@@ -898,11 +942,11 @@ Example:
           "counter" : 6
         }
       } ]
-    }    
+    }
 
 ## Suspend
 
-A running river can be suspended with 
+A running river can be suspended with
 
     curl 'localhost:9200/_river/jdbc/my_jdbc_river/_suspend'
 
@@ -1180,7 +1224,7 @@ Elasticsearch field names. For this, a column name map can be used like this:
 
 ## Connection properties for JDBC driver
 
-For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL, 
+For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL,
 but in the JDBC connection properties. You can specifiy connection properties like this:
 
     curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
