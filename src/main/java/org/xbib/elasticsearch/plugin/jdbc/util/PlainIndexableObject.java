@@ -238,7 +238,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
 
     @Override
     public boolean equals(Object o) {
-        return o != null && o instanceof IndexableObject && this.compareTo((IndexableObject)o) == 0;
+        return o != null && o instanceof IndexableObject && hashCode() == o.hashCode() && this.compareTo((IndexableObject)o) == 0;
     }
 
     @Override
