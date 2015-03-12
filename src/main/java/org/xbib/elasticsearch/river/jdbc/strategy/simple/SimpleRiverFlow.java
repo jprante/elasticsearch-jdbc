@@ -189,7 +189,10 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
         logger.debug("before fetch: created source = {}, mouth = {}, context = {}",
                 riverSource, riverMouth, riverContext);
         Integer counter = riverState.getCounter() + 1;
-        riverContext.setRiverState(riverState.setCounter(counter).setLastActive(new DateTime(), null));
+        DateTime currentTime = riverContext.getRiverState().getCurrentActiveBegin();
+        riverContext.setRiverState(riverState.setCounter(counter)
+                .setLastActive(currentTime != null ? currentTime : new DateTime(0), null)
+                .setCurrentActive(new DateTime()));
         PostRiverStateRequestBuilder postRiverStateRequestBuilder = new PostRiverStateRequestBuilder(client.admin().cluster())
                 .setRiverName(riverName.getName())
                 .setRiverType(riverName.getType())
@@ -259,7 +262,7 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
         }
         // set activity
         RiverState riverState = riverContext.getRiverState()
-                .setLastActive(riverContext.getRiverState().getLastActiveBegin(), new DateTime());
+                .setLastActive(riverContext.getRiverState().getCurrentActiveBegin(), new DateTime());
         PostRiverStateRequestBuilder postRiverStateRequestBuilder = new PostRiverStateRequestBuilder(client.admin().cluster())
                 .setRiverName(riverName.getName())
                 .setRiverType(riverName.getType())
