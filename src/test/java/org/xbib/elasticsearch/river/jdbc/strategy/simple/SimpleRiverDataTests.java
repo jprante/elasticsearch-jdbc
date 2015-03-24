@@ -25,7 +25,7 @@ public class SimpleRiverDataTests extends AbstractSimpleRiverTest {
     @Parameters({"river1", "sql1"})
     public void testSimpleRiverOnce(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        performRiver(riverResource);
+        performRiver("river1", riverResource);
         logger.info("success");
     }
 
@@ -39,7 +39,7 @@ public class SimpleRiverDataTests extends AbstractSimpleRiverTest {
     @Parameters({"river2", "sql1"})
     public void testSimpleRiverRandom(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        performRiver(riverResource);
+        performRiver("river2", riverResource);
         assertHits("1", 104);
         logger.info("success");
     }
@@ -55,7 +55,7 @@ public class SimpleRiverDataTests extends AbstractSimpleRiverTest {
     @Parameters({"river3", "sql1"})
     public void testSimpleRiverMaxrows(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        performRiver(riverResource);
+        performRiver("river3", riverResource);
         assertHits("1", 104);
         assertTimestampSort("1", 104);
         logger.info("success");

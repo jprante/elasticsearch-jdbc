@@ -25,8 +25,8 @@ public class SimpleRiverScriptTests extends AbstractSimpleRiverTest {
     @Test
     @Parameters({"river1"})
     public void testSimpleRiverOnce(String riverResource) throws Exception {
-        createRiver(riverResource);
-        waitForInactiveRiver();
+        createRiver("river1", riverResource);
+        waitForInactiveRiver("river1");
     }
 
 }

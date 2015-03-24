@@ -33,7 +33,7 @@ public class SimpleRiverJobTests extends AbstractSimpleRiverTest {
         source.close(results);
         source.closeReading();
         assertEquals(count, 100);
-        performRiver(riverResource);
+        performRiver("river1", riverResource);
         assertHits("1", 100);
         // count docs in source table, must be null, because river deletes them.
         connection = source.getConnectionForReading();

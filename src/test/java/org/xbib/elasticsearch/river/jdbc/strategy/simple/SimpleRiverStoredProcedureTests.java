@@ -22,8 +22,8 @@ public class SimpleRiverStoredProcedureTests extends AbstractSimpleRiverTest {
     @Parameters({"river8"})
     public void testSimpleStoredProcedure(String riverResource)
             throws Exception {
-        createRiver(riverResource);
-        waitForInactiveRiver();
+        createRiver("river8", riverResource);
+        waitForInactiveRiver("river8");
         assertHits("1", 5);
         logger.info("got the five hits");
     }
@@ -31,8 +31,8 @@ public class SimpleRiverStoredProcedureTests extends AbstractSimpleRiverTest {
     @Test
     @Parameters({"river9"})
     public void testRegisterStoredProcedure(String riverResource) throws Exception {
-        createRiver(riverResource);
-        waitForInactiveRiver();
+        createRiver("river9", riverResource);
+        waitForInactiveRiver("river9");
         assertHits("1", 1);
         logger.info("got the hit");
         SearchResponse response = client("1").prepareSearch("my_jdbc_river_index")

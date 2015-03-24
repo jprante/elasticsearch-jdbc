@@ -27,9 +27,9 @@ public class SimpleRiverScheduleTests extends AbstractSimpleRiverTest {
     @Parameters({"river6", "sql1"})
     public void testSimpleSchedule(String riverResource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        createRiver(riverResource);
-        waitForRiver();
-        waitForActiveRiver();
+        createRiver("river6", riverResource);
+        waitForRiver("river6");
+        waitForActiveRiver("river6");
         Thread.sleep(12500L); // run more than twice
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
@@ -49,9 +49,9 @@ public class SimpleRiverScheduleTests extends AbstractSimpleRiverTest {
     @Parameters({"river7", "sql2"})
     public void testTimestamps(String riverResource, String sql) throws Exception {
         createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem"); // TODO make timezone/locale configurable
-        createRiver(riverResource);
-        waitForRiver();
-        waitForActiveRiver();
+        createRiver("river7", riverResource);
+        waitForRiver("river7");
+        waitForActiveRiver("river7");
         Thread.sleep(12500L); // ensure at least two runs
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();

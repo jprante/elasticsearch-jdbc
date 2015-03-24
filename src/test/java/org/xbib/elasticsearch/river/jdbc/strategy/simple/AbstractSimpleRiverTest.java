@@ -149,38 +149,38 @@ public abstract class AbstractSimpleRiverTest extends AbstractNodeTestHelper {
         stopNodes();
     }
 
-    protected void performRiver(String resource) throws Exception {
-        createRiver(resource);
-        waitForRiver();
-        waitForActiveRiver();
-        waitForInactiveRiver();
+    protected void performRiver(String river, String resource) throws Exception {
+        createRiver(river, resource);
+        waitForRiver(river);
+        waitForActiveRiver(river);
+        waitForInactiveRiver(river);
     }
 
-    protected void createRiver(String resource) throws Exception {
+    protected void createRiver(String river, String resource) throws Exception {
         waitForYellow("1");
         byte[] b = Streams.copyToByteArray(getClass().getResourceAsStream(resource));
         Map<String, Object> map = XContentHelper.convertToMap(b, false).v2();
         XContentBuilder builder = jsonBuilder().map(map);
         logger.info("river = {}", builder.string());
-        IndexRequest indexRequest = Requests.indexRequest("_river").type("my_jdbc_river").id("_meta")
+        IndexRequest indexRequest = Requests.indexRequest("_river").type(river).id("_meta")
                 .source(builder.string());
         client("1").index(indexRequest).actionGet();
         client("1").admin().indices().prepareRefresh("_river").execute().actionGet();
         logger.info("river creation request sent");
     }
 
-    public void waitForRiver() throws Exception {
-        waitForRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
+    public void waitForRiver(String river) throws Exception {
+        waitForRiver(client("1"), river, "jdbc", SECONDS_TO_WAIT);
         logger.info("river is created");
     }
 
-    public void waitForActiveRiver() throws Exception {
-        waitForActiveRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
+    public void waitForActiveRiver(String river) throws Exception {
+        waitForActiveRiver(client("1"), river, "jdbc", SECONDS_TO_WAIT);
         logger.info("river is active");
     }
 
-    public void waitForInactiveRiver() throws Exception {
-        waitForInactiveRiver(client("1"), "my_jdbc_river", "jdbc", SECONDS_TO_WAIT);
+    public void waitForInactiveRiver(String river) throws Exception {
+        waitForInactiveRiver(client("1"), river, "jdbc", SECONDS_TO_WAIT);
         logger.info("river is inactive");
     }
 
