@@ -574,17 +574,26 @@
         </profile>
 
         <profile>
-            <id>bintray</id>
-            <activation><activeByDefault>false</activeByDefault></activation>
-            <distributionManagement>
-                <repository>
-                    <id>bintray-jprante-elasticsearch-plugins-elasticsearch-river-jdbc</id>
-                    <name>jprante-elasticsearch-plugins-elasticsearch-river-jdcb</name>
-                    <url>https://api.bintray.com/maven/jprante/elasticsearch-plugins/elasticsearch-river-jdbc</url>
-                </repository>
-            </distributionManagement>
+            <id>doclint-java8-disable</id>
+            <activation>
+                <os>
+                    <name>mac os x</name>
+                </os>
+                <jdk>[1.8,</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <javadocExecutable>/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/javadoc</javadocExecutable>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
-
 
     </profiles>
 </project>
