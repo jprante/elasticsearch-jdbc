@@ -133,7 +133,7 @@ public class ClientHelper {
     }
 
     public static void refresh(Client client, String index) {
-        client.admin().indices().prepareRefresh().setIndices(index).setForce(true).execute().actionGet();
+        client.admin().indices().prepareRefresh().setIndices(index).execute().actionGet();
     }
 
 }
