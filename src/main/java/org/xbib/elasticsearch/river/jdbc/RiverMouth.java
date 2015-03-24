@@ -166,6 +166,8 @@ public interface RiverMouth<RC extends RiverContext> {
      */
     void flush() throws IOException;
 
+    void release() throws Exception;
+
     /**
      * Shutdown river mouth and release all resources, e.g. bulk processor and client
      */

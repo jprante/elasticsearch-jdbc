@@ -62,6 +62,11 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     private DateTime lastActiveBegin;
 
     /*
+     * The begin time of the current river activity
+     */
+    private DateTime currentActiveBegin;
+
+    /*
      * The time when the last river activity ended
      */
     private DateTime lastActiveEnd;
@@ -124,10 +129,30 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     }
 
     /**
+     * Set the current river begin DateTime. It will be used to
+     * update lastActiveBegin after the run being done
+     * 
+     * @param begin
+     *            when the current river activity began
+     * @return this state
+     */
+    public RiverState setCurrentActive(DateTime begin) {
+        this.currentActiveBegin = begin;
+        return this;
+    }
+
+    /**
      * @return the begin of the last river activity
      */
     public DateTime getLastActiveBegin() {
         return lastActiveBegin;
+    }
+
+    /**
+     * @return the begin of the current river activity
+     */
+    public DateTime getCurrentActiveBegin() {
+        return currentActiveBegin;
     }
 
     /**
@@ -250,6 +275,7 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
                 .field("type", type)
                 .field("started", getStarted())
                 .field("last_active_begin", getLastActiveBegin())
+                .field("current_active_begin", getCurrentActiveBegin())
                 .field("last_active_end", getLastActiveEnd())
                 .field("map", map);
         builder.endObject();
@@ -266,6 +292,9 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
         }
         if (in.readBoolean()) {
             this.lastActiveBegin = new DateTime(in.readLong());
+        }
+        if (in.readBoolean()) {
+            this.currentActiveBegin = new DateTime(in.readLong());
         }
         if (in.readBoolean()) {
             this.lastActiveEnd = new DateTime(in.readLong());
@@ -287,6 +316,13 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
             out.writeBoolean(true);
             out.writeLong(lastActiveBegin.getMillis());
         } else {
+            out.writeBoolean(false);
+        }
+        if (currentActiveBegin != null) {
+            out.writeBoolean(true);
+            out.writeLong(currentActiveBegin.getMillis());
+        }
+        else {
             out.writeBoolean(false);
         }
         if (lastActiveEnd != null) {

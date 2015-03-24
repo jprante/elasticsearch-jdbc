@@ -133,6 +133,15 @@ public class SimpleRiverMouth<RC extends SimpleRiverContext> implements RiverMou
     }
 
     @Override
+    public synchronized void release() {
+        try {
+            flush();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    @Override
     public synchronized void shutdown() {
         try {
             flush();

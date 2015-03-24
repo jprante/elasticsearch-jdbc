@@ -119,6 +119,10 @@ public class MockRiverMouth implements RiverMouth<MockRiverContext> {
     }
 
     @Override
+    public void release() throws IOException {
+    }
+
+    @Override
     public void shutdown() throws IOException {
     }
 

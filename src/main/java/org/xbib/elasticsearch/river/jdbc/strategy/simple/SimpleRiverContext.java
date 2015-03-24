@@ -429,13 +429,35 @@ public class SimpleRiverContext implements RiverContext {
         return shouldTreatBinaryAsString;
     }
 
+    @Override
     public SimpleRiverContext release() {
+        try {
+            if (mouth != null) {
+                mouth.release();
+                mouth = null;
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        try {
+            if (source != null) {
+                source.release();
+                source = null;
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        return this;
+    }
+
+    @Override
+    public SimpleRiverContext shutdown() {
         try {
             if (mouth != null) {
                 mouth.shutdown();
                 mouth = null;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
         try {
@@ -443,7 +465,7 @@ public class SimpleRiverContext implements RiverContext {
                 source.shutdown();
                 source = null;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
         return this;
