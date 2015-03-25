@@ -40,6 +40,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
 | Mar 24, 2015 | 1.5.0.0        | 1.5.0                 |
+| Mar 24, 2015 | 1.4.4.0        | 1.4.4                 |
 | Feb 19, 2015 | 1.4.0.10       | 1.4.0                 |
 | Jan 25, 2015 | 1.4.0.9        | 1.4.0                 |
 | Jan  2, 2015 | 1.4.0.8        | 1.4.0                 |
