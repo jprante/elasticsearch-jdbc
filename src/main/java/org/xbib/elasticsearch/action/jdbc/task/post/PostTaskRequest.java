@@ -16,7 +16,7 @@
 package org.xbib.elasticsearch.action.jdbc.task.post;
 
 import org.elasticsearch.action.ActionRequestValidationException;
-import org.elasticsearch.action.support.master.AcknowledgedRequest;
+import org.elasticsearch.action.support.nodes.NodesOperationRequest;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.xbib.elasticsearch.common.state.State;
@@ -25,7 +25,7 @@ import java.io.IOException;
 
 import static org.elasticsearch.action.ValidateActions.addValidationError;
 
-public class PostTaskRequest extends AcknowledgedRequest<PostTaskRequest> {
+public class PostTaskRequest extends NodesOperationRequest<PostTaskRequest> {
 
     private String name;
 
@@ -92,7 +92,6 @@ public class PostTaskRequest extends AcknowledgedRequest<PostTaskRequest> {
     @Override
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
-        readTimeout(in);
         this.name = in.readString();
         if (in.readBoolean()) {
             this.state = new State();
@@ -105,7 +104,6 @@ public class PostTaskRequest extends AcknowledgedRequest<PostTaskRequest> {
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
-        writeTimeout(out);
         out.writeString(name);
         if (state == null) {
             out.writeBoolean(false);

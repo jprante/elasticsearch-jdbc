@@ -27,6 +27,7 @@ public interface CronExecutorService extends ExecutorService {
      *
      * @param task       the Runnable task to schedule
      * @param expression a cron expression
+     * @return a future
      */
     Future<?> schedule(Runnable task, CronExpression expression);
 }

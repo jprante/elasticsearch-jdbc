@@ -41,10 +41,20 @@ import static org.elasticsearch.common.xcontent.XContentParser.Token.VALUE_NULL;
  */
 public class Task implements Streamable, ToXContent, Comparable<Task> {
 
-    /**
-     * The name of the task
-     */
+    public enum State {
+        UNDEFINED,
+        STARTED,
+        SUCCEEDED,
+        FAILED
+    };
+
     private String name;
+
+    private String type;
+
+    private Integer priority = 0;
+
+    private State state = State.UNDEFINED;
 
     /**
      * The time the task was started
@@ -69,6 +79,15 @@ public class Task implements Streamable, ToXContent, Comparable<Task> {
     public Task() {
     }
 
+    public Task setType(String type) {
+        this.type = type;
+        return this;
+    }
+
+    public String getType() {
+        return type;
+    }
+
     public Task setName(String name) {
         this.name = name;
         return this;
@@ -76,6 +95,15 @@ public class Task implements Streamable, ToXContent, Comparable<Task> {
 
     public String getName() {
         return name;
+    }
+
+    public Task setPriority(Integer priority) {
+        this.priority = priority;
+        return this;
+    }
+
+    public Integer getPriority() {
+        return priority;
     }
 
     public Task setMap(Map<String, Object> map) {
@@ -269,7 +297,7 @@ public class Task implements Streamable, ToXContent, Comparable<Task> {
 
     @Override
     public int compareTo(Task o) {
-        return getName().compareTo(o.getName());
+        return getPriority().compareTo(o.getPriority());
     }
 
     @Override

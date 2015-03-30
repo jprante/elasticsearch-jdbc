@@ -85,14 +85,14 @@ public interface Mouth<C extends Context> {
     /**
      * Executed before source fetch
      *
-     * @throws Exception
+     * @throws Exception if this method fails
      */
     void beforeFetch() throws Exception;
 
     /**
      * Executed after source fetch
      *
-     * @throws Exception
+     * @throws Exception if this method fails
      */
     void afterFetch() throws Exception;
 
@@ -168,20 +168,21 @@ public interface Mouth<C extends Context> {
 
     /**
      * Shutdown mouth and release all resources, e.g. bulk processor and client
+     * @throws IOException when shutdown fails
      */
     void shutdown() throws IOException;
 
     /**
      * Suspend mouth. Do not proceed with indexing and wait for resume.
      *
-     * @throws Exception
+     * @throws Exception if suspend fails
      */
     void suspend() throws Exception;
 
     /**
      * Resume mouth after suspend.
      *
-     * @throws Exception
+     * @throws Exception if resume fails
      */
     void resume() throws Exception;
 

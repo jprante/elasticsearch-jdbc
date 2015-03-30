@@ -24,12 +24,11 @@ public final class Strings {
     public static final String EMPTY = "";
 
     private Strings() {
-        throw new UnsupportedOperationException();
     }
 
     /**
-     * <p>Gives a string consisting of the given character repeated the given number of
-     * times.</p>
+     * Gives a string consisting of the given character repeated the given number of
+     * times.
      *
      * @param ch    the character to repeat
      * @param count how many times to repeat the character
@@ -46,8 +45,8 @@ public final class Strings {
     }
 
     /**
-     * <p>Tells whether the given string is either {@code} or consists solely of
-     * whitespace characters.</p>
+     * Tells whether the given string is either {@code} or consists solely of
+     * whitespace characters.
      *
      * @param target string to check
      * @return {@code true} if the target string is null or empty
@@ -91,10 +90,10 @@ public final class Strings {
     }
 
     /**
-     * <p>Replaces a String with another String inside a larger String, once.</p>
-     * <p/>
-     * <p>A <code>null</code> reference passed to this method is a no-op.</p>
-     * <p/>
+     * Replaces a String with another String inside a larger String, once.
+     *
+     * A <code>null</code> reference passed to this method is a no-op.
+     *
      * <pre>
      * StringUtils.replaceOnce(null, *, *)        = null
      * StringUtils.replaceOnce("", *, *)          = ""
@@ -118,10 +117,10 @@ public final class Strings {
     }
 
     /**
-     * <p>Replaces all occurrences of a String within another String.</p>
-     * <p/>
-     * <p>A <code>null</code> reference passed to this method is a no-op.</p>
-     * <p/>
+     * Replaces all occurrences of a String within another String.
+     *
+     * A <code>null</code> reference passed to this method is a no-op.
+     *
      * <pre>
      * StringUtils.replace(null, *, *)        = null
      * StringUtils.replace("", *, *)          = ""
@@ -145,11 +144,11 @@ public final class Strings {
     }
 
     /**
-     * <p>Replaces a String with another String inside a larger String,
-     * for the first <code>max</code> values of the search String.</p>
-     * <p/>
-     * <p>A <code>null</code> reference passed to this method is a no-op.</p>
-     * <p/>
+     * Replaces a String with another String inside a larger String,
+     * for the first <code>max</code> values of the search String.
+     *
+     * A <code>null</code> reference passed to this method is a no-op.
+     *
      * <pre>
      * StringUtils.replace(null, *, *, *)         = null
      * StringUtils.replace("", *, *, *)           = ""

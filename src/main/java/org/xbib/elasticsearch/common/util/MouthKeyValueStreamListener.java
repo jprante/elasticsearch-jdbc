@@ -42,7 +42,7 @@ public class MouthKeyValueStreamListener<K, V> extends PlainKeyValueStreamListen
      *
      * @param object the object
      * @return this value listener
-     * @throws java.io.IOException
+     * @throws java.io.IOException if this method fails
      */
     public MouthKeyValueStreamListener<K, V> end(IndexableObject object) throws IOException {
         if (object.isEmpty()) {

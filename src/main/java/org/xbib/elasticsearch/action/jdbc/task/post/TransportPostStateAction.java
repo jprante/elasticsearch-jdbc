@@ -18,38 +18,49 @@ package org.xbib.elasticsearch.action.jdbc.task.post;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.ActionFilters;
-import org.elasticsearch.action.support.master.TransportMasterNodeOperationAction;
+import org.elasticsearch.action.support.nodes.NodeOperationRequest;
+import org.elasticsearch.action.support.nodes.TransportNodesOperationAction;
+import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.cluster.ClusterService;
-import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.ack.ClusterStateUpdateResponse;
-import org.elasticsearch.cluster.block.ClusterBlockException;
-import org.elasticsearch.cluster.block.ClusterBlockLevel;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.inject.Injector;
+import org.elasticsearch.common.io.stream.StreamInput;
+import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.node.Node;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
 import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.common.state.cluster.StateMetaData;
 import org.xbib.elasticsearch.common.state.cluster.StateService;
 
-public class TransportPostStateAction extends TransportMasterNodeOperationAction<PostTaskRequest, PostTaskResponse> {
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+
+import static org.elasticsearch.common.collect.Lists.newArrayList;
+
+public class TransportPostStateAction extends TransportNodesOperationAction<PostTaskRequest, PostTaskResponse, TransportPostStateAction.NodeTaskRequest, PostTaskResponse.NodeTaskResponse> {
+
+    private final Node node;
 
     private final Injector injector;
 
     @Inject
-    public TransportPostStateAction(Settings settings, ThreadPool threadPool,
+    public TransportPostStateAction(Settings settings, ClusterName clusterName, ThreadPool threadPool,
                                     ClusterService clusterService, TransportService transportService,
-                                    ActionFilters actionFilters,
+                                    Node node, ActionFilters actionFilters,
                                     Injector injector) {
-        super(settings, PostTaskAction.NAME, transportService, clusterService, threadPool, actionFilters);
+        super(settings, PostTaskAction.NAME, clusterName, threadPool, clusterService, transportService, actionFilters);
+        this.node = node;
         this.injector = injector;
     }
 
     @Override
     protected String executor() {
-        return ThreadPool.Names.MANAGEMENT;
+        return ThreadPool.Names.GENERIC;
     }
 
     @Override
@@ -58,22 +69,37 @@ public class TransportPostStateAction extends TransportMasterNodeOperationAction
     }
 
     @Override
-    protected PostTaskResponse newResponse() {
-        return new PostTaskResponse();
+    protected PostTaskResponse newResponse(PostTaskRequest request, AtomicReferenceArray responses) {
+        final List<PostTaskResponse.NodeTaskResponse> nodeResponses = newArrayList();
+        for (int i = 0; i < responses.length(); i++) {
+            Object resp = responses.get(i);
+            if (resp instanceof PostTaskResponse.NodeTaskResponse) {
+                nodeResponses.add((PostTaskResponse.NodeTaskResponse) resp);
+            }
+        }
+        return new PostTaskResponse(clusterName, nodeResponses.toArray(new PostTaskResponse.NodeTaskResponse[nodeResponses.size()]));
     }
 
     @Override
-    protected ClusterBlockException checkBlock(PostTaskRequest request, ClusterState state) {
-        return state.blocks().indexBlockedException(ClusterBlockLevel.METADATA, "");
+    protected NodeTaskRequest newNodeRequest() {
+        return new NodeTaskRequest();
     }
 
     @Override
-    protected void masterOperation(PostTaskRequest request, ClusterState clusterState,
-                                   final ActionListener<PostTaskResponse> listener)
-            throws ElasticsearchException {
-        StateMetaData stateMetaData = clusterState.metaData().custom(StateMetaData.TYPE);
+    protected NodeTaskRequest newNodeRequest(String clusterName, PostTaskRequest request) {
+        return new NodeTaskRequest(clusterName, request);
+    }
 
+    @Override
+    protected PostTaskResponse.NodeTaskResponse newNodeResponse() {
+        return new PostTaskResponse.NodeTaskResponse();
+    }
+
+    @Override
+    protected PostTaskResponse.NodeTaskResponse nodeOperation(NodeTaskRequest nodeTaskRequest) throws ElasticsearchException {
+        StateMetaData stateMetaData = clusterService.state().metaData().custom(StateMetaData.TYPE);
         StateService stateService = injector.getInstance(StateService.class);
+        PostTaskRequest request = nodeTaskRequest.getRequest();
         ImmutableList<State> states = stateMetaData.getStates(request.getName());
         State state = request.getState();
         if (states.isEmpty()) {
@@ -102,18 +128,51 @@ public class TransportPostStateAction extends TransportMasterNodeOperationAction
             state.getMap().put("suspended", request.isSuspend());
         }
         stateService.postState(new StateService.StateRequest("post_state[" + request.getName() + "]", state)
-                .masterNodeTimeout(request.masterNodeTimeout())
-                .ackTimeout(request.ackTimeout()), new ActionListener<ClusterStateUpdateResponse>() {
+               , new ActionListener<ClusterStateUpdateResponse>() {
             @Override
             public void onResponse(ClusterStateUpdateResponse clusterStateUpdateResponse) {
-                listener.onResponse(new PostTaskResponse(clusterStateUpdateResponse.isAcknowledged()));
+                //listener.onResponse(new PostTaskResponse());
+                logger.info("success of cluster state update");
             }
 
             @Override
             public void onFailure(Throwable e) {
-                listener.onFailure(e);
+                //listener.onFailure(e);
             }
         });
+        return new PostTaskResponse.NodeTaskResponse(clusterService.localNode());
+    }
+
+    @Override
+    protected boolean accumulateExceptions() {
+        return false;
+    }
+
+    protected static class NodeTaskRequest extends NodeOperationRequest {
+
+        PostTaskRequest request;
+
+        private NodeTaskRequest() {
+        }
+
+        private NodeTaskRequest(String nodeId, PostTaskRequest request) {
+            super(request, nodeId);
+            this.request = request;
+        }
+
+        public PostTaskRequest getRequest() {
+            return request;
+        }
+
+        @Override
+        public void readFrom(StreamInput in) throws IOException {
+            super.readFrom(in);
+        }
+
+        @Override
+        public void writeTo(StreamOutput out) throws IOException {
+            super.writeTo(out);
+        }
     }
 
 }

@@ -123,7 +123,7 @@ a separate JVM in the feeder flavor.
 | automatic failover and restart after cluster recovery | no failover, no restart |
 | hard to supervise single or multi runs and interruptions | command line control of feeds, error exit code 1, crontab control |
 | no standard method of  viewing river activity from within Elasticsearch | feed activity can be monitored by examining separate JVM |
-| about to be deprecated by Elasticsearch core team | Feeder API provided by xbib, using advanced features supported by xbib libraries only. Part of upcoming "gatherer" API to support coordinated data harvesting by multiple ES nodes |
+| about to be deprecated by Elasticsearch core team | Feeder API provided by xbib, using advanced features supported by xbib libraries only. Part of upcoming "worker" API to support coordinated data harvesting by multiple ES nodes |
 
 ## Step-by-step guide to get a river running
 

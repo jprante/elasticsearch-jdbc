@@ -44,13 +44,13 @@ public interface Source<C extends Context> {
     /**
      * Executed before fetch() is executed
      *
-     * @throws Exception
+     * @throws Exception when execution fails
      */
     void beforeFetch() throws Exception;
 
     /**
      * Fetch a data portion from the database and pass it to the task
-     * for firther processing.
+     * for further processing.
      *
      * @throws Exception when execution gives an error
      */
@@ -59,28 +59,28 @@ public interface Source<C extends Context> {
     /**
      * Executed after fetch() has been executed or threw an exception.
      *
-     * @throws Exception
+     * @throws Exception when execution fails
      */
     void afterFetch() throws Exception;
 
     /**
      * Suspend source
      *
-     * @throws Exception
+     * @throws Exception when suspend fails
      */
     void suspend() throws Exception;
 
     /**
      * Resume source
      *
-     * @throws Exception
+     * @throws Exception when resume fails
      */
     void resume() throws Exception;
 
     /**
      * Shutdown source
      *
-     * @throws java.io.IOException
+     * @throws IOException when shutdown fails
      */
     void shutdown() throws IOException;
 }

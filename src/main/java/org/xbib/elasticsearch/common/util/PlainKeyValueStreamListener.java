@@ -186,7 +186,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
      * End of values.
      *
      * @return this value listener
-     * @throws java.io.IOException
+     * @throws java.io.IOException if this method fails
      */
     public KeyValueStreamListener<K, V> end() throws IOException {
         if (prev != null) {

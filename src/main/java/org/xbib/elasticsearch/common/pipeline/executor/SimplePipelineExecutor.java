@@ -110,8 +110,8 @@ public class SimplePipelineExecutor<T, R extends PipelineRequest, P extends Pipe
      * Wait for all results of the executions.
      *
      * @return this pipeline executor
-     * @throws InterruptedException
-     * @throws java.util.concurrent.ExecutionException
+     * @throws InterruptedException if this methd is interrupted
+     * @throws java.util.concurrent.ExecutionException if execution fails
      */
     @Override
     public SimplePipelineExecutor<T, R, P> waitFor()

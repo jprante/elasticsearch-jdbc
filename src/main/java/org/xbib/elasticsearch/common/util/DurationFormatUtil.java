@@ -22,10 +22,10 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 /**
- * <p>Duration formatting utilities and constants. The following table describes the tokens
- * used in the pattern language for formatting. </p>
- * <table border="1">
- * <tr><th>character</th><th>duration element</th></tr>
+ * Duration formatting utilities and constants. The following table describes the tokens
+ * used in the pattern language for formatting.
+ * <table border="1"><caption>Used tokens</caption>
+ * <tr><th>Character</th><th>Duration element</th></tr>
  * <tr><td>y</td><td>years</td></tr>
  * <tr><td>M</td><td>months</td></tr>
  * <tr><td>d</td><td>days</td></tr>
@@ -55,28 +55,28 @@ public class DurationFormatUtil {
     public static final long MILLIS_PER_DAY = 24 * MILLIS_PER_HOUR;
 
     /**
-     * <p>DurationFormatUtils instances should NOT be constructed in standard programming.</p>
-     * <p/>
-     * <p>This constructor is public to permit tools that require a JavaBean instance
-     * to operate.</p>
+     * DurationFormatUtils instances should NOT be constructed in standard programming.
+     *
+     * This constructor is public to permit tools that require a JavaBean instance
+     * to operate.
      */
     public DurationFormatUtil() {
         super();
     }
 
     /**
-     * <p>Pattern used with <code>FastDateFormat</code> and <code>SimpleDateFormat</code>
-     * for the ISO8601 period format used in durations.</p>
+     * Pattern used with <code>FastDateFormat</code> and <code>SimpleDateFormat</code>
+     * for the ISO8601 period format used in durations.
      *
      * @see java.text.SimpleDateFormat
      */
     public static final String ISO_EXTENDED_FORMAT_PATTERN = "'P'yyyy'Y'M'M'd'DT'H'H'm'M's.S'S'";
 
     /**
-     * <p>Formats the time gap as a string.</p>
-     * <p/>
-     * <p>The format used is ISO8601-like:
-     * <i>H</i>:<i>m</i>:<i>s</i>.<i>S</i>.</p>
+     * Formats the time gap as a string.
+     *
+     * The format used is ISO8601-like:
+     * <i>H</i>:<i>m</i>:<i>s</i>.<i>S</i>.
      *
      * @param durationMillis the duration to format
      * @return the time as a String
@@ -86,12 +86,12 @@ public class DurationFormatUtil {
     }
 
     /**
-     * <p>Formats the time gap as a string.</p>
-     * <p/>
-     * <p>The format used is the ISO8601 period format.</p>
-     * <p/>
-     * <p>This method formats durations using the days and lower fields of the
-     * ISO format pattern, such as P7D6TH5M4.321S.</p>
+     * Formats the time gap as a string.
+     *
+     * The format used is the ISO8601 period format.
+     *
+     * This method formats durations using the days and lower fields of the
+     * ISO format pattern, such as P7D6TH5M4.321S.
      *
      * @param durationMillis the duration to format
      * @return the time as a String
@@ -101,11 +101,11 @@ public class DurationFormatUtil {
     }
 
     /**
-     * <p>Formats the time gap as a string, using the specified format, and
-     * using the default timezone.</p>
-     * <p/>
-     * <p>This method formats durations using the days and lower fields of the
-     * format pattern. Months and larger are not used.</p>
+     * Formats the time gap as a string, using the specified format, and
+     * using the default timezone.
+     *
+     * This method formats durations using the days and lower fields of the
+     * format pattern. Months and larger are not used.
      *
      * @param durationMillis the duration to format
      * @param format         the way in which to format the duration
@@ -145,10 +145,10 @@ public class DurationFormatUtil {
     }
 
     /**
-     * <p>Formats an elapsed time into a plurialization correct string.</p>
-     * <p/>
-     * <p>This method formats durations using the days and lower fields of the
-     * format pattern. Months and larger are not used.</p>
+     * Formats an elapsed time into a pluralization correct string.
+     *
+     * This method formats durations using the days and lower fields of the
+     * format pattern. Months and larger are not used.
      *
      * @param durationMillis               the elapsed time to report in milliseconds
      * @param suppressLeadingZeroElements  suppresses leading 0 elements
@@ -209,9 +209,9 @@ public class DurationFormatUtil {
     }
 
     /**
-     * <p>Formats the time gap as a string.</p>
-     * <p/>
-     * <p>The format used is the ISO8601 period format.</p>
+     * Formats the time gap as a string.
+     *
+     * The format used is the ISO8601 period format.
      *
      * @param startMillis the start of the duration to format
      * @param endMillis   the end of the duration to format
@@ -234,19 +234,19 @@ public class DurationFormatUtil {
     }
 
     /**
-     * <p>Formats the time gap as a string, using the specified format, and
-     * the timezone may be specified. </p>
-     * <p/>
-     * <p>When calculating the difference between months/days, it chooses to
+     * Formats the time gap as a string, using the specified format, and
+     * the timezone may be specified.
+     *
+     * When calculating the difference between months/days, it chooses to
      * calculate months first. So when working out the number of months and
      * days between January 15th and March 10th, it choose 1 month and
-     * 23 days gained by choosing January->February = 1 month and then
+     * 23 days gained by choosing January-&gt;February = 1 month and then
      * calculating days forwards, and not the 1 month and 26 days gained by
-     * choosing March -> February = 1 month and then calculating days
-     * backwards. </p>
-     * <p/>
-     * <p>For more control, the <a href="http://joda-time.sf.net/">Joda-Time</a>
-     * library is recommended.</p>
+     * choosing March -&gt; February = 1 month and then calculating days
+     * backwards.
+     *
+     * For more control, the <a href="http://joda-time.sf.net/">Joda-Time</a>
+     * library is recommended.
      *
      * @param startMillis the start of the duration
      * @param endMillis   the end of the duration
@@ -386,7 +386,7 @@ public class DurationFormatUtil {
     }
 
     /**
-     * <p>The internal method to do the formatting.</p>
+     * The internal method to do the formatting.
      *
      * @param tokens       the tokens
      * @param years        the number of years

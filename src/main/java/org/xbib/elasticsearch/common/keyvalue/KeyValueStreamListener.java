@@ -23,8 +23,8 @@ public interface KeyValueStreamListener<K, V> {
     /**
      * Begin a key/value sequence
      *
-     * @return this value listener
-     * @throws java.io.IOException
+     * @return this listener
+     * @throws java.io.IOException if this method fails
      */
     KeyValueStreamListener<K, V> begin() throws IOException;
 
@@ -33,6 +33,8 @@ public interface KeyValueStreamListener<K, V> {
      *
      * @param key   the key
      * @param value the value
+     * @return this istener
+     * @throws java.io.IOException if this method fails
      */
     KeyValueStreamListener<K, V> keyValue(K key, V value) throws IOException;
 
@@ -40,7 +42,8 @@ public interface KeyValueStreamListener<K, V> {
      * Declare the keys for the values
      *
      * @param keys the keys
-     * @return this ValueListener
+     * @return this listener
+     * @throws java.io.IOException if this method fails
      */
     KeyValueStreamListener<K, V> keys(List<K> keys) throws IOException;
 
@@ -48,8 +51,8 @@ public interface KeyValueStreamListener<K, V> {
      * Receive values for the declared keys
      *
      * @param values the values
-     * @return this ValueListener
-     * @throws java.io.IOException
+     * @return this listener
+     * @throws java.io.IOException if this method fails
      */
     KeyValueStreamListener<K, V> values(List<V> values) throws IOException;
 
@@ -57,7 +60,7 @@ public interface KeyValueStreamListener<K, V> {
      * End a key/value sequence
      *
      * @return this listener
-     * @throws java.io.IOException
+     * @throws java.io.IOException if this method fails
      */
     KeyValueStreamListener<K, V> end() throws IOException;
 

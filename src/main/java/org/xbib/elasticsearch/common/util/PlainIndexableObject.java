@@ -137,6 +137,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
      * Recursive method to build XContent from a key/value map of Values
      *
      * @param builder the builder
+     * @param params the params
      * @param map     the map
      * @return the XContent builder
      * @throws java.io.IOException when method gave an error

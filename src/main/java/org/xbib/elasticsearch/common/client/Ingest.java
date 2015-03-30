@@ -76,10 +76,10 @@ public interface Ingest {
     /**
      * Set the maximum concurent bulk requests
      *
-     * @param maxConcurentBulkRequests maximum number of concurrent ingest requests
+     * @param maxConcurrentBulkRequests maximum number of concurrent ingest requests
      * @return this Ingest
      */
-    Ingest maxConcurrentBulkRequests(int maxConcurentBulkRequests);
+    Ingest maxConcurrentBulkRequests(int maxConcurrentBulkRequests);
 
     /**
      * Set the maximum volume for bulk request before flush
@@ -131,6 +131,8 @@ public interface Ingest {
      * Create settings
      *
      * @param in the input stream with settings
+     * @throws java.io.IOException if this method fails
+     *
      */
     void setting(InputStream in) throws IOException;
 
@@ -171,7 +173,9 @@ public interface Ingest {
     /**
      * Create a new index
      *
+     * @param index the index
      * @return this ingest
+     * @throws java.io.IOException if this method fails
      */
     Ingest newIndex(String index) throws IOException;
 
@@ -182,6 +186,7 @@ public interface Ingest {
     /**
      * Delete index
      *
+     * @param index the index
      * @return this ingest
      */
     Ingest deleteIndex(String index);
@@ -189,14 +194,20 @@ public interface Ingest {
     /**
      * Start bulk mode
      *
+     * @param index the index
+     * @param startRefreshInterval the refresh interval for start
+     * @param stopRefreshInterval the refresh interval for start
      * @return this ingest
+     * @throws java.io.IOException if this method fails
      */
     Ingest startBulk(String index, long startRefreshInterval, long stopRefreshInterval) throws IOException;
 
     /**
      * Stops bulk mode
      *
+     * @param index the index
      * @return this Ingest
+     * @throws java.io.IOException if this method fails
      */
     Ingest stopBulk(String index) throws IOException;
 
@@ -230,18 +241,21 @@ public interface Ingest {
      *
      * @param maxWait maximum wait time
      * @return this ingest
-     * @throws InterruptedException
+     * @throws InterruptedException if wait is interrupted
      */
     Ingest waitForResponses(TimeValue maxWait) throws InterruptedException;
 
     /**
      * Flush the index
+     * @param index the index
+     * @return this ingest
      */
     Ingest flush(String index);
 
     /**
      * Refresh the index.
      *
+     * @param index the index
      * @return this ingest
      */
     Ingest refresh(String index);
@@ -249,22 +263,29 @@ public interface Ingest {
     /**
      * Add replica level.
      *
+     * @param index the index
      * @param level the replica level
      * @return number of shards after updating replica level
+     * @throws java.io.IOException if this method fails
      */
     int updateReplicaLevel(String index, int level) throws IOException;
 
     /**
      * Wait for cluster being healthy.
      *
-     * @throws IOException
+     * @param status the status
+     * @param timeValue the time value
+     * @return this ingest
+     * @throws IOException if wait fails
      */
     Ingest waitForCluster(ClusterHealthStatus status, TimeValue timeValue) throws IOException;
 
     /**
      * Wait for index recovery (after replica change)
      *
+     * @param index the index
      * @return number of shards found
+     * @throws java.io.IOException if this method fails
      */
     int waitForRecovery(String index) throws IOException;
 

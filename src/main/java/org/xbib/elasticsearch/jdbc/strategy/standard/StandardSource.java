@@ -495,13 +495,14 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     /**
      * Merge key/values from JDBC result set
      *
+     * @param command  the SQL command that created this result set
      * @param results  result set
      * @param listener the value listener
      * @throws SQLException when SQL execution gives an error
      * @throws IOException  when input/output error occurs
      */
     protected void merge(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
-            throws SQLException, IOException, ParseException {
+            throws SQLException, IOException {
         if (listener == null) {
             return;
         }

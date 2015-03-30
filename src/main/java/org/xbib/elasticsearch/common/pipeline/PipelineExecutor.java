@@ -63,18 +63,18 @@ public interface PipelineExecutor<T, R extends PipelineRequest, P extends Pipeli
      * Execute the pipelines.
      *
      * @return this setExecutor
-     * @throws InterruptedException
-     * @throws java.util.concurrent.ExecutionException
-     * @throws java.io.IOException
+     * @throws InterruptedException if this method is interrupted
+     * @throws java.util.concurrent.ExecutionException if thread execution fails
+     * @throws java.io.IOException if input/output method fails
      */
     PipelineExecutor<T, R, P> waitFor() throws InterruptedException, ExecutionException, IOException;
 
     /**
      * Shut down this pipeline executor.
      *
-     * @throws InterruptedException
-     * @throws java.util.concurrent.ExecutionException
-     * @throws java.io.IOException
+     * @throws InterruptedException if this method is interrupted
+     * @throws java.util.concurrent.ExecutionException if thread execution fails
+     * @throws java.io.IOException if input/output method fails
      */
     void shutdown() throws InterruptedException, ExecutionException, IOException;
 
