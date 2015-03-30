@@ -29,6 +29,8 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.river.AbstractRiverComponent;
 import org.elasticsearch.river.RiverName;
 import org.elasticsearch.river.RiverSettings;
+import org.xbib.elasticsearch.action.plugin.jdbc.state.delete.DeleteRiverStateAction;
+import org.xbib.elasticsearch.action.plugin.jdbc.state.delete.DeleteRiverStateRequest;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateRequestBuilder;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.get.GetRiverStateResponse;
 import org.xbib.elasticsearch.plugin.jdbc.RiverRunnable;
@@ -171,6 +173,12 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
             logger.error(e.getMessage(), e);
         }
         logger.info("river closed [{}/{}]", riverName.getType(), riverName.getName());
+
+        // delete state
+        DeleteRiverStateRequest riverStateRequest = new DeleteRiverStateRequest();
+        riverStateRequest.setRiverName(riverName.getName()).setRiverType(riverName.getType());
+        client.admin().cluster().execute(DeleteRiverStateAction.INSTANCE, riverStateRequest).actionGet();
+        logger.info("river state deleted [{}/{}]", riverName.getType(), riverName.getName());
     }
 
     /**
