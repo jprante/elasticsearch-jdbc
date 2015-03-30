@@ -238,17 +238,26 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
 
     @Override
     public boolean equals(Object o) {
-        return o != null && o instanceof IndexableObject && hashCode() == o.hashCode();
+        if (!(o instanceof  IndexableObject)) {
+            return false;
+        }
+        IndexableObject indexableObject = (IndexableObject)o;
+        return new EqualsBuilder()
+                .append(optype(), indexableObject.optype())
+                .append(index(), indexableObject.index())
+                .append(type(), indexableObject.type())
+                .append(id(), indexableObject.id())
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 37 * hash + (optype() != null ? optype().hashCode() : 0);
-        hash = 37 * hash + (index() != null ? index().hashCode() : 0);
-        hash = 37 * hash + (type() != null ? type().hashCode() : 0);
-        hash = 37 * hash + (id() != null ? id().hashCode() : 0);
-        return hash;
+        return new HashCodeBuilder()
+                .append(optype())
+                .append(index())
+                .append(type())
+                .append(id())
+                .toHashCode();
     }
 
 }
