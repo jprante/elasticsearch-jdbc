@@ -14,7 +14,7 @@ import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskAction;
 import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequest;
 import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
 import org.xbib.elasticsearch.common.state.State;
-import org.xbib.elasticsearch.jdbc.support.AbstractNodeTestHelper;
+import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;

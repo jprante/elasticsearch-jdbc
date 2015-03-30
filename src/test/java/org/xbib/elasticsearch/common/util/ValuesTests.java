@@ -1,8 +1,7 @@
-package org.xbib.elasticsearch.jdbc.support;
+package org.xbib.elasticsearch.common.util;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.common.util.Values;
 
 /**
  * Unit-test checking basic functionality of {@link Values}.

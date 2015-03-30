@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.jdbc.support;
+package org.xbib.elasticsearch.support;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;

@@ -171,7 +171,7 @@
                     <properties>
                         <property>
                             <name>listener</name>
-                            <value>org.xbib.elasticsearch.jdbc.support.TestListener</value>
+                            <value>org.xbib.elasticsearch.support.TestListener</value>
                         </property>
                     </properties>
                 </configuration>

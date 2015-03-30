@@ -1,8 +1,7 @@
-package org.xbib.elasticsearch.jdbc.crypt;
+package org.xbib.elasticsearch.common.crypt;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.common.crypt.Codec;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;

@@ -5,9 +5,9 @@
 
     <test name="Support Tests">
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.support.ValuesTests"/>
-            <class name="org.xbib.elasticsearch.jdbc.support.ValueListenerTests"/>
-            <class name="org.xbib.elasticsearch.jdbc.support.TimeWindowedTests"/>
+            <class name="org.xbib.elasticsearch.common.util.ValuesTests"/>
+            <class name="org.xbib.elasticsearch.common.util.ValueListenerTests"/>
+            <class name="org.xbib.elasticsearch.common.util.TimeWindowedTests"/>
         </classes>
     </test>
 

@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.jdbc.support;
+package org.xbib.elasticsearch.common.util;
 
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.format.DateTimeFormat;

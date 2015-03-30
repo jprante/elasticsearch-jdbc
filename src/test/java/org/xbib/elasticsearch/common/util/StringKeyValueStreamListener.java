@@ -1,7 +1,5 @@
-package org.xbib.elasticsearch.jdbc.support;
+package org.xbib.elasticsearch.common.util;
 
-import org.xbib.elasticsearch.common.util.IndexableObject;
-import org.xbib.elasticsearch.common.util.PlainKeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
 
 import java.io.IOException;

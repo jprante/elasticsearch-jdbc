@@ -19,7 +19,7 @@ import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.jdbc.support.AbstractNodeTestHelper;
+import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;

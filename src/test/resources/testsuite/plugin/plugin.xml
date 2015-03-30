@@ -5,7 +5,7 @@
 
     <test name="Plugin Tests">
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.util.SQLCommandTests"/>
+            <class name="org.xbib.elasticsearch.common.util.SQLCommandTests"/>
         </classes>
     </test>
 

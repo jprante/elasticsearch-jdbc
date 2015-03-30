@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.jdbc.support;
+package org.xbib.elasticsearch.support;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;

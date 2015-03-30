@@ -11,7 +11,7 @@ import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.common.util.Values;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.jdbc.support.StringKeyValueStreamListener;
+import org.xbib.elasticsearch.support.StringKeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.Connection;

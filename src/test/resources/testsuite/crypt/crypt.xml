@@ -5,7 +5,7 @@
 
     <test name="Crypt Tests">
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.crypt.CryptTest"/>
+            <class name="org.xbib.elasticsearch.common.crypt.CryptTest"/>
         </classes>
     </test>
 
