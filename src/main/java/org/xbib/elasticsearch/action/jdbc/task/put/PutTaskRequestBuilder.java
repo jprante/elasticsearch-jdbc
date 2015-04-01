@@ -18,26 +18,26 @@ package org.xbib.elasticsearch.action.jdbc.task.put;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.master.AcknowledgedRequestBuilder;
 import org.elasticsearch.client.ClusterAdminClient;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 
-public class PutStateRequestBuilder extends AcknowledgedRequestBuilder<PutStateRequest, PutStateResponse, PutStateRequestBuilder, ClusterAdminClient> {
+public class PutTaskRequestBuilder extends AcknowledgedRequestBuilder<PutTaskRequest, PutTaskResponse, PutTaskRequestBuilder, ClusterAdminClient> {
 
-    public PutStateRequestBuilder(ClusterAdminClient client) {
-        super(client, new PutStateRequest());
+    public PutTaskRequestBuilder(ClusterAdminClient client) {
+        super(client, new PutTaskRequest());
     }
 
-    public PutStateRequestBuilder setName(String name) {
+    public PutTaskRequestBuilder setName(String name) {
         request.setName(name);
         return this;
     }
 
-    public PutStateRequestBuilder setState(State state) {
-        request.setState(state);
+    public PutTaskRequestBuilder setTask(Task task) {
+        request.setTask(task);
         return this;
     }
 
     @Override
-    protected void doExecute(ActionListener<PutStateResponse> listener) {
-        client.execute(PutStateAction.INSTANCE, request, listener);
+    protected void doExecute(ActionListener<PutTaskResponse> listener) {
+        client.execute(PutTaskAction.INSTANCE, request, listener);
     }
 }

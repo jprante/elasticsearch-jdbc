@@ -22,7 +22,7 @@ public class GetTaskAction extends ClusterAction<GetTaskRequest, GetTaskResponse
 
     public static final GetTaskAction INSTANCE = new GetTaskAction();
 
-    public static final String NAME = "org.xbib.elasticsearch.action.jdbc.task.get";
+    public static final String NAME = "org.xbib.elasticsearch.action.task.get";
 
     private GetTaskAction() {
         super(NAME);

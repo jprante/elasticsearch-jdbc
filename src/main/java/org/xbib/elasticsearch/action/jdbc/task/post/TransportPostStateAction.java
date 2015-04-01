@@ -32,9 +32,9 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
-import org.xbib.elasticsearch.common.state.State;
-import org.xbib.elasticsearch.common.state.cluster.StateMetaData;
-import org.xbib.elasticsearch.common.state.cluster.StateService;
+import org.xbib.elasticsearch.common.task.Task;
+import org.xbib.elasticsearch.common.task.cluster.ClusterTaskMetaData;
+import org.xbib.elasticsearch.common.task.cluster.ClusterTaskService;
 
 import java.io.IOException;
 import java.util.List;
@@ -97,37 +97,34 @@ public class TransportPostStateAction extends TransportNodesOperationAction<Post
 
     @Override
     protected PostTaskResponse.NodeTaskResponse nodeOperation(NodeTaskRequest nodeTaskRequest) throws ElasticsearchException {
-        StateMetaData stateMetaData = clusterService.state().metaData().custom(StateMetaData.TYPE);
-        StateService stateService = injector.getInstance(StateService.class);
+        ClusterTaskMetaData metaData = clusterService.state().metaData().custom(ClusterTaskMetaData.TYPE);
+        ClusterTaskService service = injector.getInstance(ClusterTaskService.class);
         PostTaskRequest request = nodeTaskRequest.getRequest();
-        ImmutableList<State> states = stateMetaData.getStates(request.getName());
-        State state = request.getState();
-        if (states.isEmpty()) {
-            if (state == null) {
-                state = new State();
+        ImmutableList<Task> tasks = metaData.getTask(request.getName());
+        Task task = request.getTask();
+        if (tasks.isEmpty()) {
+            if (task == null) {
+                task = new Task();
             }
-            state.setName(request.getName());
-            state.getMap().put("aborted", request.isAbort());
-            state.getMap().put("suspended", request.isSuspend());
+            task.setName(request.getName());
+            task.getMap().put("aborted", request.isAbort());
+            task.getMap().put("suspended", request.isSuspend());
         } else {
             // merge old and new, overwrite previous values only if set in request
-            state = states.get(0);
-            if (request.getState().getStarted() != null) {
-                state.setStarted(request.getState().getStarted());
+            task = tasks.get(0);
+            if (request.getTask().getStarted() != null) {
+                task.setStarted(request.getTask().getStarted());
             }
-            if (request.getState().getLastActiveBegin() != null) {
-                state.setLastActive(request.getState().getLastActiveBegin(), request.getState().getLastActiveEnd());
+            if (request.getTask().getLastActiveBegin() != null) {
+                task.setLastActive(request.getTask().getLastActiveBegin(), request.getTask().getLastActiveEnd());
             }
-            if (request.getState().getCounter() != null) {
-                state.setCounter(request.getState().getCounter());
+            if (request.getTask().getMap() != null && !request.getTask().getMap().isEmpty()) {
+                task.getMap().putAll(request.getTask().getMap());
             }
-            if (request.getState().getMap() != null && !request.getState().getMap().isEmpty()) {
-                state.getMap().putAll(request.getState().getMap());
-            }
-            state.getMap().put("aborted", request.isAbort());
-            state.getMap().put("suspended", request.isSuspend());
+            task.getMap().put("aborted", request.isAbort());
+            task.getMap().put("suspended", request.isSuspend());
         }
-        stateService.postState(new StateService.StateRequest("post_state[" + request.getName() + "]", state)
+        service.postTask(new ClusterTaskService.TaskRequest("post_task[" + request.getName() + "]", task)
                , new ActionListener<ClusterStateUpdateResponse>() {
             @Override
             public void onResponse(ClusterStateUpdateResponse clusterStateUpdateResponse) {

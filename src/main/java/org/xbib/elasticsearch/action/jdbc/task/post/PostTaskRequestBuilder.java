@@ -18,7 +18,7 @@ package org.xbib.elasticsearch.action.jdbc.task.post;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.nodes.NodesOperationRequestBuilder;
 import org.elasticsearch.client.ClusterAdminClient;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 
 public class PostTaskRequestBuilder extends NodesOperationRequestBuilder<PostTaskRequest, PostTaskResponse, PostTaskRequestBuilder> {
 
@@ -31,8 +31,8 @@ public class PostTaskRequestBuilder extends NodesOperationRequestBuilder<PostTas
         return this;
     }
 
-    public PostTaskRequestBuilder setState(State state) {
-        request.setState(state);
+    public PostTaskRequestBuilder setTask(Task task) {
+        request.setTask(task);
         return this;
     }
 

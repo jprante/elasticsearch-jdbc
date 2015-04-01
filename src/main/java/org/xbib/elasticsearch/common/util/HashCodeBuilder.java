@@ -7,8 +7,7 @@ public class HashCodeBuilder {
     private int iTotal = 0;
 
     public HashCodeBuilder() {
-        iConstant = 37;
-        iTotal = 17;
+        this(17, 37);
     }
 
     public HashCodeBuilder(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber) {
@@ -24,16 +23,14 @@ public class HashCodeBuilder {
         if (multiplierNonZeroOddNumber % 2 == 0) {
             throw new IllegalArgumentException("HashCodeBuilder requires an odd multiplier");
         }
-        iConstant = multiplierNonZeroOddNumber;
         iTotal = initialNonZeroOddNumber;
+        iConstant = multiplierNonZeroOddNumber;
     }
-
 
     public HashCodeBuilder append(boolean value) {
         iTotal = iTotal * iConstant + (value ? 0 : 1);
         return this;
     }
-
 
     public HashCodeBuilder append(boolean[] array) {
         if (array == null) {
@@ -46,12 +43,10 @@ public class HashCodeBuilder {
         return this;
     }
 
-
     public HashCodeBuilder append(byte value) {
         iTotal = iTotal * iConstant + value;
         return this;
     }
-
 
     public HashCodeBuilder append(byte[] array) {
         if (array == null) {
@@ -64,12 +59,10 @@ public class HashCodeBuilder {
         return this;
     }
 
-
     public HashCodeBuilder append(char value) {
         iTotal = iTotal * iConstant + value;
         return this;
     }
-
 
     public HashCodeBuilder append(char[] array) {
         if (array == null) {
@@ -86,7 +79,6 @@ public class HashCodeBuilder {
         return append(Double.doubleToLongBits(value));
     }
 
-
     public HashCodeBuilder append(double[] array) {
         if (array == null) {
             iTotal = iTotal * iConstant;
@@ -98,12 +90,10 @@ public class HashCodeBuilder {
         return this;
     }
 
-
     public HashCodeBuilder append(float value) {
         iTotal = iTotal * iConstant + Float.floatToIntBits(value);
         return this;
     }
-
 
     public HashCodeBuilder append(float[] array) {
         if (array == null) {
@@ -120,7 +110,6 @@ public class HashCodeBuilder {
         iTotal = iTotal * iConstant + value;
         return this;
     }
-
 
     public HashCodeBuilder append(int[] array) {
         if (array == null) {
@@ -195,7 +184,6 @@ public class HashCodeBuilder {
         return this;
     }
 
-
     public HashCodeBuilder append(short[] array) {
         if (array == null) {
             iTotal = iTotal * iConstant;
@@ -204,11 +192,6 @@ public class HashCodeBuilder {
                 append(anArray);
             }
         }
-        return this;
-    }
-
-    public HashCodeBuilder appendSuper(int superHashCode) {
-        iTotal = iTotal * iConstant + superHashCode;
         return this;
     }
 

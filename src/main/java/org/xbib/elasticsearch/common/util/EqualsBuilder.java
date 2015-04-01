@@ -1,18 +1,12 @@
 package org.xbib.elasticsearch.common.util;
 
+import java.math.BigDecimal;
+
 public class EqualsBuilder {
 
     private boolean isEquals = true;
 
     public EqualsBuilder() {
-    }
-
-    public EqualsBuilder appendSuper(boolean superEquals) {
-        if (!isEquals) {
-            return this;
-        }
-        isEquals = superEquals;
-        return this;
     }
 
     public EqualsBuilder append(Object lhs, Object rhs) {
@@ -23,20 +17,19 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         Class<?> lhsClass = lhs.getClass();
         if (!lhsClass.isArray()) {
-            if (lhs instanceof java.math.BigDecimal && rhs instanceof java.math.BigDecimal) {
-                isEquals = (((java.math.BigDecimal) lhs).compareTo((java.math.BigDecimal) rhs) == 0);
+            if (lhs instanceof BigDecimal && rhs instanceof BigDecimal) {
+                isEquals = (((BigDecimal) lhs).compareTo((BigDecimal) rhs) == 0);
             } else {
                 isEquals = lhs.equals(rhs);
             }
         } else if (lhs.getClass() != rhs.getClass()) {
-            this.setEquals(false);
-        }
-        else if (lhs instanceof long[]) {
+            setEquals(false);
+        } else if (lhs instanceof long[]) {
             append((long[]) lhs, (long[]) rhs);
         } else if (lhs instanceof int[]) {
             append((int[]) lhs, (int[]) rhs);
@@ -53,7 +46,6 @@ public class EqualsBuilder {
         } else if (lhs instanceof boolean[]) {
             append((boolean[]) lhs, (boolean[]) rhs);
         } else {
-            // Not an array of primitives
             append((Object[]) lhs, (Object[]) rhs);
         }
         return this;
@@ -117,7 +109,7 @@ public class EqualsBuilder {
         if (!isEquals) {
             return this;
         }
-        isEquals = (lhs == rhs);
+        isEquals = lhs == rhs;
         return this;
     }
 
@@ -129,11 +121,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -150,11 +142,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -171,11 +163,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -192,11 +184,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -213,11 +205,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -234,11 +226,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -255,11 +247,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -276,11 +268,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -297,11 +289,11 @@ public class EqualsBuilder {
             return this;
         }
         if (lhs == null || rhs == null) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         if (lhs.length != rhs.length) {
-            this.setEquals(false);
+            setEquals(false);
             return this;
         }
         for (int i = 0; i < lhs.length && isEquals; ++i) {
@@ -311,7 +303,7 @@ public class EqualsBuilder {
     }
 
     public boolean isEquals() {
-        return this.isEquals;
+        return isEquals;
     }
 
     protected void setEquals(boolean isEquals) {

@@ -21,7 +21,7 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 
 import java.io.IOException;
 
@@ -29,33 +29,33 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class GetTaskResponse extends ActionResponse implements ToXContent {
 
-    private ImmutableList<State> states = ImmutableList.of();
+    private ImmutableList<Task> tasks = ImmutableList.of();
 
     public GetTaskResponse() {
     }
 
-    public GetTaskResponse(ImmutableList<State> states) {
-        if (states != null) {
-            this.states = states;
+    public GetTaskResponse(ImmutableList<Task> tasks) {
+        if (tasks != null) {
+            this.tasks = tasks;
         }
     }
 
-    public State getState() {
-        if (states == null || states.isEmpty()) {
+    public Task getNextTask() {
+        if (tasks == null || tasks.isEmpty()) {
             return null;
         } else {
-            return states.get(0);
+            return tasks.get(0);
         }
     }
 
-    public ImmutableList<State> getStates() {
-        return states;
+    public ImmutableList<Task> getTasks() {
+        return tasks;
     }
 
     public boolean exists(String name) {
-        if (states != null && name != null) {
-            for (State state : states) {
-                if (state != null && name.equals(state.getName())) {
+        if (tasks != null && name != null) {
+            for (Task task : tasks) {
+                if (task != null && name.equals(task.getName())) {
                     return true;
                 }
             }
@@ -67,31 +67,31 @@ public class GetTaskResponse extends ActionResponse implements ToXContent {
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
         int len = in.readInt();
-        ImmutableList.Builder<State> builder = ImmutableList.builder();
+        ImmutableList.Builder<Task> builder = ImmutableList.builder();
         for (int i = 0; i < len; i++) {
-            State rs = new State();
-            rs.readFrom(in);
-            builder.add(rs);
+            Task task = new Task();
+            task.readFrom(in);
+            builder.add(task);
         }
-        states = builder.build();
+        tasks = builder.build();
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
-        if (states == null) {
+        if (tasks == null) {
             out.writeInt(0);
         } else {
-            out.writeInt(states.size());
-            for (State rs : states) {
-                rs.writeTo(out);
+            out.writeInt(tasks.size());
+            for (Task task : tasks) {
+                task.writeTo(out);
             }
         }
     }
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.field("state", states);
+        builder.field("task", tasks);
         return builder;
     }
 

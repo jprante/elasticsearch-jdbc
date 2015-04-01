@@ -19,19 +19,19 @@ import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.support.master.AcknowledgedRequest;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 
 import java.io.IOException;
 
 import static org.elasticsearch.action.ValidateActions.addValidationError;
 
-public class PutStateRequest extends AcknowledgedRequest<PutStateRequest> {
+public class PutTaskRequest extends AcknowledgedRequest<PutTaskRequest> {
 
     private String name;
 
-    private State state;
+    private Task task;
 
-    public PutStateRequest setName(String name) {
+    public PutTaskRequest setName(String name) {
         this.name = name;
         return this;
     }
@@ -40,13 +40,13 @@ public class PutStateRequest extends AcknowledgedRequest<PutStateRequest> {
         return name;
     }
 
-    public PutStateRequest setState(State state) {
-        this.state = state;
+    public PutTaskRequest setTask(Task task) {
+        this.task = task;
         return this;
     }
 
-    public State getState() {
-        return state;
+    public Task getTask() {
+        return task;
     }
 
     @Override
@@ -55,8 +55,8 @@ public class PutStateRequest extends AcknowledgedRequest<PutStateRequest> {
         if (name == null) {
             validationException = addValidationError("name is missing", null);
         }
-        if (state == null) {
-            validationException = addValidationError("state is missing", validationException);
+        if (task == null) {
+            validationException = addValidationError("task is missing", validationException);
         }
         return validationException;
     }
@@ -67,8 +67,8 @@ public class PutStateRequest extends AcknowledgedRequest<PutStateRequest> {
         readTimeout(in);
         this.name = in.readString();
         if (in.readBoolean()) {
-            this.state = new State();
-            state.readFrom(in);
+            this.task = new Task();
+            task.readFrom(in);
         }
     }
 
@@ -77,11 +77,11 @@ public class PutStateRequest extends AcknowledgedRequest<PutStateRequest> {
         super.writeTo(out);
         writeTimeout(out);
         out.writeString(name);
-        if (state == null) {
+        if (task == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            state.writeTo(out);
+            task.writeTo(out);
         }
     }
 }

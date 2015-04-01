@@ -34,8 +34,7 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.regex.Regex;
 import org.elasticsearch.common.settings.Settings;
-import org.xbib.elasticsearch.common.state.State;
-import org.xbib.elasticsearch.common.state.cluster.StateMetaData;
+import org.xbib.elasticsearch.common.task.Task;
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +48,9 @@ import static org.elasticsearch.common.collect.Maps.newHashMap;
  */
 public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskService> implements ClusterStateListener {
 
-    private final static ESLogger logger = ESLoggerFactory.getLogger("jdbc");
+    private final static ESLogger logger = ESLoggerFactory.getLogger("task");
 
-    private volatile ImmutableMap<String, State> states = ImmutableMap.of();
+    private volatile ImmutableMap<String, Task> tasks = ImmutableMap.of();
 
     private final Injector injector;
 
@@ -80,55 +79,55 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
     @Override
     public void clusterChanged(ClusterChangedEvent event) {
         try {
-            StateMetaData prev = event.previousState().getMetaData().custom(StateMetaData.TYPE);
-            StateMetaData curr = event.state().getMetaData().custom(StateMetaData.TYPE);
+            ClusterTaskMetaData prev = event.previousState().getMetaData().custom(ClusterTaskMetaData.TYPE);
+            ClusterTaskMetaData curr = event.state().getMetaData().custom(ClusterTaskMetaData.TYPE);
             if (prev == null) {
                 if (curr != null) {
-                    processStatesMetadata(curr);
+                    processTaskMetadata(curr);
                 }
             } else {
                 if (!prev.equals(curr)) {
-                    processStatesMetadata(curr);
+                    processTaskMetadata(curr);
                 }
             }
         } catch (Throwable t) {
-            logger.warn("failed to update state", t);
+            logger.warn("failed to update task", t);
         }
     }
 
-    private void processStatesMetadata(StateMetaData stateMetaData) {
-        Map<String, State> survivors = newHashMap();
+    private void processTaskMetadata(ClusterTaskMetaData metaData) {
+        Map<String, Task> survivors = newHashMap();
         // first, remove states that are no longer there
-        for (Map.Entry<String, State> entry : states.entrySet()) {
-            if (stateMetaData != null) {
-                if (!stateMetaData.getStates(entry.getKey()).isEmpty()) {
+        for (Map.Entry<String, Task> entry : tasks.entrySet()) {
+            if (metaData != null) {
+                if (!metaData.getTask(entry.getKey()).isEmpty()) {
                     survivors.put(entry.getKey(), entry.getValue());
                 }
             }
         }
-        ImmutableMap.Builder<String, State> builder = ImmutableMap.builder();
-        if (stateMetaData != null) {
-            for (State newState : stateMetaData.getStates()) {
+        ImmutableMap.Builder<String, Task> builder = ImmutableMap.builder();
+        if (metaData != null) {
+            for (Task newState : metaData.getTasks()) {
                 if (newState.getName() == null) {
                     continue;
                 }
                 String name = newState.getName();
-                State oldState = survivors.get(name);
+                Task oldState = survivors.get(name);
                 oldState = newState;
                 builder.put(name, oldState);
             }
 
         }
-        this.states = builder.build();
+        this.tasks = builder.build();
     }
 
     /**
-     * Put a new state into state management
+     * Put a new task into task management
      *
-     * @param request  a state register request
+     * @param request  a task request
      * @param listener listener for cluster state update response
      */
-    public void putState(final StateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
+    public void putTask(final TaskRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
         clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
             @Override
             protected ClusterStateUpdateResponse newResponse(boolean acknowledged) {
@@ -138,52 +137,52 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
             @Override
             public ClusterState execute(ClusterState currentState) {
                 // sanity check
-                if (request.state.getName() == null) {
+                if (request.task.getName() == null) {
                     logger.debug("put: no name given");
                     return currentState;
                 }
-                String name = request.state.getName();
-                State previous = states.get(name);
+                String name = request.task.getName();
+                Task previous = tasks.get(name);
                 if (previous != null) {
                     logger.debug("put: previous state not null");
                     return currentState;
                 }
-                Map<String, State> newStates = newHashMap();
-                newStates.put(name, request.state);
-                states = ImmutableMap.copyOf(newStates);
+                Map<String, Task> newTasks = newHashMap();
+                newTasks.put(name, request.task);
+                tasks = ImmutableMap.copyOf(newTasks);
                 MetaData.Builder metadataBuilder = MetaData.builder(currentState.metaData());
-                StateMetaData states = currentState.metaData().custom(StateMetaData.TYPE);
-                if (states == null) {
-                    logger.debug("put: first state [{}]", request.state.getName());
-                    states = new StateMetaData(request.state);
+                ClusterTaskMetaData tasks = currentState.metaData().custom(ClusterTaskMetaData.TYPE);
+                if (tasks == null) {
+                    logger.debug("put: first task [{}]", request.task.getName());
+                    tasks = new ClusterTaskMetaData(request.task);
                 } else {
                     boolean found = false;
-                    List<State> stateList = newLinkedList();
-                    for (State state : states.getStates()) {
+                    List<Task> taskList = newLinkedList();
+                    for (Task state : tasks.getTasks()) {
                         if (state != null
-                                && request.state != null && state.getName() != null
-                                && state.getName().equals(request.state.getName())) {
+                                && state.getName() != null
+                                && state.getName().equals(request.task.getName())) {
                             found = true;
-                            stateList.add(request.state);
+                            taskList.add(request.task);
                         } else {
-                            stateList.add(state);
+                            taskList.add(state);
                         }
                     }
-                    if (!found && request.state != null && request.state.getName() != null) {
-                        logger.debug("put: another state [{}]", request.state.getName());
-                        stateList.add(request.state);
+                    if (!found && request.task.getName() != null) {
+                        logger.debug("put: another task [{}]", request.task.getName());
+                        taskList.add(request.task);
                     } else {
-                        logger.debug("put: update existing state [{}]", request.state.getName());
+                        logger.debug("put: update existing task [{}]", request.task.getName());
                     }
-                    states = new StateMetaData(stateList.toArray(new State[stateList.size()]));
+                    tasks = new ClusterTaskMetaData(taskList.toArray(new Task[taskList.size()]));
                 }
-                metadataBuilder.putCustom(StateMetaData.TYPE, states);
+                metadataBuilder.putCustom(ClusterTaskMetaData.TYPE, tasks);
                 return ClusterState.builder(currentState).metaData(metadataBuilder).build();
             }
 
             @Override
             public void onFailure(String source, Throwable t) {
-                logger.warn("failed to create state [{}]", t, request.state.getName());
+                logger.warn("failed to create tasks [{}]", t, request.task.getName());
                 super.onFailure(source, t);
             }
 
@@ -195,12 +194,12 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
     }
 
     /**
-     * Post a new state for state management
+     * Post a new task for task management
      *
-     * @param request  a state register request
-     * @param listener listener for cluster state update response
+     * @param request  a task register request
+     * @param listener listener for cluster task update response
      */
-    public void postState(final StateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
+    public void postTask(final TaskRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
         clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
             @Override
             protected ClusterStateUpdateResponse newResponse(boolean acknowledged) {
@@ -210,54 +209,52 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
             @Override
             public ClusterState execute(ClusterState currentState) {
                 // sanity check
-                if (request.state.getName() == null) {
+                if (request.task.getName() == null) {
                     logger.debug("post: no name given");
                     return currentState;
                 }
-                String name = request.state.getName();
-                Map<String, State> newStates = newHashMap();
-                newStates.put(name, request.state);
-                states = ImmutableMap.copyOf(newStates);
+                String name = request.task.getName();
+                Map<String, Task> newTasks = newHashMap();
+                newTasks.put(name, request.task);
+                tasks = ImmutableMap.copyOf(newTasks);
                 MetaData.Builder metadataBuilder = MetaData.builder(currentState.metaData());
-                StateMetaData stateMetaData = currentState.metaData().custom(StateMetaData.TYPE);
-                if (stateMetaData == null) {
-                    logger.debug("post: first state [{}]", request.state.getName());
-                    stateMetaData = new StateMetaData(request.state);
+                ClusterTaskMetaData metaData = currentState.metaData().custom(ClusterTaskMetaData.TYPE);
+                if (metaData == null) {
+                    logger.debug("post: first task [{}]", request.task.getName());
+                    metaData = new ClusterTaskMetaData(request.task);
                 } else {
                     boolean found = false;
-                    List<State> stateList = newLinkedList();
-                    for (State state : stateMetaData.getStates()) {
-                        if (state.getName() != null && state.getName().equals(request.state.getName())) {
+                    List<Task> taskList = newLinkedList();
+                    for (Task task : metaData.getTasks()) {
+                        if (task.getName() != null && task.getName().equals(request.task.getName())) {
                             found = true;
-                            if (state.getMap() == null) {
-                                state.setMap(new HashMap<String, Object>());
+                            if (task.getMap() == null) {
+                                task.setMap(new HashMap<String, Object>());
                             }
-                            if (request.state != null) {
-                                state.setStarted(request.state.getStarted());
-                                state.setLastActive(request.state.getLastActiveBegin(), request.state.getLastActiveEnd());
-                                if (request.state.getMap() != null) {
-                                    state.getMap().putAll(request.state.getMap());
-                                }
+                            task.setStarted(request.task.getStarted());
+                            task.setLastActive(request.task.getLastActiveBegin(), request.task.getLastActiveEnd());
+                            if (request.task.getMap() != null) {
+                                task.getMap().putAll(request.task.getMap());
                             }
-                            logger.debug("post: update state = {}", state);
-                            stateList.add(state);
+                            logger.debug("post: update task = {}", task);
+                            taskList.add(task);
                         } else {
-                            stateList.add(state);
+                            taskList.add(task);
                         }
                     }
-                    if (!found && request.state != null && request.state.getName() != null) {
-                        logger.debug("post: another state [{}]", request.state.getName());
-                        stateList.add(request.state);
+                    if (!found && request.task.getName() != null) {
+                        logger.debug("post: another taks [{}]", request.task.getName());
+                        taskList.add(request.task);
                     }
-                    stateMetaData = new StateMetaData(stateList.toArray(new State[stateList.size()]));
+                    metaData = new ClusterTaskMetaData(taskList.toArray(new Task[taskList.size()]));
                 }
-                metadataBuilder.putCustom(StateMetaData.TYPE, stateMetaData);
+                metadataBuilder.putCustom(ClusterTaskMetaData.TYPE, metaData);
                 return ClusterState.builder(currentState).metaData(metadataBuilder).build();
             }
 
             @Override
             public void onFailure(String source, Throwable t) {
-                logger.warn("failed to post state [{}/{}]", t, request.state.getName());
+                logger.warn("failed to post task [{}/{}]", t, request.task.getName());
                 super.onFailure(source, t);
             }
 
@@ -270,12 +267,12 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
 
 
     /**
-     * Delete state from state management
+     * Delete task from task management
      *
-     * @param request  the unregister state request
+     * @param request  the unregister task request
      * @param listener listener for cluster state updates
      */
-    public void deleteState(final DeleteStateRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
+    public void deleteTask(final DeleteTaskRequest request, final ActionListener<ClusterStateUpdateResponse> listener) {
         clusterService.submitStateUpdateTask(request.cause, new AckedClusterStateUpdateTask<ClusterStateUpdateResponse>(request, listener) {
             @Override
             protected ClusterStateUpdateResponse newResponse(boolean acknowledged) {
@@ -285,21 +282,21 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
             @Override
             public ClusterState execute(ClusterState currentState) {
                 MetaData.Builder metadataBuilder = MetaData.builder(currentState.metaData());
-                StateMetaData stateMetaData = currentState.metaData().custom(StateMetaData.TYPE);
-                if (stateMetaData != null && stateMetaData.getStates().size() > 0) {
-                    List<State> states = newLinkedList();
+                ClusterTaskMetaData metaData = currentState.metaData().custom(ClusterTaskMetaData.TYPE);
+                if (metaData != null && metaData.getTasks().size() > 0) {
+                    List<Task> tasks = newLinkedList();
                     boolean changed = false;
-                    for (State state : stateMetaData.getStates()) {
-                        if (Regex.simpleMatch(request.name, state.getName())) {
-                            logger.debug("delete: state [{}]", state.getName());
+                    for (Task task : metaData.getTasks()) {
+                        if (Regex.simpleMatch(request.name, task.getName())) {
+                            logger.debug("delete: task [{}]", task.getName());
                             changed = true;
                         } else {
-                            states.add(state);
+                            tasks.add(task);
                         }
                     }
                     if (changed) {
-                        stateMetaData = new StateMetaData(states.toArray(new State[states.size()]));
-                        metadataBuilder.putCustom(StateMetaData.TYPE, stateMetaData);
+                        metaData = new ClusterTaskMetaData(tasks.toArray(new Task[tasks.size()]));
+                        metadataBuilder.putCustom(ClusterTaskMetaData.TYPE, metaData);
                         return ClusterState.builder(currentState).metaData(metadataBuilder).build();
                     }
                 }
@@ -313,38 +310,38 @@ public class ClusterTaskService extends AbstractLifecycleComponent<ClusterTaskSe
         });
     }
 
-    public static class StateRequest extends ClusterStateUpdateRequest<StateRequest> {
+    public static class TaskRequest extends ClusterStateUpdateRequest<TaskRequest> {
 
         final String cause;
 
-        State state;
+        final Task task;
 
         /**
          * Constructs new register request
          *
          * @param cause registration cause
-         * @param state state
+         * @param task state
          */
-        public StateRequest(String cause, State state) {
+        public TaskRequest(String cause, Task task) {
             this.cause = cause;
-            this.state = state;
+            this.task = task;
         }
 
     }
 
-    public static class DeleteStateRequest extends ClusterStateUpdateRequest<DeleteStateRequest> {
+    public static class DeleteTaskRequest extends ClusterStateUpdateRequest<DeleteTaskRequest> {
 
         final String cause;
 
         final String name;
 
         /**
-         * Creates a new delete state request
+         * Creates a new delete task request
          *
          * @param cause delete cause
          * @param name  name
          */
-        public DeleteStateRequest(String cause, String name) {
+        public DeleteTaskRequest(String cause, String name) {
             this.cause = cause;
             this.name = name;
         }

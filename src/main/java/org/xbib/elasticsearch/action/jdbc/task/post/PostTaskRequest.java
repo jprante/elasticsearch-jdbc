@@ -19,7 +19,7 @@ import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.support.nodes.NodesOperationRequest;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 
 import java.io.IOException;
 
@@ -29,7 +29,7 @@ public class PostTaskRequest extends NodesOperationRequest<PostTaskRequest> {
 
     private String name;
 
-    private State state;
+    private Task task;
 
     private boolean abort;
 
@@ -44,13 +44,13 @@ public class PostTaskRequest extends NodesOperationRequest<PostTaskRequest> {
         return name;
     }
 
-    public PostTaskRequest setState(State state) {
-        this.state = state;
+    public PostTaskRequest setTask(Task task) {
+        this.task = task;
         return this;
     }
 
-    public State getState() {
-        return state;
+    public Task getTask() {
+        return task;
     }
 
     public PostTaskRequest setAbort() {
@@ -94,8 +94,8 @@ public class PostTaskRequest extends NodesOperationRequest<PostTaskRequest> {
         super.readFrom(in);
         this.name = in.readString();
         if (in.readBoolean()) {
-            this.state = new State();
-            state.readFrom(in);
+            this.task = new Task();
+            task.readFrom(in);
         }
         this.abort = in.readBoolean();
         this.suspend = in.readBoolean();
@@ -105,11 +105,11 @@ public class PostTaskRequest extends NodesOperationRequest<PostTaskRequest> {
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
         out.writeString(name);
-        if (state == null) {
+        if (task == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            state.writeTo(out);
+            task.writeTo(out);
         }
         out.writeBoolean(abort);
         out.writeBoolean(suspend);

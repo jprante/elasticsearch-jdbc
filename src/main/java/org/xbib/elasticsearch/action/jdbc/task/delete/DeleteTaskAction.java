@@ -22,7 +22,7 @@ public class DeleteTaskAction extends ClusterAction<DeleteTaskRequest, DeleteTas
 
     public static final DeleteTaskAction INSTANCE = new DeleteTaskAction();
 
-    public static final String NAME = "org.xbib.elasticsearch.action.jdbc.task.delete";
+    public static final String NAME = "org.xbib.elasticsearch.action.task.delete";
 
     private DeleteTaskAction() {
         super(NAME);

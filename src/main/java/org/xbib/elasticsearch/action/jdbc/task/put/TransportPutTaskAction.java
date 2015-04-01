@@ -29,19 +29,19 @@ import org.elasticsearch.common.inject.Injector;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
-import org.xbib.elasticsearch.common.state.State;
-import org.xbib.elasticsearch.common.state.cluster.StateService;
+import org.xbib.elasticsearch.common.task.Task;
+import org.xbib.elasticsearch.common.task.cluster.ClusterTaskService;
 
-public class TransportPutStateAction extends TransportMasterNodeOperationAction<PutStateRequest, PutStateResponse> {
+public class TransportPutTaskAction extends TransportMasterNodeOperationAction<PutTaskRequest, PutTaskResponse> {
 
     private final Injector injector;
 
     @Inject
-    public TransportPutStateAction(Settings settings, ThreadPool threadPool,
-                                   ClusterService clusterService, TransportService transportService,
-                                   ActionFilters actionFilters,
-                                   Injector injector) {
-        super(settings, PutStateAction.NAME, transportService, clusterService, threadPool, actionFilters);
+    public TransportPutTaskAction(Settings settings, ThreadPool threadPool,
+                                  ClusterService clusterService, TransportService transportService,
+                                  ActionFilters actionFilters,
+                                  Injector injector) {
+        super(settings, PutTaskAction.NAME, transportService, clusterService, threadPool, actionFilters);
         this.injector = injector;
     }
 
@@ -51,34 +51,34 @@ public class TransportPutStateAction extends TransportMasterNodeOperationAction<
     }
 
     @Override
-    protected PutStateRequest newRequest() {
-        return new PutStateRequest();
+    protected PutTaskRequest newRequest() {
+        return new PutTaskRequest();
     }
 
     @Override
-    protected PutStateResponse newResponse() {
-        return new PutStateResponse();
+    protected PutTaskResponse newResponse() {
+        return new PutTaskResponse();
     }
 
     @Override
-    protected ClusterBlockException checkBlock(PutStateRequest request, ClusterState state) {
+    protected ClusterBlockException checkBlock(PutTaskRequest request, ClusterState state) {
         return state.blocks().indexBlockedException(ClusterBlockLevel.METADATA, "");
     }
 
     @Override
-    protected void masterOperation(PutStateRequest request, ClusterState clusterState, final ActionListener<PutStateResponse> listener) throws ElasticsearchException {
-        StateService stateService = injector.getInstance(StateService.class);
-        State state = request.getState();
-        if (state == null) {
-            state = new State();
+    protected void masterOperation(PutTaskRequest request, ClusterState clusterState, final ActionListener<PutTaskResponse> listener) throws ElasticsearchException {
+        ClusterTaskService service = injector.getInstance(ClusterTaskService.class);
+        Task task = request.getTask();
+        if (task == null) {
+            task = new Task();
         }
-        state.setName(request.getName());
-        stateService.putState(new StateService.StateRequest("put_state[" + request.getName() + "]", state)
+        task.setName(request.getName());
+        service.putTask(new ClusterTaskService.TaskRequest("put_task[" + request.getName() + "]", task)
                 .masterNodeTimeout(request.masterNodeTimeout())
                 .ackTimeout(request.ackTimeout()), new ActionListener<ClusterStateUpdateResponse>() {
             @Override
             public void onResponse(ClusterStateUpdateResponse clusterStateUpdateResponse) {
-                listener.onResponse(new PutStateResponse(clusterStateUpdateResponse.isAcknowledged()));
+                listener.onResponse(new PutTaskResponse(clusterStateUpdateResponse.isAcknowledged()));
             }
 
             @Override

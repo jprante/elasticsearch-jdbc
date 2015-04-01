@@ -29,11 +29,12 @@ import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequestBuilder;
 import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
 import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskRequestBuilder;
 import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskResponse;
-import org.xbib.elasticsearch.action.jdbc.task.put.PutStateRequestBuilder;
-import org.xbib.elasticsearch.action.jdbc.task.put.PutStateResponse;
+import org.xbib.elasticsearch.action.jdbc.task.put.PutTaskRequestBuilder;
+import org.xbib.elasticsearch.action.jdbc.task.put.PutTaskResponse;
 import org.xbib.elasticsearch.common.client.IngestFactory;
 import org.xbib.elasticsearch.common.client.Metric;
 import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Flow;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
@@ -161,18 +162,18 @@ public class StandardFlow<C extends Context> implements Flow<C> {
         GetTaskRequestBuilder stateRequestBuilder = new GetTaskRequestBuilder(client.admin().cluster())
                 .setName(name);
         GetTaskResponse stateResponse = stateRequestBuilder.execute().actionGet();
-        State state = stateResponse.getState();
-        // if state was not defined yet, define it now
-        if (state == null) {
-            logger.debug("state not found, creating new state");
-            state = new State()
+        Task task = stateResponse.getNextTask();
+        // if task was not defined yet, define it now
+        if (task == null) {
+            logger.debug("task not found, creating new task");
+            task = new Task()
                     .setName(name)
                     .setStarted(new DateTime());
-            PutStateRequestBuilder putStateRequestBuilder = new PutStateRequestBuilder(client.admin().cluster())
+            PutTaskRequestBuilder putTaskRequestBuilder = new PutTaskRequestBuilder(client.admin().cluster())
                     .setName(name)
-                    .setState(state);
-            PutStateResponse putStateResponse = putStateRequestBuilder.execute().actionGet();
-            if (putStateResponse.isAcknowledged()) {
+                    .setTask(task);
+            PutTaskResponse putTaskResponse = putTaskRequestBuilder.execute().actionGet();
+            if (putTaskResponse.isAcknowledged()) {
                 logger.debug("before fetch: put initial state {}", state);
             } else {
                 logger.error("befor fetch: initial state not acknowledged", state);
@@ -242,7 +243,7 @@ public class StandardFlow<C extends Context> implements Flow<C> {
      * @param context the context
      * @throws java.lang.Exception if this method fails
      */
-    protected void afterFetch(Context context) throws Exception {
+    protected void afterFetch(C context) throws Exception {
         if (context == null) {
             return;
         }

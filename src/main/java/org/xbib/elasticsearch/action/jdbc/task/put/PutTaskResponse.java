@@ -25,12 +25,12 @@ import java.io.IOException;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class PutStateResponse extends AcknowledgedResponse implements ToXContent {
+public class PutTaskResponse extends AcknowledgedResponse implements ToXContent {
 
-    public PutStateResponse() {
+    public PutTaskResponse() {
     }
 
-    public PutStateResponse(boolean acknowledged) {
+    public PutTaskResponse(boolean acknowledged) {
         super(acknowledged);
     }
 

@@ -18,23 +18,23 @@ package org.xbib.elasticsearch.action.jdbc.task.put;
 import org.elasticsearch.action.admin.cluster.ClusterAction;
 import org.elasticsearch.client.ClusterAdminClient;
 
-public class PutStateAction extends ClusterAction<PutStateRequest, PutStateResponse, PutStateRequestBuilder> {
+public class PutTaskAction extends ClusterAction<PutTaskRequest, PutTaskResponse, PutTaskRequestBuilder> {
 
-    public static final PutStateAction INSTANCE = new PutStateAction();
+    public static final PutTaskAction INSTANCE = new PutTaskAction();
 
-    public static final String NAME = "org.xbib.elasticsearch.action.jdbc.state.put";
+    public static final String NAME = "org.xbib.elasticsearch.action.task.put";
 
-    private PutStateAction() {
+    private PutTaskAction() {
         super(NAME);
     }
 
     @Override
-    public PutStateRequestBuilder newRequestBuilder(ClusterAdminClient client) {
-        return new PutStateRequestBuilder(client);
+    public PutTaskRequestBuilder newRequestBuilder(ClusterAdminClient client) {
+        return new PutTaskRequestBuilder(client);
     }
 
     @Override
-    public PutStateResponse newResponse() {
-        return new PutStateResponse();
+    public PutTaskResponse newResponse() {
+        return new PutTaskResponse();
     }
 }

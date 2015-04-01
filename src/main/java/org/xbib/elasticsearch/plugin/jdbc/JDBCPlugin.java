@@ -30,8 +30,8 @@ import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskAction;
 import org.xbib.elasticsearch.action.jdbc.task.get.TransportGetTaskAction;
 import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskAction;
 import org.xbib.elasticsearch.action.jdbc.task.post.TransportPostStateAction;
-import org.xbib.elasticsearch.action.jdbc.task.put.PutStateAction;
-import org.xbib.elasticsearch.action.jdbc.task.put.TransportPutStateAction;
+import org.xbib.elasticsearch.action.jdbc.task.put.PutTaskAction;
+import org.xbib.elasticsearch.action.jdbc.task.put.TransportPutTaskAction;
 import org.xbib.elasticsearch.common.state.cluster.StateModule;
 import org.xbib.elasticsearch.common.state.cluster.StateService;
 import org.xbib.elasticsearch.common.task.cluster.ClusterTaskModule;
@@ -88,7 +88,7 @@ public class JDBCPlugin extends AbstractPlugin {
 
     public void onModule(ActionModule module) {
         module.registerAction(DeleteTaskAction.INSTANCE, TransportDeleteTaskAction.class);
-        module.registerAction(PutStateAction.INSTANCE, TransportPutStateAction.class);
+        module.registerAction(PutTaskAction.INSTANCE, TransportPutTaskAction.class);
         module.registerAction(PostTaskAction.INSTANCE, TransportPostStateAction.class);
         module.registerAction(GetTaskAction.INSTANCE, TransportGetTaskAction.class);
         module.registerAction(ExecuteTaskAction.INSTANCE, TransportExecuteTaskAction.class);

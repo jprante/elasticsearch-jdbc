@@ -22,7 +22,7 @@ public class PostTaskAction extends ClusterAction<PostTaskRequest, PostTaskRespo
 
     public static final PostTaskAction INSTANCE = new PostTaskAction();
 
-    public static final String NAME = "org.xbib.elasticsearch.action.jdbc.state.post";
+    public static final String NAME = "org.xbib.elasticsearch.action.task.post";
 
     private PostTaskAction() {
         super(NAME);
