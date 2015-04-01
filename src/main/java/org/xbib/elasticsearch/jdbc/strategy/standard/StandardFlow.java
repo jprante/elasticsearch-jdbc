@@ -33,7 +33,6 @@ import org.xbib.elasticsearch.action.jdbc.task.put.PutTaskRequestBuilder;
 import org.xbib.elasticsearch.action.jdbc.task.put.PutTaskResponse;
 import org.xbib.elasticsearch.common.client.IngestFactory;
 import org.xbib.elasticsearch.common.client.Metric;
-import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.common.task.Task;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Flow;
@@ -158,11 +157,11 @@ public class StandardFlow<C extends Context> implements Flow<C> {
      * @throws java.lang.Exception if this method fails
      */
     protected void beforeFetch(C context) throws Exception {
-        logger.debug("before fetch: getting state for {}", name);
-        GetTaskRequestBuilder stateRequestBuilder = new GetTaskRequestBuilder(client.admin().cluster())
+        logger.debug("before fetch: getting task for {}", name);
+        GetTaskRequestBuilder taskRequestBuilder = new GetTaskRequestBuilder(client.admin().cluster())
                 .setName(name);
-        GetTaskResponse stateResponse = stateRequestBuilder.execute().actionGet();
-        Task task = stateResponse.getNextTask();
+        GetTaskResponse taskResponse = taskRequestBuilder.execute().actionGet();
+        Task task = taskResponse.getNextTask();
         // if task was not defined yet, define it now
         if (task == null) {
             logger.debug("task not found, creating new task");
@@ -174,23 +173,22 @@ public class StandardFlow<C extends Context> implements Flow<C> {
                     .setTask(task);
             PutTaskResponse putTaskResponse = putTaskRequestBuilder.execute().actionGet();
             if (putTaskResponse.isAcknowledged()) {
-                logger.debug("before fetch: put initial state {}", state);
+                logger.debug("before fetch: put task {}", task);
             } else {
-                logger.error("befor fetch: initial state not acknowledged", state);
+                logger.error("befor fetch: task not acknowledged", task);
             }
         }
         JDBCSource source = createSource(context.getDefinition());
         Mouth mouth = createMouth(context.getDefinition());
-        context = fillContext(context, state, source, mouth);
+        context = fillContext(context, task, source, mouth);
         logger.debug("before fetch: created source = {}, mouth = {}, context = {}",
                 source, mouth, context);
-        Integer counter = state.getCounter() + 1;
-        context.setState(state.setCounter(counter).setLastActive(new DateTime(), null));
-        PostTaskRequestBuilder postStateRequestBuilder = new PostTaskRequestBuilder(client.admin().cluster())
+        context.setTask(task.setLastActive(new DateTime(), null));
+        PostTaskRequestBuilder postTaskRequestBuilder = new PostTaskRequestBuilder(client.admin().cluster())
                 .setName(name)
-                .setState(context.getState());
-        PostTaskResponse postTaskResponse = postStateRequestBuilder.execute().actionGet();
-        logger.debug("before fetch: state posted = {}", state);
+                .setTask(context.getTask());
+        PostTaskResponse postTaskResponse = postTaskRequestBuilder.execute().actionGet();
+        logger.debug("before fetch: task posted = {}", task);
         // call source "before fetch"
         try {
             context.getSource().beforeFetch();
@@ -206,7 +204,7 @@ public class StandardFlow<C extends Context> implements Flow<C> {
     }
 
     /**
-     * After context and state setup, when data should be fetched from source, this method is called.
+     * After context and task setup, when data should be fetched from source, this method is called.
      * The default is to invoke the fetch() method of the source.
      *@param context the context
      * @throws Exception if fetch fails
@@ -252,13 +250,13 @@ public class StandardFlow<C extends Context> implements Flow<C> {
             return;
         }
         // set activity
-        State state = context.getState()
-                .setLastActive(context.getState().getLastActiveBegin(), new DateTime());
-        PostTaskRequestBuilder postStateRequestBuilder = new PostTaskRequestBuilder(client.admin().cluster())
+        Task task = context.getTask()
+                .setLastActive(context.getTask().getLastActiveBegin(), new DateTime());
+        PostTaskRequestBuilder postTaskRequestBuilder = new PostTaskRequestBuilder(client.admin().cluster())
                 .setName(name)
-                .setState(state);
-        PostTaskResponse postTaskResponse = postStateRequestBuilder.execute().actionGet();
-        logger.debug("after fetch: state posted = {}", state);
+                .setTask(task);
+        PostTaskResponse postTaskResponse = postTaskRequestBuilder.execute().actionGet();
+        logger.debug("after fetch: task posted = {}", task);
         try {
             context.getMouth().afterFetch();
         } catch (Exception e) {
@@ -307,7 +305,7 @@ public class StandardFlow<C extends Context> implements Flow<C> {
         return mouth;
     }
 
-    protected C fillContext(C context, State state, JDBCSource JDBCSource, Mouth mouth) throws IOException {
+    protected C fillContext(C context, Task task, JDBCSource JDBCSource, Mouth mouth) throws IOException {
         Map<String, Object> params = context.getDefinition();
         List<SQLCommand> sql = SQLCommand.parse(params);
         String rounding = XContentMapValues.nodeStringValue(params.get("rounding"), null);
@@ -343,7 +341,7 @@ public class StandardFlow<C extends Context> implements Flow<C> {
         Map<String, Object> connectionProperties = (Map<String, Object>) params.get("connection_properties");
         boolean shouldTreatBinaryAsString = XContentMapValues.nodeBooleanValue(params.get("treat_binary_as_string"), false);
 
-        context.setState(state)
+        context.setTask(task)
                 .setSource(JDBCSource)
                 .setMouth(mouth)
                 .setMetric(meterMetric)

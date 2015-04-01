@@ -2,7 +2,7 @@ package org.xbib.elasticsearch.jdbc.strategy;
 
 import org.elasticsearch.common.metrics.MeterMetric;
 import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Map;
  * a run. Beside holding references to definition, source and mouth,
  * the objects control the behavior of the source.
  */
-public interface Context<S extends Source, M extends Mouth> {
+public interface Context<T extends Task, S extends Source, M extends Mouth> {
 
     /**
      * Set instance definition
@@ -31,19 +31,19 @@ public interface Context<S extends Source, M extends Mouth> {
     Map<String, Object> getDefinition();
 
     /**
-     * Set state
+     * Set task
      *
-     * @param state the state
+     * @param task the task
      * @return this context
      */
-    Context setState(State state);
+    Context setTask(T task);
 
     /**
-     * Get state
+     * Get task
      *
-     * @return the state
+     * @return the task
      */
-    State getState();
+    T getTask();
 
     /**
      * Set source

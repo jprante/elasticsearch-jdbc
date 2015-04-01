@@ -21,7 +21,7 @@ import org.elasticsearch.common.metrics.MeterMetric;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentHelper;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
@@ -39,16 +39,16 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  * The context consists of the parameters that span source and mouth settings.
  * It represents the state, for supporting the task execution, and scripting.
  */
-public class StandardContext implements Context<JDBCSource, Mouth> {
+public class StandardContext implements Context<Task, JDBCSource, Mouth> {
 
     private final static ESLogger logger = ESLoggerFactory.getLogger("jdbc");
 
     private Map<String, Object> definition;
 
     /**
-     * The state
+     * The task
      */
-    private State state;
+    private Task task;
 
     /**
      * The metrics
@@ -136,14 +136,14 @@ public class StandardContext implements Context<JDBCSource, Mouth> {
     }
 
     @Override
-    public StandardContext setState(State state) {
-        this.state = state;
+    public StandardContext setTask(Task task) {
+        this.task = task;
         return this;
     }
 
     @Override
-    public State getState() {
-        return state;
+    public Task getTask() {
+        return task;
     }
 
     @Override
@@ -328,41 +328,6 @@ public class StandardContext implements Context<JDBCSource, Mouth> {
         return lastRowCount;
     }
 
-    public StandardContext setLastStartDate(long lastStartDate) {
-        state.setLastStartDate(lastStartDate);
-        return this;
-    }
-
-    public long getLastStartDate() {
-        return state.getLastStartDate();
-    }
-
-    public StandardContext setLastEndDate(long lastEndDate) {
-        state.setLastEndDate(lastEndDate);
-        return this;
-    }
-
-    public long getLastEndDate() {
-        return state.getLastEndDate();
-    }
-
-    public StandardContext setLastExecutionStartDate(long lastExecutionStartDate) {
-        state.setLastExecutionStartDate(lastExecutionStartDate);
-        return this;
-    }
-
-    public long getLastExecutionStartDate() {
-        return state.getLastExecutionStartDate();
-    }
-
-    public StandardContext setLastExecutionEndDate(long lastExecutionEndDate) {
-        state.setLastExecutionEndDate(lastExecutionEndDate);
-        return this;
-    }
-
-    public long getLastExecutionEndDate() {
-        return state.getLastExecutionEndDate();
-    }
 
     public StandardContext setColumnNameMap(Map<String, Object> columnNameMap) {
         this.columnNameMap = columnNameMap;
@@ -465,10 +430,6 @@ public class StandardContext implements Context<JDBCSource, Mouth> {
                     .field("shouldignorenull", shouldIgnoreNull)
                     .field("lastResultSetMetadata", lastResultSetMetadata)
                     .field("lastDatabaseMetadata", lastDatabaseMetadata)
-                    .field("lastStartDate", state.getLastStartDate())
-                    .field("lastEndDate", state.getLastEndDate())
-                    .field("lastExecutionStartDate", state.getLastExecutionStartDate())
-                    .field("lastExecutionEndDate", state.getLastExecutionEndDate())
                     .field("columnNameMap", columnNameMap)
                     .field("lastRow", lastRow)
                     .field("sql", sql)

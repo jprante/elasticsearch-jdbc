@@ -24,7 +24,7 @@ import org.xbib.elasticsearch.common.pipeline.Pipeline;
 import org.xbib.elasticsearch.common.pipeline.PipelineProvider;
 import org.xbib.elasticsearch.common.pipeline.PipelineRequest;
 import org.xbib.elasticsearch.common.pipeline.executor.MetricSimplePipelineExecutor;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Flow;
 
@@ -170,11 +170,11 @@ public class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
      * At last, all pipeline sources and mouths are resumed.
      */
     public void checkForSuspension() {
-        GetTaskRequestBuilder stateRequestBuilder = new GetTaskRequestBuilder(flow.getClient().admin().cluster())
+        GetTaskRequestBuilder taskRequestBuilder = new GetTaskRequestBuilder(flow.getClient().admin().cluster())
                 .setName(flow.getName());
-        GetTaskResponse stateResponse = stateRequestBuilder.execute().actionGet();
-        State state = stateResponse.getState();
-        if (state.isSuspended()) {
+        GetTaskResponse taskResponse = taskRequestBuilder.execute().actionGet();
+        Task task = taskResponse.getNextTask();
+        if (task.isSuspended()) {
             // suspend all sources and mouths
             for (FeederPipeline pipeline : pipelines) {
                 Context context = pipeline.getContext();
@@ -196,14 +196,14 @@ public class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
             // wait for resume
             try {
                 do {
-                    stateRequestBuilder = new GetTaskRequestBuilder(flow.getClient().admin().cluster())
+                    taskRequestBuilder = new GetTaskRequestBuilder(flow.getClient().admin().cluster())
                             .setName(flow.getName());
-                    stateResponse = stateRequestBuilder.execute().actionGet();
-                    state = stateResponse.getState();
-                    if (state.isSuspended()) {
+                    taskResponse = taskRequestBuilder.execute().actionGet();
+                    task = taskResponse.getNextTask();
+                    if (task.isSuspended()) {
                         Thread.sleep(1000L);
                     }
-                } while (state.isSuspended());
+                } while (task.isSuspended());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.warn("interrupted");

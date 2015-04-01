@@ -20,7 +20,7 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.jdbc.strategy.Mouth;
@@ -58,10 +58,10 @@ public class ColumnFlow extends StandardFlow<ColumnContext> {
     }
 
     @Override
-    protected ColumnContext fillContext(ColumnContext columnContext, State state,
+    protected ColumnContext fillContext(ColumnContext columnContext, Task task,
                                         JDBCSource JDBCSource,
                                         Mouth mouth) throws IOException {
-        ColumnContext context = super.fillContext(columnContext, state, JDBCSource, mouth);
+        ColumnContext context = super.fillContext(columnContext, task, JDBCSource, mouth);
         // defaults for column strategy
         Map<String, Object> params = context.getDefinition();
         String columnCreatedAt = XContentMapValues.nodeStringValue(params.get("created_at"), "created_at");
@@ -82,7 +82,7 @@ public class ColumnFlow extends StandardFlow<ColumnContext> {
     protected void fetch(Context context) throws Exception {
         DateTime currentTime = new DateTime();
         context.getSource().fetch();
-        context.getState().getMap().put(LAST_RUN_TIME, currentTime);
+        context.getTask().getMap().put(LAST_RUN_TIME, currentTime);
     }
 
 }

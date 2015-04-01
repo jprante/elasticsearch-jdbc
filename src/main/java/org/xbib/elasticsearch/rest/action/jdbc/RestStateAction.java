@@ -36,7 +36,7 @@ import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
 import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskAction;
 import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskRequest;
 import org.xbib.elasticsearch.action.jdbc.task.post.PostTaskResponse;
-import org.xbib.elasticsearch.common.state.State;
+import org.xbib.elasticsearch.common.task.Task;
 
 import java.io.IOException;
 
@@ -110,9 +110,9 @@ public class RestStateAction extends BaseRestHandler {
                 PostTaskRequest postTaskRequest = new PostTaskRequest();
                 postTaskRequest.setName(name);
                 if (request.hasContent()) {
-                    State state = new State().setName(name);
-                    state.setMap(XContentHelper.convertToMap(request.content(), true).v2());
-                    postTaskRequest.setState(state);
+                    Task task = new Task().setName(name);
+                    task.setMap(XContentHelper.convertToMap(request.content(), true).v2());
+                    postTaskRequest.setTask(task);
                 }
                 if (abort) {
                     postTaskRequest.setAbort();
