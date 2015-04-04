@@ -1,10 +1,7 @@
 #!/bin/sh
 
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 # ES_HOME reguired to detect elasticsearch jars
-export ES_HOME=~es/elasticsearch-1.4.0.Beta1
+export ES_HOME=~es/elasticsearch-1.4.4
 
 echo '
 {
@@ -18,12 +15,20 @@ echo '
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
-        "sql" :  "select *, page_id as _id from page",
+        "sql" :  [
+             {
+               "statement": "select round(count(*) / 10000) as num from page"
+             },
+             {
+               "statement": "select *, page_id as _id from page limit ?",
+               "parameter" : "$row.num"
+             }
+         ],
         "treat_binary_as_string" : true,
         "index" : "metawiki"
       }
 }
 ' | java \
-    -cp "${DIR}/*" \
+    -cp "${ES_HOME}/lib/*:${ES_HOME}/plugins/jdbc/*" \
     org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
     org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
