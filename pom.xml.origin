@@ -196,7 +196,7 @@
                     <descriptors>
                         <descriptor>${basedir}/src/main/assemblies/plugin.xml</descriptor>
                     </descriptors>
-                    <appendAssemblyId>true</appendAssemblyId>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
                     <execution>
@@ -254,7 +254,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.4</version>
@@ -280,7 +279,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 
@@ -297,12 +295,10 @@
                     <bottom>${project.name}</bottom>
                 </configuration>
             </plugin>
-            <!--
             <plugin>
                 <artifactId>maven-surefire-report-plugin</artifactId>
                 <version>2.18.1</version>
             </plugin>
-            -->
         </plugins>
     </reporting>
 
@@ -348,7 +344,6 @@
             </build>
         </profile>
 
-        <!--
         <profile>
             <id>test-derby</id>
             <dependencies>
@@ -402,6 +397,10 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
+                                <!--
+                                interestingly, the test success depends on the execution order of the suites.
+                                 Has to be investigated.
+                                -->
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/h2.xml</suiteXmlFile>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/h2.xml</suiteXmlFile>
                             </suiteXmlFiles>
@@ -410,7 +409,6 @@
                 </plugins>
             </build>
         </profile>
-        -->
 
         <profile>
             <id>test-hsqldb</id>
@@ -471,7 +469,6 @@
             </build>
         </profile>
 
-        <!--
         <profile>
             <id>test-postgresql</id>
             <dependencies>
@@ -500,10 +497,8 @@
                 </plugins>
             </build>
         </profile>
-        -->
 
         <!-- Warning: sqlite JDBC is at a very immature state today -->
-        <!--
         <profile>
             <id>test-sqlite</id>
             <dependencies>
@@ -532,11 +527,9 @@
                 </plugins>
             </build>
         </profile>
-        -->
 
         <!-- Warning: Oracle does not assign version numbering scheme to JDBC drivers. Use the latest JDBC jar
            which is available for download for your JDK and database version -->
-        <!--
         <profile>
             <id>test-oracle</id>
             <dependencies>
@@ -565,7 +558,6 @@
                 </plugins>
             </build>
         </profile>
-        -->
 
         <profile>
             <id>no-tests</id>
@@ -581,7 +573,6 @@
             </build>
         </profile>
 
-        <!--
         <profile>
             <id>doclint-java8-disable</id>
             <activation>
@@ -603,7 +594,6 @@
                 </plugins>
             </build>
         </profile>
-        -->
 
     </profiles>
 </project>

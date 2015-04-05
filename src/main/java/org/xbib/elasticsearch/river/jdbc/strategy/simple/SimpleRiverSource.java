@@ -439,6 +439,7 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
                 statement = prepareQuery(command.getSQL());
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
+                logger.info("query results fetchSize={}",results.getFetchSize());
                 RiverMouthKeyValueStreamListener<Object, Object> listener = new RiverMouthKeyValueStreamListener<Object, Object>()
                         .output(context.getRiverMouth())
                         .shouldIgnoreNull(context.shouldIgnoreNull());
@@ -1039,6 +1040,7 @@ public class SimpleRiverSource<RC extends SimpleRiverContext> implements RiverSo
                 Timestamp timestamp = new Timestamp(context.getRiverState() != null && context.getRiverState().getLastActiveBegin() != null ?
                         context.getRiverState().getLastActiveBegin().getMillis() : new DateTime().getMillis());
                 statement.setTimestamp(i, timestamp, calendar);
+                logger.info("$river.state.last_active_begin={}",timestamp);
             } else if ("$river.state.last_active_end".equals(s)) {
                 Timestamp timestamp = new Timestamp(context.getRiverState() != null && context.getRiverState().getLastActiveEnd() != null ?
                         context.getRiverState().getLastActiveEnd().getMillis() : new DateTime().getMillis());
