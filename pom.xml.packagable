@@ -196,7 +196,7 @@
                     <descriptors>
                         <descriptor>${basedir}/src/main/assemblies/plugin.xml</descriptor>
                     </descriptors>
-                    <appendAssemblyId>true</appendAssemblyId>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
                     <execution>
