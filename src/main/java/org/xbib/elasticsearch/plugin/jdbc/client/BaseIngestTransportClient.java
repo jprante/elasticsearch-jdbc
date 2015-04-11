@@ -32,7 +32,7 @@ public abstract class BaseIngestTransportClient extends BaseTransportClient
 
     private final static ESLogger logger = ESLoggerFactory.getLogger("");
 
-    public Ingest newClient(Settings settings) {
+    public Ingest newClient(Settings settings) throws IOException {
         super.createClient(settings);
         return this;
     }

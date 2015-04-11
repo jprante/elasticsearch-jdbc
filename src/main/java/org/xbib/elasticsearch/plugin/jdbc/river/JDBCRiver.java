@@ -245,7 +245,6 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
                 return new BulkNodeClient()
                         .maxActionsPerBulkRequest(maxbulkactions)
                         .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                        .maxRequestWait(maxrequestwait)
                         .maxVolumePerBulkRequest(maxvolume)
                         .flushIngestInterval(flushinterval)
                         .newClient(client);
