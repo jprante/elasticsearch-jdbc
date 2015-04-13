@@ -166,6 +166,12 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
             logger.debug("interrupting river thread");
             riverThread.interrupt();
         }
+        logger.debug("shutting down river flow");
+        try {
+            riverFlow.shutdown();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
         logger.info("river closed [{}/{}]", riverName.getType(), riverName.getName());
 
         // delete state
@@ -239,7 +245,6 @@ public class JDBCRiver extends AbstractRiverComponent implements StatefulRiver, 
                 return new BulkNodeClient()
                         .maxActionsPerBulkRequest(maxbulkactions)
                         .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                        .maxRequestWait(maxrequestwait)
                         .maxVolumePerBulkRequest(maxvolume)
                         .flushIngestInterval(flushinterval)
                         .newClient(client);

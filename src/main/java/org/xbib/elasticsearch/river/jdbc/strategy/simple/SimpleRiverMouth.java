@@ -83,7 +83,7 @@ public class SimpleRiverMouth<RC extends SimpleRiverContext> implements RiverMou
     }
 
     @Override
-    public SimpleRiverMouth setIngestFactory(IngestFactory ingestFactory) {
+    public SimpleRiverMouth setIngestFactory(IngestFactory ingestFactory) throws IOException {
         this.ingestFactory = ingestFactory;
         this.ingest = ingestFactory.create();
         this.metric = ingest.getMetric();
@@ -129,6 +129,15 @@ public class SimpleRiverMouth<RC extends SimpleRiverContext> implements RiverMou
         }
         if (!ingest.isShutdown()) {
             ingest.shutdown();
+        }
+    }
+
+    @Override
+    public synchronized void release() {
+        try {
+            flush();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
         }
     }
 

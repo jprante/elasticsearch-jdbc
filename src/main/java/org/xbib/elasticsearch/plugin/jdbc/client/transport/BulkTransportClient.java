@@ -94,28 +94,17 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
     }
 
     @Override
-    public BulkTransportClient maxRequestWait(TimeValue timeout) {
-        // ignore, not supported
-        return this;
-    }
-
-    @Override
     public BulkTransportClient flushIngestInterval(TimeValue flushInterval) {
         this.flushInterval = flushInterval;
         return this;
     }
 
-    public BulkTransportClient newClient(Client client) {
+    public BulkTransportClient newClient(Client client) throws IOException {
         return this.newClient(findSettings());
     }
 
     @Override
-    public BulkTransportClient newClient(Map<String, String> settings) {
-        return this.newClient(ImmutableSettings.settingsBuilder().put(settings).build());
-    }
-
-    @Override
-    public BulkTransportClient newClient(Settings settings) {
+    public BulkTransportClient newClient(Settings settings) throws IOException {
         super.newClient(settings);
         resetSettings();
         this.metric = new Metric();

@@ -57,7 +57,7 @@ public interface RiverMouth<RC extends RiverContext> {
      * @param ingestFactory the ingest factory
      * @return this river mouth
      */
-    RiverMouth setIngestFactory(IngestFactory ingestFactory);
+    RiverMouth setIngestFactory(IngestFactory ingestFactory) throws IOException;
 
     /**
      * Get the metrics of this river mouth
@@ -165,6 +165,8 @@ public interface RiverMouth<RC extends RiverContext> {
      * @throws IOException when flush fails
      */
     void flush() throws IOException;
+
+    void release() throws Exception;
 
     /**
      * Shutdown river mouth and release all resources, e.g. bulk processor and client

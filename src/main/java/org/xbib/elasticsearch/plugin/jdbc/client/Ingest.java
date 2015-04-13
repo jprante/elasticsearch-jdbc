@@ -55,13 +55,9 @@ public interface Ingest {
      */
     Ingest delete(String index, String type, String id);
 
-    Ingest newClient(Client client);
+    Ingest newClient(Client client) throws IOException;
 
-    Ingest newClient(Settings settings);
-
-    Ingest newClient(Map<String, String> settings);
-
-    List<String> getConnectedNodes();
+    Ingest newClient(Settings settings) throws IOException;
 
     Client client();
 
@@ -96,14 +92,6 @@ public interface Ingest {
      * @return this ingest
      */
     Ingest flushIngestInterval(TimeValue flushInterval);
-
-    /**
-     * Set request timeout. Default is 60s.
-     *
-     * @param timeout timeout
-     * @return this ingest
-     */
-    Ingest maxRequestWait(TimeValue timeout);
 
     /**
      * The number of shards for index creation

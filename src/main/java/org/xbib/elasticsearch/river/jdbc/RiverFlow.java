@@ -100,7 +100,7 @@ public interface RiverFlow<RC extends RiverContext> {
      *
      * @param cause the cause why metrics are logged
      */
-    void logMetrics(RiverContext riverContext, String cause);
+    void logMetrics(RC riverContext, String cause);
 
     /**
      * Execute this river flow
@@ -142,5 +142,7 @@ public interface RiverFlow<RC extends RiverContext> {
     boolean isMetricThreadEnabled();
 
     boolean isSuspensionThreadEnabled();
+
+    void shutdown() throws Exception;
 
 }

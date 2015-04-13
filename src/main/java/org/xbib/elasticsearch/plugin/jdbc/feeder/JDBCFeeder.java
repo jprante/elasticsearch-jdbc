@@ -166,9 +166,6 @@ public class JDBCFeeder {
 
     public JDBCFeeder start() throws Exception {
         this.closed = false;
-        if (ingest.getConnectedNodes().isEmpty()) {
-            throw new IOException("no nodes connected, can't continue");
-        }
         this.feederThread = new Thread(new RiverRunnable(riverFlow, definitions));
         List<Future<?>> futures = schedule(feederThread);
         // wait for all threads to finish
@@ -247,12 +244,11 @@ public class JDBCFeeder {
     private IngestFactory createIngestFactory(final Settings settings) {
         return new IngestFactory() {
             @Override
-            public Ingest create() {
+            public Ingest create() throws IOException {
                 Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
                 ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
-                TimeValue maxrequestwait = settings.getAsTime("max_request_wait", TimeValue.timeValueSeconds(60));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 File home = new File(settings.get("home", "."));
                 BulkTransportClient ingest = new BulkTransportClient();
@@ -261,6 +257,7 @@ public class JDBCFeeder {
                         .put("host", settings.get("elasticsearch.host", "localhost"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
+                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
                         .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder". See also module load skipping in JDBCRiverPlugin
                         .put("client.transport.ignore_cluster_name", true) // ignore cluster name setting
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(10))) //  ping timeout
@@ -272,7 +269,6 @@ public class JDBCFeeder {
                 ingest.maxActionsPerBulkRequest(maxbulkactions)
                         .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                         .maxVolumePerBulkRequest(maxvolume)
-                        .maxRequestWait(maxrequestwait)
                         .flushIngestInterval(flushinterval)
                         .newClient(clientSettings);
                 return ingest;

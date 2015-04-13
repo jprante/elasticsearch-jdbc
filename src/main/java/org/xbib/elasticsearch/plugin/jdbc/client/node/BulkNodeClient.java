@@ -109,12 +109,6 @@ public class BulkNodeClient implements Ingest {
     }
 
     @Override
-    public BulkNodeClient maxRequestWait(TimeValue timeValue) {
-        // ignore, not implemented
-        return this;
-    }
-
-    @Override
     public BulkNodeClient flushIngestInterval(TimeValue flushInterval) {
         this.flushInterval = flushInterval;
         return this;
@@ -123,16 +117,6 @@ public class BulkNodeClient implements Ingest {
     @Override
     public BulkNodeClient newClient(Settings settings) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BulkNodeClient newClient(Map<String, String> client) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<String> getConnectedNodes() {
-        return Arrays.asList(client.toString());
     }
 
     @Override

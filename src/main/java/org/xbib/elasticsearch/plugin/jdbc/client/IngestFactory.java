@@ -15,10 +15,12 @@
  */
 package org.xbib.elasticsearch.plugin.jdbc.client;
 
+import java.io.IOException;
+
 /**
  * A factory for creating ingest objects
  */
 public interface IngestFactory {
 
-    Ingest create();
+    Ingest create() throws IOException;
 }
