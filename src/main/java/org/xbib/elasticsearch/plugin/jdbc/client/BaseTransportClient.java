@@ -105,7 +105,7 @@ public abstract class BaseTransportClient {
     }
 
     protected Collection<InetSocketTransportAddress> findAddresses(Settings settings) throws IOException {
-        String[] hostnames = settings.getAsArray("host");
+        String[] hostnames = settings.getAsArray("host", new String[]{"localhost"});
         int port = settings.getAsInt("port", 9300);
         Collection<InetSocketTransportAddress> addresses = new ArrayList<>();
         for (String hostname : hostnames) {
