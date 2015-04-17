@@ -254,7 +254,7 @@ public class JDBCFeeder {
                 BulkTransportClient ingest = new BulkTransportClient();
                 Settings clientSettings = ImmutableSettings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
-                        .put("host", settings.getAsArray("elasticsearch.host"))
+                        .putArray("host", settings.getAsArray("elasticsearch.host"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
                         .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
