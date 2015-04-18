@@ -35,8 +35,8 @@ import org.xbib.elasticsearch.action.plugin.jdbc.state.put.PutRiverStateAction;
 import org.xbib.elasticsearch.action.plugin.jdbc.state.put.TransportPutRiverStateAction;
 import org.xbib.elasticsearch.plugin.jdbc.state.RiverStateModule;
 import org.xbib.elasticsearch.plugin.jdbc.state.RiverStateService;
-import org.xbib.elasticsearch.rest.action.river.jdbc.RestRunRiverAction;
 import org.xbib.elasticsearch.rest.action.river.jdbc.RestRiverStateAction;
+import org.xbib.elasticsearch.rest.action.river.jdbc.RestRunRiverAction;
 
 import java.util.Collection;
 
