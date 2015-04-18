@@ -45,7 +45,7 @@ public class RestRiverStateAction extends BaseRestHandler {
     private final Client client;
 
     @Inject
-    public RestRiverStateAction(Settings settings,  RestController controller, Client client) {
+    public RestRiverStateAction(Settings settings, RestController controller, Client client) {
         super(settings, controller, client);
         this.client = client;
 

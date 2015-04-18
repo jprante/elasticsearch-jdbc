@@ -16,6 +16,7 @@
 package org.xbib.elasticsearch.plugin.jdbc.feeder;
 
 import org.elasticsearch.cluster.metadata.MetaData;
+import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.metrics.MeterMetric;
@@ -46,6 +47,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -103,9 +105,16 @@ public class JDBCFeeder {
      * Constructor for running this from command line
      */
     public JDBCFeeder() {
+        // disable DNS caching for found.no failover
+        Security.setProperty("networkaddress.cache.ttl", "0");
         Runtime.getRuntime().addShutdownHook(shutdownHook());
     }
 
+    /**
+     * Invoked by Runner
+     *
+     * @throws Exception
+     */
     public void exec() throws Exception {
         readFrom(new InputStreamReader(System.in, "UTF-8"))
                 .writeTo(new OutputStreamWriter(System.out, "UTF-8"))
@@ -252,25 +261,34 @@ public class JDBCFeeder {
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 File home = new File(settings.get("home", "."));
                 BulkTransportClient ingest = new BulkTransportClient();
-                Settings clientSettings = ImmutableSettings.settingsBuilder()
+                ImmutableSettings.Builder clientSettings = ImmutableSettings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                         .putArray("host", settings.getAsArray("elasticsearch.host"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
                         .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
                         .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder". See also module load skipping in JDBCRiverPlugin
-                        .put("client.transport.ignore_cluster_name", true) // ignore cluster name setting
+                        .put("client.transport.ignore_cluster_name", false) // do not ignore cluster name setting
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(10))) //  ping timeout
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                         .put("path.plugins", ".dontexist") // pointing to a non-exiting folder means, this disables loading site plugins
                                 // adding our custom class loader is tricky, actions may not be registered to ActionService
                         .classLoader(getClassLoader(getClass().getClassLoader(), home))
-                        .build();
+                                // optional found.no transport plugin
+                        .put("transport.type", settings.get("transport.type"));
+                // copy found.no transport settings
+                Settings foundTransportSettings = settings.getAsSettings("transport.found");
+                if (foundTransportSettings != null) {
+                    ImmutableMap<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
+                    for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
+                        clientSettings.put("transport.found." + entry.getKey(), entry.getValue());
+                    }
+                }
                 ingest.maxActionsPerBulkRequest(maxbulkactions)
                         .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                         .maxVolumePerBulkRequest(maxvolume)
                         .flushIngestInterval(flushinterval)
-                        .newClient(clientSettings);
+                        .newClient(clientSettings.build());
                 return ingest;
             }
         };

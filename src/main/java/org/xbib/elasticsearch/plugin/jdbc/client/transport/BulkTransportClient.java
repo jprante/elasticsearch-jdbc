@@ -27,7 +27,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.collect.ImmutableSet;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -39,7 +38,6 @@ import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
 import org.xbib.elasticsearch.plugin.jdbc.client.Metric;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Client using the BulkProcessor of Elasticsearch

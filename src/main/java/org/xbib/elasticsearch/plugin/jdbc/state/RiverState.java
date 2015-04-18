@@ -131,9 +131,8 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     /**
      * Set the current river begin DateTime. It will be used to
      * update lastActiveBegin after the run being done
-     * 
-     * @param begin
-     *            when the current river activity began
+     *
+     * @param begin when the current river activity began
      * @return this state
      */
     public RiverState setCurrentActive(DateTime begin) {
@@ -191,7 +190,7 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     }
 
     public long getLastStartDate() {
-        return (long)this.map.get("lastStartDate");
+        return (long) this.map.get("lastStartDate");
     }
 
     public RiverState setLastEndDate(long lastEndDate) {
@@ -200,7 +199,7 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     }
 
     public long getLastEndDate() {
-        return (long)this.map.get("lastEndDate");
+        return (long) this.map.get("lastEndDate");
     }
 
     public RiverState setLastExecutionStartDate(long lastExecutionStartDate) {
@@ -209,7 +208,7 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     }
 
     public long getLastExecutionStartDate() {
-        return (long)this.map.get("lastExecutionStartDate");
+        return (long) this.map.get("lastExecutionStartDate");
     }
 
     public RiverState setLastExecutionEndDate(long lastExecutionEndDate) {
@@ -218,7 +217,7 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
     }
 
     public long getLastExecutionEndDate() {
-        return (long)this.map.get("lastExecutionEndDate");
+        return (long) this.map.get("lastExecutionEndDate");
     }
 
     public RiverState fromXContent(XContentParser parser) throws IOException {
@@ -321,8 +320,7 @@ public class RiverState implements Streamable, ToXContent, Comparable<RiverState
         if (currentActiveBegin != null) {
             out.writeBoolean(true);
             out.writeLong(currentActiveBegin.getMillis());
-        }
-        else {
+        } else {
             out.writeBoolean(false);
         }
         if (lastActiveEnd != null) {

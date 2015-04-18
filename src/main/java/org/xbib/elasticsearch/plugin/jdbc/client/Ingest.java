@@ -26,7 +26,6 @@ import org.elasticsearch.common.unit.TimeValue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 /**
