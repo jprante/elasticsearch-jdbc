@@ -45,8 +45,9 @@ public abstract class NetworkUtils {
         InetAddress address;
         for (NetworkInterface networkInterface : getNetworkInterfaces()) {
             try {
-                if (!networkInterface.isUp() || networkInterface.isLoopback())
+                if (!networkInterface.isUp() || networkInterface.isLoopback()) {
                     continue;
+                }
             } catch (Exception e) {
                 continue;
             }
@@ -59,29 +60,33 @@ public abstract class NetworkUtils {
     }
 
     public static InetAddress getFirstNonLoopbackAddress(NetworkInterface networkInterface, ProtocolVersion ipVersion) throws SocketException {
-        if (networkInterface == null)
+        if (networkInterface == null) {
             throw new IllegalArgumentException("network interface is null");
+        }
 
         for (Enumeration addresses = networkInterface.getInetAddresses(); addresses.hasMoreElements(); ) {
             InetAddress address = (InetAddress) addresses.nextElement();
             if (!address.isLoopbackAddress()) {
                 if ((address instanceof Inet4Address && ipVersion == ProtocolVersion.IPv4) ||
-                        (address instanceof Inet6Address && ipVersion == ProtocolVersion.IPv6))
+                        (address instanceof Inet6Address && ipVersion == ProtocolVersion.IPv6)) {
                     return address;
+                }
             }
         }
         return null;
     }
 
     public static InetAddress getFirstAddress(NetworkInterface networkInterface, ProtocolVersion ipVersion) throws SocketException {
-        if (networkInterface == null)
+        if (networkInterface == null) {
             throw new IllegalArgumentException("network interface is null");
+        }
 
         for (Enumeration addresses = networkInterface.getInetAddresses(); addresses.hasMoreElements(); ) {
             InetAddress address = (InetAddress) addresses.nextElement();
             if ((address instanceof Inet4Address && ipVersion == ProtocolVersion.IPv4) ||
-                    (address instanceof Inet6Address && ipVersion == ProtocolVersion.IPv6))
+                    (address instanceof Inet6Address && ipVersion == ProtocolVersion.IPv6)) {
                 return address;
+            }
         }
         return null;
     }

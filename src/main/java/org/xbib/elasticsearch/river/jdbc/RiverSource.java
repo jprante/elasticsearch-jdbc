@@ -352,6 +352,7 @@ public interface RiverSource<RC extends RiverContext> {
 
     /**
      * Release resources of source
+     *
      * @throws Exception
      */
     void release() throws Exception;

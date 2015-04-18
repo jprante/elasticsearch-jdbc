@@ -16,7 +16,7 @@ public class EqualsBuilder {
 
 
     public static boolean reflectionEquals(Object lhs, Object rhs, boolean testTransients, Class<?> reflectUpToClass,
-            String[] excludeFields) {
+                                           String[] excludeFields) {
         if (lhs == rhs) {
             return true;
         }
@@ -102,8 +102,7 @@ public class EqualsBuilder {
             }
         } else if (lhs.getClass() != rhs.getClass()) {
             this.setEquals(false);
-        }
-        else if (lhs instanceof long[]) {
+        } else if (lhs instanceof long[]) {
             append((long[]) lhs, (long[]) rhs);
         } else if (lhs instanceof int[]) {
             append((int[]) lhs, (int[]) rhs);

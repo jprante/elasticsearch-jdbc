@@ -29,9 +29,9 @@ public class Metric {
 
     private final Set<String> indexNames = new HashSet<String>();
 
-    private final Map<String,Long> startBulkRefreshIntervals = new HashMap<String,Long>();
+    private final Map<String, Long> startBulkRefreshIntervals = new HashMap<String, Long>();
 
-    private final Map<String,Long> stopBulkRefreshIntervals = new HashMap<String,Long>();
+    private final Map<String, Long> stopBulkRefreshIntervals = new HashMap<String, Long>();
 
     private final MeanMetric totalIngest = new MeanMetric();
 
@@ -108,11 +108,11 @@ public class Metric {
         return indexNames;
     }
 
-    public Map<String,Long> getStartBulkRefreshIntervals() {
+    public Map<String, Long> getStartBulkRefreshIntervals() {
         return startBulkRefreshIntervals;
     }
 
-    public Map<String,Long> getStopBulkRefreshIntervals() {
+    public Map<String, Long> getStopBulkRefreshIntervals() {
         return stopBulkRefreshIntervals;
     }
 
