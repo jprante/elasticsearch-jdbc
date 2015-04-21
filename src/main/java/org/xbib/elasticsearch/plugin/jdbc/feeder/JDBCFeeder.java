@@ -273,9 +273,11 @@ public class JDBCFeeder {
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                         .put("path.plugins", ".dontexist") // pointing to a non-exiting folder means, this disables loading site plugins
                                 // adding our custom class loader is tricky, actions may not be registered to ActionService
-                        .classLoader(getClassLoader(getClass().getClassLoader(), home))
+                        .classLoader(getClassLoader(getClass().getClassLoader(), home));
                                 // optional found.no transport plugin
-                        .put("transport.type", settings.get("transport.type"));
+                if (settings.get("transport.type") != null) {
+                    clientSettings.put("transport.type", settings.get("transport.type"));
+                }
                 // copy found.no transport settings
                 Settings foundTransportSettings = settings.getAsSettings("transport.found");
                 if (foundTransportSettings != null) {
