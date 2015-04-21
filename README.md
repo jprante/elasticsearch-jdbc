@@ -27,8 +27,8 @@ will be supported.
 
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
-| Apr 18, 2015 | 1.5.0.4        | 1.5.0                 |
-| Apr 18, 2015 | 1.4.4.4        | 1.4.4                 |
+| Apr 21, 2015 | 1.5.0.5        | 1.5.0                 |
+| Apr 21, 2015 | 1.4.4.5        | 1.4.4                 |
 | Mar 24, 2015 | 1.5.0.0        | 1.5.0                 |
 | Mar 24, 2015 | 1.4.4.0        | 1.4.4                 |
 | Feb 19, 2015 | 1.4.0.10       | 1.4.0                 |
@@ -57,7 +57,7 @@ will be supported.
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.5.0.4/elasticsearch-river-jdbc-1.5.0.4.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.5.0.5/elasticsearch-river-jdbc-1.5.0.5.zip
 
 Do not forget to restart the node after installing.
 
