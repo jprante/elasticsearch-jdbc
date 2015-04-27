@@ -1,20 +1,19 @@
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.indices.IndexMissingException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
-import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskAction;
-import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskRequest;
-import org.xbib.elasticsearch.action.jdbc.task.get.GetTaskResponse;
-import org.xbib.elasticsearch.common.state.State;
 import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
+import org.xbib.elasticsearch.support.client.Ingest;
+import org.xbib.elasticsearch.support.client.IngestFactory;
+import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,14 +23,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
 public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper {
-
-    private final static int SECONDS_TO_WAIT = 15;
 
     protected static ColumnSource source;
 
@@ -56,9 +50,6 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
                 .setPassword(password)
                 .setLocale(Locale.getDefault())
                 .setTimeZone(TimeZone.getDefault());
-        context = newContext();
-        context.setSource(source);
-        source.setContext(context);
         logger.info("create table {}", resourceName);
         if (resourceName == null || "".equals(resourceName)) {
             return;
@@ -123,45 +114,27 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         stopNodes();
     }
 
-    protected void perform(String resource) throws Exception {
-        create(resource);
-        waitFor();
-        waitForActive();
-        waitForInactive();
-    }
-
     protected void create(String resource) throws Exception {
         waitForYellow("1");
-        byte[] b = Streams.copyToByteArray(getClass().getResourceAsStream(resource));
-        Map<String, Object> map = XContentHelper.convertToMap(b, false).v2();
-        XContentBuilder builder = jsonBuilder().map(map);
-        logger.info("task = {}", builder.string());
-        /*IndexRequest indexRequest = Requests.indexRequest("_river").type("my_jdbc_river").id("_meta")
-                .source(builder.string());
-        client("1").index(indexRequest).actionGet();
-        client("1").admin().indices().prepareRefresh("_river").execute().actionGet();*/
-        logger.info("task is created");
+        InputStream in = getClass().getResourceAsStream(resource);
+        logger.info("creating context");
+        Settings settings = ImmutableSettings.settingsBuilder()
+                .loadFromStream("test", in)
+                .build().getAsSettings("jdbc");
+        context = newContext();
+        context.setCounter(0)
+                .setSettings(settings)
+                .setIngestFactory(createIngestFactory(settings));
     }
 
-    public void waitFor() throws Exception {
-        waitFor(client("1"), "my_task", SECONDS_TO_WAIT);
-        logger.info("task is up");
-    }
-
-    public void waitForActive() throws Exception {
-        waitForActive(client("1"), "my_task", SECONDS_TO_WAIT);
-        logger.info("task is active");
-    }
-
-    public void waitForInactive() throws Exception {
-        waitForInactive(client("1"), "my_task", SECONDS_TO_WAIT);
-        logger.info("task is inactive");
-    }
-
-    protected Map<String,Object> taskSettings(String resource)
+    protected Settings createSettings(String resource)
             throws IOException {
         InputStream in = getClass().getResourceAsStream(resource);
-        return XContentHelper.convertToMap(Streams.copyToByteArray(in), false).v2();
+        Settings settings = ImmutableSettings.settingsBuilder()
+                .loadFromStream("test", in)
+                .build().getAsSettings("jdbc");
+        in.close();
+        return settings;
     }
 
     private void sqlScript(Connection connection, String resourceName) throws Exception {
@@ -185,83 +158,34 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         br.close();
     }
 
-    public static State waitFor(Client client, String name, int seconds)
-            throws InterruptedException, IOException {
-        GetTaskRequest stateRequest = new GetTaskRequest()
-                .setName(name);
-        GetTaskResponse stateResponse = client.admin().cluster()
-                .execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
-        logger.info("waitFor {}", name);
-        while (seconds-- > 0 && stateResponse.exists(name)) {
-            Thread.sleep(1000L);
-            try {
-                stateResponse = client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
-                logger.info("waitFor state={}", stateResponse.getState());
-            } catch (IndexMissingException e) {
-                logger.warn("index missing");
+    protected IngestFactory createIngestFactory(final Settings settings) {
+        return new IngestFactory() {
+            @Override
+            public Ingest create() throws IOException {
+                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
+                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
+                        Runtime.getRuntime().availableProcessors() * 2);
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
+                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
+                BulkTransportClient ingest = new BulkTransportClient();
+                Settings clientSettings = ImmutableSettings.settingsBuilder()
+                        .put("cluster.name", settings.get("elasticsearch.cluster", getClusterName()))
+                        .putArray("host", getHosts())
+                        .put("port", settings.getAsInt("elasticsearch.port", 9300))
+                        .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
+                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
+                        .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
+                        .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
+                        .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
+                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
+                        .build();
+                ingest.maxActionsPerBulkRequest(maxbulkactions)
+                        .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
+                        .maxVolumePerBulkRequest(maxvolume)
+                        .flushIngestInterval(flushinterval)
+                        .newClient(clientSettings);
+                return ingest;
             }
-        }
-        if (seconds < 0) {
-            throw new IOException("timeout waiting for task");
-        }
-        return stateResponse.getState();
-    }
-
-    public static State waitForActive(Client client, String name, int seconds) throws InterruptedException, IOException {
-        long now = System.currentTimeMillis();
-        GetTaskRequest stateRequest = new GetTaskRequest()
-                .setName(name);
-        GetTaskResponse stateResponse = client.admin().cluster()
-                .execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
-        State state = stateResponse.getState();
-        long t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
-        logger.info("waitForActive: now={} t0={} t0<now={} state={}",
-                now, t0, t0 < now, state);
-        while (seconds-- > 0 && t0 == 0 && t0 < now) {
-            Thread.sleep(1000L);
-            try {
-                stateResponse = client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
-                state = stateResponse.getState();
-                t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
-            } catch (IndexMissingException e) {
-                //
-            }
-            logger.info("waitForActive: now={} t0={} t0<now={} state={}",
-                    now, t0, t0 < now, state);
-        }
-        if (seconds < 0) {
-            throw new IOException("timeout waiting for active task");
-        }
-        return state;
-    }
-
-    public static State waitForInactive(Client client, String name, int seconds) throws InterruptedException, IOException {
-        long now = System.currentTimeMillis();
-        GetTaskRequest stateRequest = new GetTaskRequest()
-                .setName(name);
-        GetTaskResponse stateResponse = client.admin().cluster()
-                .execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
-        State state = stateResponse.getState();
-        long t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
-        long t1 = state != null ? state.getLastActiveEnd().getMillis() : 0L;
-        logger.info("waitForInactive: now={} t0<now={} t1-t0<=0={} state={}",
-                now, t0 < now, t1 - t0 <= 0L, state);
-        while (seconds-- > 0 && t0 < now && t1 - t0 <= 0L) {
-            Thread.sleep(1000L);
-            try {
-                stateResponse = client.admin().cluster().execute(GetTaskAction.INSTANCE, stateRequest).actionGet();
-                state = stateResponse.getState();
-                t0 = state != null ? state.getLastActiveBegin().getMillis() : 0L;
-                t1 = state != null ? state.getLastActiveEnd().getMillis() : 0L;
-            } catch (IndexMissingException e) {
-                //
-            }
-            logger.info("waitForInactive: now={} t0<now={} t1-t0<=0={} state={}",
-                    now, t0 < now, t1 - t0 <= 0L, state);
-        }
-        if (seconds < 0) {
-            throw new IOException("timeout waiting for inactive task");
-        }
-        return state;
+        };
     }
 }

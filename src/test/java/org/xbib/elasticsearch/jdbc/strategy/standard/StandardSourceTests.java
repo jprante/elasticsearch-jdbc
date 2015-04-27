@@ -1,17 +1,31 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
-import org.xbib.elasticsearch.jdbc.strategy.mock.MockMouth;
+import org.xbib.elasticsearch.common.util.StringKeyValueStreamListener;
+import org.xbib.elasticsearch.jdbc.strategy.mock.MockSink;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.common.util.Values;
-import org.xbib.elasticsearch.jdbc.strategy.Mouth;
+import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.support.StringKeyValueStreamListener;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -21,9 +35,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class StandardSourceTests extends AbstractStandardTest {
+public class StandardSourceTests extends AbstractSourceTest {
 
-    private static final ESLogger logger = ESLoggerFactory.getLogger(StandardSourceTests.class.getName());
+    private static final Logger logger = LogManager.getLogger(StandardSourceTests.class.getName());
 
     @Override
     public JDBCSource newSource() {
@@ -37,56 +51,56 @@ public class StandardSourceTests extends AbstractStandardTest {
 
     @Test
     public void testSimpleConnectionClose() throws Exception {
-        Connection connection = JDBCSource.getConnectionForReading();
+        Connection connection = source.getConnectionForReading();
         assertFalse(connection.isClosed());
-        JDBCSource.closeReading();
+        source.closeReading();
         assertTrue(connection.isClosed());
-        JDBCSource.getConnectionForReading();
+        source.getConnectionForReading();
     }
 
     @Test
     @Parameters({"sql1"})
     public void testSimpleSQL(String sql) throws Exception {
-        PreparedStatement statement = JDBCSource.prepareQuery(sql);
-        ResultSet results = JDBCSource.executeQuery(statement);
+        PreparedStatement statement = source.prepareQuery(sql);
+        ResultSet results = source.executeQuery(statement);
         for (int i = 0; i < 5; i++) {
             assertTrue(results.next());
         }
-        JDBCSource.close(results);
-        JDBCSource.close(statement);
+        source.close(results);
+        source.close(statement);
     }
 
     @Test
     @Parameters({"sql2", "n"})
     public void testSimpleStarQuery(String sql, @Optional Integer n) throws Exception {
         List<Object> params = new LinkedList<Object>();
-        Mouth output = new MockMouth() {
+        Sink output = new MockSink() {
             @Override
             public void index(IndexableObject object, boolean create) throws IOException {
                 logger.debug("object={}", object);
             }
         };
-        PreparedStatement statement = JDBCSource.prepareQuery(sql);
-        JDBCSource.bind(statement, params);
-        ResultSet results = JDBCSource.executeQuery(statement);
-        KeyValueStreamListener listener = new StringKeyValueStreamListener()
+        PreparedStatement statement = source.prepareQuery(sql);
+        source.bind(statement, params);
+        ResultSet results = source.executeQuery(statement);
+        StringKeyValueStreamListener listener = new StringKeyValueStreamListener()
                 .output(output);
         long rows = 0L;
-        JDBCSource.beforeRows(results, listener);
-        while (JDBCSource.nextRow(results, listener)) {
+        source.beforeRows(results, listener);
+        while (source.nextRow(results, listener)) {
             rows++;
         }
-        JDBCSource.afterRows(results, listener);
+        source.afterRows(results, listener);
         assertEquals(rows, n == null ? 5 : n);
-        JDBCSource.close(results);
-        JDBCSource.close(statement);
+        source.close(results);
+        source.close(statement);
     }
 
     @Test
     @Parameters({"sql3"})
     public void testSimpleNullInteger(String sql) throws Exception {
         List<Object> params = new LinkedList<Object>();
-        Mouth mouth = new MockMouth() {
+        Sink sink = new MockSink() {
             @Override
             public void index(IndexableObject object, boolean create) throws IOException {
                 if (object == null || object.source() == null) {
@@ -101,21 +115,21 @@ public class StandardSourceTests extends AbstractStandardTest {
                 }
             }
         };
-        PreparedStatement statement = JDBCSource.prepareQuery(sql);
-        JDBCSource.bind(statement, params);
-        ResultSet results = JDBCSource.executeQuery(statement);
-        KeyValueStreamListener listener = new StringKeyValueStreamListener()
-                .output(mouth);
+        PreparedStatement statement = source.prepareQuery(sql);
+        source.bind(statement, params);
+        ResultSet results = source.executeQuery(statement);
+        StringKeyValueStreamListener listener = new StringKeyValueStreamListener()
+                .output(sink);
         long rows = 0L;
-        JDBCSource.beforeRows(results, listener);
-        if (JDBCSource.nextRow(results, listener)) {
+        source.beforeRows(results, listener);
+        if (source.nextRow(results, listener)) {
             // only one row
             rows++;
         }
-        JDBCSource.afterRows(results, listener);
+        source.afterRows(results, listener);
         assertEquals(rows, 1);
-        JDBCSource.close(results);
-        JDBCSource.close(statement);
+        source.close(results);
+        source.close(statement);
     }
 
     /**
@@ -132,7 +146,7 @@ public class StandardSourceTests extends AbstractStandardTest {
         }
         List<Object> params = new LinkedList<Object>();
         final List<IndexableObject> result = new LinkedList<IndexableObject>();
-        Mouth mouth = new MockMouth() {
+        Sink sink = new MockSink() {
             @Override
             public void index(IndexableObject object, boolean create) throws IOException {
                 if (object == null || object.source() == null) {
@@ -141,20 +155,20 @@ public class StandardSourceTests extends AbstractStandardTest {
                 result.add(object);
             }
         };
-        PreparedStatement statement = JDBCSource.prepareQuery(sql);
-        JDBCSource.bind(statement, params);
-        ResultSet results = JDBCSource.executeQuery(statement);
-        KeyValueStreamListener listener = new StringKeyValueStreamListener()
-                .output(mouth);
+        PreparedStatement statement = source.prepareQuery(sql);
+        source.bind(statement, params);
+        ResultSet results = source.executeQuery(statement);
+        StringKeyValueStreamListener listener = new StringKeyValueStreamListener()
+                .output(sink);
         long rows = 0L;
-        JDBCSource.beforeRows(results, listener);
-        while (JDBCSource.nextRow(results, listener)) {
+        source.beforeRows(results, listener);
+        while (source.nextRow(results, listener)) {
             rows++;
         }
-        JDBCSource.afterRows(results, listener);
+        source.afterRows(results, listener);
         assertEquals(rows, 2);
-        JDBCSource.close(results);
-        JDBCSource.close(statement);
+        source.close(results);
+        source.close(statement);
         Iterator<IndexableObject> it = result.iterator();
         assertEquals(it.next().source().toString(), res1);
         assertEquals(it.next().source().toString(), res2);

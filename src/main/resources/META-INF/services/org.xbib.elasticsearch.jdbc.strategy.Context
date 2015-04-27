@@ -1,0 +1,2 @@
+org.xbib.elasticsearch.jdbc.strategy.standard.StandardContext
+org.xbib.elasticsearch.jdbc.strategy.column.ColumnContext

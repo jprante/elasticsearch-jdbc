@@ -1,10 +1,30 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
+import org.xbib.tools.JDBCFeeder;
 
-public class StandardScheduleTests extends AbstractStandardTest {
+import java.io.InputStream;
+
+public class StandardScheduleTests extends AbstractSinkTest {
 
     @Override
     public JDBCSource newSource() {
@@ -27,13 +47,13 @@ public class StandardScheduleTests extends AbstractStandardTest {
     @Parameters({"task6", "sql1"})
     public void testSimpleSchedule(String resource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        create(resource);
-        waitFor();
-        waitForActive();
+        JDBCFeeder feeder = createFeeder(resource);
         Thread.sleep(12500L); // run more than twice
+        feeder.shutdown();
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
-        assertTrue(hits > 100L);
+        logger.info("found {} hits", hits);
+        assertTrue(hits > 104L);
     }
 
     /**
@@ -48,15 +68,35 @@ public class StandardScheduleTests extends AbstractStandardTest {
     @Test
     @Parameters({"task7", "sql2"})
     public void testTimestamps(String resource, String sql) throws Exception {
-        createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem"); // TODO make timezone/locale configurable
-        create(resource);
-        waitFor();
-        waitForActive();
-        Thread.sleep(12500L); // ensure at least two runs
+        // TODO make timezone/locale configurable for better testing
+        createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem");
+        JDBCFeeder feeder = createFeeder(resource);
+        Thread.sleep(12500L); // run more than twice
+        feeder.shutdown();
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
         // just an estimation, at least two runs should deliver 50 hits each.
+        logger.info("found {} hits", hits);
         assertTrue(hits > 99L);
+    }
+
+    protected JDBCFeeder createFeeder(String resource) throws Exception {
+        waitForYellow("1");
+        InputStream in = getClass().getResourceAsStream(resource);
+        Settings settings = ImmutableSettings.settingsBuilder()
+                .loadFromStream("args", in)
+                .put("jdbc.elasticsearch.cluster", getClusterName())
+                .putArray("jdbc.elasticsearch.host", getHosts())
+                .build();
+        final JDBCFeeder feeder = new JDBCFeeder();
+        feeder.setSettings(settings);
+        // dispatch in new thread
+        new Thread() {
+            public void run() {
+                feeder.run(true);
+            }
+        }.start();
+        return feeder;
     }
 
 }

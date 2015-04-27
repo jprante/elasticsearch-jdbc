@@ -1,14 +1,13 @@
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.common.state.State;
-import org.xbib.elasticsearch.jdbc.strategy.mock.MockMouth;
+import org.xbib.elasticsearch.jdbc.strategy.mock.MockSink;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.common.util.PlainIndexableObject;
 import org.xbib.elasticsearch.common.util.SQLCommand;
@@ -25,7 +24,7 @@ import java.util.Random;
 
 public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
 
-    private final ESLogger logger = ESLoggerFactory.getLogger(ColumnStrategySourceTests.class.getName());
+    private final Logger logger = LogManager.getLogger("test.column.source");
 
     private Random random = new Random();
 
@@ -83,7 +82,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
         final int updatedRecordsInTimeRangeWithOverlap = 1;
-        testColumnStrategy(new MockMouth(), resource, sql, new ProductFixture[]{
+        testColumnStrategy(new MockSink(), resource, sql, new ProductFixture[]{
                 ProductFixture.size(newRecordsOutOfTimeRange).createdAt(oldTimestamp()),
                 ProductFixture.size(newRecordsInTimeRange).createdAt(okTimestamp()),
                 ProductFixture.size(updatedRecordsInTimeRange).createdAt(oldTimestamp()).updatedAt(okTimestamp()),
@@ -96,7 +95,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
         final int newRecordsOutOfTimeRange = 3;
         final int newRecordsInTimeRange = 2;
         final int updatedRecordsInTimeRange = 4;
-        testColumnStrategy(new MockMouth(), resource, sql, new ProductFixture[]{
+        testColumnStrategy(new MockSink(), resource, sql, new ProductFixture[]{
                 new ProductFixture(newRecordsOutOfTimeRange).createdAt(oldTimestamp()),
                 new ProductFixture(newRecordsInTimeRange).createdAt(okTimestamp()),
                 new ProductFixture(updatedRecordsInTimeRange).createdAt(oldTimestamp()).updatedAt(okTimestamp()),
@@ -105,7 +104,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
 
     private void verifyDeleteObjects(String resource, String insertSql)
             throws Exception {
-        MockMouth mouth = new MockMouth();
+        MockSink mouth = new MockSink();
         boolean[] shouldProductsBeDeleted = new boolean[]{true, true, false};
         ProductFixtures productFixtures = createFixturesAndPopulateMouth(shouldProductsBeDeleted, mouth);
         testColumnStrategy(mouth, resource, insertSql,
@@ -113,7 +112,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
                 productFixtures.expectedCount);
     }
 
-    private ProductFixtures createFixturesAndPopulateMouth(boolean[] shouldProductsBeDeleted, MockMouth mouth)
+    private ProductFixtures createFixturesAndPopulateMouth(boolean[] shouldProductsBeDeleted, MockSink mouth)
             throws IOException {
         ProductFixture[] fixtures = new ProductFixture[shouldProductsBeDeleted.length];
         int expectedExistsCountAfterRun = 0;
@@ -146,35 +145,38 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
         return map;
     }
 
-    private void testColumnStrategy(MockMouth mouth, String resource, String sql, ProductFixture[] fixtures, int expectedHits)
+    private void testColumnStrategy(MockSink mouth, String resource, String sql, ProductFixture[] fixtures, int expectedHits)
             throws Exception {
         createData(sql, fixtures);
-        context.setMouth(mouth);
         createContext(resource);
+        context.setSink(mouth);
         source.fetch();
         assertEquals(mouth.data().size(), expectedHits);
     }
 
     private void createContext(String resource) throws IOException {
-        Map<String, Object> settings = taskSettings(resource);
+        //Map<String, Object> settings = taskSettings(resource);
+        Settings settings = createSettings(resource);
 
-        State state = new State();
+        /*State state = new State();
         state.getMap().put(ColumnFlow.LAST_RUN_TIME, LAST_RUN_TIME);
-        state.getMap().put(ColumnFlow.CURRENT_RUN_STARTED_TIME, new DateTime());
+        state.getMap().put(ColumnFlow.CURRENT_RUN_STARTED_TIME, new DateTime());*/
+        context = newContext();
+        context.setSettings(settings);
+        context.setLastRunTimeStamp(LAST_RUN_TIME);
 
-        context.columnCreatedAt(XContentMapValues.nodeStringValue(settings.get("column_created_at"), null))
-                .columnUpdatedAt(XContentMapValues.nodeStringValue(settings.get("column_updated_at"), null))
-                .columnDeletedAt(XContentMapValues.nodeStringValue(settings.get("column_deleted_at"), null))
+        context.columnCreatedAt(settings.get("column_created_at"))
+                .columnUpdatedAt(settings.get("column_updated_at"))
+                .columnDeletedAt(settings.get("column_deleted_at"))
                 .columnEscape(true)
-                .setLastRunTimeStampOverlap(getLastRunTimestampOverlap(settings))
-                .setStatements(SQLCommand.parse(settings))
-                .setState(state);
+                .setLastRunTimeStampOverlap(getLastRunTimestampOverlap(settings));
+        source.setStatements(SQLCommand.parse(settings.getAsStructuredMap()));
     }
 
-    private TimeValue getLastRunTimestampOverlap(Map<String, Object> settings) {
+    private TimeValue getLastRunTimestampOverlap(Settings settings) {
         TimeValue overlap = TimeValue.timeValueMillis(0);
-        if (settings != null && settings.containsKey("last_run_timestamp_overlap")) {
-            overlap = XContentMapValues.nodeTimeValue(settings.get("last_run_timestamp_overlap"));
+        if (settings != null && settings.getAsStructuredMap().containsKey("last_run_timestamp_overlap")) {
+            overlap = settings.getAsTime("last_run_timestamp_overlap", null);
         }
         return overlap;
     }

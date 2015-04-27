@@ -6,8 +6,8 @@
         "password" : "",
         "sql" : "select * from \"products\"",
         "maxrows" : 50,
-        "index" : "my_jdbc_river_index",
-        "type" : "my_jdbc_river_type",
+        "index" : "my_index",
+        "type" : "my_type",
         "index_settings" : {
             "index" : {
                 "number_of_shards" : 2

@@ -1,36 +1,61 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.jdbc.strategy.mock;
 
-import org.elasticsearch.common.metrics.MeterMetric;
-import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.common.state.State;
+import org.elasticsearch.common.settings.Settings;
 import org.xbib.elasticsearch.jdbc.strategy.Source;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
-import org.xbib.elasticsearch.jdbc.strategy.Mouth;
-import org.xbib.elasticsearch.common.util.SQLCommand;
+import org.xbib.elasticsearch.jdbc.strategy.Sink;
+import org.xbib.elasticsearch.support.client.IngestFactory;
 
-import java.util.List;
-import java.util.Map;
-
-public class MockContext implements Context<Source,Mouth> {
+public class MockContext implements Context<Source,Sink> {
 
     @Override
-    public Context setDefinition(Map<String, Object> definition) {
-        return this;
-    }
-
-    @Override
-    public Map<String, Object> getDefinition() {
+    public String strategy() {
         return null;
     }
 
     @Override
-    public Context setState(State state) {
+    public Context newInstance() {
         return this;
     }
 
     @Override
-    public State getState() {
+    public Context setCounter(int counter) {
+        return this;
+    }
+
+    @Override
+    public int getCounter() {
+        return 0;
+    }
+
+    @Override
+    public Context setSettings(Settings settings) {
+        return this;
+    }
+
+    @Override
+    public Settings getSettings() {
         return null;
+    }
+
+    @Override
+    public Context setIngestFactory(IngestFactory ingestFactory) {
+        return this;
     }
 
     @Override
@@ -44,113 +69,39 @@ public class MockContext implements Context<Source,Mouth> {
     }
 
     @Override
-    public Context setMouth(Mouth mouth) {
+    public Context setSink(Sink sink) {
         return this;
     }
 
     @Override
-    public Mouth getMouth() {
+    public Sink getSink() {
         return null;
     }
 
     @Override
-    public Context setMetric(MeterMetric metric) {
-        return this;
+    public void execute() throws Exception {
+
     }
 
     @Override
-    public MeterMetric getMetric() {
-        return null;
+    public void beforeFetch() throws Exception {
+
     }
 
     @Override
-    public Context setScale(int scale) {
-        return this;
+    public void fetch() throws Exception {
+
     }
 
     @Override
-    public Context setRounding(String rounding) {
-        return this;
+    public void afterFetch() throws Exception {
+
     }
 
     @Override
-    public Context setStatements(List<SQLCommand> sql) {
-        return this;
-    }
-
-    @Override
-    public Context setAutoCommit(boolean autocommit) {
-        return this;
-    }
-
-    @Override
-    public Context setMaxRows(int maxRows) {
-        return this;
-    }
-
-    @Override
-    public Context setFetchSize(int fetchSize) {
-        return this;
-    }
-
-    @Override
-    public Context setRetries(int retries) {
-        return this;
-    }
-
-    @Override
-    public Context setMaxRetryWait(TimeValue maxretrywait) {
-        return this;
-    }
-
-    @Override
-    public Context setResultSetType(String resultSetType) {
-        return this;
-    }
-
-    @Override
-    public Context setResultSetConcurrency(String resultSetConcurrency) {
-        return this;
-    }
-
-    @Override
-    public Context shouldIgnoreNull(boolean shouldIgnoreNull) {
-        return this;
-    }
-
-    @Override
-    public Context shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
-        return this;
-    }
-
-    @Override
-    public Context shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
-        return this;
-    }
-
-    @Override
-    public Context setQueryTimeout(int queryTimeout) {
-        return this;
-    }
-
-    @Override
-    public Context setConnectionProperties(Map<String, Object> connectionProperties) {
-        return this;
-    }
-
-    @Override
-    public Context setColumnNameMap(Map<String, Object> columnNameMap) {
-        return this;
-    }
-
-    @Override
-    public Context shouldTreatBinaryAsString(boolean shouldTreatBinaryAsString) {
-        return this;
-    }
-
-    @Override
-    public Context release() {
-        return this;
+    public State getState() {
+        // always idle
+        return State.IDLE;
     }
 
 }

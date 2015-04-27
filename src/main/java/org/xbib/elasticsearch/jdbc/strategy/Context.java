@@ -1,49 +1,57 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.jdbc.strategy;
 
-import org.elasticsearch.common.metrics.MeterMetric;
-import org.elasticsearch.common.unit.TimeValue;
-import org.xbib.elasticsearch.common.task.Task;
-import org.xbib.elasticsearch.common.util.SQLCommand;
+import org.elasticsearch.common.settings.Settings;
+import org.xbib.elasticsearch.support.client.IngestFactory;
 
-import java.util.List;
-import java.util.Map;
+public interface Context<S extends Source, T extends Sink> {
 
-/**
- * The Context is a collection of objects that are relevant to parameterization of
- * a run. Beside holding references to definition, source and mouth,
- * the objects control the behavior of the source.
- */
-public interface Context<T extends Task, S extends Source, M extends Mouth> {
+    enum State { BEFORE_FETCH, FETCH, AFTER_FETCH, IDLE }
+
+    String strategy();
+
+    Context newInstance();
+
+    Context setCounter(int count);
+
+    int getCounter();
 
     /**
-     * Set instance definition
+     * Set the settings
      *
-     * @param definition the instance definition
+     * @param settings the settings
      * @return this context
      */
-    Context setDefinition(Map<String, Object> definition);
+    Context setSettings(Settings settings);
 
     /**
-     * Get instance definition
+     * Get the settings
      *
-     * @return instance definition
+     * @return the settings
      */
-    Map<String, Object> getDefinition();
+    Settings getSettings();
 
     /**
-     * Set task
+     * Set ingest factory
      *
-     * @param task the task
+     * @param ingestFactory ingest factory
      * @return this context
      */
-    Context setTask(T task);
-
-    /**
-     * Get task
-     *
-     * @return the task
-     */
-    T getTask();
+    Context setIngestFactory(IngestFactory ingestFactory);
 
     /**
      * Set source
@@ -61,176 +69,27 @@ public interface Context<T extends Task, S extends Source, M extends Mouth> {
     S getSource();
 
     /**
-     * Set mouth
+     * Set sink
      *
-     * @param mouth the mouth
+     * @param sink the sink
      * @return this context
      */
-    Context setMouth(M mouth);
+    Context setSink(T sink);
 
     /**
-     * Get mouth
+     * Get sink
      *
-     * @return the mouth
+     * @return the sink
      */
-    M getMouth();
+    T getSink();
 
-    /**
-     * Set metric
-     *
-     * @param metric the meter metric
-     * @return this context
-     */
-    Context setMetric(MeterMetric metric);
+    void execute() throws Exception;
 
-    /**
-     * Get metric
-     *
-     * @return metric
-     */
-    MeterMetric getMetric();
+    void beforeFetch() throws Exception;
 
-    /**
-     * Set scale of big decimal values.  See java.math.BigDecimal#setScale
-     *
-     * @param scale the scale of big decimal values
-     * @return this context
-     */
-    Context setScale(int scale);
+    void fetch() throws Exception;
 
-    /**
-     * Set rounding of big decimal values. See java.math.BigDecimal#setScale
-     *
-     * @param rounding the rounding of big decimal values
-     * @return this context
-     */
-    Context setRounding(String rounding);
+    void afterFetch() throws Exception;
 
-    /**
-     * Set the list of SQL statements
-     *
-     * @param sql the list of SQL statements
-     * @return this context
-     */
-    Context setStatements(List<SQLCommand> sql);
-
-    /**
-     * Set auto commit
-     *
-     * @param autocommit true if automatic commit should be performed
-     * @return this context
-     */
-    Context setAutoCommit(boolean autocommit);
-
-    /**
-     * Set max rows
-     *
-     * @param maxRows max rows
-     * @return this context
-     */
-    Context setMaxRows(int maxRows);
-
-    /**
-     * Set fetch size
-     *
-     * @param fetchSize fetch size
-     * @return this context
-     */
-    Context setFetchSize(int fetchSize);
-
-    /**
-     * Set retries
-     *
-     * @param retries number of retries
-     * @return this context
-     */
-    Context setRetries(int retries);
-
-    /**
-     * Set maximum count of retries
-     *
-     * @param maxretrywait maximum count of retries
-     * @return this context
-     */
-    Context setMaxRetryWait(TimeValue maxretrywait);
-
-    /**
-     * Set result set type
-     *
-     * @param resultSetType result set type
-     * @return this context
-     */
-    Context setResultSetType(String resultSetType);
-
-    /**
-     * Set result set concurrency
-     *
-     * @param resultSetConcurrency result set concurrency
-     * @return this context
-     */
-    Context setResultSetConcurrency(String resultSetConcurrency);
-
-    /**
-     * Should null values in columns be ignored for indexing
-     *
-     * @param shouldIgnoreNull true if null values in columns should be ignored for indexing
-     * @return this context
-     */
-    Context shouldIgnoreNull(boolean shouldIgnoreNull);
-
-    /**
-     * Should result set metadata be used in parameter variables
-     *
-     * @param shouldPrepareResultSetMetadata true if result set metadata should be used in parameter variables
-     * @return this context
-     */
-    Context shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata);
-
-    /**
-     * Should database metadata be used in parameter variables
-     *
-     * @param shouldPrepareDatabaseMetadata true if database metadata should be used in parameter variables
-     * @return this context
-     */
-    Context shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata);
-
-    /**
-     * Set result set query timeout
-     *
-     * @param queryTimeout the query timeout in seconds
-     * @return this context
-     */
-    Context setQueryTimeout(int queryTimeout);
-
-    /**
-     * Optional JDBC connection properties
-     *
-     * @param connectionProperties connection properties
-     * @return this context
-     */
-    Context setConnectionProperties(Map<String, Object> connectionProperties);
-
-    /**
-     * Set column name map. Useful for expanding shortcolumn names to longer variants.
-     *
-     * @param columnNameMap the column name map
-     * @return this context
-     */
-    Context setColumnNameMap(Map<String, Object> columnNameMap);
-
-    /**
-     * Should binary types (byte arrays) be treated as JSON strings
-     *
-     * @param shouldTreatBinaryAsString true if binary types (byte arrays) should be treated as JSON strings
-     * @return this context
-     */
-    Context shouldTreatBinaryAsString(boolean shouldTreatBinaryAsString);
-
-    /**
-     * Release all resources
-     *
-     * @return this context
-     */
-    Context release();
-
+    State getState();
 }

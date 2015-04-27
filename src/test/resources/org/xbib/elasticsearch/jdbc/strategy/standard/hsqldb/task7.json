@@ -1,9 +1,9 @@
 {
     "type" : "jdbc",
-    "schedule" : "0/5 0-59 0-23 ? * *",
-    "timezone" : "Asia/Jerusalem",
-    "locale" : "iw_IL",
     "jdbc" : {
+        "schedule" : "0/5 0-59 0-23 ? * *",
+        "timezone" : "Asia/Jerusalem",
+        "locale" : "iw_IL",
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
         "password" : "",

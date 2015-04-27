@@ -1,8 +1,23 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.common.util;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.jdbc.strategy.mock.MockMouth;
+import org.xbib.elasticsearch.jdbc.strategy.mock.MockSink;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -18,7 +33,7 @@ public class ValueListenerTests extends Assert {
         List<String> row2 = Arrays.asList("index", "2", "label2");
         List<String> row3 = Arrays.asList("index", "3", "label3");
         List<String> row4 = Arrays.asList("index", "4", "label4");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -38,7 +53,7 @@ public class ValueListenerTests extends Assert {
         List<String> row2 = Arrays.asList("create", "2", "label2");
         List<String> row3 = Arrays.asList("delete", "3", "label3");
         List<String> row4 = Arrays.asList("index", "4", "label4");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -58,7 +73,7 @@ public class ValueListenerTests extends Assert {
         List<String> row2 = Arrays.asList("create", "1", "label2");
         List<String> row3 = Arrays.asList("delete", "2", "label3");
         List<String> row4 = Arrays.asList("index", "2", "label4");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -76,7 +91,7 @@ public class ValueListenerTests extends Assert {
         List<String> columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");
         List<String> row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");
         List<String> row2 = Arrays.asList("2", "$2000", "Bill Smith", "Boss", "2012-06-13");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -95,7 +110,7 @@ public class ValueListenerTests extends Assert {
         List<String> columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");
         List<String> row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-12");
         List<String> row2 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-13");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -113,7 +128,7 @@ public class ValueListenerTests extends Assert {
         List<String> columns = Arrays.asList("_id", "person.salary", "person.name", "person.position.name", "person.position.since");
         List<String> row1 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", null);
         List<String> row2 = Arrays.asList("1", "$1000", "Joe Doe", "Worker", "2012-06-13");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -133,7 +148,7 @@ public class ValueListenerTests extends Assert {
         List<String> row1 = Arrays.asList("1", "$1000", "Joe,John", "Worker", null);
         List<String> row2 = Arrays.asList("1", "$1000", "Mark", "Worker", "2012-06-13");
         List<String> row3 = Arrays.asList("2", "$1000", "Mark", "Worker", "2012-06-13");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -157,7 +172,7 @@ public class ValueListenerTests extends Assert {
         List<String> row4 = Arrays.asList("2", "Doug Cutting", "Basic of Lucene", "25");
         List<String> row5 = Arrays.asList("2", "Doug Cutting", "Advanced Lucene", "5");
         List<String> row6 = Arrays.asList("2", "Doug Cutting", "Introduction to Apache Avro", "5");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -178,7 +193,7 @@ public class ValueListenerTests extends Assert {
     public void testJSONSource() throws Exception {
         List<String> columns = Arrays.asList("_optype", "_id", "_source");
         List<String> row1 = Arrays.asList("index", "1", "{\"Hello\":\"World\"}");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -194,7 +209,7 @@ public class ValueListenerTests extends Assert {
     public void testJSON() throws Exception {
         List<String> columns = Arrays.asList("_optype", "_id", "message", "person", "person.attributes");
         List<String> row1 = Arrays.asList("index", "1", "{\"Hello\":\"World\"}", "{\"name\":[\"Joe\",\"John\"]}", "{\"haircolor\":\"blue\"}");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -211,7 +226,7 @@ public class ValueListenerTests extends Assert {
         List<String> columns = Arrays.asList("_optype", "_id", "message", "person", "person.attributes");
         List<String> row1 = Arrays.asList("index", "1", "{\"Hello\":\"World\"}", "{\"name\":[\"Joe\",\"John\"]}", "{\"haircolor\":\"blue\"}");
         List<String> row2 = Arrays.asList("index", "1", null, "{\"name\":[\"Joe\",\"John\"]}", "{\"haircolor\":\"blue\"}");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -230,7 +245,7 @@ public class ValueListenerTests extends Assert {
         List<String> row1 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3917", "Idris Elba", "9450", "/web/q/g/h/57436356.jpg");
         List<String> row2 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3917", "Idris Elba", "9965", "/web/i/s/q/GS3193626.jpg");
         List<String> row3 = Arrays.asList("4679", "Tesla, Abe and Elba", "2014-01-06 00:00:00", "3917", "Idris Elba", "9451", "/web/i/s/q/GS3193626.jpg");
-        MockMouth output = new MockMouth();
+        MockSink output = new MockSink();
         new StringKeyValueStreamListener()
                 .output(output)
                 .begin()
@@ -252,8 +267,8 @@ public class ValueListenerTests extends Assert {
         row1.add("1");
         row1.add(50.940664);
         row1.add(6.9599115);
-        MockMouth output = new MockMouth();
-        new MouthKeyValueStreamListener<String, Object>()
+        MockSink output = new MockSink();
+        new SinkKeyValueStreamListener<String, Object>()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -273,8 +288,8 @@ public class ValueListenerTests extends Assert {
         List<String> row4 = Arrays.asList("2", "Doug Cutting", "2", "Marc Levengood");
         List<String> row5 = Arrays.asList("2", "Doug Cutting", "3", "Samantha Carter");
         List<String> row6 = Arrays.asList("2", "Doug Cutting", "4", "Jack O'Neill");
-        MockMouth output = new MockMouth();
-        new MouthKeyValueStreamListener<String, String>()
+        MockSink output = new MockSink();
+        new SinkKeyValueStreamListener<String, String>()
                 .output(output)
                 .begin()
                 .keys(columns)
@@ -301,8 +316,8 @@ public class ValueListenerTests extends Assert {
         row2.add("1");
         row2.add(null);
         row2.add("Hello World");
-        MockMouth output = new MockMouth();
-        new MouthKeyValueStreamListener<String, Object>()
+        MockSink output = new MockSink();
+        new SinkKeyValueStreamListener<String, Object>()
                 .shouldIgnoreNull(true)
                 .output(output)
                 .begin()
@@ -333,8 +348,8 @@ public class ValueListenerTests extends Assert {
         row3.add("Joe");
         row3.add(null);
         row3.add(null);
-        MockMouth output = new MockMouth();
-        new MouthKeyValueStreamListener<String, Object>()
+        MockSink output = new MockSink();
+        new SinkKeyValueStreamListener<String, Object>()
                 .shouldIgnoreNull(true)
                 .output(output)
                 .begin()
@@ -364,8 +379,8 @@ public class ValueListenerTests extends Assert {
         row2.add("ABC");
         row2.add("DEF");
         row2.add(1212);
-        MockMouth output = new MockMouth();
-        new MouthKeyValueStreamListener<String, Object>()
+        MockSink output = new MockSink();
+        new SinkKeyValueStreamListener<String, Object>()
                 .shouldIgnoreNull(true)
                 .output(output)
                 .begin()

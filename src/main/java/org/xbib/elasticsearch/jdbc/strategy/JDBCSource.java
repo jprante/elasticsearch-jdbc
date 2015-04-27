@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Jörg Prante
+ * Copyright (C) 2015 Jörg Prante
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy;
 
+import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
 
@@ -74,6 +75,142 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @return this source
      */
     JDBCSource<C> setPassword(String password);
+
+    /**
+     * Set scale of big decimal values.  See java.math.BigDecimal#setScale
+     *
+     * @param scale the scale of big decimal values
+     * @return this context
+     */
+    JDBCSource<C> setScale(int scale);
+
+    /**
+     * Set rounding of big decimal values. See java.math.BigDecimal#setScale
+     *
+     * @param rounding the rounding of big decimal values
+     * @return this context
+     */
+    JDBCSource<C> setRounding(String rounding);
+
+    /**
+     * Set the list of SQL statements
+     *
+     * @param sql the list of SQL statements
+     * @return this context
+     */
+    JDBCSource<C> setStatements(List<SQLCommand> sql);
+
+    /**
+     * Set auto commit
+     *
+     * @param autocommit true if automatic commit should be performed
+     * @return this context
+     */
+    JDBCSource<C> setAutoCommit(boolean autocommit);
+
+    /**
+     * Set max rows
+     *
+     * @param maxRows max rows
+     * @return this context
+     */
+    JDBCSource<C> setMaxRows(int maxRows);
+
+    /**
+     * Set fetch size
+     *
+     * @param fetchSize fetch size
+     * @return this context
+     */
+    JDBCSource<C> setFetchSize(int fetchSize);
+
+    /**
+     * Set retries
+     *
+     * @param retries number of retries
+     * @return this context
+     */
+    JDBCSource<C> setRetries(int retries);
+
+    /**
+     * Set maximum count of retries
+     *
+     * @param maxretrywait maximum count of retries
+     * @return this context
+     */
+    JDBCSource<C> setMaxRetryWait(TimeValue maxretrywait);
+
+    /**
+     * Set result set type
+     *
+     * @param resultSetType result set type
+     * @return this context
+     */
+    JDBCSource<C> setResultSetType(String resultSetType);
+
+    /**
+     * Set result set concurrency
+     *
+     * @param resultSetConcurrency result set concurrency
+     * @return this context
+     */
+    JDBCSource<C> setResultSetConcurrency(String resultSetConcurrency);
+
+    /**
+     * Should null values in columns be ignored for indexing
+     *
+     * @param shouldIgnoreNull true if null values in columns should be ignored for indexing
+     * @return this context
+     */
+    JDBCSource<C> shouldIgnoreNull(boolean shouldIgnoreNull);
+
+    /**
+     * Should result set metadata be used in parameter variables
+     *
+     * @param shouldPrepareResultSetMetadata true if result set metadata should be used in parameter variables
+     * @return this context
+     */
+    JDBCSource<C> shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata);
+
+    /**
+     * Should database metadata be used in parameter variables
+     *
+     * @param shouldPrepareDatabaseMetadata true if database metadata should be used in parameter variables
+     * @return this context
+     */
+    JDBCSource<C> shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata);
+
+    /**
+     * Set result set query timeout
+     *
+     * @param queryTimeout the query timeout in seconds
+     * @return this context
+     */
+    JDBCSource<C> setQueryTimeout(int queryTimeout);
+
+    /**
+     * Optional JDBC connection properties
+     *
+     * @param connectionProperties connection properties
+     * @return this context
+     */
+    JDBCSource<C> setConnectionProperties(Map<String, Object> connectionProperties);
+
+    /**
+     * Set column name map. Useful for expanding shortcolumn names to longer variants.
+     *
+     * @param columnNameMap the column name map
+     * @return this context
+     */
+    JDBCSource<C> setColumnNameMap(Map<String, Object> columnNameMap);
+
+    /**
+     * Should binary types (byte arrays) be treated as JSON strings
+     *
+     * @param shouldTreatBinaryAsString true if binary types (byte arrays) should be treated as JSON strings
+     * @return this context
+     */
+    JDBCSource<C> shouldTreatBinaryAsString(boolean shouldTreatBinaryAsString);
 
     /**
      * Get a connection for reading data
@@ -155,7 +292,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @return this source
      * @throws SQLException when SQL execution gives an error
      */
-    JDBCSource executeUpdate(PreparedStatement statement) throws SQLException;
+    JDBCSource<C> executeUpdate(PreparedStatement statement) throws SQLException;
 
     /**
      * Execute insert update
@@ -287,25 +424,11 @@ public interface JDBCSource<C extends Context> extends Source<C> {
     JDBCSource<C> setLocale(Locale locale);
 
     /**
-     * Get the current locale
-     *
-     * @return the time zone
-     */
-    Locale getLocale();
-
-    /**
      * Set the timezone for setTimestamp() calls with calendar object.
      *
      * @param timeZone the time zone
      * @return this source
      */
     JDBCSource<C> setTimeZone(TimeZone timeZone);
-
-    /**
-     * Get the current timezone of this source for the setTimestamp() call
-     *
-     * @return the time zone
-     */
-    TimeZone getTimeZone();
 
 }

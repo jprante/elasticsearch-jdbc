@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<assembly>
+    <id>standalone</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+            <includes>
+                <include>org.xbib.elasticsearch.feeder:elasticsearch-jdbc</include>
+                <include>org.xbib.elasticsearch.plugin:elasticsearch-support</include>
+                <include>org.elasticsearch:elasticsearch</include>
+                <include>org.apache.lucene:lucene-core</include>
+                <include>org.apache.logging.log4j</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

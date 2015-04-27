@@ -1,5 +1,21 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.jdbc.strategy.mock;
 
+import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
@@ -33,7 +49,7 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
-    public JDBCSource setContext(MockContext context) {
+    public JDBCSource<MockContext> setContext(MockContext context) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -51,18 +67,103 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
-    public JDBCSource setUrl(String url) {
+    public JDBCSource<MockContext> setUrl(String url) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource setUser(String user) {
+    public JDBCSource<MockContext> setUser(String user) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource setPassword(String password) {
+    public JDBCSource<MockContext> setPassword(String password) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public JDBCSource<MockContext> setScale(int scale) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setRounding(String rounding) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setStatements(List<SQLCommand> sql) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setAutoCommit(boolean autocommit) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setMaxRows(int maxRows) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setFetchSize(int fetchSize) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setRetries(int retries) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setMaxRetryWait(TimeValue maxretrywait) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setResultSetType(String resultSetType) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setResultSetConcurrency(String resultSetConcurrency) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> shouldIgnoreNull(boolean shouldIgnoreNull) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setQueryTimeout(int queryTimeout) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setConnectionProperties(Map<String, Object> connectionProperties) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> setColumnNameMap(Map<String, Object> columnNameMap) {
+        return this;
+    }
+
+    @Override
+    public JDBCSource<MockContext> shouldTreatBinaryAsString(boolean shouldTreatBinaryAsString) {
+        return this;
     }
 
     @Override
@@ -86,12 +187,12 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
-    public JDBCSource bind(PreparedStatement statement, List<Object> values) throws SQLException {
+    public JDBCSource<MockContext> bind(PreparedStatement statement, List<Object> values) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource register(CallableStatement statement, Map<String, Object> values) throws SQLException {
+    public JDBCSource<MockContext> register(CallableStatement statement, Map<String, Object> values) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -106,12 +207,12 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
-    public JDBCSource executeUpdate(PreparedStatement statement) throws SQLException {
+    public JDBCSource<MockContext> executeUpdate(PreparedStatement statement) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource executeUpdate(Statement statement, String sql) throws SQLException {
+    public JDBCSource<MockContext> executeUpdate(Statement statement, String sql) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -151,51 +252,33 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
-    public JDBCSource close(ResultSet result) throws SQLException {
+    public JDBCSource<MockContext> close(ResultSet result) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource close(Statement statement) throws SQLException {
+    public JDBCSource<MockContext> close(Statement statement) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource closeReading() {
+    public JDBCSource<MockContext> closeReading() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource closeWriting() {
+    public JDBCSource<MockContext> closeWriting() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public JDBCSource setLocale(Locale locale) {
+    public JDBCSource<MockContext> setLocale(Locale locale) {
         return this;
     }
 
     @Override
-    public Locale getLocale() {
-        return Locale.ROOT;
-    }
-
-    @Override
-    public JDBCSource setTimeZone(TimeZone timezone) {
+    public JDBCSource<MockContext> setTimeZone(TimeZone timezone) {
         return this;
-    }
-
-    @Override
-    public TimeZone getTimeZone() {
-        return TimeZone.getDefault();
-    }
-
-    @Override
-    public void suspend() throws Exception {
-    }
-
-    @Override
-    public void resume() throws Exception {
     }
 
     @Override

@@ -26,7 +26,7 @@
         <parameter name="river3" value="mysql/river-3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardDataTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
         </classes>
     </test>
 

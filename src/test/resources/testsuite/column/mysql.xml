@@ -22,7 +22,7 @@
                     value="update products set deleted_at=? where id=?" />
         <classes>
             <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategySourceTests"/>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategyFlowTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategyContextTests"/>
         </classes>
     </test>
 

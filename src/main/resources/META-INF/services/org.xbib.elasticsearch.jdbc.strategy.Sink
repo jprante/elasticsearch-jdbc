@@ -1,0 +1,2 @@
+org.xbib.elasticsearch.jdbc.strategy.standard.StandardSink
+org.xbib.elasticsearch.jdbc.strategy.column.ColumnSink

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Jörg Prante
+ * Copyright (C) 2015 Jörg Prante
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource;
 import org.xbib.elasticsearch.common.util.IndexableObject;
-import org.xbib.elasticsearch.common.util.MouthKeyValueStreamListener;
+import org.xbib.elasticsearch.common.util.SinkKeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.io.IOException;
@@ -58,8 +58,7 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
 
     @Override
     public void fetch() throws SQLException, IOException {
-        logger.info("fetch state={}", context.getState());
-        for (SQLCommand command : context.getStatements()) {
+        for (SQLCommand command : getStatements()) {
             Connection connection = getConnectionForReading();
             if (connection != null) {
                 List<OpInfo> opInfos = getOpInfos(connection);
@@ -78,7 +77,7 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
         List<OpInfo> opInfos = new LinkedList<OpInfo>();
         String noDeletedWhereClause = context.columnDeletedAt() != null ?
                 " AND " + quoteColumn(context.columnDeletedAt(), quoteString) + " IS NULL" : "";
-        if (context.isTimestampDiffSupported()) {
+        if (isTimestampDiffSupported()) {
             opInfos.add(new OpInfo("create", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnCreatedAt(), quoteString) + ")} >= 0" + noDeletedWhereClause));
             opInfos.add(new OpInfo("index", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnUpdatedAt(), quoteString) + ")} >= 0 AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR {fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnCreatedAt(), quoteString) + ")} < 0) " + noDeletedWhereClause, 2));
             if (context.columnDeletedAt() != null) {
@@ -110,8 +109,9 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
     }
 
     private Timestamp getLastRunTimestamp() {
-        DateTime lastRunTime = context.getState() != null ?
-                (DateTime) context.getState().getMap().get(ColumnFlow.LAST_RUN_TIME) : null;
+        DateTime lastRunTime =  context.getLastRunTimestamp();
+                /*context.getState() != null ?
+                (DateTime) context.getState().getMap().get(ColumnFlow.LAST_RUN_TIME) : null;*/
         if (lastRunTime == null) {
             return new Timestamp(0);
         }
@@ -129,7 +129,7 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
             result = executeQuery(stmt);
             KeyValueStreamListener<Object, Object> listener =
                     new ColumnKeyValueStreamListener<Object, Object>(opInfo.opType)
-                            .output(context.getMouth());
+                            .output(context.getSink());
             merge(command, result, listener);
         } catch (Exception e) {
             throw new IOException(e);
@@ -188,7 +188,7 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
         }
     }
 
-    private class ColumnKeyValueStreamListener<K, V> extends MouthKeyValueStreamListener<K, V> {
+    private class ColumnKeyValueStreamListener<K, V> extends SinkKeyValueStreamListener<K, V> {
 
         private String opType;
 

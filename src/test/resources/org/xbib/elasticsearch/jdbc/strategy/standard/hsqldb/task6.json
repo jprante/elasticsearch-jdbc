@@ -1,7 +1,7 @@
 {
     "type" : "jdbc",
-    "schedule" : "0/5 0-59 0-23 ? * *",
     "jdbc" : {
+        "schedule" : "0/5 0-59 0-23 ? * *",
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
         "password" : "",

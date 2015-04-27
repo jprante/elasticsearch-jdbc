@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Jörg Prante
+ * Copyright (C) 2015 Jörg Prante
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.DateTimeZone;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.common.util.MouthKeyValueStreamListener;
+import org.xbib.elasticsearch.common.util.SinkKeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.io.IOException;
@@ -70,7 +71,7 @@ import static org.elasticsearch.common.collect.Lists.newLinkedList;
  */
 public class StandardSource<C extends StandardContext> implements JDBCSource<C> {
 
-    private final static ESLogger logger = ESLoggerFactory.getLogger("jdbc");
+    private final static Logger logger = LogManager.getLogger("feeder.jdbc.source.standard");
 
     protected C context;
 
@@ -92,11 +93,53 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     protected DateTimeZone dateTimeZone;
 
-    protected volatile boolean suspended;
+    private boolean autocommit;
+
+    private int fetchSize;
+
+    private int maxRows;
+
+    private int retries = 1;
+
+    private TimeValue maxretrywait = TimeValue.timeValueSeconds(30);
+
+    private int rounding;
+
+    private int scale = -1;
+
+    private String resultSetType = "TYPE_FORWARD_ONLY";
+
+    private String resultSetConcurrency = "CONCUR_UPDATABLE";
+
+    private boolean shouldIgnoreNull;
+
+    private boolean shouldPrepareResultSetMetadata;
+
+    private boolean shouldPrepareDatabaseMetadata;
+
+    private Map<String, Object> lastResultSetMetadata = new HashMap<String, Object>();
+
+    private Map<String, Object> lastDatabaseMetadata = new HashMap<String, Object>();
+
+    private long lastRowCount;
+
+    private Map<String, Object> columnNameMap;
+
+    private Map<String, Object> lastRow = new HashMap<String, Object>();
+
+    private List<SQLCommand> sql;
+
+    private boolean isTimestampDiffSupported;
+
+    private int queryTimeout;
+
+    private Map<String, Object> connectionProperties = new HashMap<String, Object>();
+
+    private boolean shouldTreatBinaryAsString;
 
     @Override
     public String strategy() {
-        return "simple";
+        return "standard";
     }
 
     @Override
@@ -146,14 +189,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     }
 
     @Override
-    public Locale getLocale() {
-        if (locale == null) {
-            setLocale(Locale.getDefault());
-        }
-        return locale;
-    }
-
-    @Override
     public StandardSource<C> setTimeZone(TimeZone timezone) {
         this.timezone = timezone;
         TimeZone.setDefault(timezone); // for JDBC drivers internals
@@ -167,22 +202,218 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return this;
     }
 
-    @Override
-    public TimeZone getTimeZone() {
-        if (timezone == null) {
-            setTimeZone(TimeZone.getDefault());
+    public StandardSource<C> setAutoCommit(boolean autocommit) {
+        this.autocommit = autocommit;
+        return this;
+    }
+
+    public boolean getAutoCommit() {
+        return autocommit;
+    }
+
+    public StandardSource<C>  setFetchSize(int fetchSize) {
+        this.fetchSize = fetchSize;
+        return this;
+    }
+
+    public int getFetchSize() {
+        return fetchSize;
+    }
+
+    public StandardSource<C>  setMaxRows(int maxRows) {
+        this.maxRows = maxRows;
+        return this;
+    }
+
+    public int getMaxRows() {
+        return maxRows;
+    }
+
+    public StandardSource<C>  setRetries(int retries) {
+        this.retries = retries;
+        return this;
+    }
+
+    public int getRetries() {
+        return retries;
+    }
+
+    public StandardSource<C>  setMaxRetryWait(TimeValue maxretrywait) {
+        this.maxretrywait = maxretrywait;
+        return this;
+    }
+
+    public TimeValue getMaxRetryWait() {
+        return maxretrywait;
+    }
+
+    public StandardSource<C>  setRounding(String rounding) {
+        if ("ceiling".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_CEILING;
+        } else if ("down".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_DOWN;
+        } else if ("floor".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_FLOOR;
+        } else if ("halfdown".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_DOWN;
+        } else if ("halfeven".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_EVEN;
+        } else if ("halfup".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_HALF_UP;
+        } else if ("unnecessary".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_UNNECESSARY;
+        } else if ("up".equalsIgnoreCase(rounding)) {
+            this.rounding = BigDecimal.ROUND_UP;
         }
-        return timezone;
+        return this;
     }
 
-    @Override
-    public void suspend() {
-        this.suspended = true;
+    public int getRounding() {
+        return rounding;
     }
 
-    @Override
-    public void resume() {
-        this.suspended = false;
+    public StandardSource<C>  setScale(int scale) {
+        this.scale = scale;
+        return this;
+    }
+
+    public int getScale() {
+        return scale;
+    }
+
+    public StandardSource<C>  setResultSetType(String resultSetType) {
+        this.resultSetType = resultSetType;
+        return this;
+    }
+
+    public String getResultSetType() {
+        return resultSetType;
+    }
+
+    public StandardSource<C>  setResultSetConcurrency(String resultSetConcurrency) {
+        this.resultSetConcurrency = resultSetConcurrency;
+        return this;
+    }
+
+    public String getResultSetConcurrency() {
+        return resultSetConcurrency;
+    }
+
+    public StandardSource<C>  shouldIgnoreNull(boolean shouldIgnoreNull) {
+        this.shouldIgnoreNull = shouldIgnoreNull;
+        return this;
+    }
+
+    public boolean shouldIgnoreNull() {
+        return shouldIgnoreNull;
+    }
+
+    public StandardSource<C>  shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
+        this.shouldPrepareResultSetMetadata = shouldPrepareResultSetMetadata;
+        return this;
+    }
+
+    public boolean shouldPrepareResultSetMetadata() {
+        return shouldPrepareResultSetMetadata;
+    }
+
+    public StandardSource<C>  shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
+        this.shouldPrepareDatabaseMetadata = shouldPrepareDatabaseMetadata;
+        return this;
+    }
+
+    public boolean shouldPrepareDatabaseMetadata() {
+        return shouldPrepareDatabaseMetadata;
+    }
+
+    public StandardSource<C>  setLastResultSetMetadata(Map<String, Object> lastResultSetMetadata) {
+        this.lastResultSetMetadata = lastResultSetMetadata;
+        return this;
+    }
+
+    public Map<String, Object> getLastResultSetMetadata() {
+        return lastResultSetMetadata;
+    }
+
+    public StandardSource<C>  setLastDatabaseMetadata(Map<String, Object> lastDatabaseMetadata) {
+        this.lastDatabaseMetadata = lastDatabaseMetadata;
+        return this;
+    }
+
+    public Map<String, Object> getLastDatabaseMetadata() {
+        return lastDatabaseMetadata;
+    }
+
+    public StandardSource<C>  setLastRowCount(long lastRowCount) {
+        this.lastRowCount = lastRowCount;
+        return this;
+    }
+
+    public long getLastRowCount() {
+        return lastRowCount;
+    }
+
+    public StandardSource<C>  setColumnNameMap(Map<String, Object> columnNameMap) {
+        this.columnNameMap = columnNameMap;
+        return this;
+    }
+
+    public Map<String, Object> getColumnNameMap() {
+        return columnNameMap;
+    }
+
+    public StandardSource<C>  setLastRow(Map<String, Object> lastRow) {
+        this.lastRow = lastRow;
+        return this;
+    }
+
+    public Map<String, Object> getLastRow() {
+        return lastRow;
+    }
+
+    public StandardSource<C> setStatements(List<SQLCommand> sql) {
+        this.sql = sql;
+        return this;
+    }
+
+    public List<SQLCommand> getStatements() {
+        return sql;
+    }
+
+    public StandardSource<C>  setTimestampDiffSupported(boolean supported) {
+        this.isTimestampDiffSupported = supported;
+        return this;
+    }
+
+    public boolean isTimestampDiffSupported() {
+        return isTimestampDiffSupported;
+    }
+
+    public StandardSource<C> setQueryTimeout(int queryTimeout) {
+        this.queryTimeout = queryTimeout;
+        return this;
+    }
+
+    public int getQueryTimeout() {
+        return queryTimeout;
+    }
+
+    public StandardSource<C> setConnectionProperties(Map<String, Object> connectionProperties) {
+        this.connectionProperties = connectionProperties;
+        return this;
+    }
+
+    public Map<String, Object> getConnectionProperties() {
+        return connectionProperties;
+    }
+
+    public StandardSource<C> shouldTreatBinaryAsString(boolean shouldTreatBinaryAsString) {
+        this.shouldTreatBinaryAsString = shouldTreatBinaryAsString;
+        return this;
+    }
+
+    public boolean shouldTreatBinaryAsString() {
+        return shouldTreatBinaryAsString;
     }
 
     /**
@@ -204,7 +435,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             logger.debug(e.getMessage());
         }
         if (invalid) {
-            int retries = context.getRetries();
+            int retries = getRetries();
             while (retries > 0) {
                 retries--;
                 try {
@@ -214,19 +445,19 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         if (password != null) {
                             properties.put("password", password);
                         }
-                        if (context.getConnectionProperties() != null) {
-                            properties.putAll(context.getConnectionProperties());
+                        if (getConnectionProperties() != null) {
+                            properties.putAll(getConnectionProperties());
                         }
                         readConnection = DriverManager.getConnection(url, properties);
                     } else {
                         readConnection = DriverManager.getConnection(url);
                     }
                     DatabaseMetaData metaData = readConnection.getMetaData();
-                    if (context.shouldPrepareDatabaseMetadata()) {
+                    if (shouldPrepareDatabaseMetadata()) {
                         prepare(metaData);
                     }
                     if (metaData.getTimeDateFunctions().contains("TIMESTAMPDIFF")) {
-                        context.setTimestampDiffSupported(true);
+                        setTimestampDiffSupported(true);
                     }
                     // "readonly" is required by MySQL for large result streaming
                     readConnection.setReadOnly(true);
@@ -235,13 +466,13 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     // https://github.com/pgjdbc/pgjdbc/blob/master/org/postgresql/jdbc2/AbstractJdbc2Statement.java#L514
                     //readConnection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
                     // many drivers don't like autocommit=true
-                    readConnection.setAutoCommit(context.getAutoCommit());
+                    readConnection.setAutoCommit(getAutoCommit());
                     return readConnection;
                 } catch (SQLException e) {
                     logger.error("while opening read connection: " + url + " " + e.getMessage(), e);
                     try {
-                        logger.debug("waiting for {} seconds", context.getMaxRetryWait().seconds());
-                        Thread.sleep(context.getMaxRetryWait().millis());
+                        logger.debug("waiting for {} seconds", getMaxRetryWait().seconds());
+                        Thread.sleep(getMaxRetryWait().millis());
                     } catch (InterruptedException ex) {
                         // do nothing
                     }
@@ -268,7 +499,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             // Example: postgresql does implement but not support isValid()
         }
         if (invalid) {
-            int retries = context.getRetries();
+            int retries = getRetries();
             while (retries > 0) {
                 retries--;
                 try {
@@ -278,22 +509,22 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         if (password != null) {
                             properties.put("password", password);
                         }
-                        if (context.getConnectionProperties() != null) {
-                            properties.putAll(context.getConnectionProperties());
+                        if (getConnectionProperties() != null) {
+                            properties.putAll(getConnectionProperties());
                         }
                         writeConnection = DriverManager.getConnection(url, properties);
                     } else {
                         writeConnection = DriverManager.getConnection(url);
                     }
                     // many drivers don't like autocommit=true
-                    writeConnection.setAutoCommit(context.getAutoCommit());
+                    writeConnection.setAutoCommit(getAutoCommit());
                     return writeConnection;
                 } catch (SQLNonTransientConnectionException e) {
                     // ignore derby drop=true silently
                 } catch (SQLException e) {
                     logger.error("while opening write connection: " + url + " " + e.getMessage(), e);
                     try {
-                        Thread.sleep(context.getMaxRetryWait().millis());
+                        Thread.sleep(getMaxRetryWait().millis());
                     } catch (InterruptedException ex) {
                         // do nothing
                     }
@@ -305,7 +536,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     @Override
     public void beforeFetch() throws Exception {
-        context.setLastStartDate(new DateTime().getMillis());
+        //context.setLastStartDate(new DateTime().getMillis());
     }
 
     /**
@@ -316,10 +547,10 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
      */
     @Override
     public void fetch() throws SQLException, IOException {
-        logger.debug("fetching, {} SQL commands", context.getStatements().size());
+        logger.debug("fetching, {} SQL commands", getStatements().size());
         try {
-            for (SQLCommand command : context.getStatements()) {
-                context.setLastExecutionStartDate(new DateTime().getMillis());
+            for (SQLCommand command : getStatements()) {
+                //context.setLastExecutionStartDate(new DateTime().getMillis());
                 try {
                     if (command.isCallable()) {
                         logger.debug("{} executing callable SQL: {}", this, command);
@@ -331,11 +562,11 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         logger.debug("{} executing SQL without params: {}", this, command);
                         execute(command);
                     }
-                    context.setLastExecutionEndDate(new DateTime().getMillis());
+                    //context.setLastExecutionEndDate(new DateTime().getMillis());
                 } catch (SQLRecoverableException e) {
-                    long millis = context.getMaxRetryWait().getMillis();
+                    long millis = getMaxRetryWait().getMillis();
                     logger.warn("retrying after " + millis / 1000 + " seconds, got exception ", e);
-                    Thread.sleep(context.getMaxRetryWait().getMillis());
+                    Thread.sleep(getMaxRetryWait().getMillis());
                     if (command.isCallable()) {
                         logger.debug("retrying, executing callable SQL: {}", command);
                         executeCallable(command);
@@ -346,7 +577,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         logger.debug("retrying, executing SQL without params: {}", command);
                         execute(command);
                     }
-                    context.setLastExecutionEndDate(new DateTime().getMillis());
+                    //context.setLastExecutionEndDate(new DateTime().getMillis());
                 }
             }
         } catch (Exception e) {
@@ -356,12 +587,13 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     @Override
     public void afterFetch() throws Exception {
-        context.setLastEndDate(new DateTime().getMillis());
+        //context.setLastEndDate(new DateTime().getMillis());
         shutdown();
     }
 
     @Override
     public void shutdown() {
+        logger.info("shutdown");
         closeReading();
         logger.debug("read connection closed");
         readConnection = null;
@@ -390,18 +622,18 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     logger.debug("{} using read connection {} for executing query", this, connection);
                     statement = connection.createStatement();
                     try {
-                        statement.setQueryTimeout(context.getQueryTimeout());
+                        statement.setQueryTimeout(getQueryTimeout());
                     } catch (SQLFeatureNotSupportedException e) {
                         // Postgresql does not support setQueryTimeout()
                         logger.warn("driver does not support setQueryTimeout(), skipped");
                     }
                     results = executeQuery(statement, command.getSQL());
-                    if (context.shouldPrepareResultSetMetadata()) {
+                    if (shouldPrepareResultSetMetadata()) {
                         prepare(results.getMetaData());
                     }
-                    MouthKeyValueStreamListener<Object, Object> listener = new MouthKeyValueStreamListener<Object, Object>()
-                            .output(context.getMouth())
-                            .shouldIgnoreNull(context.shouldIgnoreNull());
+                    SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
+                            .output(context.getSink())
+                            .shouldIgnoreNull(shouldIgnoreNull());
                     merge(command, results, listener);
                 }
             } else {
@@ -434,9 +666,9 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 statement = prepareQuery(command.getSQL());
                 bind(statement, command.getParameters());
                 results = executeQuery(statement);
-                MouthKeyValueStreamListener<Object, Object> listener = new MouthKeyValueStreamListener<Object, Object>()
-                        .output(context.getMouth())
-                        .shouldIgnoreNull(context.shouldIgnoreNull());
+                SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
+                        .output(context.getSink())
+                        .shouldIgnoreNull(shouldIgnoreNull());
                 merge(command, results, listener);
             } else {
                 statement = prepareUpdate(command.getSQL());
@@ -473,8 +705,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     register(statement, command.getRegister());
                 }
                 boolean hasRows = statement.execute();
-                MouthKeyValueStreamListener<Object, Object> listener = new MouthKeyValueStreamListener<Object, Object>()
-                        .output(context.getMouth());
+                SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
+                        .output(context.getSink());
                 if (hasRows) {
                     logger.debug("callable execution created result set");
                     while (hasRows) {
@@ -510,19 +742,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         long rows = 0L;
         while (nextRow(command, results, listener)) {
             rows++;
-            if (context.getMetric() != null) {
-                context.getMetric().mark();
-            }
-            while (suspended) {
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    logger.warn("interrupted");
-                }
-            }
         }
-        context.setLastRowCount(rows);
+        setLastRowCount(rows);
         if (rows > 0) {
             logger.debug("merged {} rows", rows);
         } else {
@@ -545,11 +766,11 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             throw new SQLException("can't connect to source " + url);
         }
         logger.debug("preparing statement with SQL {}", sql);
-        int type = "TYPE_FORWARD_ONLY".equals(context.getResultSetType()) ?
-                ResultSet.TYPE_FORWARD_ONLY : "TYPE_SCROLL_SENSITIVE".equals(context.getResultSetType()) ?
-                ResultSet.TYPE_SCROLL_SENSITIVE : "TYPE_SCROLL_INSENSITIVE".equals(context.getResultSetType()) ?
+        int type = "TYPE_FORWARD_ONLY".equals(getResultSetType()) ?
+                ResultSet.TYPE_FORWARD_ONLY : "TYPE_SCROLL_SENSITIVE".equals(getResultSetType()) ?
+                ResultSet.TYPE_SCROLL_SENSITIVE : "TYPE_SCROLL_INSENSITIVE".equals(getResultSetType()) ?
                 ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
-        int concurrency = "CONCUR_READ_ONLY".equals(context.getResultSetConcurrency()) ?
+        int concurrency = "CONCUR_READ_ONLY".equals(getResultSetConcurrency()) ?
                 ResultSet.CONCUR_READ_ONLY : ResultSet.CONCUR_UPDATABLE;
         return connection.prepareStatement(sql, type, concurrency);
     }
@@ -661,8 +882,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
      */
     @Override
     public ResultSet executeQuery(PreparedStatement statement) throws SQLException {
-        statement.setMaxRows(context.getMaxRows());
-        statement.setFetchSize(context.getFetchSize());
+        statement.setMaxRows(getMaxRows());
+        statement.setFetchSize(getFetchSize());
         return statement.executeQuery();
     }
 
@@ -676,8 +897,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
      */
     @Override
     public ResultSet executeQuery(Statement statement, String sql) throws SQLException {
-        statement.setMaxRows(context.getMaxRows());
-        statement.setFetchSize(context.getFetchSize());
+        statement.setMaxRows(getMaxRows());
+        statement.setFetchSize(getFetchSize());
         return statement.executeQuery(sql);
     }
 
@@ -743,7 +964,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             ResultSetMetaData metadata = results.getMetaData();
             int columns = metadata.getColumnCount();
             for (int i = 1; i <= columns; i++) {
-                if (context.getColumnNameMap() == null) {
+                if (getColumnNameMap() == null) {
                     keys.add(metadata.getColumnLabel(i));
                 } else {
                     keys.add(mapColumnName(metadata.getColumnLabel(i)));
@@ -809,13 +1030,13 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         List<Object> values = new LinkedList<Object>();
         ResultSetMetaData metadata = results.getMetaData();
         int columns = metadata.getColumnCount();
-        context.setLastRow(new HashMap());
+        setLastRow(new HashMap());
         for (int i = 1; i <= columns; i++) {
             try {
                 Object value = parseType(results, i, metadata.getColumnType(i), locale);
                 logger.trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
                 values.add(value);
-                context.getLastRow().put("$row." + metadata.getColumnLabel(i), value);
+                getLastRow().put("$row." + metadata.getColumnLabel(i), value);
             } catch (ParseException e) {
                 logger.warn("parse error for value {}, using null instead", results.getObject(i));
                 values.add(null);
@@ -946,7 +1167,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 put("$meta.db.sqlstatetype", metaData.getSQLStateType());
             }
         };
-        context.setLastDatabaseMetadata(m);
+        setLastDatabaseMetadata(m);
     }
 
     private void prepare(final ResultSetMetaData metaData) throws SQLException {
@@ -977,23 +1198,23 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             m.put("$meta.rs.issigned." + i, metaData.isSigned(i));
             m.put("$meta.rs.iswritable." + i, metaData.isWritable(i));
         }
-        context.setLastResultSetMetadata(m);
+        setLastResultSetMetadata(m);
     }
 
     private void bind(PreparedStatement statement, int i, Object value) throws SQLException {
-        logger.trace("bind: value = {}", value);
+        logger.debug("bind: value = {}", value);
         if (value == null) {
             statement.setNull(i, Types.VARCHAR);
         } else if (value instanceof String) {
             String s = (String) value;
             if ("$now".equals(s)) {
                 Timestamp t = new Timestamp(new DateTime().getMillis());
-                logger.trace("setting $now to {}", t);
+                logger.debug("setting $now to {}", t);
                 statement.setTimestamp(i, t, calendar);
             } else if ("$job".equals(s)) {
-                logger.trace("setting $job to {}", context.getState().getCounter());
-                statement.setInt(i, context.getState().getCounter());
-            } else if ("$count".equals(s)) {
+                logger.info("setting $job to {}", context.getCounter());
+                statement.setInt(i, context.getCounter());
+            /*else if ("$count".equals(s)) {
                 logger.trace("setting $count to {}", context.getLastRowCount());
                 statement.setLong(i, context.getLastRowCount());
             } else if ("$last.sql.start".equals(s)) {
@@ -1044,20 +1265,21 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 if (counter != null) {
                     statement.setInt(i, counter);
                 }
-            } else if (context.shouldPrepareDatabaseMetadata()) {
-                for (String k : context.getLastDatabaseMetadata().keySet()) {
+            } else*/
+            } else if (shouldPrepareDatabaseMetadata()) {
+                for (String k : getLastDatabaseMetadata().keySet()) {
                     if (k.equals(s)) {
-                        statement.setObject(i, context.getLastDatabaseMetadata().get(k));
+                        statement.setObject(i, getLastDatabaseMetadata().get(k));
                     }
                 }
-            } else if (context.shouldPrepareResultSetMetadata()) {
-                for (String k : context.getLastResultSetMetadata().keySet()) {
+            } else if (shouldPrepareResultSetMetadata()) {
+                for (String k : getLastResultSetMetadata().keySet()) {
                     if (k.equals(s)) {
-                        statement.setObject(i, context.getLastResultSetMetadata().get(k));
+                        statement.setObject(i, getLastResultSetMetadata().get(k));
                     }
                 }
             } else {
-                Object rowValue = context.getLastRow().get(s);
+                Object rowValue = getLastRow().get(s);
                 if (rowValue != null) {
                     statement.setObject(i, rowValue);
                 } else {
@@ -1125,7 +1347,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             case Types.VARBINARY:
             case Types.LONGVARBINARY: {
                 byte[] b = result.getBytes(i);
-                return context.shouldTreatBinaryAsString() ? (b != null ? new String(b) : null) : b;
+                return shouldTreatBinaryAsString() ? (b != null ? new String(b) : null) : b;
             }
             /**
              * The JDBC type ARRAY represents the SQL3 type ARRAY.
@@ -1368,8 +1590,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 if (bd == null || result.wasNull()) {
                     return null;
                 }
-                if (context.getScale() >= 0) {
-                    bd = bd.setScale(context.getScale(), context.getRounding());
+                if (getScale() >= 0) {
+                    bd = bd.setScale(getScale(), getRounding());
                     try {
                         long l = bd.longValueExact();
                         if (Long.toString(l).equals(result.getString(i))) {
@@ -1669,7 +1891,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     private String mapColumnName(String columnName) {
         // TODO JDK8: StringJoiner
-        Map<String, Object> columnNameMap = context.getColumnNameMap();
+        Map<String, Object> columnNameMap = getColumnNameMap();
         StringBuilder sb = new StringBuilder();
         String[] s = columnName.split("\\.");
         for (int i = 0; i < s.length; i++) {

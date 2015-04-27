@@ -15,13 +15,13 @@
  */
 package org.xbib.elasticsearch.common.util;
 
-import org.xbib.elasticsearch.jdbc.strategy.Flow;
+import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.jdbc.strategy.Source;
-import org.xbib.elasticsearch.jdbc.strategy.Mouth;
-import org.xbib.elasticsearch.jdbc.strategy.standard.StandardFlow;
+import org.xbib.elasticsearch.jdbc.strategy.Sink;
+import org.xbib.elasticsearch.jdbc.strategy.standard.StandardContext;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource;
-import org.xbib.elasticsearch.jdbc.strategy.standard.StandardMouth;
+import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSink;
 
 import java.util.ServiceLoader;
 
@@ -31,19 +31,19 @@ import java.util.ServiceLoader;
 public class StrategyLoader {
 
     /**
-     * A flow encapsulates the thread that moves the data from source to mouth
+     * A context encapsulates the move from source to mouth
      *
      * @param strategy the strategy
-     * @return a flow, or the StandardFlow
+     * @return a context, or the StandardFlow
      */
-    public static Flow newFlow(String strategy) {
-        ServiceLoader<Flow> loader = ServiceLoader.load(Flow.class);
-        for (Flow flow : loader) {
-            if (strategy.equals(flow.strategy())) {
-                return flow.newInstance();
+    public static Context newContext(String strategy) {
+        ServiceLoader<Context> loader = ServiceLoader.load(Context.class);
+        for (Context context : loader) {
+            if (strategy.equals(context.strategy())) {
+                return context.newInstance();
             }
         }
-        return new StandardFlow();
+        return new StandardContext();
     }
 
     /**
@@ -85,14 +85,14 @@ public class StrategyLoader {
      * @param strategy the strategy
      * @return a new instance of a mouth, or an instance of the StandardMouth if strategy does not exist
      */
-    public static Mouth newMouth(String strategy) {
-        ServiceLoader<Mouth> loader = ServiceLoader.load(Mouth.class);
-        for (Mouth mouth : loader) {
-            if (strategy.equals(mouth.strategy())) {
-                return mouth.newInstance();
+    public static Sink newMouth(String strategy) {
+        ServiceLoader<Sink> loader = ServiceLoader.load(Sink.class);
+        for (Sink sink : loader) {
+            if (strategy.equals(sink.strategy())) {
+                return sink.newInstance();
             }
         }
-        return new StandardMouth();
+        return new StandardSink();
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Jörg Prante
+ * Copyright (C) 2015 Jörg Prante
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,19 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
+import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentHelper;
+import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
+import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardContext;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class ColumnContext extends StandardContext {
+
+    public static final String LAST_RUN_TIME = "last_run_time";
+
+    public static final String CURRENT_RUN_STARTED_TIME = "current_run_started_time";
     /**
      * Column name that contains creation time (for column strategy)
      */
@@ -42,6 +43,8 @@ public class ColumnContext extends StandardContext {
      */
     private String columnDeletedAt;
 
+    private DateTime lastRunTimestamp;
+
     /**
      * Contains overlap value for last run timestamp.
      */
@@ -51,6 +54,16 @@ public class ColumnContext extends StandardContext {
      * Columns name should be automatically escaped by proper db quote mark or not (for column strategy)
      */
     private boolean columnEscape;
+
+    @Override
+    public String strategy() {
+        return "column";
+    }
+
+    @Override
+    public ColumnContext newInstance() {
+        return new ColumnContext();
+    }
 
     public ColumnContext columnUpdatedAt(String updatedAt) {
         this.columnUpdatedAt = updatedAt;
@@ -88,8 +101,12 @@ public class ColumnContext extends StandardContext {
         return this.columnEscape;
     }
 
-    public TimeValue getLastRunTimeStampOverlap() {
-        return lastRunTimeStampOverlap;
+    public void setLastRunTimeStamp(DateTime dateTime) {
+        this.lastRunTimestamp = dateTime;
+    }
+
+    public DateTime getLastRunTimestamp() {
+        return lastRunTimestamp;
     }
 
     public ColumnContext setLastRunTimeStampOverlap(TimeValue lastRunTimeStampOverlap) {
@@ -97,21 +114,30 @@ public class ColumnContext extends StandardContext {
         return this;
     }
 
-    public Map<String, Object> asMap() {
-        Map<String, Object> map = super.asMap();
-        try {
-            XContentBuilder builder = jsonBuilder()
-                    .startObject()
-                    .field("columnCreatedAt", columnCreatedAt)
-                    .field("columnUpdatedAt", columnUpdatedAt)
-                    .field("columnDeletedAt", columnDeletedAt)
-                    .field("columnEscape", columnEscape)
-                    .endObject();
-            map.putAll(XContentHelper.convertToMap(builder.bytes(), true).v2());
-            return map;
-        } catch (IOException e) {
-            // should really not happen
-            return new HashMap<String, Object>();
-        }
+    public TimeValue getLastRunTimeStampOverlap() {
+        return lastRunTimeStampOverlap;
     }
+
+    @Override
+    protected void prepareContext(JDBCSource source, Sink sink) throws IOException {
+        super.prepareContext(source, sink);
+        String columnCreatedAt = getSettings().get("created_at", "created_at");
+        String columnUpdatedAt = getSettings().get("updated_at", "updated_at");
+        String columnDeletedAt = getSettings().get("deleted_at");
+        boolean columnEscape = getSettings().getAsBoolean("column_escape", true);
+        TimeValue lastRunTimeStampOverlap = getSettings().getAsTime("last_run_timestamp_overlap", TimeValue.timeValueSeconds(0));
+        columnCreatedAt(columnCreatedAt)
+                .columnUpdatedAt(columnUpdatedAt)
+                .columnDeletedAt(columnDeletedAt)
+                .columnEscape(columnEscape)
+                .setLastRunTimeStampOverlap(lastRunTimeStampOverlap);
+    }
+
+    @Override
+    public void fetch() throws Exception {
+        DateTime currentTime = new DateTime();
+        getSource().fetch();
+        setLastRunTimeStamp(currentTime);
+    }
+
 }

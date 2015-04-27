@@ -30,7 +30,7 @@
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardDataTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
         </classes>
     </test>
 

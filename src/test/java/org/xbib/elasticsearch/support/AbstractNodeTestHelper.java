@@ -1,16 +1,32 @@
+/*
+ * Copyright (C) 2015 Jörg Prante
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.xbib.elasticsearch.support;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.network.NetworkUtils;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.transport.LocalTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
@@ -19,9 +35,13 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.transport.TransportInfo;
 import org.testng.Assert;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,16 +51,16 @@ import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 public abstract class AbstractNodeTestHelper extends Assert {
 
-    protected final static ESLogger logger = ESLoggerFactory.getLogger("test");
+    protected final static Logger logger = LogManager.getLogger("test");
 
     private final static AtomicInteger clusterCount = new AtomicInteger();
 
-    protected String cluster;
+    private String cluster;
 
     // note, this must be same name as in json river specs
-    protected final String index = "my_jdbc_river_index";
+    protected final String index = "my_index";
 
-    protected final String type = "my_jdbc_river_type";
+    protected final String type = "my_type";
 
     private Map<String, Node> nodes = newHashMap();
 
@@ -54,6 +74,12 @@ public abstract class AbstractNodeTestHelper extends Assert {
         return cluster;
     }
 
+    private List<String> hosts;
+
+    protected String[] getHosts() {
+        return hosts != null ? hosts.toArray(new String[hosts.size()]) : new String[]{};
+    }
+
     protected Settings getNodeSettings() {
         return ImmutableSettings
                 .settingsBuilder()
@@ -64,28 +90,30 @@ public abstract class AbstractNodeTestHelper extends Assert {
                 .put("gateway.type", "none")
                 .put("index.store.type", "ram")
                 .put("http.enabled", false)
-                .put("discovery.zen.multicast.enabled", false)
+                .put("discovery.zen.multicast.enabled", true)
                 .build();
     }
 
     public void startNodes() throws Exception {
         setClusterName();
 
-        // we need more than one node, for better resilience of the river state actions
+        // we need more than one node, for better resilience testing
         startNode("1");
         startNode("2");
 
         // find node address
         NodesInfoRequest nodesInfoRequest = new NodesInfoRequest().transport(true);
         NodesInfoResponse response = client("1").admin().cluster().nodesInfo(nodesInfoRequest).actionGet();
-        Object obj = response.iterator().next().getTransport().getAddress().publishAddress();
-        if (obj instanceof InetSocketTransportAddress) {
-            InetSocketTransportAddress address = (InetSocketTransportAddress) obj;
-            // ... do we need our transport address?
-        }
-        if (obj instanceof LocalTransportAddress) {
-            LocalTransportAddress address = (LocalTransportAddress) obj;
-            // .... do we need local transport?
+        Iterator<NodeInfo> it = response.iterator();
+        hosts = new LinkedList<>();
+        while (it.hasNext()) {
+            NodeInfo nodeInfo = it.next();
+            TransportInfo transportInfo = nodeInfo.getTransport();
+            TransportAddress address = transportInfo.getAddress().publishAddress();
+            if (address instanceof InetSocketTransportAddress) {
+                InetSocketTransportAddress inetSocketTransportAddress = (InetSocketTransportAddress) address;
+                hosts.add(inetSocketTransportAddress.address().getHostName() + ":" + inetSocketTransportAddress.address().getPort());
+            }
         }
     }
 
@@ -100,7 +128,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
                 .put(getNodeSettings())
                 .put("name", id)
                 .build();
-        Node node = nodeBuilder().local(true).settings(finalSettings).build();
+        Node node = nodeBuilder().settings(finalSettings).build();
         Client client = node.client();
         nodes.put(id, node);
         clients.put(id, client);

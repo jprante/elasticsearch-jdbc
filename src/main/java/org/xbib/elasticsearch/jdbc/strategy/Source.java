@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Jörg Prante
+ * Copyright (C) 2015 Jörg Prante
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,20 +62,6 @@ public interface Source<C extends Context> {
      * @throws Exception when execution fails
      */
     void afterFetch() throws Exception;
-
-    /**
-     * Suspend source
-     *
-     * @throws Exception when suspend fails
-     */
-    void suspend() throws Exception;
-
-    /**
-     * Resume source
-     *
-     * @throws Exception when resume fails
-     */
-    void resume() throws Exception;
 
     /**
      * Shutdown source
