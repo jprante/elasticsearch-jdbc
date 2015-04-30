@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC Plugin Test Suite (standard strategy - derby)" verbose="1">
+<suite name="JDBC Test Suite (standard strategy - derby)" verbose="1">
     <parameter name="starturl" value="jdbc:derby:memory:myDB;create=true"/>
     <parameter name="stopurl" value="jdbc:derby:memory:myDB;drop=true"/>
     <parameter name="user" value=""/>
@@ -18,7 +18,7 @@
         </classes>
     </test>
 
-    <test name="Data Tests (standard strategy - derby)">
+    <test name="Sink Tests (standard strategy - derby)">
         <parameter name="create" value="derby/create-ordertables.sql"/>
         <parameter name="delete" value="derby/delete-ordertables.sql"/>
         <parameter name="task1" value="derby/task1.json"/>

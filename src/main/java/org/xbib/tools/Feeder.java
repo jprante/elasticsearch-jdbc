@@ -18,7 +18,7 @@ package org.xbib.tools;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.support.client.Ingest;
 import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
@@ -28,6 +28,8 @@ import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineRequest;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         extends Converter<T, R, P> {
@@ -36,14 +38,28 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
 
     protected static Ingest ingest;
 
-    protected String getIndex() {
-        return settings.get("index");
-    }
+    private static String index;
+
+    private static String concreteIndex;
 
     protected String getType() {
         return settings.get("type");
     }
+    protected void setIndex(String index) {
+        this.index = index;
+    }
 
+    protected String getIndex() {
+        return index;
+    }
+
+    protected void setConcreteIndex(String concreteIndex) {
+        this.concreteIndex = concreteIndex;
+    }
+
+    protected String getConcreteIndex() {
+        return concreteIndex;
+    }
     protected Ingest createIngest() {
         return settings.getAsBoolean("mock", false) ? new MockTransportClient() :
                 "ingest".equals(settings.get("client")) ? new IngestTransportClient() :
@@ -69,42 +85,61 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
         super.cleanup();
         if (ingest != null) {
             try {
-                logger.info("flush");
+                logger.debug("flush");
                 ingest.flushIngest();
-                logger.info("waiting for all responses");
+                logger.info("waiting for completing all bulk responses");
                 ingest.waitForResponses(TimeValue.timeValueSeconds(120));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.error(e.getMessage(), e);
             }
             ingest.shutdown();
-            logger.info("shutdown complete");
+            logger.info("complete");
         }
         return this;
     }
 
     protected Feeder createIndex(String index) throws IOException {
-        /*ingest.newClient(ImmutableSettings.settingsBuilder()
-                .put("cluster.name", settings.get("elasticsearch.cluster"))
-                .putArray("host", settings.getAsArray("elasticsearch.host"))
-                .put("port", settings.getAsInt("elasticsearch.port", 9300))
-                .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
-                .build());*/
-        ingest.waitForCluster(ClusterHealthStatus.YELLOW, TimeValue.timeValueSeconds(30));
-        try {
-            beforeIndexCreation(ingest);
-            ingest.newIndex(index);
-        } catch (Exception e) {
-            if (!settings.getAsBoolean("ignoreindexcreationerror", false)) {
-                throw e;
-            } else {
-                logger.warn("index creation error, but configured to ignore");
+        if (index == null) {
+            return this;
+        }
+        if (ingest.client() != null) {
+            ingest.waitForCluster(ClusterHealthStatus.YELLOW, TimeValue.timeValueSeconds(30));
+            try {
+                if (settings.getAsStructuredMap().containsKey("index_settings")) {
+                    String indexSettings = settings.get("index_settings");
+                    InputStream indexSettingsInput = (indexSettings.startsWith("classpath:") ?
+                            new URL(null, indexSettings, new ClasspathURLStreamHandler()) :
+                            new URL(indexSettings)).openStream();
+                    String indexMappings = settings.get("type_mapping", null);
+                    InputStream indexMappingsInput = (indexMappings.startsWith("classpath:") ?
+                            new URL(null, indexMappings, new ClasspathURLStreamHandler()) :
+                            new URL(indexMappings)).openStream();
+                    ingest.newIndex(getConcreteIndex(), getType(),
+                            indexSettingsInput, indexMappingsInput);
+                    indexSettingsInput.close();
+                    indexMappingsInput.close();
+                    ingest.startBulk(getConcreteIndex(), -1, 1000);
+                }
+            } catch (Exception e) {
+                if (!settings.getAsBoolean("ignoreindexcreationerror", false)) {
+                    throw e;
+                } else {
+                    logger.warn("index creation error, but configured to ignore", e);
+                }
             }
         }
         return this;
     }
 
-    protected Feeder beforeIndexCreation(Ingest ingest) throws IOException {
-        return this;
+    protected String resolveAlias(String alias) {
+        if (ingest.client() == null) {
+            return alias;
+        }
+        GetAliasesResponse getAliasesResponse = ingest.client().admin().indices().prepareGetAliases(alias).execute().actionGet();
+        if (!getAliasesResponse.getAliases().isEmpty()) {
+            return getAliasesResponse.getAliases().keys().iterator().next().value;
+        }
+        return alias;
     }
 }

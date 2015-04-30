@@ -17,8 +17,6 @@ package org.xbib.tools;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -32,21 +30,20 @@ import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.elasticsearch.common.collect.Queues.newConcurrentLinkedQueue;
 
 /**
  * Standalone feeder for JDBC
  */
-public class JDBCFeeder extends TimewindowFeeder {
+public class JDBCFeeder extends Feeder {
 
     private final static Logger logger = LogManager.getLogger("feeder.jdbc");
 
@@ -74,14 +71,16 @@ public class JDBCFeeder extends TimewindowFeeder {
     protected void prepare() throws IOException {
         Runtime.getRuntime().addShutdownHook(shutdownHook());
         ingest = createIngest();
-        String timeWindow = settings.get("timewindow") != null ?
-                DateTimeFormat.forPattern(settings.get("timewindow")).print(new DateTime()) : "";
-        setConcreteIndex(resolveAlias(settings.get("index") + timeWindow));
-        Pattern pattern = Pattern.compile("^(.*?)\\d+$");
-        Matcher m = pattern.matcher(getConcreteIndex());
-        setIndex(m.matches() ? m.group() : getConcreteIndex());
-        logger.info("base index name = {}, concrete index name = {}",
-                getIndex(), getConcreteIndex());
+        String index = settings.get("index");
+        if (index != null) {
+            setIndex(index);
+            SimpleDateFormat formatter = new SimpleDateFormat();
+            formatter.applyPattern(index);
+            index = index.indexOf('\'') < 0 ? index : formatter.format(new Date());
+            index = resolveAlias(index);
+            setConcreteIndex(index);
+            logger.info("index name = {}, concrete index name = {}", getIndex(), getConcreteIndex());
+        }
         Integer maxbulkactions = settings.getAsInt("maxbulkactions", 1000);
         Integer maxconcurrentbulkrequests = settings.getAsInt("maxconcurrentbulkrequests",
                 Runtime.getRuntime().availableProcessors());
@@ -184,7 +183,6 @@ public class JDBCFeeder extends TimewindowFeeder {
     }
 
     private IngestFactory createIngestFactory(final Settings settings) {
-        logger.info("createIngestFactory settings={}", settings.getAsStructuredMap());
         return new IngestFactory() {
             @Override
             public Ingest create() throws IOException {
@@ -214,4 +212,5 @@ public class JDBCFeeder extends TimewindowFeeder {
             }
         };
     }
+
 }

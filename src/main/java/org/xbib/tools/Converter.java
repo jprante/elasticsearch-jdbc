@@ -35,6 +35,7 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -87,22 +88,24 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public void run(boolean bootstrap) {
         try {
-            logger.info("bootstrap, preparing schedule with settings {}", settings.getAsStructuredMap());
+            logger.debug("bootstrap, preparing schedule with settings {}", settings.getAsStructuredMap());
             prepare();
             futures = schedule(settings);
             if (!futures.isEmpty()) {
-                logger.info("waiting for {} futures...", futures.size());
+                logger.debug("waiting for {} futures...", futures.size());
                 for (Future future : futures) {
                     try {
                         Object o = future.get();
-                        logger.info("got future {}", o);
+                        logger.debug("got future {}", o);
+                    } catch (CancellationException e) {
+                        logger.warn("schedule canceled");
                     } catch (InterruptedException e) {
                         logger.error(e.getMessage(), e);
                     } catch (ExecutionException e) {
                         logger.error(e.getMessage(), e);
                     }
                 }
-                logger.info("futures complete");
+                logger.debug("futures complete");
             } else {
                 execute();
             }
@@ -123,7 +126,7 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public void run() {
         try {
-            logger.info("preparing with settings {}", settings.getAsStructuredMap());
+            logger.debug("preparing with settings {}", settings.getAsStructuredMap());
             prepare();
             execute();
         } catch (Throwable e) {
@@ -148,17 +151,17 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
                 input.add(settings);
             }
         }
-        logger.info("input = {}", input);
+        logger.debug("input = {}", input);
     }
 
     protected Converter<T, R, P> cleanup() throws IOException {
-        logger.info("cleanup (no op)");
+        logger.debug("cleanup (no op)");
         return this;
     }
 
     @Override
     public void close() throws IOException {
-        logger.info("close (no op)");
+        logger.debug("close (no op)");
     }
 
     @Override
@@ -172,7 +175,7 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
         done = settings == null;
         pipelineElement.set(settings);
         if (done) {
-            logger.info("done is true");
+            logger.debug("done is true");
             return pipelineElement;
         }
         return pipelineElement;
@@ -221,25 +224,18 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
             logger.info("scheduled feeder instance at fixed rate of {} seconds", seconds);
             this.threadPoolExecutor = scheduledThreadPoolExecutor;
         }
-        /* else {
-            Thread thread = new Thread(this);
-            this.threadPoolExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<Runnable>());
-            futures.add(threadPoolExecutor.submit(thread));
-            logger.debug("started feeder instance");
-        }*/
         return futures;
     }
 
     protected void execute() throws ExecutionException, InterruptedException {
-        logger.info("executing");
+        logger.debug("executing");
         executor = new MetricSimplePipelineExecutor<T, R, P>()
                 .setConcurrency(settings.getAsInt("concurrency", 1))
                 .setPipelineProvider(pipelineProvider())
                 .prepare()
                 .execute()
                 .waitFor();
-        logger.info("execution completed");
+        logger.debug("execution completed");
     }
 
     public synchronized void shutdown() throws Exception {

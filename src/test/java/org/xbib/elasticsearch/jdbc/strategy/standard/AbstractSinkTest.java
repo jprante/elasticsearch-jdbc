@@ -91,26 +91,20 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     @Parameters({"stopurl", "user", "password", "delete"})
     public void afterMethod(String stopurl, String user, String password, @Optional String resourceName)
             throws Exception {
-
         logger.info("remove table {}", resourceName);
         if (resourceName == null || "".equals(resourceName)) {
             return;
         }
-        // before dropping tables, open read connection must be closed to avoid hangs in mysql/postgresql
-        logger.debug("closing reads...");
-        source.closeReading();
-
-        logger.debug("connecting for close...");
+        logger.debug("cleaning...");
+        // clean up tables
         Connection connection = source.getConnectionForWriting();
         if (connection == null) {
             throw new IOException("no connection");
         }
-        logger.debug("cleaning...");
-        // clean up tables
         sqlScript(connection, resourceName);
-        logger.debug("closing writes...");
-        source.closeWriting();
-
+        // before dropping tables, open read connection must be closed to avoid hangs in mysql/postgresql
+        logger.debug("closing reads...");
+        source.closeReading();
         // some driver can drop database by a magic 'stop' URL
         source = newSource()
                 .setUrl(stopurl)
@@ -125,10 +119,8 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
         } catch (Exception e) {
             // exception is expected, ignore
         }
-        // close open write connection
         source.closeWriting();
         logger.info("stopped");
-
         // delete test index
         try {
             client("1").admin().indices().prepareDelete(index).execute().actionGet();

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite (simple strategy - oracle)" verbose="1">
+<suite name="Test Suite (simple strategy - oracle)" verbose="1">
     <parameter name="starturl" value="jdbc:oracle:thin:@//127.0.0.1:1521/test?autoReconnect=true"/>
     <parameter name="stopurl" value="jdbc:oracle:thin:@//127.0.0.1:1521/test"/>
     <parameter name="user" value="test"/>
     <parameter name="password" value="test"/>
 
-    <test name="River Source Tests (simple strategy - oracle)">
+    <test name="Source Tests (simple strategy - oracle)">
         <parameter name="create" value="oracle/create-ordertables.sql"/>
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from &quot;orders&quot;"/>
@@ -18,12 +18,12 @@
         </classes>
     </test>
 
-    <test name="River Data Tests (simple strategy - oracle)">
+    <test name="Sink Tests (simple strategy - oracle)">
         <parameter name="create" value="oracle/create-ordertables.sql"/>
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
-        <parameter name="river1" value="oracle/river-1.json"/>
-        <parameter name="river2" value="oracle/river-2.json"/>
-        <parameter name="river3" value="oracle/river-3.json"/>
+        <parameter name="task1" value="oracle/task1.json"/>
+        <parameter name="task2" value="oracle/task2.json"/>
+        <parameter name="task3" value="oracle/task3.json"/>
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <classes>
@@ -31,10 +31,10 @@
         </classes>
     </test>
 
-    <test name="River Job Tests (simple strategy - oracle)">
+    <test name="Job Tests (simple strategy - oracle)">
         <parameter name="create" value="oracle/create-jobtables.sql"/>
         <parameter name="delete" value="oracle/delete-jobtables.sql"/>
-        <parameter name="river1" value="oracle/jobriver-1.json"/>
+        <parameter name="task1" value="oracle/jobtask1.json"/>
         <parameter name="sql1" value="select count(*) from &quot;products&quot;"/>
         <parameter name="sql2"
                    value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
@@ -43,11 +43,11 @@
         </classes>
     </test>
 
-    <test name="River Schedule Tests (simple strategy - oracle)">
+    <test name="Schedule Tests (simple strategy - oracle)">
         <parameter name="create" value="oracle/create-ordertables.sql"/>
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
-        <parameter name="river6" value="oracle/river-6.json"/>
-        <parameter name="river7" value="oracle/river-7.json"/>
+        <parameter name="task6" value="oracle/task6.json"/>
+        <parameter name="task7" value="oracle/task7.json"/>
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <parameter name="sql2"

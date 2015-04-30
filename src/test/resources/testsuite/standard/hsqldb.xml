@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite (simple strategy - hsqldb)" verbose="1">
+<suite name="Test Suite (simple strategy - hsqldb)" verbose="1">
     <parameter name="starturl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="stopurl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="user" value="sa"/>
     <parameter name="password" value=""/>
 
-    <test name="River Source Tests (simple strategy - hsqldb)">
+    <test name="Source Tests (simple strategy - hsqldb)">
         <parameter name="create" value="hsqldb/create-ordertables.sql"/>
         <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
@@ -18,22 +18,22 @@
         </classes>
     </test>
 
-    <test name="River Data Tests (simple strategy - hsqldb)">
+    <test name="Sink Tests (simple strategy - hsqldb)">
         <parameter name="create" value="hsqldb/create-ordertables.sql"/>
         <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
-        <parameter name="river1" value="hsqldb/river-1.json"/>
-        <parameter name="river2" value="hsqldb/river-2.json"/>
-        <parameter name="river3" value="hsqldb/river-3.json"/>
+        <parameter name="task1" value="hsqldb/task1.json"/>
+        <parameter name="task2" value="hsqldb/task2.json"/>
+        <parameter name="task3" value="hsqldb/task3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
             <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
         </classes>
     </test>
 
-    <test name="River Job Tests (simple strategy - hsqldb)">
+    <test name="Job Tests (simple strategy - hsqldb)">
         <parameter name="create" value="hsqldb/create-jobtables.sql"/>
         <parameter name="delete" value="hsqldb/delete-jobtables.sql"/>
-        <parameter name="river1" value="hsqldb/jobriver-1.json"/>
+        <parameter name="task1" value="hsqldb/jobtask1.json"/>
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2"
                    value="insert into products (&quot;_job&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
@@ -42,11 +42,11 @@
         </classes>
     </test>
 
-    <test name="River Schedule Tests (simple strategy - hsqldb)">
+    <test name="Schedule Tests (simple strategy - hsqldb)">
         <parameter name="create" value="hsqldb/create-ordertables.sql"/>
         <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
-        <parameter name="river6" value="hsqldb/river-6.json"/>
-        <parameter name="river7" value="hsqldb/river-7.json"/>
+        <parameter name="task6" value="hsqldb/task6.json"/>
+        <parameter name="task7" value="hsqldb/task7.json"/>
         <parameter name="sql1"
                    value="insert into products (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <parameter name="sql2"

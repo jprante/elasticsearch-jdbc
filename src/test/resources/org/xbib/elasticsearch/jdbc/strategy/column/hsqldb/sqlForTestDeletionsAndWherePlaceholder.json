@@ -1,7 +1,7 @@
 {
     "type" : "jdbc",
-    "strategy" : "column",
     "jdbc" : {
+        "strategy" : "column",
         "url" : "jdbc:hsqldb:mem:test",
         "user" : "sa",
         "password" : "",

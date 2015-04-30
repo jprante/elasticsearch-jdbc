@@ -15,9 +15,9 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource;
 import org.xbib.elasticsearch.common.util.IndexableObject;
@@ -40,11 +40,31 @@ import java.util.List;
  *
  * @author <a href="piotr.sliwa@zineinc.com">Piotr Śliwa</a>
  */
-public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
+public class ColumnSource<C extends ColumnContext> extends StandardSource<C> {
 
-    private static final ESLogger logger = ESLoggerFactory.getLogger("jdbc");
+    private static final Logger logger = LogManager.getLogger("feeder.jdbc.source.column");
 
     private static final String WHERE_CLAUSE_PLACEHOLDER = "$where";
+
+    /**
+     * Column name that contains creation time (for column strategy)
+     */
+    private String columnCreatedAt;
+
+    /**
+     * Column name that contains last update time (for column strategy)
+     */
+    private String columnUpdatedAt;
+
+    /**
+     * Column name that contains deletion time (for column strategy)
+     */
+    private String columnDeletedAt;
+
+    /**
+     * Columns name should be automatically escaped by proper db quote mark or not (for column strategy)
+     */
+    private boolean columnEscape;
 
     @Override
     public String strategy() {
@@ -52,8 +72,44 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
     }
 
     @Override
-    public ColumnSource<RC> newInstance() {
-        return new ColumnSource<RC>();
+    public ColumnSource<C> newInstance() {
+        return new ColumnSource<C>();
+    }
+
+    public ColumnSource<C> columnUpdatedAt(String updatedAt) {
+        this.columnUpdatedAt = updatedAt;
+        return this;
+    }
+
+    public String columnUpdatedAt() {
+        return columnUpdatedAt;
+    }
+
+    public ColumnSource<C> columnCreatedAt(String createdAt) {
+        this.columnCreatedAt = createdAt;
+        return this;
+    }
+
+    public String columnCreatedAt() {
+        return columnCreatedAt;
+    }
+
+    public ColumnSource<C> columnDeletedAt(String deletedAt) {
+        this.columnDeletedAt = deletedAt;
+        return this;
+    }
+
+    public String columnDeletedAt() {
+        return columnDeletedAt;
+    }
+
+    public ColumnSource<C> columnEscape(boolean escape) {
+        this.columnEscape = escape;
+        return this;
+    }
+
+    public boolean columnEscape() {
+        return this.columnEscape;
     }
 
     @Override
@@ -75,28 +131,43 @@ public class ColumnSource<RC extends ColumnContext> extends StandardSource<RC> {
     private List<OpInfo> getOpInfos(Connection connection) throws SQLException {
         String quoteString = getIdentifierQuoteString(connection);
         List<OpInfo> opInfos = new LinkedList<OpInfo>();
-        String noDeletedWhereClause = context.columnDeletedAt() != null ?
-                " AND " + quoteColumn(context.columnDeletedAt(), quoteString) + " IS NULL" : "";
+        String noDeletedWhereClause = columnDeletedAt() != null ?
+                " AND " + quoteColumn(columnDeletedAt(), quoteString) + " IS NULL" : "";
         if (isTimestampDiffSupported()) {
-            opInfos.add(new OpInfo("create", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnCreatedAt(), quoteString) + ")} >= 0" + noDeletedWhereClause));
-            opInfos.add(new OpInfo("index", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnUpdatedAt(), quoteString) + ")} >= 0 AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR {fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnCreatedAt(), quoteString) + ")} < 0) " + noDeletedWhereClause, 2));
-            if (context.columnDeletedAt() != null) {
-                opInfos.add(new OpInfo("delete", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?," + quoteColumn(context.columnDeletedAt(), quoteString) + ")} >= 0"));
+            opInfos.add(new OpInfo("create", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?,"
+                    + quoteColumn(columnCreatedAt(), quoteString)
+                    + ")} >= 0"
+                    + noDeletedWhereClause));
+            opInfos.add(new OpInfo("index", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?,"
+                    + quoteColumn(columnUpdatedAt(), quoteString)
+                    + ")} >= 0 AND (" + quoteColumn(columnCreatedAt(), quoteString)
+                    + " IS NULL OR {fn TIMESTAMPDIFF(SQL_TSI_SECOND,?,"
+                    + quoteColumn(columnCreatedAt(), quoteString)
+                    + ")} < 0) "
+                    + noDeletedWhereClause, 2));
+            if (columnDeletedAt() != null) {
+                opInfos.add(new OpInfo("delete", "{fn TIMESTAMPDIFF(SQL_TSI_SECOND,?,"
+                        + quoteColumn(columnDeletedAt(), quoteString) + ")} >= 0"));
             }
         } else {
             // no TIMESTAMPDIFF support
-            opInfos.add(new OpInfo("create", quoteColumn(context.columnCreatedAt(), quoteString) + " >= ?" + noDeletedWhereClause));
-            opInfos.add(new OpInfo("index", quoteColumn(context.columnUpdatedAt(), quoteString) + " >= ? AND (" + quoteColumn(context.columnCreatedAt(), quoteString) + " IS NULL OR " + quoteColumn(context.columnCreatedAt(), quoteString) + " < ?)" + noDeletedWhereClause, 2));
-
-            if (context.columnDeletedAt() != null) {
-                opInfos.add(new OpInfo("delete", quoteColumn(context.columnDeletedAt(), quoteString) + " >= ?"));
+            opInfos.add(new OpInfo("create", quoteColumn(columnCreatedAt(), quoteString)
+                    + " >= ?"
+                    + noDeletedWhereClause));
+            opInfos.add(new OpInfo("index", quoteColumn(columnUpdatedAt(), quoteString)
+                    + " >= ? AND (" + quoteColumn(columnCreatedAt(), quoteString)
+                    + " IS NULL OR " + quoteColumn(columnCreatedAt(), quoteString)
+                    + " < ?)" + noDeletedWhereClause, 2));
+            if (columnDeletedAt() != null) {
+                opInfos.add(new OpInfo("delete", quoteColumn(columnDeletedAt(), quoteString)
+                        + " >= ?"));
             }
         }
         return opInfos;
     }
 
     private String getIdentifierQuoteString(Connection connection) throws SQLException {
-        if (!context.columnEscape()) {
+        if (!columnEscape()) {
             return "";
         }
         String quoteString = connection.getMetaData().getIdentifierQuoteString();

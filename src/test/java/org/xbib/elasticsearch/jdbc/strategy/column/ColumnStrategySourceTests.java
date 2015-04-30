@@ -24,7 +24,7 @@ import java.util.Random;
 
 public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
 
-    private final Logger logger = LogManager.getLogger("test.column.source");
+    private final static Logger logger = LogManager.getLogger("test.column.source");
 
     private Random random = new Random();
 
@@ -145,13 +145,13 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
         return map;
     }
 
-    private void testColumnStrategy(MockSink mouth, String resource, String sql, ProductFixture[] fixtures, int expectedHits)
+    private void testColumnStrategy(MockSink sink, String resource, String sql, ProductFixture[] fixtures, int expectedHits)
             throws Exception {
         createData(sql, fixtures);
         createContext(resource);
-        context.setSink(mouth);
+        context.setSink(sink);
         source.fetch();
-        assertEquals(mouth.data().size(), expectedHits);
+        assertEquals(sink.data().size(), expectedHits);
     }
 
     private void createContext(String resource) throws IOException {
@@ -164,12 +164,13 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
         context = newContext();
         context.setSettings(settings);
         context.setLastRunTimeStamp(LAST_RUN_TIME);
+        context.setLastRunTimeStampOverlap(getLastRunTimestampOverlap(settings));
 
-        context.columnCreatedAt(settings.get("column_created_at"))
+        source.setContext(context);
+        source.columnCreatedAt(settings.get("column_created_at"))
                 .columnUpdatedAt(settings.get("column_updated_at"))
                 .columnDeletedAt(settings.get("column_deleted_at"))
-                .columnEscape(true)
-                .setLastRunTimeStampOverlap(getLastRunTimestampOverlap(settings));
+                .columnEscape(true);
         source.setStatements(SQLCommand.parse(settings.getAsStructuredMap()));
     }
 

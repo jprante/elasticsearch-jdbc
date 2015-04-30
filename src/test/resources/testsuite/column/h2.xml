@@ -7,7 +7,7 @@
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="Data tests (column strategy - h2)">
+    <test name="Sink tests (column strategy - h2)">
         <parameter name="create" value="h2/create-producttables.sql"/>
         <parameter name="delete" value="h2/delete-producttables.sql"/>
         <parameter name="existedWhereClause" value="h2/existedWhereClause.json"/>

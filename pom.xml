@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.feeder</groupId>
     <artifactId>elasticsearch-jdbc</artifactId>
-    <version>1.5.1.0</version>
+    <version>1.5.2.0</version>
 
     <packaging>jar</packaging>
 
@@ -72,8 +72,8 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
-        <elasticsearch.version>1.5.1</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>1.5.1.0</org.xbib.elasticsearch.support.version>
+        <elasticsearch.version>1.5.2</elasticsearch.version>
+        <org.xbib.elasticsearch.support.version>1.5.2.0</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -104,7 +104,7 @@
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
-            <version>2.4.1</version>
+            <version>2.4.3</version>
             <type>jar</type>
             <classifier>indy</classifier>
             <scope>provided</scope>
@@ -385,8 +385,8 @@
                                 <!--
                                 interestingly, the test success depends on the execution order of the suites.
                                  Has to be investigated.
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/h2.xml</suiteXmlFile>
                                 -->
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/h2.xml</suiteXmlFile>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/h2.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
@@ -417,7 +417,7 @@
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/hsqldb.xml</suiteXmlFile>
-                                <!-- <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/hsqldb.xml</suiteXmlFile> -->
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/hsqldb.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>

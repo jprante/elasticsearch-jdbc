@@ -13,7 +13,7 @@
                 "parameter" : [ "$job" ]
             }
         ],
-        "index" : "my_jdbc_river_index",
-        "type" : "my_jdbc_river_type"
+        "index" : "my_index",
+        "type" : "my_type"
     }
 }

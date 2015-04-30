@@ -7,7 +7,7 @@
     <parameter name="user" value="sa"/>
     <parameter name="password" value=""/>
 
-    <test name="Data tests (column strategy - hsqldb)">
+    <test name="Sink tests (column strategy - hsqldb)">
         <parameter name="create" value="hsqldb/create-producttables.sql"/>
         <parameter name="delete" value="hsqldb/delete-producttables.sql"/>
         <parameter name="existedWhereClause" value="hsqldb/existedWhereClause.json"/>

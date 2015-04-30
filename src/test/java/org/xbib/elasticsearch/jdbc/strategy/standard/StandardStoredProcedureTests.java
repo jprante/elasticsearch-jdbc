@@ -35,10 +35,10 @@ public class StandardStoredProcedureTests extends AbstractSinkTest {
     }
 
     @Test
-    @Parameters({"river8"})
-    public void testSimpleStoredProcedure(String riverResource)
+    @Parameters({"task8"})
+    public void testSimpleStoredProcedure(String resource)
             throws Exception {
-        create(riverResource);
+        perform(resource);
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
         logger.info("after wait for: {}", b);
         assertHits("1", 5);
@@ -46,9 +46,9 @@ public class StandardStoredProcedureTests extends AbstractSinkTest {
     }
 
     @Test
-    @Parameters({"river9"})
-    public void testRegisterStoredProcedure(String riverResource) throws Exception {
-        create(riverResource);
+    @Parameters({"task9"})
+    public void testRegisterStoredProcedure(String resource) throws Exception {
+        perform(resource);
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
         logger.info("after wait for: {}", b);
         assertHits("1", 1);

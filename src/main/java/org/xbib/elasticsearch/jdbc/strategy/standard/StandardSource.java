@@ -859,14 +859,18 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         for (Map.Entry<String, Object> me : values.entrySet()) {
             // { "key" : { "pos": n, "type" : "VARCHAR", "field" : "fieldname" }, ... }
             Map<String, Object> m = (Map<String, Object>) me.getValue();
-            Integer n = (Integer) m.get("pos");
-            String type = (String) m.get("type");
-            if (n != null && type != null) {
-                logger.debug("n={} type={}", n, toJDBCType(type));
-                try {
-                    statement.registerOutParameter(n, toJDBCType(type));
-                } catch (Throwable t) {
-                    logger.warn("can't register out parameter " + n + " of type " + type);
+            Object o = m.get("pos");
+            if (o != null) {
+                Integer n = o instanceof Integer ? (Integer) o : Integer.parseInt(o.toString());
+                o =  m.get("type");
+                String type = o instanceof String ? (String) o: o.toString();
+                if (type != null) {
+                    logger.debug("registerOutParameter: n={} type={}", n, toJDBCType(type));
+                    try {
+                        statement.registerOutParameter(n, toJDBCType(type));
+                    } catch (Throwable t) {
+                        logger.warn("can't register out parameter " + n + " of type " + type);
+                    }
                 }
             }
         }

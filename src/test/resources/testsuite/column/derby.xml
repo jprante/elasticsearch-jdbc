@@ -7,7 +7,7 @@
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="data tests (column strategy - derby)">
+    <test name="Sink tests (column strategy - derby)">
         <parameter name="create" value="derby/create-producttables.sql"/>
         <parameter name="delete" value="derby/delete-producttables.sql"/>
         <parameter name="existedWhereClause" value="derby/existedWhereClause.json"/>

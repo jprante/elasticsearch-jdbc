@@ -42,7 +42,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  * The context consists of the parameters that span source and mouth settings.
  * It represents the state, for supporting the task execution, and scripting.
  */
-public class StandardContext implements Context<JDBCSource, Sink> {
+public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     private final static Logger logger = LogManager.getLogger("feeder.jdbc.context.standard");
 
@@ -52,7 +52,7 @@ public class StandardContext implements Context<JDBCSource, Sink> {
 
     private IngestFactory ingestFactory;
 
-    private JDBCSource source;
+    private S source;
 
     private Sink sink;
 
@@ -106,13 +106,13 @@ public class StandardContext implements Context<JDBCSource, Sink> {
     }
 
     @Override
-    public StandardContext setSource(JDBCSource source) {
+    public StandardContext setSource(S source) {
         this.source = source;
         return this;
     }
 
     @Override
-    public JDBCSource getSource() {
+    public S getSource() {
         return source;
     }
 
@@ -142,7 +142,7 @@ public class StandardContext implements Context<JDBCSource, Sink> {
     @Override
     public void beforeFetch() throws Exception {
         logger.info("before fetch");
-        JDBCSource source = createSource();
+        S source = createSource();
         Sink sink = createMouth();
         prepareContext(source, sink);
         logger.info("before fetch: created source = {}, mouth = {}", source, sink);
@@ -171,8 +171,9 @@ public class StandardContext implements Context<JDBCSource, Sink> {
         }
     }
 
-    protected JDBCSource createSource() {
-        JDBCSource source = (JDBCSource) StrategyLoader.newSource(strategy());
+    @SuppressWarnings("unchecked")
+    protected S createSource() {
+        S source = (S) StrategyLoader.newSource(strategy());
         logger.info("found source class {}", source);
         String url = settings.get("url");
         String user = settings.get("user");
@@ -205,7 +206,7 @@ public class StandardContext implements Context<JDBCSource, Sink> {
         return sink;
     }
 
-    protected void prepareContext(JDBCSource source, Sink sink) throws IOException {
+    protected void prepareContext(S source, Sink sink) throws IOException {
         Map<String, Object> params = settings.getAsStructuredMap();
         List<SQLCommand> sql = SQLCommand.parse(params);
         String rounding = XContentMapValues.nodeStringValue(params.get("rounding"), null);
