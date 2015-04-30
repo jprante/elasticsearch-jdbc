@@ -88,7 +88,6 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public void run(boolean bootstrap) {
         try {
-            logger.debug("bootstrap, preparing schedule with settings {}", settings.getAsStructuredMap());
             prepare();
             futures = schedule(settings);
             if (!futures.isEmpty()) {
@@ -126,7 +125,6 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public void run() {
         try {
-            logger.debug("preparing with settings {}", settings.getAsStructuredMap());
             prepare();
             execute();
         } catch (Throwable e) {

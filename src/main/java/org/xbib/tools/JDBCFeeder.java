@@ -17,6 +17,7 @@ package org.xbib.tools;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -30,11 +31,13 @@ import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
 
 import java.io.IOException;
+import java.security.Security;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -69,6 +72,7 @@ public class JDBCFeeder extends Feeder {
 
     @Override
     protected void prepare() throws IOException {
+        Security.setProperty("networkaddress.cache.ttl", "0");
         Runtime.getRuntime().addShutdownHook(shutdownHook());
         ingest = createIngest();
         String index = settings.get("index");
@@ -192,7 +196,7 @@ public class JDBCFeeder extends Feeder {
                 ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 BulkTransportClient ingest = new BulkTransportClient();
-                Settings clientSettings = ImmutableSettings.settingsBuilder()
+                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                         .putArray("host", settings.getAsArray("elasticsearch.host"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
@@ -201,13 +205,24 @@ public class JDBCFeeder extends Feeder {
                         .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
                         .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
-                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
-                        .build();
+                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))); // for sniff sampling
+                // optional found.no transport plugin
+                if (settings.get("transport.type") != null) {
+                    settingsBuilder.put("transport.type", settings.get("transport.type"));
+                }
+                // copy found.no transport settings
+                Settings foundTransportSettings = settings.getAsSettings("transport.found");
+                if (foundTransportSettings != null) {
+                    ImmutableMap<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
+                    for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
+                        settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
+                    }
+                }
                 ingest.maxActionsPerBulkRequest(maxbulkactions)
                         .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                         .maxVolumePerBulkRequest(maxvolume)
                         .flushIngestInterval(flushinterval)
-                        .newClient(clientSettings);
+                        .newClient(settingsBuilder.build());
                 return ingest;
             }
         };
