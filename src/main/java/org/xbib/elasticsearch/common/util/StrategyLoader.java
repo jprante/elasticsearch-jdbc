@@ -31,10 +31,10 @@ import java.util.ServiceLoader;
 public class StrategyLoader {
 
     /**
-     * A context encapsulates the move from source to mouth
+     * A context encapsulates the move from source to sink
      *
      * @param strategy the strategy
-     * @return a context, or the StandardFlow
+     * @return a context, or the StandardContext
      */
     public static Context newContext(String strategy) {
         ServiceLoader<Context> loader = ServiceLoader.load(Context.class);
@@ -83,7 +83,7 @@ public class StrategyLoader {
      * A sink is the Elasticsearch side where the bulk processor lives
      *
      * @param strategy the strategy
-     * @return a new instance of a mouth, or an instance of the StandardMouth if strategy does not exist
+     * @return a new instance of a sink, or an instance of the StandardSinkif strategy does not exist
      */
     public static Sink newSink(String strategy) {
         ServiceLoader<Sink> loader = ServiceLoader.load(Sink.class);

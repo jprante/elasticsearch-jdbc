@@ -57,7 +57,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
 
     private String cluster;
 
-    // note, this must be same name as in json river specs
+    // note, this must be same name as in json specs
     protected final String index = "my_index";
 
     protected final String type = "my_type";

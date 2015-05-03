@@ -104,8 +104,7 @@ public abstract class AbstractSourceTest extends Assert {
         sqlScript(connection, resourceName);
         logger.debug("closing writes...");
         source.closeWriting();
-
-        // some driver can drop database by a magic 'stop' URL
+        // we can drop database by a magic 'stop' URL
         source = newSource()
                 .setUrl(stopurl)
                 .setUser(user)

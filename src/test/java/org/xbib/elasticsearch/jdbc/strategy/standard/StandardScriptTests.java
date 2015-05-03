@@ -35,13 +35,13 @@ public class StandardScriptTests extends AbstractSinkTest {
     /**
      * Orders table (star query)
      *
-     * @param riverResource the river definition
+     * @param resource the definition
      * @throws Exception if test fails
      */
     @Test
-    @Parameters({"river1"})
-    public void testSimpleRiverOnce(String riverResource) throws Exception {
-        create(riverResource);
+    @Parameters({"task1"})
+    public void testSimpleTaskOnce(String resource) throws Exception {
+        create(resource);
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
         logger.info("after wait for: {}", b);
     }

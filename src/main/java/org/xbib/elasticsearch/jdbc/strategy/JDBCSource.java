@@ -416,7 +416,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
     JDBCSource<C> closeWriting();
 
     /**
-     * Set the locale for JDBC driver
+     * Set the locale
      *
      * @param locale locale
      * @return this source

@@ -21,7 +21,7 @@ import java.io.IOException;
 
 /**
  * This class consumes pairs from a key/value stream
- * and transports them to the river mouth.
+ * and transports them to the sink.
  */
 public class StringKeyValueStreamListener extends PlainKeyValueStreamListener<String, String> {
 
@@ -33,7 +33,7 @@ public class StringKeyValueStreamListener extends PlainKeyValueStreamListener<St
     }
 
     /**
-     * The object is complete. Push it to the river mouth.
+     * The object is complete. Push it to the sink.
      *
      * @param object the object
      * @return this value listener

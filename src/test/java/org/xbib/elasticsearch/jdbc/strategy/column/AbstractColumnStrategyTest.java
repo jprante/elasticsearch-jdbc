@@ -86,7 +86,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         logger.debug("closing writes...");
         source.closeWriting();
 
-        // some driver can drop database by a magic 'stop' URL
+        // we can drop database by a magic 'stop' URL
         source = newSource();
         source.setUrl(stopurl)
                 .setUser(user)

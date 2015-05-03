@@ -105,7 +105,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
         // before dropping tables, open read connection must be closed to avoid hangs in mysql/postgresql
         logger.debug("closing reads...");
         source.closeReading();
-        // some driver can drop database by a magic 'stop' URL
+        // we can drop database by a magic 'stop' URL
         source = newSource()
                 .setUrl(stopurl)
                 .setUser(user)

@@ -21,7 +21,7 @@ import java.io.IOException;
 
 /**
  * This class consumes pairs from a key/value stream
- * and transports them to the mouth.
+ * and transports them to the sink.
  */
 public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListener<K, V> {
 
@@ -38,7 +38,7 @@ public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListene
     }
 
     /**
-     * The object is complete. Push it to the mouth.
+     * The object is complete. Push it to the sink.
      *
      * @param object the object
      * @return this value listener

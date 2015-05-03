@@ -26,10 +26,7 @@ public class StoredProcedureJavaDBSample {
 
     public static void showSuppliers(ResultSet[] rs)
             throws SQLException {
-
         Connection con = DriverManager.getConnection("jdbc:default:connection");
-        Statement stmt = null;
-
         String query =
                 "select SUPPLIERS.SUP_NAME, " +
                         "COFFEES.COF_NAME " +
@@ -38,7 +35,7 @@ public class StoredProcedureJavaDBSample {
                         "COFFEES.SUP_ID " +
                         "order by SUP_NAME";
 
-        stmt = con.createStatement();
+        Statement stmt = con.createStatement();
         rs[0] = stmt.executeQuery(query);
     }
 

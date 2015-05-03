@@ -104,15 +104,15 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
 
     private void verifyDeleteObjects(String resource, String insertSql)
             throws Exception {
-        MockSink mouth = new MockSink();
+        MockSink sink = new MockSink();
         boolean[] shouldProductsBeDeleted = new boolean[]{true, true, false};
-        ProductFixtures productFixtures = createFixturesAndPopulateMouth(shouldProductsBeDeleted, mouth);
-        testColumnStrategy(mouth, resource, insertSql,
+        ProductFixtures productFixtures = createFixturesAndPopulateSink(shouldProductsBeDeleted, sink);
+        testColumnStrategy(sink, resource, insertSql,
                 productFixtures.fixtures,
                 productFixtures.expectedCount);
     }
 
-    private ProductFixtures createFixturesAndPopulateMouth(boolean[] shouldProductsBeDeleted, MockSink mouth)
+    private ProductFixtures createFixturesAndPopulateSink(boolean[] shouldProductsBeDeleted, MockSink sink)
             throws IOException {
         ProductFixture[] fixtures = new ProductFixture[shouldProductsBeDeleted.length];
         int expectedExistsCountAfterRun = 0;
@@ -121,7 +121,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
                     .id(Integer.toString(i))
                     .source(createSource(i))
                     .optype("delete");
-            mouth.index(p, false);
+            sink.index(p, false);
             Timestamp deletedAt;
             if (shouldProductsBeDeleted[i]) {
                 deletedAt = okTimestamp();
@@ -155,17 +155,11 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
     }
 
     private void createContext(String resource) throws IOException {
-        //Map<String, Object> settings = taskSettings(resource);
         Settings settings = createSettings(resource);
-
-        /*State state = new State();
-        state.getMap().put(ColumnFlow.LAST_RUN_TIME, LAST_RUN_TIME);
-        state.getMap().put(ColumnFlow.CURRENT_RUN_STARTED_TIME, new DateTime());*/
         context = newContext();
         context.setSettings(settings);
         context.setLastRunTimeStamp(LAST_RUN_TIME);
         context.setLastRunTimeStampOverlap(getLastRunTimestampOverlap(settings));
-
         source.setContext(context);
         source.columnCreatedAt(settings.get("column_created_at"))
                 .columnUpdatedAt(settings.get("column_updated_at"))
