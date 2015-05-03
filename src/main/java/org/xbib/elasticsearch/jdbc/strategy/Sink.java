@@ -17,6 +17,7 @@ package org.xbib.elasticsearch.jdbc.strategy;
 
 import org.elasticsearch.common.settings.Settings;
 import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.support.client.Metric;
 
 import java.io.IOException;
 import java.util.Map;
@@ -154,5 +155,9 @@ public interface Sink<C extends Context> {
      * @throws IOException when shutdown fails
      */
     void shutdown() throws IOException;
+
+    Sink setMetric(Metric metric);
+
+    Metric getMetric();
 
 }

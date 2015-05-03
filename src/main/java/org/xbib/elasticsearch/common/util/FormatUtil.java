@@ -15,14 +15,18 @@
  */
 package org.xbib.elasticsearch.common.util;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * Duration formatting utilities and constants. The following table describes the tokens
+ * Formatting utilities and constants.
+ *
+ * The following table describes the tokens
  * used in the pattern language for formatting.
  * <table border="1"><caption>Used tokens</caption>
  * <tr><th>Character</th><th>Duration element</th></tr>
@@ -35,7 +39,7 @@ import java.util.TimeZone;
  * <tr><td>S</td><td>milliseconds</td></tr>
  * </table>
  */
-public class DurationFormatUtil {
+public class FormatUtil {
 
     /**
      * Number of milliseconds in a standard second.
@@ -55,22 +59,41 @@ public class DurationFormatUtil {
     public static final long MILLIS_PER_DAY = 24 * MILLIS_PER_HOUR;
 
     /**
-     * DurationFormatUtils instances should NOT be constructed in standard programming.
-     *
-     * This constructor is public to permit tools that require a JavaBean instance
-     * to operate.
-     */
-    public DurationFormatUtil() {
-        super();
-    }
-
-    /**
      * Pattern used with <code>FastDateFormat</code> and <code>SimpleDateFormat</code>
      * for the ISO8601 period format used in durations.
      *
      * @see java.text.SimpleDateFormat
      */
     public static final String ISO_EXTENDED_FORMAT_PATTERN = "'P'yyyy'Y'M'M'd'DT'H'H'm'M's.S'S'";
+
+    public static String convertFileSize(double size) {
+        return convertFileSize(size, Locale.getDefault());
+    }
+
+    public static String convertFileSize(double size, Locale locale) {
+        String strSize;
+        long kb = 1024;
+        long mb = 1024 * kb;
+        long gb = 1024 * mb;
+        long tb = 1024 * gb;
+
+        NumberFormat formatter = NumberFormat.getNumberInstance(locale);
+        formatter.setMaximumFractionDigits(2);
+        formatter.setMinimumFractionDigits(2);
+
+        if (size < kb) {
+            strSize = size + " bytes";
+        } else if (size < mb) {
+            strSize = formatter.format(size / kb) + " KB";
+        } else if (size < gb) {
+            strSize = formatter.format(size / mb) + " MB";
+        } else if (size < tb) {
+            strSize = formatter.format(size / gb) + " GB";
+        } else {
+            strSize = formatter.format(size / tb) + " TB";
+        }
+        return strSize;
+    }
 
     /**
      * Formats the time gap as a string.

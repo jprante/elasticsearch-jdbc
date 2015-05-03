@@ -18,9 +18,11 @@ package org.xbib.elasticsearch.jdbc.strategy;
 import org.elasticsearch.common.settings.Settings;
 import org.xbib.elasticsearch.support.client.IngestFactory;
 
+import java.io.IOException;
+
 public interface Context<S extends Source, T extends Sink> {
 
-    enum State { BEFORE_FETCH, FETCH, AFTER_FETCH, IDLE }
+    enum State { BEFORE_FETCH, FETCH, AFTER_FETCH, IDLE, EXCEPTION }
 
     String strategy();
 
@@ -44,14 +46,6 @@ public interface Context<S extends Source, T extends Sink> {
      * @return the settings
      */
     Settings getSettings();
-
-    /**
-     * Set ingest factory
-     *
-     * @param ingestFactory ingest factory
-     * @return this context
-     */
-    Context setIngestFactory(IngestFactory ingestFactory);
 
     /**
      * Set source
@@ -92,4 +86,10 @@ public interface Context<S extends Source, T extends Sink> {
     void afterFetch() throws Exception;
 
     State getState();
+
+    Context setIngestFactory(IngestFactory ingestFactory);
+
+    void log();
+
+    void shutdown() throws IOException;
 }

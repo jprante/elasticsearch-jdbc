@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
+import org.xbib.elasticsearch.support.client.Metric;
 
 import java.io.IOException;
 import java.util.Map;
@@ -128,6 +129,16 @@ public class MockSink implements Sink<MockContext> {
 
     @Override
     public void shutdown() throws IOException {
+    }
+
+    @Override
+    public Sink setMetric(Metric metric) {
+        return this;
+    }
+
+    @Override
+    public Metric getMetric() {
+        return null;
     }
 
     public long getCounter() {

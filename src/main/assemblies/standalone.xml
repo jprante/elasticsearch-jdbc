@@ -14,9 +14,11 @@
             <includes>
                 <include>org.xbib.elasticsearch.feeder:elasticsearch-jdbc</include>
                 <include>org.xbib.elasticsearch.plugin:elasticsearch-support</include>
+                <include>org.xbib.jdbc</include>
                 <include>org.elasticsearch:elasticsearch</include>
                 <include>org.apache.lucene:lucene-core</include>
                 <include>org.apache.logging.log4j</include>
+                <include>org.slf4j:slf4j-api</include>
             </includes>
         </dependencySet>
     </dependencySets>

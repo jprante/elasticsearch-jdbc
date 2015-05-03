@@ -45,6 +45,7 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
     protected String getType() {
         return settings.get("type");
     }
+
     protected void setIndex(String index) {
         this.index = index;
     }
@@ -60,6 +61,7 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
     protected String getConcreteIndex() {
         return concreteIndex;
     }
+
     protected Ingest createIngest() {
         return settings.getAsBoolean("mock", false) ? new MockTransportClient() :
                 "ingest".equals(settings.get("client")) ? new IngestTransportClient() :
@@ -70,8 +72,8 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
     protected void prepare() throws IOException {
         super.prepare();
         if (ingest == null) {
-            Integer maxbulkactions = settings.getAsInt("maxbulkactions", 1000);
-            Integer maxconcurrentbulkrequests = settings.getAsInt("maxconcurrentbulkrequests",
+            Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
+            Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                     Runtime.getRuntime().availableProcessors());
             ingest = createIngest();
             ingest.maxActionsPerBulkRequest(maxbulkactions)

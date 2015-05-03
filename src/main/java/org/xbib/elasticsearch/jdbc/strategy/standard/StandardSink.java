@@ -30,6 +30,7 @@ import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.support.client.Ingest;
+import org.xbib.elasticsearch.support.client.Metric;
 
 import java.io.IOException;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     protected String id;
 
-    protected volatile boolean suspended = false;
+    private Metric metric;
 
     @Override
     public String strategy() {
@@ -76,15 +77,31 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
     }
 
     @Override
+    public StandardSink<C> setMetric(Metric metric) {
+        this.metric = metric;
+        return this;
+    }
+
+    @Override
+    public Metric getMetric() {
+        return metric;
+    }
+
+    @Override
     public synchronized void beforeFetch() throws IOException {
         if (ingest == null) {
             if (context.getIngestFactory() != null) {
                 ingest = context.getIngestFactory().create();
+                ingest.setMetric(metric);
+            } else {
+                logger.warn("no ingest factory found");
             }
         }
         if (ingest == null) {
+            logger.warn("no ingest found");
             return;
         }
+
         if (ingest.client() != null && !ingest.client().admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             logger.info("creating index {} with settings = {} and mappings = {}",
                     index,
@@ -104,6 +121,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (ingest == null) {
             if (context.getIngestFactory() != null) {
                 ingest = context.getIngestFactory().create();
+                ingest.setMetric(metric);
             }
         }
         if (ingest == null) {
@@ -177,14 +195,6 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public void index(IndexableObject object, boolean create) throws IOException {
-        try {
-            while (suspended) {
-                Thread.sleep(1000L);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.warn("interrupted");
-        }
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -224,14 +234,6 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public void delete(IndexableObject object) {
-        try {
-            while (suspended) {
-                Thread.sleep(1000L);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.warn("interrupted");
-        }
         if (Strings.hasLength(object.index())) {
             this.index = object.index();
         }

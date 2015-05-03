@@ -135,6 +135,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
         // perform a single step
         logger.info("before execution");
         create(resource);
+        logger.info("execution");
         context.execute();
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
         logger.info("after execution: {}", b);

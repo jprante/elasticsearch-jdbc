@@ -123,18 +123,6 @@ public abstract class AbstractSourceTest extends Assert {
         source.closeWriting();
     }
 
-    protected void perform(String resource) throws Exception {
-        // perform a single step
-        logger.info("executing");
-        create(resource);
-        context.execute();
-        boolean b = waitFor(context, Context.State.IDLE, 5000L);
-        logger.info("after execution: {}", b);
-        /*waitFor();
-        waitForActive();
-        waitForInactive();*/
-    }
-
     protected void create(String resource) throws Exception {
         InputStream in = getClass().getResourceAsStream(resource);
         logger.info("creating context");
@@ -143,8 +131,7 @@ public abstract class AbstractSourceTest extends Assert {
                 .build().getAsSettings("jdbc");
         context = newContext();
         context.setCounter(0)
-                .setSettings(settings)
-                .setIngestFactory(createIngestFactory(settings));
+                .setSettings(settings);
     }
 
     protected void createRandomProducts(String sql, int size)

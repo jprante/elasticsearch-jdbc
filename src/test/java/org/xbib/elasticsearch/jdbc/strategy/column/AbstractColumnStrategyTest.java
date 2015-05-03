@@ -158,6 +158,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         br.close();
     }
 
+
     protected IngestFactory createIngestFactory(final Settings settings) {
         return new IngestFactory() {
             @Override

@@ -21,6 +21,8 @@ import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
+import org.xbib.elasticsearch.common.util.ExceptionFormatter;
+import org.xbib.elasticsearch.common.util.SourceMetric;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.common.util.SinkKeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
@@ -137,6 +139,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     private boolean shouldTreatBinaryAsString;
 
+    private SourceMetric metric;
+
     @Override
     public String strategy() {
         return "standard";
@@ -151,6 +155,17 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     public StandardSource<C> setContext(C context) {
         this.context = context;
         return this;
+    }
+
+    @Override
+    public StandardSource<C> setMetric(SourceMetric metric) {
+        this.metric = metric;
+        return this;
+    }
+
+    @Override
+    public SourceMetric getMetric() {
+        return metric;
     }
 
     @Override
@@ -471,7 +486,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 } catch (SQLException e) {
                     logger.error("while opening read connection: " + url + " " + e.getMessage(), e);
                     try {
-                        logger.debug("waiting for {} seconds", getMaxRetryWait().seconds());
+                        logger.debug("delaying for {} seconds...", getMaxRetryWait().seconds());
                         Thread.sleep(getMaxRetryWait().millis());
                     } catch (InterruptedException ex) {
                         // do nothing
@@ -522,6 +537,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 } catch (SQLNonTransientConnectionException e) {
                     // ignore derby drop=true silently
                 } catch (SQLException e) {
+                    context.setThrowable(e);
                     logger.error("while opening write connection: " + url + " " + e.getMessage(), e);
                     try {
                         Thread.sleep(getMaxRetryWait().millis());
@@ -536,7 +552,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     @Override
     public void beforeFetch() throws Exception {
-        //context.setLastStartDate(new DateTime().getMillis());
     }
 
     /**
@@ -548,9 +563,9 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     @Override
     public void fetch() throws SQLException, IOException {
         logger.debug("fetching, {} SQL commands", getStatements().size());
+        DateTime dateTime = new DateTime();
         try {
             for (SQLCommand command : getStatements()) {
-                //context.setLastExecutionStartDate(new DateTime().getMillis());
                 try {
                     if (command.isCallable()) {
                         logger.debug("{} executing callable SQL: {}", this, command);
@@ -562,7 +577,11 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         logger.debug("{} executing SQL without params: {}", this, command);
                         execute(command);
                     }
-                    //context.setLastExecutionEndDate(new DateTime().getMillis());
+                    if (metric != null) {
+                        metric.getSucceeded().inc();
+                        metric.setLastExecutionStart(dateTime);
+                        metric.setLastExecutionEnd(new DateTime());
+                    }
                 } catch (SQLRecoverableException e) {
                     long millis = getMaxRetryWait().getMillis();
                     logger.warn("retrying after " + millis / 1000 + " seconds, got exception ", e);
@@ -577,23 +596,31 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         logger.debug("retrying, executing SQL without params: {}", command);
                         execute(command);
                     }
-                    //context.setLastExecutionEndDate(new DateTime().getMillis());
+                    if (metric != null) {
+                        metric.getSucceeded().inc();
+                        metric.setLastExecutionStart(dateTime);
+                        metric.setLastExecutionEnd(new DateTime());
+                    }
                 }
             }
         } catch (Exception e) {
+            if (metric != null) {
+                metric.getFailed().inc();
+                metric.setLastExecutionStart(dateTime);
+                metric.setLastExecutionEnd(new DateTime());
+            }
             throw new IOException(e);
         }
     }
 
     @Override
     public void afterFetch() throws Exception {
-        //context.setLastEndDate(new DateTime().getMillis());
         shutdown();
     }
 
     @Override
     public void shutdown() {
-        logger.info("shutdown");
+        logger.debug("shutdown");
         closeReading();
         logger.debug("read connection closed");
         readConnection = null;
@@ -740,8 +767,15 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         }
         beforeRows(command, results, listener);
         long rows = 0L;
+        if (metric != null) {
+            metric.resetCurrentRows();
+        }
         while (nextRow(command, results, listener)) {
             rows++;
+            if (metric != null) {
+                metric.getCurrentRows().inc();
+                metric.getTotalRows().inc();
+            }
         }
         setLastRowCount(rows);
         if (rows > 0) {
@@ -1038,9 +1072,14 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         for (int i = 1; i <= columns; i++) {
             try {
                 Object value = parseType(results, i, metadata.getColumnType(i), locale);
-                logger.trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+                if (logger.isTraceEnabled()) {
+                    logger.trace("value={} class={}", value, value != null ? value.getClass().getName() : "");
+                }
                 values.add(value);
                 getLastRow().put("$row." + metadata.getColumnLabel(i), value);
+                if (value != null && metric != null) {
+                    metric.getTotalSizeInBytes().inc(value.toString().length());
+                }
             } catch (ParseException e) {
                 logger.warn("parse error for value {}, using null instead", results.getObject(i));
                 values.add(null);
@@ -1213,63 +1252,37 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             String s = (String) value;
             if ("$now".equals(s)) {
                 Timestamp t = new Timestamp(new DateTime().getMillis());
-                logger.debug("setting $now to {}", t);
                 statement.setTimestamp(i, t, calendar);
-            } else if ("$job".equals(s)) {
-                logger.info("setting $job to {}", context.getCounter());
-                statement.setInt(i, context.getCounter());
-            /*else if ("$count".equals(s)) {
-                logger.trace("setting $count to {}", context.getLastRowCount());
-                statement.setLong(i, context.getLastRowCount());
-            } else if ("$last.sql.start".equals(s)) {
-                if (context.getLastExecutionStartDate() == 0L) {
-                    Timestamp t = new Timestamp(context.getState() != null ?
-                            context.getState().getLastExecutionStartDate() : new DateTime().getMillis());
-                    context.setLastExecutionStartDate(t.getTime());
-                }
-                statement.setTimestamp(i, new Timestamp(context.getLastExecutionStartDate()), calendar);
-            } else if ("$last.sql.end".equals(s)) {
-                if (context.getLastExecutionEndDate() == 0L) {
-                    Timestamp t = new Timestamp(context.getState() != null ?
-                            context.getState().getLastExecutionEndDate() : new DateTime().getMillis());
-                    context.setLastExecutionEndDate(t.getTime());
-                }
-                statement.setTimestamp(i, new Timestamp(context.getLastExecutionEndDate()), calendar);
-            } else if ("$last.sql.sequence.start".equals(s)) {
-                if (context.getLastStartDate() == 0L) {
-                    Timestamp t = new Timestamp(context.getState() != null ?
-                            context.getState().getLastStartDate() : new DateTime().getMillis());
-                    context.setLastStartDate(t.getTime());
-                }
-                statement.setTimestamp(i, new Timestamp(context.getLastStartDate()), calendar);
-            } else if ("$last.sql.sequence.end".equals(s)) {
-                if (context.getLastEndDate() == 0L) {
-                    Timestamp t = new Timestamp(context.getState() != null ?
-                            context.getState().getLastEndDate() : new DateTime().getMillis());
-                    context.setLastEndDate(t.getTime());
-                }
-                statement.setTimestamp(i, new Timestamp(context.getLastEndDate()), calendar);
             } else if ("$name".equals(s)) {
-                String name = context.getState().getName();
+                String name = context.getState().name();
                 statement.setString(i, name);
-            } else if ("$state.started".equals(s)) {
-                Timestamp t = new Timestamp(context.getState() != null ?
-                        context.getState().getStarted().getMillis() : new DateTime().getMillis());
-                statement.setTimestamp(i, t, calendar);
-            } else if ("$state.last_active_begin".equals(s)) {
-                Timestamp timestamp = new Timestamp(context.getState() != null && context.getState().getLastActiveBegin() != null ?
-                        context.getState().getLastActiveBegin().getMillis() : new DateTime().getMillis());
-                statement.setTimestamp(i, timestamp, calendar);
-            } else if ("$state.last_active_end".equals(s)) {
-                Timestamp timestamp = new Timestamp(context.getState() != null && context.getState().getLastActiveEnd() != null ?
-                        context.getState().getLastActiveEnd().getMillis() : new DateTime().getMillis());
-                statement.setTimestamp(i, timestamp, calendar);
-            } else if ("$state.counter".equals(s)) {
-                Integer counter = context.getState().getCounter();
-                if (counter != null) {
-                    statement.setInt(i, counter);
-                }
-            } else*/
+            } else if ("$job".equals(s)) {
+                statement.setInt(i, context.getCounter());
+            } else if ("$lastrowcount".equals(s)) {
+                statement.setLong(i, getLastRowCount());
+            } else if ("$lastexceptiondate".equals(s)) {
+                DateTime dateTime = context.getDateOfThrowable();
+                statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
+            } else if ("$lastexception".equals(s)) {
+                statement.setString(i, ExceptionFormatter.format(context.getThrowable()));
+            } else if ("$metric.lastexecutionstart".equals(s)) {
+                DateTime dateTime = metric != null ? metric.getLastExecutionStart() : null;
+                statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
+            } else if ("$metric.lastexecutionend".equals(s)) {
+                DateTime dateTime = metric != null ? metric.getLastExecutionEnd() : null;
+                statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
+            } else if ("$metric.totalrows".equals(s)) {
+                Long count = metric != null && metric.getTotalRows() != null ? metric.getTotalRows().count() : -1L;
+                statement.setLong(i, count);
+            } else if ("$metric.totalbytes".equals(s)) {
+                Long count = metric != null && metric.getTotalSizeInBytes() != null ? metric.getTotalSizeInBytes().count() : -1L;
+                statement.setLong(i, count);
+            } else if ("$metric.failed".equals(s)) {
+                Long count = metric != null && metric.getFailed() != null ? metric.getFailed().count() : -1L;
+                statement.setLong(i, count);
+            } else if ("$metric.succeeded".equals(s)) {
+                Long count = metric != null && metric.getSucceeded() != null ? metric.getSucceeded().count() : -1L;
+                statement.setLong(i, count);
             } else if (shouldPrepareDatabaseMetadata()) {
                 for (String k : getLastDatabaseMetadata().keySet()) {
                     if (k.equals(s)) {
@@ -1905,7 +1918,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             if (columnNameMap.containsKey(s[i])) {
                 s[i] = columnNameMap.get(s[i]).toString();
             } else {
-                logger.info("no column map entry for {} in map {}", s[i], columnNameMap);
+                logger.warn("no column map entry for {} in map {}", s[i], columnNameMap);
             }
             sb.append(s[i]);
         }

@@ -80,12 +80,12 @@ public class StrategyLoader {
     }
 
     /**
-     * A mouth is the Elasticsearch side where the bulk processor lives
+     * A sink is the Elasticsearch side where the bulk processor lives
      *
      * @param strategy the strategy
      * @return a new instance of a mouth, or an instance of the StandardMouth if strategy does not exist
      */
-    public static Sink newMouth(String strategy) {
+    public static Sink newSink(String strategy) {
         ServiceLoader<Sink> loader = ServiceLoader.load(Sink.class);
         for (Sink sink : loader) {
             if (strategy.equals(sink.strategy())) {

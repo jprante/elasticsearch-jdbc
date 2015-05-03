@@ -15,6 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy;
 
+import org.xbib.elasticsearch.common.util.SourceMetric;
+
 import java.io.IOException;
 
 public interface Source<C extends Context> {
@@ -69,4 +71,8 @@ public interface Source<C extends Context> {
      * @throws IOException when shutdown fails
      */
     void shutdown() throws IOException;
+
+    Source setMetric(SourceMetric metric);
+
+    SourceMetric getMetric();
 }

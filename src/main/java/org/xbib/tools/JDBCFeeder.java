@@ -17,16 +17,9 @@ package org.xbib.tools;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.collect.ImmutableMap;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
-import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.IngestFactory;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
 
@@ -37,7 +30,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -50,11 +42,9 @@ public class JDBCFeeder extends Feeder {
 
     private final static Logger logger = LogManager.getLogger("feeder.jdbc");
 
-    protected Context context;
-
-    protected IngestFactory ingestFactory;
-
     private final static List<JDBCFeeder> feeders = new LinkedList<>();
+
+    protected Context context;
 
     private volatile boolean closed;
 
@@ -72,15 +62,22 @@ public class JDBCFeeder extends Feeder {
 
     @Override
     protected void prepare() throws IOException {
+        logger.debug("prepare started");
+        if (settings.getAsStructuredMap().containsKey("jdbc")) {
+            settings = settings.getAsSettings("jdbc");
+        }
         Security.setProperty("networkaddress.cache.ttl", "0");
         Runtime.getRuntime().addShutdownHook(shutdownHook());
         ingest = createIngest();
         String index = settings.get("index");
         if (index != null) {
             setIndex(index);
-            SimpleDateFormat formatter = new SimpleDateFormat();
-            formatter.applyPattern(index);
-            index = index.indexOf('\'') < 0 ? index : formatter.format(new Date());
+            int pos = index.indexOf('\'');
+            if (pos >= 0) {
+                SimpleDateFormat formatter = new SimpleDateFormat();
+                formatter.applyPattern(index);
+                index = formatter.format(new Date());
+            }
             index = resolveAlias(index);
             setConcreteIndex(index);
             logger.info("index name = {}, concrete index name = {}", getIndex(), getConcreteIndex());
@@ -93,26 +90,28 @@ public class JDBCFeeder extends Feeder {
         createIndex(getConcreteIndex());
         input = newConcurrentLinkedQueue();
         input.offer(settings);
+        logger.debug("prepare ended");
     }
 
     @Override
     protected List<Future> schedule(Settings settings) {
-        settings = settings.getAsSettings("jdbc");
+        if (settings.getAsStructuredMap().containsKey("jdbc")) {
+            settings = settings.getAsSettings("jdbc");
+        }
         return super.schedule(settings);
     }
 
     @Override
     protected void process(int counter, Settings settings) throws Exception {
-        settings = settings.getAsSettings("jdbc");
+        if (settings.getAsStructuredMap().containsKey("jdbc")) {
+            settings = settings.getAsSettings("jdbc");
+        }
         String strategy = settings.get("strategy", "standard");
         this.context = StrategyLoader.newContext(strategy);
         logger.info("strategy {}: settings = {}, context = {}",
                 strategy, settings.getAsMap(), context);
-        this.ingestFactory = createIngestFactory(settings);
-        // simple execution in sync
-        context.setCounter(getCounter())
+        context.setCounter(counter)
                 .setSettings(settings)
-                .setIngestFactory(ingestFactory)
                 .execute();
     }
 
@@ -178,54 +177,10 @@ public class JDBCFeeder extends Feeder {
         }
         super.shutdown();
         if (context != null) {
-            context.getSource().shutdown();
-            context.getSink().shutdown();
+            context.shutdown();
         }
         if (ingest != null) {
             ingest.shutdown();
         }
     }
-
-    private IngestFactory createIngestFactory(final Settings settings) {
-        return new IngestFactory() {
-            @Override
-            public Ingest create() throws IOException {
-                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
-                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
-                        Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
-                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
-                BulkTransportClient ingest = new BulkTransportClient();
-                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
-                        .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
-                        .putArray("host", settings.getAsArray("elasticsearch.host"))
-                        .put("port", settings.getAsInt("elasticsearch.port", 9300))
-                        .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
-                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
-                        .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
-                        .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
-                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))); // for sniff sampling
-                // optional found.no transport plugin
-                if (settings.get("transport.type") != null) {
-                    settingsBuilder.put("transport.type", settings.get("transport.type"));
-                }
-                // copy found.no transport settings
-                Settings foundTransportSettings = settings.getAsSettings("transport.found");
-                if (foundTransportSettings != null) {
-                    ImmutableMap<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
-                    for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
-                        settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
-                    }
-                }
-                ingest.maxActionsPerBulkRequest(maxbulkactions)
-                        .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                        .maxVolumePerBulkRequest(maxvolume)
-                        .flushIngestInterval(flushinterval)
-                        .newClient(settingsBuilder.build());
-                return ingest;
-            }
-        };
-    }
-
 }

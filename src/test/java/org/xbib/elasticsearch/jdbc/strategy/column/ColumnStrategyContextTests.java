@@ -32,7 +32,8 @@ public class ColumnStrategyContextTests extends AbstractColumnStrategyTest {
         };
         context.setSettings(settings)
                 .setSink(new MockSink())
-                .setSource(source);
+                .setSource(source)
+                .setIngestFactory(createIngestFactory(settings));
         context.execute();
         assertNotNull(context.getLastRunTimestamp());
     }
@@ -55,7 +56,8 @@ public class ColumnStrategyContextTests extends AbstractColumnStrategyTest {
         };
         context.setSettings(settings)
                 .setSink(new MockSink())
-                .setSource(source);
+                .setSource(source)
+                .setIngestFactory(createIngestFactory(settings));
         context.setLastRunTimeStamp(lastRunAt);
         context.execute();
     }

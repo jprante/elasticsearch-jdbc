@@ -30,7 +30,6 @@ public class TestFoundNettyTransport {
             .build();
 
         ModulesBuilder modules = new ModulesBuilder();
-
         modules.add(new Version.Module(Version.CURRENT));
         modules.add(new SettingsModule(settings));
         modules.add(new ClusterNameModule(settings));
@@ -51,5 +50,9 @@ public class TestFoundNettyTransport {
 
         FoundAuthenticatingChannelHandler channelHandler = pipeline.get(FoundAuthenticatingChannelHandler.class);
         assertNotNull(channelHandler);
+
+        transport.stop();
+        transport.close();
+
     }
 }

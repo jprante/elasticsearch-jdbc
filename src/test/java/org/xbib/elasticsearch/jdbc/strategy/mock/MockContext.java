@@ -21,6 +21,8 @@ import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.support.client.IngestFactory;
 
+import java.io.IOException;
+
 public class MockContext implements Context<Source,Sink> {
 
     @Override
@@ -51,11 +53,6 @@ public class MockContext implements Context<Source,Sink> {
     @Override
     public Settings getSettings() {
         return null;
-    }
-
-    @Override
-    public Context setIngestFactory(IngestFactory ingestFactory) {
-        return this;
     }
 
     @Override
@@ -102,6 +99,21 @@ public class MockContext implements Context<Source,Sink> {
     public State getState() {
         // always idle
         return State.IDLE;
+    }
+
+    @Override
+    public Context setIngestFactory(IngestFactory ingestFactory) {
+        return this;
+    }
+
+    @Override
+    public void log() {
+
+    }
+
+    @Override
+    public void shutdown() throws IOException {
+
     }
 
 }

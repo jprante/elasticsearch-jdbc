@@ -73,7 +73,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
         <elasticsearch.version>1.5.2</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>1.5.2.0</org.xbib.elasticsearch.support.version>
+        <org.xbib.elasticsearch.support.version>1.5.2.1</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -84,7 +84,6 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>org.xbib.elasticsearch.plugin</groupId>
             <artifactId>elasticsearch-support</artifactId>
@@ -92,7 +91,27 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+            <type>jar</type>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.2</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.2</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.xbib.jdbc</groupId>
             <artifactId>jdbc-driver-csv</artifactId>
@@ -100,38 +119,12 @@
             <type>jar</type>
             <scope>runtime</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>2.4.3</version>
-            <type>jar</type>
-            <classifier>indy</classifier>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.2</version>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.2</version>
-            <optional>true</optional>
-        </dependency>
-
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>6.8.21</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -163,6 +156,7 @@
                     <filesets>
                         <fileset>
                             <directory>data</directory>
+                            <directory>lib</directory>
                         </fileset>
                     </filesets>
                 </configuration>
@@ -193,9 +187,9 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.5.4</version>
                 <configuration>
-                    <outputDirectory>${project.build.directory}/releases/</outputDirectory>
+                    <outputDirectory>${basedir}/lib</outputDirectory>
                     <descriptors>
                         <descriptor>${basedir}/src/main/assemblies/standalone.xml</descriptor>
                     </descriptors>
@@ -215,6 +209,40 @@
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>mysql</groupId>
+                                    <artifactId>mysql-connector-java</artifactId>
+                                    <version>5.1.33</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.postgresql</groupId>
+                                    <artifactId>postgresql</artifactId>
+                                    <version>9.3-1102-jdbc41</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.derby</groupId>
+                                    <artifactId>derby</artifactId>
+                                    <version>10.11.1.1</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-project-info-reports-plugin</artifactId>

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This example shows a complete minimalistic geo push & search example for MySQL -> Elasticsearch
+# This example shows a complete geo data push & search example for MySQL -> Elasticsearch
 
 # - install Elasticsearch
 # - run Elasticsearch
@@ -11,22 +11,18 @@
 # - as MySQL root admin, create empty user '' with empty password '' :
 #     GRANT ALL PRIVILEGES ON geo.* TO ''@'localhost' IDENTIFIED BY '';
 # - execute SQL in geo.dump
-#     /usr/local/mysql/bin/mysql geo < ./bin/feeder/mysql/geo.dump
+#     /usr/local/mysql/bin/mysql geo < ./bin/geo.dump
 # - then run this script
-#    ./bin/feeder/mysql/geo.sh
+#    ./bin/mysql-geo.sh
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. ${DIR}/../../feeder.in.sh
+bin=${DIR}/../bin
+lib=${DIR}/../lib
 
 curl -XDELETE 'localhost:9200/myjdbc'
 
 echo '
 {
-    "elasticsearch" : {
-         "cluster" : "elasticsearch",
-         "host" : "localhost",
-         "port" : 9300
-    },
     "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:mysql://localhost:3306/test",
@@ -34,6 +30,11 @@ echo '
         "password" : "",
         "locale" : "en_US",
         "sql" : "select \"myjdbc\" as _index, \"mytype\" as _type, name as _id, city, zip, address, lat as \"location.lat\", lon as \"location.lon\" from geo",
+        "elasticsearch" : {
+             "cluster" : "elasticsearch",
+             "host" : "localhost",
+             "port" : 9300
+        },
         "index" : "myjdbc",
         "type" : "mytype",
         "index_settings" : {
@@ -52,10 +53,11 @@ echo '
         }
     }
 }
-' | ${JAVA_HOME}/bin/java \
-    -cp ${ES_JDBC_CLASSPATH} \
-    org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
-    org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
+' | java \
+    -cp "${lib}/*" \
+    -Dlog4j.configurationFile=${bin}/log4j2.xml \
+    org.xbib.tools.Runner \
+    org.xbib.tools.JDBCFeeder
 
 curl -XGET 'localhost:9200/myjdbc/_refresh'
 

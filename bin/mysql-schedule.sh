@@ -1,10 +1,13 @@
 #!/bin/sh
 
-curl -XPUT '0:9200/_river/my_mysql_river/_meta' -d '{
-    "schedule" : "0 0-59 0-23 ? * *",
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+bin=${DIR}/../bin
+lib=${DIR}/../lib
+
+echo '{
     "type" : "jdbc",
     "jdbc" : {
-        "strategy" : "simple",
+        "schedule" : "0 0-59 0-23 ? * *",
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
@@ -17,4 +20,9 @@ curl -XPUT '0:9200/_river/my_mysql_river/_meta' -d '{
             }
         }
     }
-}'
+}
+' | java \
+    -cp "${lib}/*" \
+    -Dlog4j.configurationFile=${bin}/log4j2.xml \
+    org.xbib.tools.Runner \
+    org.xbib.tools.JDBCFeeder
