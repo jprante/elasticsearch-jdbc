@@ -22,8 +22,6 @@ public interface CommandLineInterpreter {
 
     CommandLineInterpreter reader(String resourceName, InputStream in);
 
-    CommandLineInterpreter writer(Writer writer);
-
     void run(boolean bootstrap) throws Exception;
 
 }

@@ -15,8 +15,6 @@
  */
 package org.xbib.tools;
 
-import java.io.OutputStreamWriter;
-
 public class Runner {
 
     public static void main(String[] args) {
@@ -24,7 +22,6 @@ public class Runner {
             Class clazz = Class.forName(args[0]);
             CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
             commandLineInterpreter.reader("args", System.in)
-                    .writer(new OutputStreamWriter(System.out, "UTF-8"))
                     .run(true);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -32,4 +29,5 @@ public class Runner {
         }
         System.exit(0);
     }
+
 }

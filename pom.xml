@@ -157,6 +157,7 @@
                         <fileset>
                             <directory>data</directory>
                             <directory>lib</directory>
+                            <directory>lib</directory>
                         </fileset>
                     </filesets>
                 </configuration>

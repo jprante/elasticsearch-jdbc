@@ -29,8 +29,11 @@ import org.xbib.pipeline.PipelineProvider;
 import org.xbib.pipeline.PipelineRequest;
 import org.xbib.pipeline.simple.MetricSimplePipelineExecutor;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +58,8 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
 
     private final static SettingsPipelineElement pipelineElement = new SettingsPipelineElement();
 
+    protected static Writer writer;
+
     protected static Settings settings;
 
     protected static Queue<Settings> input;
@@ -72,17 +77,16 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public Converter<T, R, P> reader(String resourceName, InputStream in) {
         settings = settingsBuilder().loadFromStream(resourceName, in).build();
+        try {
+            writer = new OutputStreamWriter(new FileOutputStream(settings.get("jdbc.state", "jdbc-state.json")), "UTF-8");
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
         return this;
     }
 
     public Converter<T, R, P> setSettings(Settings newSettings) {
         settings = newSettings;
-        return this;
-    }
-
-    @Override
-    public Converter<T, R, P> writer(Writer writer) {
-        // ignore
         return this;
     }
 

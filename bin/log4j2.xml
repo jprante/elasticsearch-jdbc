@@ -4,10 +4,13 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{ABSOLUTE}][%-5p][%-25c][%t] %m%n"/>
         </Console>
+        <File name="File" fileName="logs/jdbc.log" immediateFlush="false"   append="true">
+            <PatternLayout pattern="[%d{ABSOLUTE}][%-5p][%-25c][%t] %m%n"/>
+        </File>
     </appenders>
     <Loggers>
         <Root level="info">
-            <AppenderRef ref="Console" />
+            <AppenderRef ref="File" />
         </Root>
     </Loggers>
 </configuration>

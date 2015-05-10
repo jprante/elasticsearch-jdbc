@@ -18,6 +18,8 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.collect.ImmutableMap;
+import org.elasticsearch.common.joda.FormatDateTimeFormatter;
+import org.elasticsearch.common.joda.Joda;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -39,6 +41,7 @@ import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 import org.xbib.tools.MetricsLogger;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -139,6 +142,14 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext setSource(S source) {
         this.source = source;
+        if (settings.get("metrics.lastexecutionstart") != null) {
+            DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
+            sourceMetric.setLastExecutionStart(lastexecutionstart);
+        }
+        if (settings.get("metrics.lastexecutionend") != null) {
+            DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
+            sourceMetric.setLastExecutionEnd(lastexecutionend);
+        }
         source.setMetric(sourceMetric);
         return this;
     }
@@ -233,12 +244,32 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     }
 
     @Override
-    public void shutdown() throws IOException {
+    public void shutdown(Writer writer) throws IOException {
+        logger.info("shutdown");
         for (Future future : futures) {
             future.cancel(true);
         }
-        getSource().shutdown();
-        getSink().shutdown();
+        if (source != null) {
+            source.shutdown();
+        }
+        if (sink != null) {
+            sink.shutdown();
+        }
+        if (writer != null && sourceMetric != null) {
+            FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
+            ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
+                    .put(settings)
+                    .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
+                    .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()));
+            XContentBuilder builder = jsonBuilder().prettyPrint()
+                    .map(settingsBuilder.build().getAsStructuredMap());
+            writer.write(builder.string());
+            writer.flush();
+            writer.close();
+            logger.info("state persisted");
+        } else {
+            logger.warn("no state persisted");
+        }
     }
 
     @SuppressWarnings("unchecked")

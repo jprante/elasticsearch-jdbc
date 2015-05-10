@@ -177,7 +177,7 @@ public class JDBCFeeder extends Feeder {
         }
         super.shutdown();
         if (context != null) {
-            context.shutdown();
+            context.shutdown(writer);
         }
         if (ingest != null) {
             ingest.shutdown();

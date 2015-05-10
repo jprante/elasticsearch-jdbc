@@ -3,6 +3,7 @@
 # Schedule with acknowledging internal flags back to an SQL table
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT="$(basename ${BASH_SOURCE[0]})"
 bin=${DIR}/../bin
 lib=${DIR}/../lib
 
@@ -22,9 +23,9 @@ echo '
                     "parameter": [
                         "$job",
                         "$now",
-                        "$metric.totalrows",
-                        "$metric.lastexecutionstart",
-                        "$metric.lastexecutionend",
+                        "$metrics.totalrows",
+                        "$metrics.lastexecutionstart",
+                        "$metrics.lastexecutionend",
                         "$lastexception",
                         "$lastexceptiondate"
                     ]
@@ -39,7 +40,8 @@ echo '
         "metrics" : {
             "enabled" : true,
             "interval" : "10s"
-        }
+        },
+        "state" : "schedule.json"
       }
 }
 ' | java \

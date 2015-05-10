@@ -22,6 +22,7 @@ import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.support.client.IngestFactory;
 
 import java.io.IOException;
+import java.io.Writer;
 
 public class MockContext implements Context<Source,Sink> {
 
@@ -112,7 +113,7 @@ public class MockContext implements Context<Source,Sink> {
     }
 
     @Override
-    public void shutdown() throws IOException {
+    public void shutdown(Writer writer) throws IOException {
 
     }
 

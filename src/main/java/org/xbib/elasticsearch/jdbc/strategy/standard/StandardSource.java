@@ -1265,22 +1265,22 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
             } else if ("$lastexception".equals(s)) {
                 statement.setString(i, ExceptionFormatter.format(context.getThrowable()));
-            } else if ("$metric.lastexecutionstart".equals(s)) {
+            } else if ("$metrics.lastexecutionstart".equals(s)) {
                 DateTime dateTime = metric != null ? metric.getLastExecutionStart() : null;
                 statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
-            } else if ("$metric.lastexecutionend".equals(s)) {
+            } else if ("$metrics.lastexecutionend".equals(s)) {
                 DateTime dateTime = metric != null ? metric.getLastExecutionEnd() : null;
                 statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
-            } else if ("$metric.totalrows".equals(s)) {
+            } else if ("$metrics.totalrows".equals(s)) {
                 Long count = metric != null && metric.getTotalRows() != null ? metric.getTotalRows().count() : -1L;
                 statement.setLong(i, count);
-            } else if ("$metric.totalbytes".equals(s)) {
+            } else if ("$metrics.totalbytes".equals(s)) {
                 Long count = metric != null && metric.getTotalSizeInBytes() != null ? metric.getTotalSizeInBytes().count() : -1L;
                 statement.setLong(i, count);
-            } else if ("$metric.failed".equals(s)) {
+            } else if ("$metrics.failed".equals(s)) {
                 Long count = metric != null && metric.getFailed() != null ? metric.getFailed().count() : -1L;
                 statement.setLong(i, count);
-            } else if ("$metric.succeeded".equals(s)) {
+            } else if ("$metrics.succeeded".equals(s)) {
                 Long count = metric != null && metric.getSucceeded() != null ? metric.getSucceeded().count() : -1L;
                 statement.setLong(i, count);
             } else if (shouldPrepareDatabaseMetadata()) {

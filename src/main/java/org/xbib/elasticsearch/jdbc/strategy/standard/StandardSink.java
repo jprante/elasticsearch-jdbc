@@ -105,14 +105,16 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (ingest.client() != null && !ingest.client().admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             logger.info("creating index {} with settings = {} and mappings = {}",
                     index,
-                    indexSettings != null ? indexSettings.getAsMap() : "{}",
+                    indexSettings != null ? indexSettings.getAsMap() : "",
                     indexMappings != null ? indexMappings : "");
             ingest.newIndex(index, indexSettings, indexMappings);
         }
         long startRefreshInterval = indexSettings != null ?
-                indexSettings.getAsTime("bulk." + index + ".refresh_interval.start", TimeValue.timeValueSeconds(-1)).getMillis() : -1L;
+                indexSettings.getAsTime("bulk." + index + ".refresh_interval.start",
+                        TimeValue.timeValueSeconds(-1)).getMillis() : -1L;
         long stopRefreshInterval = indexSettings != null ?
-                indexSettings.getAsTime("bulk." + index + ".refresh_interval.stop", indexSettings.getAsTime("index.refresh_interval", TimeValue.timeValueSeconds(1))).getMillis() : 1000L;
+                indexSettings.getAsTime("bulk." + index + ".refresh_interval.stop",
+                        indexSettings.getAsTime("index.refresh_interval", TimeValue.timeValueSeconds(1))).getMillis() : 1000L;
         ingest.startBulk(index, startRefreshInterval, stopRefreshInterval);
     }
 
