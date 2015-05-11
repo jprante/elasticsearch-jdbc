@@ -16,7 +16,6 @@
 package org.xbib.tools;
 
 import java.io.InputStream;
-import java.io.Writer;
 
 public interface CommandLineInterpreter {
 

@@ -148,7 +148,7 @@ public interface Sink<C extends Context> {
      *
      * @throws IOException when flush fails
      */
-    void flush() throws IOException;
+    void flushIngest() throws IOException;
 
     /**
      * Shutdown and release all resources, e.g. bulk processor and client

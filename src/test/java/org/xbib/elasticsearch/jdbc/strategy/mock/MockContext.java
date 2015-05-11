@@ -109,12 +109,10 @@ public class MockContext implements Context<Source,Sink> {
 
     @Override
     public void log() {
-
     }
 
     @Override
-    public void shutdown(Writer writer) throws IOException {
-
+    public void shutdown() {
     }
 
 }

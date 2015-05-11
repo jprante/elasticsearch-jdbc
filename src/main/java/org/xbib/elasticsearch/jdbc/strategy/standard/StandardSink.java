@@ -129,9 +129,9 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (ingest == null) {
             return;
         }
-        flush();
+        flushIngest();
         ingest.stopBulk(index);
-        ingest.refresh(index);
+        ingest.refreshIndex(index);
         ingest.shutdown();
     }
 
@@ -142,7 +142,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
             return;
         }
         try {
-            flush();
+            flushIngest();
             ingest.stopBulk(index);
             ingest.shutdown();
         } catch (IOException e) {
@@ -268,7 +268,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
     }
 
     @Override
-    public void flush() throws IOException {
+    public void flushIngest() throws IOException {
         if (ingest == null) {
             return;
         }

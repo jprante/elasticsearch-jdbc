@@ -29,12 +29,8 @@ import org.xbib.pipeline.PipelineProvider;
 import org.xbib.pipeline.PipelineRequest;
 import org.xbib.pipeline.simple.MetricSimplePipelineExecutor;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
@@ -58,8 +54,6 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
 
     private final static SettingsPipelineElement pipelineElement = new SettingsPipelineElement();
 
-    protected static Writer writer;
-
     protected static Settings settings;
 
     protected static Queue<Settings> input;
@@ -77,11 +71,6 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public Converter<T, R, P> reader(String resourceName, InputStream in) {
         settings = settingsBuilder().loadFromStream(resourceName, in).build();
-        try {
-            writer = new OutputStreamWriter(new FileOutputStream(settings.get("jdbc.state", "jdbc-state.json")), "UTF-8");
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
         return this;
     }
 
@@ -222,7 +211,7 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
         } else if (seconds > 0L) {
             Thread thread = new Thread(this);
             ScheduledThreadPoolExecutor scheduledThreadPoolExecutor =
-                    new ScheduledThreadPoolExecutor(settings.getAsInt("threadpoolsize", 4));
+                    new ScheduledThreadPoolExecutor(settings.getAsInt("threadpoolsize", 1));
             futures.add(scheduledThreadPoolExecutor.scheduleAtFixedRate(thread, 0L, seconds, TimeUnit.SECONDS));
             logger.info("scheduled feeder instance at fixed rate of {} seconds", seconds);
             this.threadPoolExecutor = scheduledThreadPoolExecutor;

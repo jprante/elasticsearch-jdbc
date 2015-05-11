@@ -92,5 +92,5 @@ public interface Context<S extends Source, T extends Sink> {
 
     void log();
 
-    void shutdown(Writer writer) throws IOException;
+    void shutdown();
 }

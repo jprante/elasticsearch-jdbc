@@ -124,7 +124,7 @@ public class MockSink implements Sink<MockContext> {
     }
 
     @Override
-    public void flush() throws IOException {
+    public void flushIngest() throws IOException {
     }
 
     @Override

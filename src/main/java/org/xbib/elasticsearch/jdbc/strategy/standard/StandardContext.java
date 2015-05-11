@@ -40,6 +40,7 @@ import org.xbib.elasticsearch.support.client.Metric;
 import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 import org.xbib.tools.MetricsLogger;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -244,29 +245,42 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     }
 
     @Override
-    public void shutdown(Writer writer) throws IOException {
+    public void shutdown() {
         logger.info("shutdown");
         for (Future future : futures) {
             future.cancel(true);
         }
         if (source != null) {
-            source.shutdown();
+            try {
+                source.shutdown();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
         if (sink != null) {
-            sink.shutdown();
+            try {
+                sink.shutdown();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
-        if (writer != null && sourceMetric != null) {
-            FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
-            ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
-                    .put(settings)
-                    .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
-                    .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()));
-            XContentBuilder builder = jsonBuilder().prettyPrint()
-                    .map(settingsBuilder.build().getAsStructuredMap());
-            writer.write(builder.string());
-            writer.flush();
-            writer.close();
-            logger.info("state persisted");
+        if (settings.get("state") != null && sourceMetric != null) {
+            try {
+                Writer writer = new FileWriter(settings.get("state"));
+                FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
+                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
+                        .put(settings)
+                        .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
+                        .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()));
+                XContentBuilder builder = jsonBuilder().prettyPrint()
+                        .map(settingsBuilder.build().getAsStructuredMap());
+                writer.write(builder.string());
+                writer.flush();
+                writer.close();
+                logger.info("state persisted to {}", settings.get("state"));
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
         } else {
             logger.warn("no state persisted");
         }
@@ -411,14 +425,14 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     public void log() {
         try {
-            if (source != null) {
+            if (metricsLogger != null && source != null) {
                 metricsLogger.writeMetrics(settings, source.getMetric());
             }
-            if (sink != null) {
+            if (metricsLogger != null && sink != null) {
                 metricsLogger.writeMetrics(settings, sink.getMetric());
             }
         } catch (Exception e) {
-            //
+            // ignore
         }
     }
 
