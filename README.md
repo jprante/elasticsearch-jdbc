@@ -344,7 +344,6 @@ Quartz cron expression format (see below).
 
 `connection_properties` - a map for the connection properties for driver connection creation. Default is `null`
 
-
 `index` - the Elasticsearch index used for indexing
 
 `type` - the Elasticsearch type of the index used for indexing
@@ -416,128 +415,124 @@ Cron expressions provide the ability to specify complex time combinations such a
 Cron expressions are comprised of 6 required fields and one optional field separated by
 white space. The fields respectively are described as follows:
 
-| Field Name      | Allowed Values      | Allowed Special Characters  |
-| --------------- | ------------------- | ----------------------------|
-| Seconds         | 0-59                | , - * / |
-| Minutes         | 0-59                | , - * / |
-| Hours           | 0-23                | , - * / |
-| Day-of-month    | 1-31                | , - * ? / L W |
-| Month           | 1-12 or JAN-DEC     | , - * / |
-| Day-of-Week     | 1-7 or SUN-SAT      | , - * ? / L # |
-| Year (Optional) | empty, 1970-2199    | , - * / |
+| Field Name      | Allowed Values          | Allowed Special Characters  |
+| --------------- | ----------------------- | ----------------------------|
+| Seconds         | `0`-`59`                | `,` `-` `*` `/`             |
+| Minutes         | `0`-`59`                | `,` `-` `*` `/`             |
+| Hours           | `0`-`23`                | `,` `-` `*` `/`             |
+| Day-of-month    | `1`-`31`                | `,` `-` `*` `?` `/` `L` `W` |
+| Month           | `1`-`12` or `JAN`-`DEC` | `,` `-` `*` `/`             |
+| Day-of-Week     | `1`-`7` or `SUN`-`SAT`  | `,` `-` `*` `?` `/` `L` `#` |
+| Year (Optional) | empty, `1970`-`2199`    | `,` `-` `*` `/`             |
 
-The '*' character is used to specify all values. For example, "*" in the minute field means "every minute".
+The `*` character is used to specify all values. For example, `*` in the minute field means "every minute".
 
-The '?' character is allowed for the day-of-month and day-of-week fields.
+The `?` character is allowed for the day-of-month and day-of-week fields.
 It is used to specify 'no specific value'.
 This is useful when you need to specify something in one of the two fields, but not the other.
 
-The '-' character is used to specify ranges For example "10-12" in the hour field means
+The `-` character is used to specify ranges For example `10-12` in the hour field means
 "the hours 10, 11 and 12".
 
-The ',' character is used to specify additional values. For example "MON,WED,FRI" in the
+The `,` character is used to specify additional values. For example `MON,WED,FRI` in the
 day-of-week field means "the days Monday, Wednesday, and Friday".
 
-The '/' character is used to specify increments. For example "0/15" in the seconds field means
-"the seconds 0, 15, 30, and 45". And "5/15" in the seconds field means "the seconds 5, 20, 35, and 50".
-Specifying '*' before the '/' is equivalent to specifying 0 is the value to start with.
+The `/` character is used to specify increments. For example `0/15` in the seconds field means
+"the seconds 0, 15, 30, and 45". And `5/15` in the seconds field means "the seconds 5, 20, 35, and 50".
+Specifying `*` before the `/` is equivalent to specifying `0` is the value to start with.
 Essentially, for each field in the expression, there is a set of numbers that can be turned on or off.
 For seconds and minutes, the numbers range from 0 to 59.
 For hours 0 to 23, for days of the month 0 to 31, and for months 1 to 12.
-The "/" character simply helps you turn on every "nth" value in the given set.
-Thus "7/6" in the month field only turns on month "7", it does NOT mean every 6th month,
+The `/` character simply helps you turn on every "nth" value in the given set.
+Thus `7/6` in the month field only turns on month "7", it does NOT mean every 6th month,
 please note that subtlety.
 
-The 'L' character is allowed for the day-of-month and day-of-week fields.
+The `L` character is allowed for the day-of-month and day-of-week fields.
 This character is short-hand for "last", but it has different meaning in each of the two fields.
-For example, the value "L" in the day-of-month field means "the last day of the month" - day
+For example, the value `L` in the day-of-month field means "the last day of the month" - day
 31 for January, day 28 for February on non-leap years. If used in the day-of-week field by itself,
-it simply means "7" or "SAT". But if used in the day-of-week field after another value,
-it means "the last xxx day of the month" - for example "6L" means "the last friday of the month".
-You can also specify an offset from the last day of the month, such as "L-3" which would mean
-the third-to-last day of the calendar month. When using the 'L' option, it is important not
+it simply means `7` or `SAT`. But if used in the day-of-week field after another value,
+it means "the last xxx day of the month" - for example `6L` means "the last friday of the month".
+You can also specify an offset from the last day of the month, such as `L-3` which would mean
+the third-to-last day of the calendar month. When using the `L` option, it is important not
 to specify lists, or ranges of values, as you'll get confusing/unexpected results.
 
-The 'W' character is allowed for the day-of-month field. This character is used to specify
-the weekday (Monday-Friday) nearest the given day. As an example, if you were to specify "15W"
+The `W` character is allowed for the day-of-month field. This character is used to specify
+the weekday (Monday-Friday) nearest the given day. As an example, if you were to specify `15W`
 as the value for the day-of-month field, the meaning is: "the nearest weekday to the 15th of the month".
 So if the 15th is a Saturday, the trigger will fire on Friday the 14th.
 If the 15th is a Sunday, the trigger will fire on Monday the 16th.
 If the 15th is a Tuesday, then it will fire on Tuesday the 15th.
-However if you specify "1W" as the value for day-of-month, and the 1st is a Saturday,
+However if you specify `1W` as the value for day-of-month, and the 1st is a Saturday,
 the trigger will fire on Monday the 3rd, as it will not 'jump' over the boundary of a month's days.
-The 'W' character can only be specified when the day-of-month is a single day,
+The `W` character can only be specified when the day-of-month is a single day,
 not a range or list of days.
 
-The 'L' and 'W' characters can also be combined for the day-of-month expression to yield 'LW',
+The `L` and `W` characters can also be combined for the day-of-month expression to yield `LW`,
 which translates to "last weekday of the month".
 
-The '#' character is allowed for the day-of-week field. This character is used to specify
-"the nth" XXX day of the month. For example, the value of "6#3" in the day-of-week field means
-the third Friday of the month (day 6 = Friday and "#3" = the 3rd one in the month).
-Other examples: "2#1" = the first Monday of the month and "4#5" = the fifth Wednesday of the month.
-Note that if you specify "#5" and there is not 5 of the given day-of-week in the month,
-then no firing will occur that month. If the '#' character is used, there can only be
-one expression in the day-of-week field ("3#1,6#3" is not valid, since there are two expressions).
+The `#` character is allowed for the day-of-week field. This character is used to specify
+"the nth" XXX day of the month. For example, the value of `6#3` in the day-of-week field means
+the third Friday of the month (day `6` = Friday and `#3` = the 3rd one in the month).
+Other examples: `2#1` = the first Monday of the month and `4#5` = the fifth Wednesday of the month.
+Note that if you specify `#5` and there is not 5 of the given day-of-week in the month,
+then no firing will occur that month. If the `#` character is used, there can only be
+one expression in the day-of-week field (`3#1,6#3` is not valid, since there are two expressions).
 
 The legal characters and the names of months and days of the week are not case sensitive.
 
 Note: Support for specifying both a day-of-week and a day-of-month value is not complete
-(you'll need to use the '?' character in one of these fields).
+(you'll need to use the `?` character in one of these fields).
 Overflowing ranges is supported - that is, having a larger number on the left hand side than the right.
-You might do 22-2 to catch 10 o'clock at night until 2 o'clock in the morning, or you might have NOV-FEB.
+You might do `22-2` to catch 10 o'clock at night until 2 o'clock in the morning, or you might have `NOV-FEB`.
 It is very important to note that overuse of overflowing ranges creates ranges that don't make sense
 and no effort has been made to determine which interpretation CronExpression chooses.
-An example would be "0 0 14-6 ? * FRI-MON".
+An example would be `0 0 14-6 ? * FRI-MON`.
 
 ## How to run a standalone JDBC feeder
 
-A feeder can be started from a shell script. For this , the Elasticsearch home directory must be set in
-the environment variable ES_HOME. The JDBC plugin jar must be placed in the same directory of the script,
-together with JDBC river jar(s). 
+A feeder can be started from a shell script. For this, the Elasticsearch home directory must be set in
+the environment variable ES_HOME. The JDBC plugin (along with the JDBC driver for your speicifc DB) should also be installed.
 
-Here is an example of a feeder bash script:
+Here is an example of the feeder bash script (tested with ElasticSearch version 1.5.1 on Ubuntu 14.04 LTS):
 
-    #!/bin/sh
+```bash
+#!/bin/bash
 
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    
-    # ES_HOME required to detect elasticsearch jars
-    export ES_HOME=~es/elasticsearch-1.4.0.Beta1
-    
-    echo '
-    {
-        "elasticsearch" : {
-             "cluster" : "elasticsearch",
-             "host" : "localhost",
-             "port" : 9300
-        },
-        "type" : "jdbc",
-        "jdbc" : {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "sql" :  "select *, page_id as _id from page",
-            "treat_binary_as_string" : true,
-            "index" : "metawiki"
-          }
+# ES_HOME required to detect elasticsearch jars
+export ES_HOME=/usr/share/elasticsearch
+
+echo '
+{
+    "elasticsearch": {
+        "cluster": "elasticsearch",
+        "host": "localhost",
+        "port": 9300
+    },
+    "type": "jdbc",
+    "jdbc": {
+        "url": "jdbc:mysql://localhost:3306/test",
+        "user": "",
+        "password": "",
+        "sql":  "SELECT *, page_id AS _id FROM pages",
+        "index": "metawiki",
+        "type": "pages"
     }
-    ' | java \
-        -cp "${DIR}/*" \
-        org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
-        org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
+}
+' | java \
+    -cp "${ES_HOME}/lib/*:${ES_HOME}/plugins/jdbc/*" \
+    org.xbib.elasticsearch.plugin.jdbc.feeder.Runner org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
+```
 
 How does it work?
 
-- first the shell script finds out about the directory where the script is placed, and it is placed into a variable `DIR`
+- the location of the Elasticsearch home is exported in a shell variable `ES_HOME`
 
-- second, the location of the Elasticsearch home is exported in a shell variable `ES_HOME`
+- the classpath must be set to `${ES_HOME}/lib/*:${ES_HOME}/plugins/jdbc/*` to detect the elasticsearch jars, JDBC plugin jar, and specific JDBC driver for your DB (assuming the driver is in the `jdbc` directory; if not, make sure it's included in the classpath)
 
-- the classpath must be set to `DIR/*` to detect the JDBC plugin jar in the same directory of the script
+- the "Runner" and "JDBCFeeder" classes should be on the same line because sometimes, splitting it with `\` causes errors
 
-- the "Runner" class is able to expand the classpath over the Elasticsearch jars in `ES_HOME/lib` and looks also in `ES_HOME/plugins/jdbc`
-
-- the "Runner" class invokes the "JDBCFeeder", which reads a JSON file from stdin, which corresponds to a JDBC river definition
+- the "Runner" class invokes the "JDBCFeeder", which reads a JSON-formatted string from `stdin`, which corresponds to a JDBC river definition
 
 - the `elasticsearch` structure specifies the cluster, host, and port of a connection to an Elasticsearch cluster
 
