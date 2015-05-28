@@ -18,6 +18,9 @@ package org.xbib.elasticsearch.plugin.jdbc.feeder;
 import org.xbib.elasticsearch.plugin.jdbc.classloader.uri.URIClassLoader;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -35,14 +38,24 @@ public class Runner {
                 System.err.println("Warning: ES_HOME not set, using current directory");
                 homeFile = System.getProperty("user.dir");
             }
+
             // add drivers and Elasticsearch libs from ES_HOME
             ClassLoader cl = getClassLoader(new File(homeFile));
             Thread.currentThread().setContextClassLoader(cl);
             // here we load the "concrete" class we want to execute
             Class clazz = cl.loadClass(args[0]);
+
+            Reader configurationReader;
+            if (args.length > 1) {
+                configurationReader = new FileReader(args[1]);
+            } else {
+                configurationReader = new InputStreamReader(System.in, "UTF-8");
+            }
+
             // we can not cast classes, we have different classloaders. Just invoke "exec" method
-            Method execMethod = clazz.getMethod("exec");
-            execMethod.invoke(clazz.newInstance());
+            Method execMethod = clazz.getMethod("exec", Reader.class);
+            execMethod.invoke(clazz.newInstance(), configurationReader);
+
         } catch (Throwable e) {
             // ensure all errors are printed to stderr
             e.printStackTrace();
