@@ -522,10 +522,45 @@ Here is an example of a feeder bash script:
             "index" : "metawiki"
           }
     }
-    ' | java \
+    ' | java
         -cp "${DIR}/*" \
         org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
         org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder
+
+or you can add the feeder configuration in a JSON file and pass it as argument to the command:
+
+    #!/bin/sh
+
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    
+    # ES_HOME required to detect elasticsearch jars
+    export ES_HOME=~es/elasticsearch-1.4.0.Beta1
+    
+    java -cp "${DIR}/*" \
+        org.xbib.elasticsearch.plugin.jdbc.feeder.Runner \
+        org.xbib.elasticsearch.plugin.jdbc.feeder.JDBCFeeder \
+        feederinput.json
+
+
+**feederinput.json**
+    
+    {
+        "elasticsearch" : {
+             "cluster" : "elasticsearch",
+             "host" : "localhost",
+             "port" : 9300
+        },
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:mysql://localhost:3306/test",
+            "user" : "",
+            "password" : "",
+            "sql" :  "select *, page_id as _id from page",
+            "treat_binary_as_string" : true,
+            "index" : "metawiki"
+        }
+    }
+    
 
 How does it work?
 
