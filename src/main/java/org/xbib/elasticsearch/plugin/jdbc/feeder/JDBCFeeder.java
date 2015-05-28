@@ -40,24 +40,12 @@ import org.xbib.elasticsearch.plugin.jdbc.state.RiverStatesMetaData;
 import org.xbib.elasticsearch.plugin.jdbc.util.RiverServiceLoader;
 import org.xbib.elasticsearch.river.jdbc.RiverFlow;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
@@ -115,8 +103,8 @@ public class JDBCFeeder {
      *
      * @throws Exception
      */
-    public void exec() throws Exception {
-        readFrom(new InputStreamReader(System.in, "UTF-8"))
+    public void exec(Reader reader) throws Exception {
+        readFrom(reader)
                 .writeTo(new OutputStreamWriter(System.out, "UTF-8"))
                 .errorsTo(System.err)
                 .start();
