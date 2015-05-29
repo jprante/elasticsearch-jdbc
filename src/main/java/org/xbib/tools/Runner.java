@@ -15,14 +15,18 @@
  */
 package org.xbib.tools;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 public class Runner {
 
     public static void main(String[] args) {
         try {
             Class clazz = Class.forName(args[0]);
             CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
-            commandLineInterpreter.reader("args", System.in)
-                    .run(true);
+            InputStream in = args.length > 1 ? new FileInputStream(args[1]) : System.in;
+            commandLineInterpreter.reader("args", in).run(true);
+            in.close();
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);
