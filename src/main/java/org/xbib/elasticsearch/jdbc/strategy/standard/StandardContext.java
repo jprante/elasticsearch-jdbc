@@ -63,8 +63,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     private final static Logger logger = LogManager.getLogger("feeder.jdbc.context.standard");
 
-    private int counter;
-
     private Settings settings;
 
     private IngestFactory ingestFactory;
@@ -93,17 +91,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext newInstance() {
         return new StandardContext();
-    }
-
-    @Override
-    public StandardContext setCounter(int counter) {
-        this.counter = counter;
-        return this;
-    }
-
-    @Override
-    public int getCounter() {
-        return counter;
     }
 
     @Override
@@ -151,6 +138,10 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
             sourceMetric.setLastExecutionEnd(lastexecutionend);
         }
+        if (settings.get("metrics.count") != null) {
+            Long counter = Long.parseLong(settings.get("metrics.count"));
+            sourceMetric.setCounter(counter);
+        }
         source.setMetric(sourceMetric);
         return this;
     }
@@ -197,7 +188,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             state = State.AFTER_FETCH;
             afterFetch();
             state = State.IDLE;
-            counter++;
+            sourceMetric.setCounter(sourceMetric.getCounter() != null ? sourceMetric.getCounter() + 1 : 0);
         }
     }
 
@@ -230,6 +221,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public void afterFetch() throws Exception {
         logger.debug("after fetch");
+        writeState();
         try {
             getSource().afterFetch();
         } catch (Throwable e) {
@@ -264,25 +256,37 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 logger.error(e.getMessage(), e);
             }
         }
-        if (settings.get("state") != null && sourceMetric != null) {
-            try {
-                Writer writer = new FileWriter(settings.get("state"));
-                FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
-                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
-                        .put(settings)
-                        .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
-                        .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()));
-                XContentBuilder builder = jsonBuilder().prettyPrint()
-                        .map(settingsBuilder.build().getAsStructuredMap());
-                writer.write(builder.string());
-                writer.flush();
-                writer.close();
-                logger.info("state persisted to {}", settings.get("state"));
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-            }
-        } else {
-            logger.warn("no state persisted");
+        writeState();
+    }
+
+    @Override
+    public void resetCounter() {
+        if (sourceMetric != null) {
+            sourceMetric.setCounter(0L);
+        }
+    }
+
+    protected void writeState() {
+        String statefile = settings.get("statefile");
+        if (statefile == null || sourceMetric == null) {
+            return;
+        }
+        try {
+            Writer writer = new FileWriter(statefile);
+            FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
+            ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
+                    .put(settings)
+                    .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
+                    .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()))
+                    .put("metrics.counter", sourceMetric.getCounter());
+            XContentBuilder builder = jsonBuilder().prettyPrint()
+                    .map(settingsBuilder.build().getAsStructuredMap());
+            writer.write(builder.string());
+            writer.flush();
+            writer.close();
+            logger.info("state persisted to {}", statefile);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
         }
     }
 

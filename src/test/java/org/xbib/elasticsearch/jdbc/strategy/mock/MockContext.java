@@ -21,9 +21,6 @@ import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.support.client.IngestFactory;
 
-import java.io.IOException;
-import java.io.Writer;
-
 public class MockContext implements Context<Source,Sink> {
 
     @Override
@@ -34,16 +31,6 @@ public class MockContext implements Context<Source,Sink> {
     @Override
     public Context newInstance() {
         return this;
-    }
-
-    @Override
-    public Context setCounter(int counter) {
-        return this;
-    }
-
-    @Override
-    public int getCounter() {
-        return 0;
     }
 
     @Override
@@ -78,22 +65,18 @@ public class MockContext implements Context<Source,Sink> {
 
     @Override
     public void execute() throws Exception {
-
     }
 
     @Override
     public void beforeFetch() throws Exception {
-
     }
 
     @Override
     public void fetch() throws Exception {
-
     }
 
     @Override
     public void afterFetch() throws Exception {
-
     }
 
     @Override
@@ -113,6 +96,10 @@ public class MockContext implements Context<Source,Sink> {
 
     @Override
     public void shutdown() {
+    }
+
+    @Override
+    public void resetCounter() {
     }
 
 }

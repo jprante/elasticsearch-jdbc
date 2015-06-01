@@ -37,7 +37,7 @@
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardJobTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
         </classes>
     </test>
 

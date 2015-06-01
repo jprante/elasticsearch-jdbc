@@ -22,6 +22,8 @@ public class SourceMetric {
 
     private long started;
 
+    private Long counter;
+
     private final CounterMetric totalRows = new CounterMetric();
 
     private final CounterMetric totalSizeInBytes = new CounterMetric();
@@ -83,6 +85,14 @@ public class SourceMetric {
 
     public DateTime getLastExecutionEnd() {
         return lastExecutionEnd;
+    }
+
+    public void setCounter(Long counter) {
+        this.counter = counter;
+    }
+
+    public Long getCounter() {
+        return counter;
     }
 
 }

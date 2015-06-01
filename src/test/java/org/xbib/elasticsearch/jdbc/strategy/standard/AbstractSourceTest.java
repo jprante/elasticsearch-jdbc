@@ -129,8 +129,7 @@ public abstract class AbstractSourceTest extends Assert {
                 .loadFromStream("test", in)
                 .build().getAsSettings("jdbc");
         context = newContext();
-        context.setCounter(0)
-                .setSettings(settings);
+        context.setSettings(settings);
     }
 
     protected void createRandomProducts(String sql, int size)

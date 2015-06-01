@@ -102,7 +102,7 @@ public class JDBCFeeder extends Feeder {
     }
 
     @Override
-    protected void process(int counter, Settings settings) throws Exception {
+    protected void process(Settings settings) throws Exception {
         if (settings.getAsStructuredMap().containsKey("jdbc")) {
             settings = settings.getAsSettings("jdbc");
         }
@@ -110,8 +110,7 @@ public class JDBCFeeder extends Feeder {
         this.context = StrategyLoader.newContext(strategy);
         logger.info("strategy {}: settings = {}, context = {}",
                 strategy, settings.getAsMap(), context);
-        context.setCounter(counter)
-                .setSettings(settings)
+        context.setSettings(settings)
                 .execute();
     }
 

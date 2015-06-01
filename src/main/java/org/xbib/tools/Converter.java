@@ -41,7 +41,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.elasticsearch.common.collect.Lists.newLinkedList;
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
@@ -63,8 +62,6 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     private ThreadPoolExecutor threadPoolExecutor;
 
     private boolean done = false;
-
-    private final static AtomicInteger counter = new AtomicInteger();
 
     private List<Future> futures;
 
@@ -176,7 +173,7 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     @Override
     public void newRequest(Pipeline<MeterMetric, SettingsPipelineElement> pipeline, SettingsPipelineElement request) {
         try {
-            process(counter.incrementAndGet(), request.get());
+            process(request.get());
         } catch (Exception ex) {
             logger.error("error while getting next input: " + ex.getMessage(), ex);
         }
@@ -189,11 +186,7 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
 
     protected abstract PipelineProvider<P> pipelineProvider();
 
-    protected abstract void process(int counter, Settings settings) throws Exception;
-
-    public int getCounter() {
-        return counter.get();
-    }
+    protected abstract void process(Settings settings) throws Exception;
 
     protected List<Future> schedule(Settings settings) {
         String[] schedule = settings.getAsArray("schedule");

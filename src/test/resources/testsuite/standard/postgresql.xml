@@ -51,7 +51,7 @@ sudo -u postgres
         <parameter name="sql2"
                    value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardJobTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
         </classes>
     </test>
 

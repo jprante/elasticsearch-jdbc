@@ -149,8 +149,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
                 .loadFromStream("test", in)
                 .build().getAsSettings("jdbc");
         context = newContext();
-        context.setCounter(0)
-                .setSettings(settings)
+        context.setSettings(settings)
                 .setIngestFactory(createIngestFactory(settings));
     }
 

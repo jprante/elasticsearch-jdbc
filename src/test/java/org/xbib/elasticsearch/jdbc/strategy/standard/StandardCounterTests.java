@@ -22,7 +22,7 @@ import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 
-public class StandardJobTests extends AbstractSinkTest {
+public class StandardCounterTests extends AbstractSinkTest {
 
     @Override
     public JDBCSource newSource() {
@@ -38,6 +38,10 @@ public class StandardJobTests extends AbstractSinkTest {
     @Parameters({"task1", "sql1", "sql2"})
     public void testJob(String resource, String sql1, String sql2)
             throws Exception {
+
+        // set counter to 0 (may be higher when tests have run)
+        context.resetCounter();
+
         createRandomProductsJob(sql2, 100);
         Connection connection = source.getConnectionForReading();
         ResultSet results = connection.createStatement().executeQuery(sql1);
