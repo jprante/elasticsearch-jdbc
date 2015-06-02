@@ -5,7 +5,7 @@ Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons
 [Follow me on twitter](https://twitter.com/xbib)
 
 # JDBC plugin for Elasticsearch
-![Travis](https://travis-ci.org/jprante/elasticsearch-river-jdbc.png)
+![Travis](https://api.travis-ci.org/jprante/elasticsearch-jdbc.png)
 
 The Java Database Connection (JDBC) plugin allows to fetch data from JDBC sources for
 indexing into [Elasticsearch](http://www.elasticsearch.org).
