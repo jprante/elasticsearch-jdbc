@@ -12,7 +12,7 @@
 #     GRANT ALL PRIVILEGES ON geo.* TO ''@'localhost' IDENTIFIED BY '';
 # - execute SQL in geo.dump
 #     /usr/local/mysql/bin/mysql geo < ./bin/geo.dump
-# - then run this script
+# - run this script
 #    ./bin/mysql-geo.sh
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -57,7 +57,7 @@ echo '
     -cp "${lib}/*" \
     -Dlog4j.configurationFile=${bin}/log4j2.xml \
     org.xbib.tools.Runner \
-    org.xbib.tools.JDBCFeeder
+    org.xbib.tools.JDBCImporter
 
 curl -XGET 'localhost:9200/myjdbc/_refresh'
 

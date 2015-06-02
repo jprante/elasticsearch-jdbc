@@ -20,7 +20,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.tools.JDBCFeeder;
+import org.xbib.tools.JDBCImporter;
 
 import java.io.InputStream;
 
@@ -47,7 +47,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
     @Parameters({"task6", "sql1"})
     public void testSimpleSchedule(String resource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        JDBCFeeder feeder = createFeeder(resource);
+        JDBCImporter feeder = createFeeder(resource);
         Thread.sleep(12500L); // run more than twice
         feeder.shutdown();
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
@@ -70,7 +70,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
     public void testTimestamps(String resource, String sql) throws Exception {
         // TODO make timezone/locale configurable for better testing
         createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem");
-        JDBCFeeder feeder = createFeeder(resource);
+        JDBCImporter feeder = createFeeder(resource);
         Thread.sleep(12500L); // run more than twice
         feeder.shutdown();
         client("1").admin().indices().prepareRefresh(index).execute().actionGet();
@@ -80,7 +80,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
         assertTrue(hits > 99L);
     }
 
-    protected JDBCFeeder createFeeder(String resource) throws Exception {
+    protected JDBCImporter createFeeder(String resource) throws Exception {
         waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
         Settings settings = ImmutableSettings.settingsBuilder()
@@ -88,7 +88,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
                 .put("jdbc.elasticsearch.cluster", getClusterName())
                 .putArray("jdbc.elasticsearch.host", getHosts())
                 .build();
-        final JDBCFeeder feeder = new JDBCFeeder();
+        final JDBCImporter feeder = new JDBCImporter();
         feeder.setSettings(settings);
         // dispatch in new thread
         new Thread() {

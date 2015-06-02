@@ -31,10 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T, R>>
+public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<T, R>>
         extends Converter<T, R, P> {
 
-    private final static Logger logger = LogManager.getLogger("feeder");
+    private final static Logger logger = LogManager.getLogger("importer");
 
     protected static Ingest ingest;
 
@@ -83,7 +83,7 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
     }
 
     @Override
-    protected Feeder<T, R, P> cleanup() throws IOException {
+    protected Importer<T, R, P> cleanup() throws IOException {
         super.cleanup();
         if (ingest != null) {
             try {
@@ -101,7 +101,7 @@ public abstract class Feeder<T, R extends PipelineRequest, P extends Pipeline<T,
         return this;
     }
 
-    protected Feeder createIndex(String index) throws IOException {
+    protected Importer createIndex(String index) throws IOException {
         if (index == null) {
             return this;
         }

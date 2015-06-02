@@ -1,11 +1,13 @@
 #!/bin/sh
 
-# This example shows a complete geo data push & search example for Postgresql -> Elasticsearch
+# This example shows a complete geo data push & search example
+# for Postgresql -> Elasticsearch
 
 # - install Elasticsearch
 # - run Elasticsearch
 # - install Postgresql
 # - start Postgresql
+# - modifiy line with PSQL in this script
 # - run this script
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -66,7 +68,7 @@ echo '
     -cp "${lib}/*" \
     -Dlog4j.configurationFile=${bin}/log4j2.xml \
     org.xbib.tools.Runner \
-    org.xbib.tools.JDBCFeeder
+    org.xbib.tools.JDBCImporter
 
 curl -XGET 'localhost:9200/myjdbc/_refresh'
 

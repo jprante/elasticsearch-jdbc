@@ -200,13 +200,13 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
                 futures.add(cronThreadPoolExecutor.schedule(thread, new CronExpression(cron)));
             }
             this.threadPoolExecutor = cronThreadPoolExecutor;
-            logger.info("scheduled feeder instance with cron expressions {}", Arrays.asList(schedule));
+            logger.info("schedule with cron expressions {}", Arrays.asList(schedule));
         } else if (seconds > 0L) {
             Thread thread = new Thread(this);
             ScheduledThreadPoolExecutor scheduledThreadPoolExecutor =
                     new ScheduledThreadPoolExecutor(settings.getAsInt("threadpoolsize", 1));
             futures.add(scheduledThreadPoolExecutor.scheduleAtFixedRate(thread, 0L, seconds, TimeUnit.SECONDS));
-            logger.info("scheduled feeder instance at fixed rate of {} seconds", seconds);
+            logger.info("schedule at fixed rate of {} seconds", seconds);
             this.threadPoolExecutor = scheduledThreadPoolExecutor;
         }
         return futures;

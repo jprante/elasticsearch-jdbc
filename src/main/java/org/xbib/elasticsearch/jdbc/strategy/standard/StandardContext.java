@@ -18,6 +18,7 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.collect.ImmutableMap;
+import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.joda.FormatDateTimeFormatter;
 import org.elasticsearch.common.joda.Joda;
 import org.elasticsearch.common.joda.time.DateTime;
@@ -27,6 +28,7 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import org.elasticsearch.script.ScriptService;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.common.util.SourceMetric;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
@@ -61,7 +63,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  */
 public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
-    private final static Logger logger = LogManager.getLogger("feeder.jdbc.context.standard");
+    private final static Logger logger = LogManager.getLogger("importer.jdbc.context.standard");
 
     private Settings settings;
 
@@ -313,11 +315,12 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         String index = settings.get("index", "jdbc");
         String type = settings.get("type", "jdbc");
         sink.setIndex(index).setType(type);
-        if (settings.getAsStructuredMap().containsKey("index_settings")) {
+        Map<String,Object> map = settings.getAsStructuredMap();
+        if (map.containsKey("index_settings")) {
             Settings loadedSettings = settings.getAsSettings("index_settings");
             sink.setIndexSettings(loadedSettings);
         }
-        if (settings.getAsStructuredMap().containsKey("type_mapping")) {
+        if (map.containsKey("type_mapping")) {
             XContentBuilder builder = jsonBuilder()
                     .map(settings.getAsSettings("type_mapping").getAsStructuredMap());
             sink.setTypeMapping(Collections.singletonMap(type, builder.string()));
@@ -399,7 +402,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
                         .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
+                        .put("name", "importer") // prevents lookup of names.txt, we don't have it
                         .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))); // for sniff sampling

@@ -4,7 +4,7 @@
 # 1. Download from http://meta.wikimedia.org/wiki/Data_dumps
 # 2. Load into MySQL
 # 3. Start ES
-# 4. Run
+# 4. Run this script
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 bin=${DIR}/../bin
@@ -33,4 +33,4 @@ echo '
     -cp "${lib}/*" \
     -Dlog4j.configurationFile=${bin}/log4j2.xml \
     org.xbib.tools.Runner \
-    org.xbib.tools.JDBCFeeder
+    org.xbib.tools.JDBCImporter

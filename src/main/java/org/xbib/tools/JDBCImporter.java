@@ -36,13 +36,13 @@ import java.util.concurrent.Future;
 import static org.elasticsearch.common.collect.Queues.newConcurrentLinkedQueue;
 
 /**
- * Standalone feeder for JDBC
+ * Standalone importer for JDBC
  */
-public class JDBCFeeder extends Feeder {
+public class JDBCImporter extends Importer {
 
-    private final static Logger logger = LogManager.getLogger("feeder.jdbc");
+    private final static Logger logger = LogManager.getLogger("importer.jdbc");
 
-    private final static List<JDBCFeeder> feeders = new LinkedList<>();
+    private final static List<JDBCImporter> importers = new LinkedList<>();
 
     protected Context context;
 
@@ -53,9 +53,9 @@ public class JDBCFeeder extends Feeder {
         return new PipelineProvider<Pipeline>() {
             @Override
             public Pipeline get() {
-                JDBCFeeder feeder = new JDBCFeeder();
-                feeders.add(feeder);
-                return feeder;
+                JDBCImporter importer = new JDBCImporter();
+                importers.add(importer);
+                return importer;
             }
         };
     }
@@ -120,9 +120,9 @@ public class JDBCFeeder extends Feeder {
 
     public Set<Context.State> getStates() {
         Set<Context.State> states = new HashSet<>();
-        for (JDBCFeeder feeder : feeders) {
-            if (feeder.getContext() != null) {
-                states.add(feeder.getContext().getState());
+        for (JDBCImporter importer : importers) {
+            if (importer.getContext() != null) {
+                states.add(importer.getContext().getState());
             }
         }
         return states;
@@ -171,8 +171,8 @@ public class JDBCFeeder extends Feeder {
             return;
         }
         closed = true;
-        for (JDBCFeeder feeder : feeders) {
-            feeder.shutdown();
+        for (JDBCImporter importer : importers) {
+            importer.shutdown();
         }
         super.shutdown();
         if (context != null) {

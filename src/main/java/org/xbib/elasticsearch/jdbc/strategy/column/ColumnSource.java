@@ -42,7 +42,7 @@ import java.util.List;
  */
 public class ColumnSource<C extends ColumnContext> extends StandardSource<C> {
 
-    private static final Logger logger = LogManager.getLogger("feeder.jdbc.source.column");
+    private static final Logger logger = LogManager.getLogger("importer.jdbc.source.column");
 
     private static final String WHERE_CLAUSE_PLACEHOLDER = "$where";
 

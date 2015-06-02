@@ -73,7 +73,7 @@ import static org.elasticsearch.common.collect.Lists.newLinkedList;
  */
 public class StandardSource<C extends StandardContext> implements JDBCSource<C> {
 
-    private final static Logger logger = LogManager.getLogger("feeder.jdbc.source.standard");
+    private final static Logger logger = LogManager.getLogger("importer.jdbc.source.standard");
 
     protected C context;
 
@@ -1253,9 +1253,9 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             if ("$now".equals(s)) {
                 Timestamp t = new Timestamp(new DateTime().getMillis());
                 statement.setTimestamp(i, t, calendar);
-            } else if ("$name".equals(s)) {
-                String name = context.getState().name();
-                statement.setString(i, name);
+            } else if ("state".equals(s)) {
+                String state = context.getState().name();
+                statement.setString(i, state);
             } else if ("$metrics.counter".equals(s) || "$job".equals(s)) { // $job for legacy support
                 Long counter = metric != null ? metric.getCounter() : -0L;
                 statement.setLong(i, counter);

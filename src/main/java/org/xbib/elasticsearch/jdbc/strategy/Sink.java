@@ -159,5 +159,4 @@ public interface Sink<C extends Context> {
     Sink setMetric(Metric metric);
 
     Metric getMetric();
-
 }

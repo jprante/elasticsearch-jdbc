@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <assembly>
-    <id>standalone</id>
+    <id>uberjar</id>
     <formats>
         <format>jar</format>
     </formats>
@@ -12,7 +12,7 @@
             <unpack>true</unpack>
             <scope>runtime</scope>
             <includes>
-                <include>org.xbib.elasticsearch.feeder:elasticsearch-jdbc</include>
+                <include>org.xbib.elasticsearch.importer:elasticsearch-jdbc</include>
                 <include>org.xbib.elasticsearch.plugin:elasticsearch-support</include>
                 <include>org.xbib.jdbc</include>
                 <include>org.elasticsearch:elasticsearch</include>

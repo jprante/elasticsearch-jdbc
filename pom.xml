@@ -5,14 +5,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.xbib.elasticsearch.feeder</groupId>
+    <groupId>org.xbib.elasticsearch.importer</groupId>
     <artifactId>elasticsearch-jdbc</artifactId>
     <version>1.5.2.0</version>
 
     <packaging>jar</packaging>
 
     <name>elasticsearch-jdbc</name>
-    <description>JDBC feeder for Elasticsearch</description>
+    <description>JDBC importer for Elasticsearch</description>
 
     <url>http://github.com/jprante/elasticsearch-jdbc</url>
 
@@ -156,8 +156,15 @@
                     <filesets>
                         <fileset>
                             <directory>data</directory>
+                        </fileset>
+                        <fileset>
                             <directory>lib</directory>
-                            <directory>lib</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>logs</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>dist</directory>
                         </fileset>
                     </filesets>
                 </configuration>
@@ -192,7 +199,7 @@
                 <configuration>
                     <outputDirectory>${basedir}/lib</outputDirectory>
                     <descriptors>
-                        <descriptor>${basedir}/src/main/assemblies/standalone.xml</descriptor>
+                        <descriptor>${basedir}/src/main/assemblies/uberjar.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
@@ -223,6 +230,18 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
+                                    <groupId>com.h2database</groupId>
+                                    <artifactId>h2</artifactId>
+                                    <version>1.4.181</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.hsqldb</groupId>
+                                    <artifactId>hsqldb</artifactId>
+                                    <version>2.3.2</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
                                     <groupId>mysql</groupId>
                                     <artifactId>mysql-connector-java</artifactId>
                                     <version>5.1.33</version>
@@ -238,6 +257,12 @@
                                     <groupId>org.apache.derby</groupId>
                                     <artifactId>derby</artifactId>
                                     <version>10.11.1.1</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.xbib.jdbc</groupId>
+                                    <artifactId>jdbc-driver-csv</artifactId>
+                                    <version>1.0.0</version>
                                     <outputDirectory>${basedir}/lib</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
@@ -604,6 +629,38 @@
                             <javadocExecutable>/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/javadoc</javadocExecutable>
                             <additionalparam>-Xdoclint:none</additionalparam>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>dist</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.5.4</version>
+                        <configuration>
+                            <outputDirectory>${basedir}/dist</outputDirectory>
+                            <descriptors>
+                                <descriptor>${basedir}/src/main/assemblies/dist.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

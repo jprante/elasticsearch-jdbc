@@ -42,7 +42,7 @@ import java.util.Map;
  */
 public class StandardSink<C extends StandardContext> implements Sink<C> {
 
-    private final static Logger logger = LogManager.getLogger("feeder.jdbc.sink.standard");
+    private final static Logger logger = LogManager.getLogger("importer.jdbc.sink.standard");
 
     protected C context;
 

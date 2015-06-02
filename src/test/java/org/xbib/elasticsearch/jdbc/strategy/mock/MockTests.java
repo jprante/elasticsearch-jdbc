@@ -164,7 +164,6 @@ public class MockTests extends AbstractSinkTest {
                 logger.debug("products={}", object);
             }
         };
-        //mock.setIndex("products").setType("products");
         PreparedStatement statement = source.prepareQuery(sql);
         ResultSet results = source.executeQuery(statement);
         StringKeyValueStreamListener listener = new StringKeyValueStreamListener()

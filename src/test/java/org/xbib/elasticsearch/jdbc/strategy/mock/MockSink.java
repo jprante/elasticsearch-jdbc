@@ -141,6 +141,7 @@ public class MockSink implements Sink<MockContext> {
         return null;
     }
 
+    // for tests
     public long getCounter() {
         return counter;
     }
