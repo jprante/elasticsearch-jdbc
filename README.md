@@ -114,7 +114,7 @@ Example:
 
 ### Parameters
 
-`strategy` - the strategy of the JDBC plugin, currently implemented: `"simple"`, `"column"`
+`strategy` - the strategy of the JDBC importer, currently implemented: `"standard"`, `"column"`
 
 `url` - the JDBC driver URL
 
@@ -230,7 +230,7 @@ Quartz cron expression format (see below for syntax)
 ## Overview about the default parameter settings
 
 	{
-        "strategy" : "simple",
+        "strategy" : "standard",
         "schedule" : null,
         "interval" : 0L,
         "threadpoolsize" : 4,
@@ -279,7 +279,7 @@ Example of a `schedule` paramter:
 
         "schedule" : "0 0-59 0-23 ? * *"
 
-This executes JDBC river every minute, every hour, all the days in the week/month/year.
+This executes JDBC importer every minute, every hour, all the days in the week/month/year.
 
 The following documentation about the syntax of the cron expression is copied from the Quartz 
 scheduler javadoc page.
@@ -412,7 +412,7 @@ controls how values are folded into arrays for making use of the Elasticsearch J
 
 ## Column names for JSON document construction
 
-In SQL, each column may be labeled. This label is used by the JDBC plugin for JSON document
+In SQL, each column may be labeled. This label is used by the JDBC importer for JSON document
 construction. The dot is the path separator for the document strcuture.
 
 For example
@@ -526,7 +526,7 @@ Result:
 
 ## How to fetch a table?
 
-For fetching a table, a simple "select *" (star) query can be used.
+For fetching a table, a "select \*" (star) query can be used.
 Star queries are the simplest variant of selecting data from a database.
 They dump tables into Elasticsearch row-by-row. If no `_id` column name is given, IDs will be automatically generated.
 
@@ -566,7 +566,7 @@ will result into the following JSON documents
 
 ## How to update a table?
 
-The JDBC plugin allows to write data into the database for maintenance purpose. 
+The JDBC importer allows to write data into the database for maintenance purpose. 
 
 Writing back data into the database makes sense for acknowledging fetched data. 
 
@@ -613,7 +613,7 @@ column `mytimestamp`:
             "sql" : [
                 {
                     "statement" : "select * from \"products\" where \"mytimestamp\" > ?",
-                    "parameter" : [ "$river.state.last_active_begin" ]
+                    "parameter" : [ "$metrics.lastexecutionstart" ]
                 }
             ],
             "index" : "my_jdbc_index",
@@ -639,7 +639,7 @@ from where the example is taken.
             select supplierName; 
         end
 
-Now it is possible to call the procedure from the JDBC plugin and index the result in Elasticsearch.
+Now it is possible to call the procedure from the JDBC importer and index the result in Elasticsearch.
 
     {
         "jdbc" : {
@@ -658,8 +658,8 @@ Now it is possible to call the procedure from the JDBC plugin and index the resu
                     }
                 }
             ],
-            "index" : "my_jdbc_river_index",
-            "type" : "my_jdbc_river_type"
+            "index" : "my_jdbc_index",
+            "type" : "my_jdbc_type"
         }
     }
 
@@ -671,110 +671,79 @@ like the column name specification in an ordinary SQL statement, because column 
 in callable statement result sets.
 
 If there is more than one result sets returned by a callable statement,
-the JDBC plugin enters a loop and iterates through all result sets.
+the JDBC importer enters a loop and iterates through all result sets.
 
-# Monitoring the JDBC plugin state
+# Monitoring the JDBC importer
 
-While a river/feed is running, you can monitor the activity by using the `_state` command.
+The JDBC importer writes the state after each execution step into a state file which can be set by the
+parameter `statefile`.
 
-The `_state` command can show the state of a specific river or of all rivers, 
-when an asterisk `*` is used as the river name.
+Also, metrics logging can be enabled to watch for the current transfer statistics.
 
-The river state mechanism is specific to JDBC plugin implementation. It is part of the cluster metadata.
+# Developer notes
 
-In the response, the field `started` will represent the time when the river/feeder was created.
-The field `last_active_begin` will represent the last time when a river/feeder run had begun, and
-the field `last_active_end` is null if th river/feeder runs, or will represent the last time the river/feeder 
-has completed a run.
+## Source, Sink, Context
 
-The `map` carries some flags for the river: `aborted`, `suspended`, and a `counter` for the number of
-invocations on this node.
+The JDBC importer consists of three conceptual interfaces than can be implemented separately.
 
-Example:
+When you use the ``strategy`` parameter, the JDBC importer tries to load additional classes before
+falling back to the ``standard`` strategy.
 
-    curl 'localhost:9200/_river/jdbc/*/_state?pretty'
-    {
-      "state" : [ {
-        "name" : "feeder",
-        "type" : "jdbc",
-        "started" : "2014-10-18T13:38:14.436Z",
-        "last_active_begin" : "2014-10-18T17:46:47.548Z",
-        "last_active_end" : "2014-10-18T13:42:57.678Z",
-        "map" : {
-          "aborted" : false,
-          "suspended" : false,
-          "counter" : 6
-        }
-      } ]
-    }    
-
-## Suspend
-
-A running river can be suspended with 
-
-    curl 'localhost:9200/_river/jdbc/my_jdbc_river/_suspend'
-
-## Resume
-
-A suspended river can be resumed with
-
-    curl 'localhost:9200/_river/jdbc/my_jdbc_river/_resume'
-
-# Advanced topics
-
-## RiverSource, RiverMouth, RiverFlow
-
-The JDBC river consists of three conceptual interfaces than can be implemented separately.
-
-When you use the ``strategy`` parameter, the JDBC river tries to load additional classes before
-falling back to the ``simple`` strategy.
-
-You can implement your own strategy by adding your implementation jars to the plugin folder and
-exporting the implementing classes in the ``META-INF/services`` directory. The ``RiverService`` looks up implementations for your favorite ``strategy`` before the JDBC river initializes.
+You can implement your own strategy by adding your implementation jars to the lib folder and
+declaring the implementing classes in the ``META-INF/services`` directory. 
 
 So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy
-to the core JDBC river.
+to the unmodified JDBC importer jar.
 
-### RiverSource
+### Source
 
-The river source models the data producing side. Beside defining the JDBC connect parameters, it manages a dual-channel connection to the data producer for reading and for writing.
+The `Source` models the data producing side. Beside defining the JDBC connect parameters, 
+it manages a dual-channel connection to the data producer for reading and for writing.
 The reading channel is used for fetching data, while the writing channel can update the source.
 
-The RiverSource API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverSource.html
+The `Source` API can be inspected at 
+http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Source.html
 
-### RiverMouth
+### Sink
 
-The ``RiverMouth`` is the abstraction of the destination where all the data is flowing from the river source. It controls the resource usage of the bulk indexing method of Elasticsearch. Throttling is possible by limiting the number of bulk actions per request or by the maximum number of concurrent request.
+The `Sink` is the abstraction of the destination where all the data is flowing from the source. 
+It controls the resource usage of the bulk indexing method of Elasticsearch. T
+hrottling is possible by limiting the number of bulk actions per request or by the 
+maximum number of concurrent request.
 
-The RiverMouth API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverSource.html
+The `Sink` API can be inspected at 
+http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Sink.html
 
-### RiverFlow
+### Context
 
-The ``RiverFlow`` is the abstraction to the thread which performs data fetching from the river source and transports it to the river mouth. A 'move' is considered a single step in the river live cycle. A river flow can be aborted.
+The `Context` is the abstraction to the thread which performs data fetching from the source 
+and transports it to the mouth. A 'move' is considered a single step in the execution cycle. 
 
-The RiverFlow API can be inspected at http://jprante.github.io/elasticsearch-river-jdbc/apidocs/org/xbib/elasticsearch/river/jdbc/RiverFlow.html
+The `Context` API can be inspected at 
+http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Context.html
 
 ## Strategies
 
-The JDBC plugin can be configured for different methods of data transport.
+The JDBC importer can be configured for different methods of data transport.
 Such methods of data transports are called a 'strategy'.
 
-By default, the JDBC plugin implements a ``simple`` strategy.
+By default, the JDBC importer implements a ``standard`` strategy.
 
-## Simple strategy
+## Standard strategy
 
-This strategy contains the following steps of processing:
+The standard strategy contains the following steps of processing:
 
 1. fetch data from the JDBC connection
 2. build structured objects and move them to Elasticsearch for indexing or deleting
 
-In the ``sql`` parameter of the river, a series of SQL statements can be defined which are executed at each river cycle to fetch the data.
+In the ``sql`` parameter, a series of SQL statements can be defined which are executed to fetch the data.
 
 ## Your custom strategy
 
-If you want to extend the JDBC plugin, for example by your custom password authentication, you could
-extend the SimpleRiverSource. Then, declare your strategy classes in `META-INF/services`. Add your
-jar to the classpath and add the `strategy` parameter to the river/feeder specifications.
+If you want to extend the JDBC importer, for example by your custom password authentication, you could
+extend `org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource`. 
+Then, declare your strategy classes in `META-INF/services`. Add your
+jar to the classpath and add the `strategy` parameter to the specifications.
 
 # Examples
 
@@ -788,14 +757,13 @@ jar to the classpath and add the `strategy` parameter to the river/feeder specif
 
 2. Install Elasticsearch
 
-   Follow instructions on http://elasticsearch.org
+   Follow instructions on https://www.elastic.co/products/elasticsearch
 
-3. Install JDBC plugin
+3. Install JDBC importer
 
-   Check for the JDBC version under http://github.com/jprante/elasticsearch-river/jdbc
-
-	    cd $ES_HOME
-	   ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.3.0.4/elasticsearch-river-jdbc-1.3.0.4-plugin.zip
+    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.5.2.0/elasticsearch-jdbc-1.5.2.0-dist.zip`
+    
+   (update version 1.5.2.0 respectively)
 
 4. Download PostgreSQL JDBC driver
 
@@ -805,32 +773,20 @@ jar to the classpath and add the `strategy` parameter to the river/feeder specif
 
    Filname postgresql-9.1-902.jdbc4.jar
 
-5. Copy driver into river folder
+5. Copy driver into lib folder
 
-   The reason is to include the JDBC driver into the Java classpath.
-
-	    cp postgresql-9.1-902.jdbc4.jar $ES_HOME/plugins/river-jdbc/
+	    cp postgresql-9.1-902.jdbc4.jar $JDBC_IMPORTER_HOME/lib
 
 6. Start Elasticsearch
 
-   Just in the foreground to follow log messages on the console.
-
-	    cd $ES_HOME
-	    ./bin/elasticsearch
-
-   Check if the river is installed correctly, Elasticsearch announces it in the second line logged. It must show ``loaded [jdbc-...]``.
-
-	[2014-01-22 23:00:06,821][INFO ][node                     ] [Julie Power] version[...], pid[26152], build[c6155c5/2014-01-15T17:02:32Z]
-	[2014-01-22 23:00:06,841][INFO ][node                     ] [Julie Power] initializing ...
-	[2014-01-22 23:00:06,932][INFO ][plugins                  ] [Julie Power] loaded [jdbc-..., support-...], sites []
-
-7. Create JDBC river
+7. Starts JDBC importer
 
    This is just a basic example to a database `test` with user `fred` and password `secret`.
-   The easiest method is using ``curl`` for a river creation via the REST interface.
    Use the port configured during PostgreSQL installation. The default is `5432`.
    ```
-   curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
+   bin=$JDBC_IMPORTER_HOME/bin
+   lib=$JDBC_IMPORTER_HOME/lib
+   echo '{
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:postgresql://localhost:5432/test",
@@ -840,41 +796,51 @@ jar to the classpath and add the `strategy` parameter to the river/feeder specif
             "index" : "myindex",
             "type" : "mytype"
         }
-   }'
+    }' | java \
+           -cp "${lib}/*" \
+           -Dlog4j.configurationFile=${bin}/log4j2.xml \
+           org.xbib.tools.Runner \
+           org.xbib.tools.JDBCImporter
    ```
 
 8. Check log messages
 
    In case the user does not exist, Elasticsearch will log a message.
 
-9. Repeat River creation until the river runs fine.
-
 
 ## MS SQL Server
 
 1. Download Elasticsearch
 
-2. Download SQL Server JDBC driver from [the vendor](http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx)
+2. Install Elasticsearch
 
-3. Put the `SQLJDBC4.jar` file in the lib folder of elasticsearch.
+   Follow instructions on https://www.elastic.co/products/elasticsearch
 
-4. Download elasticsearch-river-jdbc using the plugin downloader. Navigate to the elasticsearch folder on your computer and run...
-   ```
-    ./bin/plugin --install jdbc --url ...
-   ```
+3. Install JDBC importer
 
-5. Set up the database you want to be indexed.
+    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.5.2.0/elasticsearch-jdbc-1.5.2.0-dist.zip`
+    
+   (update version 1.5.2.0 respectively)
+
+4. Download SQL Server JDBC driver from [the vendor](http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx)
+
+5. Copy driver into lib folder
+
+     cp SQLJDBC4.jar $JDBC_IMPORTER_HOME/lib
+
+6. Set up the database you want to be indexed.
    [This includes allowing TCP/IP connections](http://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip)
 
-6. Start Elasticsearch
+7. Start Elasticsearch
     ```
     ./elasticsearch.bat
     ```
 
-7. Install a river like this
+8. Start JDBC importer
     ```
-    curl -XPUT 'localhost:9200/_river/scorecards_river/_meta' -d '
-    {
+   bin=$JDBC_IMPORTER_HOME/bin
+   lib=$JDBC_IMPORTER_HOME/lib
+    echo '{
         "type" : "jdbc",
         "jdbc": {
             "url":"jdbc:sqlserver://localhost:1433;databaseName=ICFV",
@@ -884,32 +850,34 @@ jar to the classpath and add the `strategy` parameter to the river/feeder specif
             "index" : "myindex",
             "type" : "mytype"
         }
-    }
+    }' | java \
+           -cp "${lib}/*" \
+           -Dlog4j.configurationFile=${bin}/log4j2.xml \
+           org.xbib.tools.Runner \
+           org.xbib.tools.JDBCImporter
     ```
 
-8. You should see the river parsing the incoming data from the database in the logfile.
+8. You should see messages from the importer in the logfile.
 
 ## Index geo coordinates from MySQL in Elasticsearch
 
-This minimalistic example can also be found at `bin/river/mysql/geo.sh`
+1. install MySQL e.g. in /usr/local/mysql
 
-- install MySQL e.g. in /usr/local/mysql
+2. start MySQL on localhost:3306 (default)
 
-- start MySQL on localhost:3306 (default)
+3. prepare a 'test' database in MySQL
 
-- prepare a 'test' database in MySQL
+4. create empty user '' with empty password '' (this user should exist as default user, otherwise set up a password and adapt the example)
 
-- create empty user '' with empty password '' (this user should exist as default user, otherwise set up a password and adapt the example)
+5. execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
 
-- execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
-
-- then run this script: bash bin/river/mysql/geo.sh
-    ```
-    curl -XDELETE 'localhost:9200/_river/my_geo_river/'
-    curl -XGET 'localhost:9200/_river/_refresh'
-    curl -XDELETE 'localhost:9200/myjdbc'
-    curl -XPOST 'localhost:9200/_river/my_geo_river/_meta' -d '
-    {
+6. then run this script
+   ```
+   curl -XDELETE 'localhost:9200/myjdbc'
+   bin=$JDBC_IMPORTER_HOME/bin
+   lib=$JDBC_IMPORTER_HOME/lib
+   echo '
+   {
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:mysql://localhost:3306/test",
@@ -938,14 +906,16 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
                 }
             }
         }
-    }
-    '
-    echo "sleeping while river should run..."
-    sleep 10
-    curl -XDELETE 'localhost:9200/_river/my_geo_river/'
-    curl -XGET 'localhost:9200/myjdbc/_refresh'
-    curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
-    {
+   }'  | java \
+                  -cp "${lib}/*" \
+                  -Dlog4j.configurationFile=${bin}/log4j2.xml \
+                  org.xbib.tools.Runner \
+                  org.xbib.tools.JDBCImporter
+   echo "sleeping while importer should run..."
+   sleep 10
+   curl -XGET 'localhost:9200/myjdbc/_refresh'
+   curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
+   {
       "query": {
          "filtered": {
            "query": {
@@ -963,15 +933,15 @@ This minimalistic example can also be found at `bin/river/mysql/geo.sh`
             }
          }
        }
-    }'
-    ```
+   }'
+   ```
 
 ## Oracle column name 30 character limit
 
 Oracle imposes a 30 character limit on column name aliases. This makes it sometimes hard to define columns names for
 Elasticsearch field names. For this, a column name map can be used like this:
 
-    curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
+    {
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:oracle:thin:@//localhost/sid",
@@ -984,14 +954,14 @@ Elasticsearch field names. For this, a column name map can be used like this:
                "s" : "status"
             }
         }
-    }'
+    }
 
 ## Connection properties for JDBC driver
 
 For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL, 
 but in the JDBC connection properties. You can specifiy connection properties like this:
 
-    curl -XPUT 'localhost:9200/_river/my_oracle_river/_meta' -d '{
+    {
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:oracle:thin:@//localhost:1521/sid",
@@ -1005,14 +975,14 @@ but in the JDBC connection properties. You can specifiy connection properties li
                 "oracle.jdbc.ReadTimeout" : 50000
             }
         }
-    }'
+    }
 
 
 # License
 
-Elasticsearch JDBC Plugin
+Elasticsearch JDBC Importer
 
-Copyright (C) 2012-2014 Jörg Prante
+Copyright (C) 2012-2015 Jörg Prante
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
