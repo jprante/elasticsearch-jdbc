@@ -1253,7 +1253,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             if ("$now".equals(s)) {
                 Timestamp t = new Timestamp(new DateTime().getMillis());
                 statement.setTimestamp(i, t, calendar);
-            } else if ("state".equals(s)) {
+            } else if ("$state".equals(s)) {
                 String state = context.getState().name();
                 statement.setString(i, state);
             } else if ("$metrics.counter".equals(s) || "$job".equals(s)) { // $job for legacy support
