@@ -12,6 +12,10 @@
         <Root level="info">
             <AppenderRef ref="File" />
         </Root>
+        <!-- set this level to trace to debug SQL value mapping -->
+        <Logger name="importer.jdbc.source.standard" level="info">
+            <appender-ref ref="Console"/>
+        </Logger>
         <Logger name="metrics.source.plain" level="info">
             <appender-ref ref="Console"/>
         </Logger>

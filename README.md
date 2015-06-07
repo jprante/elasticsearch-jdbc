@@ -973,7 +973,7 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 8. You should see messages from the importer in the logfile.
 
-## Index geo coordinates from MySQL in Elasticsearch
+## Index simple geo coordinates from MySQL in Elasticsearch
 
 1. install MySQL e.g. in /usr/local/mysql
 
@@ -1049,6 +1049,65 @@ jar to the classpath and add the `strategy` parameter to the specifications.
        }
    }'
    ```
+
+## Geo shapes
+
+The JDBC importer understands WKT http://en.wikipedia.org/wiki/Well-known_text 
+"POINT" and "POLYGON" formats and converts them to GeoJSON.
+
+With MySQL, the `astext` function can format WKT from columns of type `geometry`.
+
+Example:
+	
+	mysql -u root test <<EOT
+	drop table if exists test.geom;
+	create table test.geom (
+		id integer,
+		g geometry
+	);
+	set @g = 'POLYGON((0 0,10 0,10 10,0 10,0 0),(5 5,7 5,7 7,5 7, 5 5))';
+	insert into test.geom values (0, GeomFromText(@g));
+	EOT
+	
+	curl -XDELETE 'localhost:9200/myjdbc'
+	echo '
+	{
+		"type" : "jdbc",
+		"jdbc" : {
+			"url" : "jdbc:mysql://localhost:3306/test",
+			"user" : "",
+			"password" : "",
+			"locale" : "en_US",
+			"sql" : "select \"myjdbc\" as _index, \"mytype\" as _type, id as _id, astext(g) as polygon from geom",
+			"elasticsearch" : {
+				 "cluster" : "elasticsearch",
+				 "host" : "localhost",
+				 "port" : 9300
+			},
+			"index" : "myjdbc",
+			"type" : "mytype",
+			"index_settings" : {
+				"index" : {
+					"number_of_shards" : 1
+				}
+			},
+			"type_mapping": {
+				"mytype" : {
+					"properties" : {
+						"polygon" : {
+							"type" : "geo_shape",
+							"tree" : "quadtree"
+						}
+					}
+				}
+			}
+		}
+	}
+	' | java \
+		-cp "${lib}/*" \
+		-Dlog4j.configurationFile=${bin}/log4j2.xml \
+		org.xbib.tools.Runner \
+		org.xbib.tools.JDBCImporter
 
 ## Oracle column name 30 character limit
 

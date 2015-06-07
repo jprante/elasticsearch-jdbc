@@ -19,6 +19,8 @@
                 <include>org.apache.lucene:lucene-core</include>
                 <include>org.apache.logging.log4j</include>
                 <include>org.slf4j:slf4j-api</include>
+                <include>com.spatial4j:spatial4j</include>
+                <include>com.vividsolutions:jts</include>
             </includes>
         </dependencySet>
     </dependencySets>

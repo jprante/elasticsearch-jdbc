@@ -15,6 +15,10 @@
  */
 package org.xbib.elasticsearch.common.util;
 
+import com.spatial4j.core.context.SpatialContext;
+import com.spatial4j.core.context.jts.JtsSpatialContext;
+import com.spatial4j.core.shape.Shape;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 
@@ -26,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener<K, V> {
 
@@ -144,8 +150,18 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         for (int i = 0; i < keys.size() && i < values.size(); i++) {
             Map map = null;
             try {
+                String s = values.get(i).toString();
+                if (s.startsWith("POLYGON(") || s.startsWith("POINT(")) {
+                    SpatialContext ctx = JtsSpatialContext.GEO;
+                    Shape shape = ctx.readShapeFromWkt(s);
+                    XContentBuilder builder = jsonBuilder();
+                    builder.startObject();
+                    GeoJSONShapeSerializer.serialize(shape, builder);
+                    builder.endObject();
+                    s = builder.string();
+                }
                 // JSON content?
-                map = JsonXContent.jsonXContent.createParser(values.get(i).toString()).mapAndClose();
+                map = JsonXContent.jsonXContent.createParser(s).mapAndClose();
             } catch (Exception e) {
                 // ignore
             }
