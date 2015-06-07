@@ -18,6 +18,8 @@ could be specified, the current solution is focused on rather simple tabular dat
 Assuming you have a table of name `orders` with a primary key in column `id`, 
 you can issue this from the command line
 
+    bin=$JDBC_IMPORTER_HOME/bin
+    lib=$JDBC_IMPORTER_HOME/lib
     echo '{
         "type" : "jdbc",
         "jdbc" : {
@@ -51,7 +53,7 @@ about what happened.
 - unpack     
     `unzip elasticsearch-jdbc-1.5.2.0-dist.zip`
 
-- go to directory
+- go to the unpacked directory (we call it $JDBC_IMPORTER_HOME)
     `cd elasticsearch-jdbc-1.5.2.0`
 
 - if you do not find the JDBC driver jar in the `lib` directory, download it from your vendor's site 
@@ -59,7 +61,7 @@ about what happened.
 
 - modify script in the `bin` directory to your needs (Elasticsearch cluster address) 
 
-- run script with a command that starts `org.xbib.tools.JDBCImporter`
+- run script with a command that starts `org.xbib.tools.JDBCImporter` with the `lib` directory on the classpath
 
 ## Bundled drivers
 
@@ -83,7 +85,8 @@ All feedback is welcome! If you find issues, please post them at
 The relational data is internally transformed into structured JSON objects for the schema-less
 indexing model of Elasticsearch documents.
 
-The importer can fetch data from RDBMS while multithreaded bulk mode ensures high throughput when indexing to Elasticsearch.
+The importer can fetch data from RDBMS while multithreaded bulk mode ensures high throughput when 
+indexing to Elasticsearch.
 
 ## JDBC importer definition file
 
@@ -113,6 +116,8 @@ Example:
 
 The importer can either be executed via stdin (for example with echo)
 
+    bin=$JDBC_IMPORTER_HOME/bin
+    lib=$JDBC_IMPORTER_HOME/lib
     echo '{
       ...
     }' | java \
@@ -893,7 +898,7 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 6. Start Elasticsearch
 
-7. Starts JDBC importer
+7. Start JDBC importer
 
    This is just a basic example to a database `test` with user `fred` and password `secret`.
    Use the port configured during PostgreSQL installation. The default is `5432`.
