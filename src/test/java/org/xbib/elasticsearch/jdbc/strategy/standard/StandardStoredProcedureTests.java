@@ -39,7 +39,7 @@ public class StandardStoredProcedureTests extends AbstractSinkTest {
     public void testSimpleStoredProcedure(String resource)
             throws Exception {
         perform(resource);
-        boolean b = waitFor(context, Context.State.IDLE, 5000L);
+        boolean b = waitFor(source.getContext(), Context.State.IDLE, 5000L);
         logger.info("after wait for: {}", b);
         assertHits("1", 5);
         logger.info("got the five hits");
@@ -49,7 +49,7 @@ public class StandardStoredProcedureTests extends AbstractSinkTest {
     @Parameters({"task9"})
     public void testRegisterStoredProcedure(String resource) throws Exception {
         perform(resource);
-        boolean b = waitFor(context, Context.State.IDLE, 5000L);
+        boolean b = waitFor(source.getContext(), Context.State.IDLE, 5000L);
         logger.info("after wait for: {}", b);
         assertHits("1", 1);
         logger.info("got the hit");

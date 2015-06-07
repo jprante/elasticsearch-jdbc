@@ -158,6 +158,11 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     }
 
     @Override
+    public C getContext() {
+        return context;
+    }
+
+    @Override
     public StandardSource<C> setMetric(SourceMetric metric) {
         this.metric = metric;
         return this;
@@ -610,6 +615,10 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 metric.setLastExecutionEnd(new DateTime());
             }
             throw new IOException(e);
+        } finally {
+            if (metric != null) {
+                metric.incCounter();
+            }
         }
     }
 

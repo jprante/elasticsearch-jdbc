@@ -28,7 +28,6 @@ import java.security.Security;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -42,20 +41,22 @@ public class JDBCImporter extends Importer {
 
     private final static Logger logger = LogManager.getLogger("importer.jdbc");
 
-    private final static List<JDBCImporter> importers = new LinkedList<>();
+    private final static JDBCImporter INSTANCE = new JDBCImporter();
 
     protected Context context;
 
     private volatile boolean closed;
+
+    public static JDBCImporter getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     protected PipelineProvider<Pipeline> pipelineProvider() {
         return new PipelineProvider<Pipeline>() {
             @Override
             public Pipeline get() {
-                JDBCImporter importer = new JDBCImporter();
-                importers.add(importer);
-                return importer;
+                return INSTANCE;
             }
         };
     }
@@ -106,12 +107,19 @@ public class JDBCImporter extends Importer {
         if (settings.getAsStructuredMap().containsKey("jdbc")) {
             settings = settings.getAsSettings("jdbc");
         }
-        String strategy = settings.get("strategy", "standard");
-        this.context = StrategyLoader.newContext(strategy);
-        logger.info("strategy {}: settings = {}, context = {}",
-                strategy, settings.getAsMap(), context);
-        context.setSettings(settings)
-                .execute();
+        if (context == null) {
+            String strategy = settings.get("strategy", "standard");
+            this.context = StrategyLoader.newContext(strategy);
+            logger.info("strategy {}: settings = {}, context = {}",
+                    strategy, settings.getAsMap(), context);
+        }
+        context.setSettings(settings);
+        context.execute();
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+        setSettings(context.getSettings());
     }
 
     public Context getContext() {
@@ -120,10 +128,8 @@ public class JDBCImporter extends Importer {
 
     public Set<Context.State> getStates() {
         Set<Context.State> states = new HashSet<>();
-        for (JDBCImporter importer : importers) {
-            if (importer.getContext() != null) {
-                states.add(importer.getContext().getState());
-            }
+        if (INSTANCE.getContext() != null) {
+            states.add(INSTANCE.getContext().getState());
         }
         return states;
     }
@@ -171,15 +177,17 @@ public class JDBCImporter extends Importer {
             return;
         }
         closed = true;
-        for (JDBCImporter importer : importers) {
-            importer.shutdown();
-        }
         super.shutdown();
         if (context != null) {
             context.shutdown();
         }
         if (ingest != null) {
             ingest.shutdown();
+            ingest = null;
         }
+    }
+
+    public boolean isShutdown() {
+        return closed;
     }
 }

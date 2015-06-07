@@ -43,6 +43,8 @@ public interface Source<C extends Context> {
      */
     Source<C> setContext(C context);
 
+    C getContext();
+
     /**
      * Executed before fetch() is executed
      *

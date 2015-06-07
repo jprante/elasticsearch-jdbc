@@ -56,8 +56,6 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
 
     protected static JDBCSource source;
 
-    protected static Context context;
-
     public abstract JDBCSource newSource();
 
     public abstract Context newContext();
@@ -134,23 +132,27 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     protected void perform(String resource) throws Exception {
         // perform a single step
         logger.info("before execution");
-        create(resource);
+        Context context = createContext(resource);
         logger.info("execution");
         context.execute();
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
         logger.info("after execution: {}", b);
     }
 
-    protected void create(String resource) throws Exception {
+    protected Context createContext(String resource) throws Exception {
         waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
-        logger.info("creating context");
         Settings settings = ImmutableSettings.settingsBuilder()
                 .loadFromStream("test", in)
-                .build().getAsSettings("jdbc");
-        context = newContext();
+                .put("jdbc.elasticsearch.cluster", getClusterName())
+                .putArray("jdbc.elasticsearch.host", getHosts())
+                .build()
+                .getAsSettings("jdbc");
+        Context context = newContext();
         context.setSettings(settings)
                 .setIngestFactory(createIngestFactory(settings));
+        logger.info("created context {} with cluster name {}", context, getClusterName());
+        return context;
     }
 
     protected void createRandomProducts(String sql, int size)
@@ -285,16 +287,17 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 BulkTransportClient ingest = new BulkTransportClient();
                 Settings clientSettings = ImmutableSettings.settingsBuilder()
-                        .put("cluster.name", settings.get("elasticsearch.cluster", getClusterName()))
+                        .put("cluster.name", settings.get("elasticsearch.cluster"))
                         .putArray("host", getHosts())
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
                         .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
+                        .put("name", "importer") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
                         .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                         .build();
+                logger.info("ingest factory: client settings = {}", clientSettings);
                 ingest.maxActionsPerBulkRequest(maxbulkactions)
                         .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
                         .maxVolumePerBulkRequest(maxvolume)

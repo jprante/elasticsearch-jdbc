@@ -4,7 +4,7 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{ABSOLUTE}][%-5p][%-25c][%t] %m%n"/>
         </Console>
-        <File name="File" fileName="logs/jdbc.log" immediateFlush="false"   append="true">
+        <File name="File" fileName="logs/jdbc.log" immediateFlush="true"  append="true">
             <PatternLayout pattern="[%d{ABSOLUTE}][%-5p][%-25c][%t] %m%n"/>
         </File>
     </appenders>
@@ -12,5 +12,17 @@
         <Root level="info">
             <AppenderRef ref="File" />
         </Root>
+        <Logger name="metrics.source.plain" level="info">
+            <appender-ref ref="Console"/>
+        </Logger>
+        <Logger name="metrics.sink.plain" level="info">
+            <appender-ref ref="Console"/>
+        </Logger>
+        <Logger name="metrics.source.json" level="info">
+            <appender-ref ref="Console"/>
+        </Logger>
+        <Logger name="metrics.sink.json" level="info">
+            <appender-ref ref="Console"/>
+        </Logger>
     </Loggers>
 </configuration>

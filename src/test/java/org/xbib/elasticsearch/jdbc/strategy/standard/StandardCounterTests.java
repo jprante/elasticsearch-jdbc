@@ -17,6 +17,7 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 
 import java.sql.Connection;
@@ -38,10 +39,6 @@ public class StandardCounterTests extends AbstractSinkTest {
     @Parameters({"task1", "sql1", "sql2"})
     public void testJob(String resource, String sql1, String sql2)
             throws Exception {
-
-        // set counter to 0 (may be higher when tests have run)
-        context.resetCounter();
-
         createRandomProductsJob(sql2, 100);
         Connection connection = source.getConnectionForReading();
         ResultSet results = connection.createStatement().executeQuery(sql1);
@@ -66,4 +63,11 @@ public class StandardCounterTests extends AbstractSinkTest {
         assertEquals(count, 0);
     }
 
+    @Override
+    protected Context createContext(String resource) throws Exception {
+        Context context = super.createContext(resource);
+        // set counter to 0, to ensure deletion of documents
+        context.resetCounter();
+        return context;
+    }
 }

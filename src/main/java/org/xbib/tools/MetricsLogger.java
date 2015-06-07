@@ -29,9 +29,13 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class MetricsLogger {
 
-    private final static Logger logger = LogManager.getLogger("metrics.plain");
+    private final static Logger plainsourcelogger = LogManager.getLogger("metrics.source.plain");
 
-    private final static Logger jsonlogger = LogManager.getLogger("metrics.json");
+    private final static Logger plainsinklogger = LogManager.getLogger("metrics.sink.plain");
+
+    private final static Logger jsonsourcelogger = LogManager.getLogger("metrics.source.json");
+
+    private final static Logger jsonsinklogger = LogManager.getLogger("metrics.sink.json");
 
     private final static NumberFormat formatter = NumberFormat.getNumberInstance();
 
@@ -56,10 +60,10 @@ public class MetricsLogger {
                     .field("dps", dps)
                     .field("mbps", mbps)
                     .endObject();
-            jsonlogger.info(builder.string());
+            jsonsinklogger.info(builder.string());
         }
         if (settings.getAsBoolean("metrics.logger.plain", true)) {
-            logger.info("{} = {} ms, submitted = {}, succeeded = {}, failed = {}, {} = {} bytes, {} = {} avg size, {} dps, {} MB/s",
+            plainsinklogger.info("{} = {} ms, submitted = {}, succeeded = {}, failed = {}, {} = {} bytes, {} = {} avg size, {} dps, {} MB/s",
                     FormatUtil.formatDurationWords(elapsed, true, true),
                     elapsed,
                     submitted,
@@ -91,10 +95,10 @@ public class MetricsLogger {
                     .field("dps", dps)
                     .field("mbps", mbps)
                     .endObject();
-            jsonlogger.info(builder.string());
+            jsonsourcelogger.info(builder.string());
         }
         if (settings.getAsBoolean("metrics.logger.plain", true)) {
-            logger.info("count = {}, {} = {} ms, {} = {} bytes, {} = {} avg size, {} dps, {} MB/s",
+            plainsourcelogger.info("totalrows = {}, {} = {} ms, {} = {} bytes, {} = {} avg size, {} dps, {} MB/s",
                     totalrows,
                     FormatUtil.formatDurationWords(elapsed, true, true),
                     elapsed,

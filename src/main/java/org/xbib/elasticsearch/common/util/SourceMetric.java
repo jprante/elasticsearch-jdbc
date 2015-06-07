@@ -18,11 +18,11 @@ package org.xbib.elasticsearch.common.util;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.metrics.CounterMetric;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class SourceMetric {
 
     private long started;
-
-    private Long counter;
 
     private final CounterMetric totalRows = new CounterMetric();
 
@@ -31,6 +31,8 @@ public class SourceMetric {
     private final CounterMetric succeeded = new CounterMetric();
 
     private final CounterMetric failed = new CounterMetric();
+
+    private final AtomicInteger counter = new AtomicInteger();
 
     private CounterMetric currentRows = new CounterMetric();
 
@@ -87,12 +89,16 @@ public class SourceMetric {
         return lastExecutionEnd;
     }
 
-    public void setCounter(Long counter) {
-        this.counter = counter;
+    public void setCounter(int counter) {
+        this.counter.getAndSet(counter);
     }
 
-    public Long getCounter() {
-        return counter;
+    public int getCounter() {
+        return counter.get();
+    }
+
+    public void incCounter() {
+        counter.incrementAndGet();
     }
 
 }

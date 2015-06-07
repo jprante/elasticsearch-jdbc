@@ -101,7 +101,6 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
             logger.warn("no ingest found");
             return;
         }
-
         if (ingest.client() != null && !ingest.client().admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             logger.info("creating index {} with settings = {} and mappings = {}",
                     index,
@@ -121,27 +120,27 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
     @Override
     public synchronized void afterFetch() throws IOException {
         if (ingest == null) {
-            if (context.getIngestFactory() != null) {
-                ingest = context.getIngestFactory().create();
-                ingest.setMetric(metric);
-            }
-        }
-        if (ingest == null) {
             return;
         }
+        logger.debug("afterFetch: flush ingest");
         flushIngest();
+        logger.debug("afterFetch: stop bulk");
         ingest.stopBulk(index);
+        logger.debug("afterFetch: refresh index");
         ingest.refreshIndex(index);
+        logger.debug("afterFetch: before ingest shutdown");
         ingest.shutdown();
+        ingest = null;
+        logger.debug("afterFetch: after ingest shutdown");
     }
 
     @Override
     public synchronized void shutdown() {
-        logger.info("shutdown");
         if (ingest == null) {
             return;
         }
         try {
+            logger.info("shutdown in progress");
             flushIngest();
             ingest.stopBulk(index);
             ingest.shutdown();
@@ -197,6 +196,9 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public void index(IndexableObject object, boolean create) throws IOException {
+        if (ingest == null) {
+            return;
+        }
         if (Strings.hasLength(object.index())) {
             setIndex(object.index());
         }
@@ -229,13 +231,14 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (logger.isTraceEnabled()) {
             logger.trace("adding bulk index action {}", request.source().toUtf8());
         }
-        if (ingest != null) {
-            ingest.bulkIndex(request);
-        }
+        ingest.bulkIndex(request);
     }
 
     @Override
     public void delete(IndexableObject object) {
+        if (ingest == null) {
+            return;
+        }
         if (Strings.hasLength(object.index())) {
             this.index = object.index();
         }
@@ -262,9 +265,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (logger.isTraceEnabled()) {
             logger.trace("adding bulk delete action {}/{}/{}", request.index(), request.type(), request.id());
         }
-        if (ingest != null) {
-            ingest.bulkDelete(request);
-        }
+        ingest.bulkDelete(request);
     }
 
     @Override
@@ -273,7 +274,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
             return;
         }
         ingest.flushIngest();
-        // wait for all outstanding bulk requests before continuing
+        // wait for all outstanding bulk requests before continuing. Estimation is 60 seconds
         try {
             ingest.waitForResponses(TimeValue.timeValueSeconds(60));
         } catch (InterruptedException e) {

@@ -46,16 +46,16 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
         return settings.get("type");
     }
 
-    protected void setIndex(String index) {
-        this.index = index;
+    protected void setIndex(String newIndex) {
+        index = newIndex;
     }
 
     protected String getIndex() {
         return index;
     }
 
-    protected void setConcreteIndex(String concreteIndex) {
-        this.concreteIndex = concreteIndex;
+    protected void setConcreteIndex(String newConcreteIndex) {
+        concreteIndex = newConcreteIndex;
     }
 
     protected String getConcreteIndex() {
@@ -85,19 +85,6 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
     @Override
     protected Importer<T, R, P> cleanup() throws IOException {
         super.cleanup();
-        if (ingest != null) {
-            try {
-                logger.debug("flush");
-                ingest.flushIngest();
-                logger.info("waiting for completing all bulk responses");
-                ingest.waitForResponses(TimeValue.timeValueSeconds(120));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.error(e.getMessage(), e);
-            }
-            ingest.shutdown();
-            logger.info("complete");
-        }
         return this;
     }
 

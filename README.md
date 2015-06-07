@@ -85,9 +85,9 @@ indexing model of Elasticsearch documents.
 
 The importer can fetch data from RDBMS while multithreaded bulk mode ensures high throughput when indexing to Elasticsearch.
 
-## JDBC importer parameters
+## JDBC importer definition file
 
-The general form of a JDBC import specification is
+The general form of a JDBC import specification is a JSON object.
 
 	{
 	    "type" : "jdbc",
@@ -111,8 +111,32 @@ Example:
 	    }
 	}
 
+The importer can either be executed via stdin (for example with echo)
+
+    echo '{
+      ...
+    }' | java \
+		-cp "${lib}/*" \
+		-Dlog4j.configurationFile=${bin}/log4j2.xml \
+		org.xbib.tools.Runner \
+		org.xbib.tools.JDBCImporter
+
+or with explicit file name parameter from command line. Here is an example
+where `statefile.json` is a file which is loaded before execution.
+
+	java \
+		-cp "${lib}/*" \
+		-Dlog4j.configurationFile=${bin}/log4j2.xml \
+		org.xbib.tools.Runner \
+		org.xbib.tools.JDBCImporter \
+		statefile.json
+
+This style is convenient for subsequent execution controlled by the `statefile` parameter
+if `statefile` is set to `statefile.json`.
 
 ### Parameters
+
+Here is the list of parameters for the `jdbc` block in the definition.
 
 `strategy` - the strategy of the JDBC importer, currently implemented: `"standard"`, `"column"`
 
@@ -201,13 +225,13 @@ Quartz cron expression format (see below for syntax)
 
 `interval` - a time value for the delay between two runs (default: not set)
 
-`elasticsearch.cluster` - 
+`elasticsearch.cluster` - Elasticsearch cluster name
 
-`elasticsearch.host` - 
+`elasticsearch.host` - array of Elasticsearch host specifications (host name or `host:port`)
 
-`elasticsearch.port` - 
+`elasticsearch.port` -  port of Elasticsearch host
 
-`elasticsearch.autodiscover` - 
+`elasticsearch.autodiscover` - if `true`, JDBC importer will try to connect to all cluster nodes. Default is `false`
 
 `max_bulk_actions` - the length of each bulk index request submitted (default: 10000)
 
@@ -227,29 +251,37 @@ Quartz cron expression format (see below for syntax)
 
 `type_mapping` - optional mapping for the Elasticsearch index type
 
+`statefile` - name of a file where the JDBC importer reads or writes state information 
+
+`metrics.lastexecutionstart` - the UTC date/time of the begin of the last execution of a single fetch
+
+`metrics.lastexecutionend` - the UTC date/time of the end of the last execution of a single fetch
+
+`metrics.counter` - a counter for metrics, will be incremented after each single fetch
+
+`metrics.enabled` - if `true`, metrics logging is enabled. Default is `false`
+
+`metrics.interval` - the interval between metrics logging. Default is 30 seconds.
+
+`metrics.logger.plain` - if `true`, write metrics log messages in plain text format. Default is `false`
+
+`metrics.logger.json` - if `true`, write metric log messages in JSON format. Default is `false`
+
 ## Overview about the default parameter settings
 
 	{
-        "strategy" : "standard",
-        "schedule" : null,
-        "interval" : 0L,
-        "threadpoolsize" : 4,
-        "max_bulk_actions" : 10000,
-        "max_concurrent_bulk_requests" : 2 * available CPU cores,
-        "max_bulk_volume" : "10m",
-        "max_request_wait" : "60s",
-        "flush_interval" : "5s",
 	    "jdbc" : {
+			"strategy" : "standard",
 	        "url" : null,
 	        "user" : null,
 	        "password" : null,
 	        "sql" : null,
-	        "locale" : Locale.getDefault().toLanguageTag(),
-	        "timezone" : TimeZone.getDefault(),
+	        "locale" : /* equivalent to Locale.getDefault().toLanguageTag() */,
+	        "timezone" : /* equivalent to TimeZone.getDefault() */,
 	        "rounding" : null,
 	        "scale" : 2,
 	        "autocommit" : false,
-	        "fetchsize" : 10, /* MySQL: Integer.MIN */
+	        "fetchsize" : 10, /* if URL contains MySQL JDBC driver URL, this is Integer.MIN */
 	        "max_rows" : 0,
 	        "max_retries" : 3,
 	        "max_retries_wait" : "30s",
@@ -261,10 +293,18 @@ Quartz cron expression format (see below for syntax)
 	        "column_name_map" : null,
 	        "query_timeout" : 1800,
 	        "connection_properties" : null,
+			"schedule" : null,
+			"interval" : 0L,
+			"threadpoolsize" : 1,
 	        "index" : "jdbc",
 	        "type" : "jdbc",
 	        "index_settings" : null,
 	        "type_mapping" : null,
+			"max_bulk_actions" : 10000,
+			"max_concurrent_bulk_requests" : 2 * available CPU cores,
+			"max_bulk_volume" : "10m",
+			"max_request_wait" : "60s",
+			"flush_interval" : "5s"
 	    }
 	}
 
@@ -595,8 +635,7 @@ Example:
 In this example, the DB administrator has prepared product rows and attached a `_job` column to it
 to enumerate the product updates incrementally. The assertion is that Elasticsearch should 
 delete all products from the database after they are indexed successfully. The parameter `$job`
-is a counter. The importer state is saved in a file, so the counter is persisted throughout 
-the lifetime of the cluster.
+is a counter. The importer state is saved in a file, so the counter is persisted.
 
 ## How to select incremental data from a table?
 
@@ -620,7 +659,6 @@ column `mytimestamp`:
             "type" : "my_jdbc_type"
         }
     }
-
 
 ## Stored procedures or callable statements
 
@@ -673,12 +711,67 @@ in callable statement result sets.
 If there is more than one result sets returned by a callable statement,
 the JDBC importer enters a loop and iterates through all result sets.
 
+# How to import from a CSV file?
+
+Importing from a CSV is easy because a CSV JDBC driver is included.
+
+Try something like this
+
+	{
+		"type" : "jdbc",
+		"jdbc" : {
+			"driver" : "org.xbib.jdbc.csv.CsvDriver",
+			"url" : "jdbc:csv:mydatadir?columnTypes=&separator=,",
+			"user" : "",
+			"password" : "",
+			"sql" : "select * from mycsvfile"
+		}
+	}
+
+where
+
+`mydatadir` - path to the directory where the CSV file exists
+
+`mycsvfile` - the name of the file
+
+`columnTypes` - column types will be inferred. Default is `String`, where column types will be all set to  string
+
+`separator` - the column separator
+
+For a full list of the CSV JDBC driver options, see
+https://github.com/jprante/jdbc-driver-csv
+
 # Monitoring the JDBC importer
 
 The JDBC importer writes the state after each execution step into a state file which can be set by the
 parameter `statefile`.
 
-Also, metrics logging can be enabled to watch for the current transfer statistics.
+Also, metrics logging can be enabled to watch for the current transfer statistics. Example:
+
+    "sql" : ...
+    "metrics" : {
+        "enabled" : true
+        "interval" : "1m"
+        "logger" : {
+            "plain" : false,
+            "json" : true
+        }
+    }
+
+This configuration enables metrics logging, sets the metrics logging interval to one minute,
+and switches form plain loggin to JSON logging.
+
+In the `log4j2.xml` configuration file, you can set up how to log. The loggers used for metrics logging are
+
+`metrics.source.plain` - for plain format logging of the source
+
+`metrics.sink.plain` - for plain format logging of the sink
+
+`metrics.source.json` - for JSON format logging of the source
+
+`metrics.sink.json` - for JSON format logging of the sink
+
+See also the parameter documentation above.
 
 # Developer notes
 
@@ -838,8 +931,8 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 8. Start JDBC importer
     ```
-   bin=$JDBC_IMPORTER_HOME/bin
-   lib=$JDBC_IMPORTER_HOME/lib
+    bin=$JDBC_IMPORTER_HOME/bin
+    lib=$JDBC_IMPORTER_HOME/lib
     echo '{
         "type" : "jdbc",
         "jdbc": {

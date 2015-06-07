@@ -29,6 +29,8 @@ import org.xbib.pipeline.PipelineProvider;
 import org.xbib.pipeline.PipelineRequest;
 import org.xbib.pipeline.simple.MetricSimplePipelineExecutor;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -67,12 +69,27 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
 
     @Override
     public Converter<T, R, P> reader(String resourceName, InputStream in) {
-        settings = settingsBuilder().loadFromStream(resourceName, in).build();
+        setSettings(settingsBuilder().loadFromStream(resourceName, in).build());
         return this;
     }
 
     public Converter<T, R, P> setSettings(Settings newSettings) {
         settings = newSettings;
+        String statefile = settings.get("jdbc.statefile");
+        if (statefile != null) {
+            try {
+                File file = new File(statefile);
+                if (file.exists() && file.isFile() && file.canRead()) {
+                    InputStream stateFileInputStream = new FileInputStream(file);
+                    settings = settingsBuilder().put(settings).loadFromStream("statefile", stateFileInputStream).build();
+                    logger.info("loaded state from {}", statefile);
+                } else {
+                    logger.warn("can't read from {}, skipped", statefile);
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
         return this;
     }
 
@@ -189,8 +206,12 @@ public abstract class Converter<T, R extends PipelineRequest, P extends Pipeline
     protected abstract void process(Settings settings) throws Exception;
 
     protected List<Future> schedule(Settings settings) {
-        String[] schedule = settings.getAsArray("schedule");
         List<Future> futures = newLinkedList();
+        if (threadPoolExecutor != null) {
+            logger.info("already scheduled");
+            return futures;
+        }
+        String[] schedule = settings.getAsArray("schedule");
         Long seconds = settings.getAsTime("interval", TimeValue.timeValueSeconds(0)).seconds();
         if (schedule != null && schedule.length > 0) {
             Thread thread = new Thread(this);

@@ -56,6 +56,11 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
+    public MockContext getContext() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     public void beforeFetch() throws Exception {
     }
 

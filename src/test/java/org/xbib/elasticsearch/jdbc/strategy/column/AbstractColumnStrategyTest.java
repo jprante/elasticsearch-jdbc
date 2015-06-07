@@ -157,7 +157,6 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         br.close();
     }
 
-
     protected IngestFactory createIngestFactory(final Settings settings) {
         return new IngestFactory() {
             @Override
@@ -174,7 +173,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
                         .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "feeder") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
+                        .put("name", "importer") // prevents lookup of names.txt, we don't have it
                         .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling

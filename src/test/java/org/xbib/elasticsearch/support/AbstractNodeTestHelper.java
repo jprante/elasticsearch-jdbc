@@ -67,11 +67,11 @@ public abstract class AbstractNodeTestHelper extends Assert {
     private Map<String, Client> clients = newHashMap();
 
     protected void setClusterName() {
-        this.cluster = "test-jdbc-cluster-" + NetworkUtils.getLocalAddress().getHostName() + "-" + clusterCount.incrementAndGet();
+        this.cluster = "test-jdbc-cluster-" + NetworkUtils.getLocalAddress().getHostName() + "-" + clusterCount.getAndIncrement();
     }
 
     protected String getClusterName() {
-        return cluster;
+        return this.cluster;
     }
 
     private List<String> hosts;
@@ -136,7 +136,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
     }
 
     public void waitForYellow(String id) throws IOException {
-        logger.info("wait for healthy cluster...");
+        logger.info("wait for healthy cluster {} ...", cluster);
         ClusterHealthResponse clusterHealthResponse = client(id).admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet();
         if (clusterHealthResponse.isTimedOut()) {
             throw new IOException("error, cluster health is " + clusterHealthResponse.getStatus().name());
@@ -185,10 +185,12 @@ public abstract class AbstractNodeTestHelper extends Assert {
     }
 
     public void stopNodes() {
+        logger.info("stopping clients");
         for (Client client : clients.values()) {
             client.close();
         }
         clients.clear();
+        logger.info("stopping and closing nodes");
         for (Node node : nodes.values()) {
             node.stop();
             node.close();

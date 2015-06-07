@@ -41,7 +41,7 @@ public class StandardScriptTests extends AbstractSinkTest {
     @Test
     @Parameters({"task1"})
     public void testSimpleTaskOnce(String resource) throws Exception {
-        create(resource);
+        Context context = createContext(resource);
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
         logger.info("after wait for: {}", b);
     }

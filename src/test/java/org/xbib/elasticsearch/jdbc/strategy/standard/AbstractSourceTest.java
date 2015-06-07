@@ -17,8 +17,6 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.settings.Settings;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -27,8 +25,6 @@ import org.testng.annotations.Parameters;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.IngestFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -51,8 +47,6 @@ public abstract class AbstractSourceTest extends Assert {
     protected final static Logger logger = LogManager.getLogger("test.source");
 
     protected static JDBCSource source;
-
-    protected static Context context;
 
     public abstract JDBCSource newSource();
 
@@ -122,15 +116,16 @@ public abstract class AbstractSourceTest extends Assert {
         source.closeWriting();
     }
 
-    protected void create(String resource) throws Exception {
+    /*protected Context createContext(String resource) throws Exception {
         InputStream in = getClass().getResourceAsStream(resource);
         logger.info("creating context");
         Settings settings = ImmutableSettings.settingsBuilder()
                 .loadFromStream("test", in)
                 .build().getAsSettings("jdbc");
-        context = newContext();
+        Context context = newContext();
         context.setSettings(settings);
-    }
+        return context;
+    }*/
 
     protected void createRandomProducts(String sql, int size)
             throws SQLException {
@@ -239,27 +234,6 @@ public abstract class AbstractSourceTest extends Assert {
             }
         }
         br.close();
-    }
-
-    public boolean waitFor(Context context, Context.State state, long millis) throws InterruptedException {
-        long t0 = System.currentTimeMillis();
-        boolean found;
-        do {
-            found = state == context.getState();
-            if (!found) {
-                Thread.sleep(100L);
-            }
-        } while (!found && System.currentTimeMillis() - t0 < millis);
-        return found;
-    }
-
-    protected IngestFactory createIngestFactory(final Settings settings) {
-        return new IngestFactory() {
-            @Override
-            public Ingest create() throws IOException {
-                return null;
-            }
-        };
     }
 
 }

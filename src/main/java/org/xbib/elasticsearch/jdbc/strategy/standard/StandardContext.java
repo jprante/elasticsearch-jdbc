@@ -18,7 +18,6 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.collect.ImmutableMap;
-import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.joda.FormatDateTimeFormatter;
 import org.elasticsearch.common.joda.Joda;
 import org.elasticsearch.common.joda.time.DateTime;
@@ -28,7 +27,6 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.elasticsearch.script.ScriptService;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.common.util.SourceMetric;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
@@ -42,6 +40,7 @@ import org.xbib.elasticsearch.support.client.Metric;
 import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 import org.xbib.tools.MetricsLogger;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -103,13 +102,28 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext setSettings(Settings settings) {
         this.settings = settings;
+        ImmutableMap<String,String> map = settings.getAsMap();
+        if (map.containsKey("metrics.lastexecutionstart")) {
+            DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
+            sourceMetric.setLastExecutionStart(lastexecutionstart);
+        }
+        if (map.containsKey("metrics.lastexecutionend")) {
+            DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
+            sourceMetric.setLastExecutionEnd(lastexecutionend);
+        }
+        if (map.containsKey("metrics.counter")) {
+            int counter = Integer.parseInt(settings.get("metrics.counter"));
+            if (counter > 0) {
+                sourceMetric.setCounter(counter);
+            }
+        }
         if (settings.getAsBoolean("metrics.enabled",false) && futures.isEmpty()) {
             Thread thread = new MetricsThread();
             ScheduledThreadPoolExecutor scheduledthreadPoolExecutor =
                     new ScheduledThreadPoolExecutor(1);
             futures.add(scheduledthreadPoolExecutor.scheduleAtFixedRate(thread, 0L,
                     settings.getAsTime("metrics.interval", TimeValue.timeValueSeconds(30)).seconds(), TimeUnit.SECONDS));
-            logger.debug("metrics thread started");
+            logger.info("metrics thread started");
         }
         return this;
     }
@@ -132,18 +146,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext setSource(S source) {
         this.source = source;
-        if (settings.get("metrics.lastexecutionstart") != null) {
-            DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
-            sourceMetric.setLastExecutionStart(lastexecutionstart);
-        }
-        if (settings.get("metrics.lastexecutionend") != null) {
-            DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
-            sourceMetric.setLastExecutionEnd(lastexecutionend);
-        }
-        if (settings.get("metrics.count") != null) {
-            Long counter = Long.parseLong(settings.get("metrics.count"));
-            sourceMetric.setCounter(counter);
-        }
         source.setMetric(sourceMetric);
         return this;
     }
@@ -190,7 +192,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             state = State.AFTER_FETCH;
             afterFetch();
             state = State.IDLE;
-            sourceMetric.setCounter(sourceMetric.getCounter() != null ? sourceMetric.getCounter() + 1 : 0);
         }
     }
 
@@ -203,8 +204,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         Sink sink = createSink();
         S source = createSource();
         prepareContext(source, sink);
-        logger.debug("before fetch: ingestfactory = {} source = {}, sink = {}",
-                ingestFactory, source, sink);
         getSink().beforeFetch();
         getSource().beforeFetch();
     }
@@ -240,7 +239,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     @Override
     public void shutdown() {
-        logger.info("shutdown");
+        logger.info("shutdown in progress");
         for (Future future : futures) {
             future.cancel(true);
         }
@@ -258,13 +257,14 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 logger.error(e.getMessage(), e);
             }
         }
+        logger.info("shutdown completed");
         writeState();
     }
 
     @Override
     public void resetCounter() {
         if (sourceMetric != null) {
-            sourceMetric.setCounter(0L);
+            sourceMetric.setCounter(0);
         }
     }
 
@@ -274,19 +274,34 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             return;
         }
         try {
-            Writer writer = new FileWriter(statefile);
-            FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
-            ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
-                    .put(settings)
-                    .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
-                    .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()))
-                    .put("metrics.counter", sourceMetric.getCounter());
-            XContentBuilder builder = jsonBuilder().prettyPrint()
-                    .map(settingsBuilder.build().getAsStructuredMap());
-            writer.write(builder.string());
-            writer.flush();
-            writer.close();
-            logger.info("state persisted to {}", statefile);
+            File file = new File(statefile);
+            if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+            if (!file.exists() || file.canWrite()) {
+                Writer writer = new FileWriter(statefile);
+                FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
+                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
+                        .put(settings)
+                        .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
+                        .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()))
+                        .put("metrics.counter", sourceMetric.getCounter());
+                XContentBuilder builder = jsonBuilder().prettyPrint()
+                        .startObject()
+                        .field("type", "jdbc")
+                        .field("jdbc")
+                        .map(settingsBuilder.build().getAsStructuredMap())
+                        .endObject();
+                writer.write(builder.string());
+                writer.close();
+                if (file.length() > 0) {
+                    logger.info("state persisted to {}", statefile);
+                } else {
+                    logger.error("state file truncated!");
+                }
+            } else {
+                logger.warn("can't write to {}", statefile);
+            }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
@@ -432,14 +447,14 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     public void log() {
         try {
-            if (metricsLogger != null && source != null) {
+            if (source != null) {
                 metricsLogger.writeMetrics(settings, source.getMetric());
             }
-            if (metricsLogger != null && sink != null) {
+            if (sink != null) {
                 metricsLogger.writeMetrics(settings, sink.getMetric());
             }
         } catch (Exception e) {
-            // ignore
+            // ignore log errors
         }
     }
 
