@@ -741,14 +741,35 @@ where
 For a full list of the CSV JDBC driver options, see
 https://github.com/jprante/jdbc-driver-csv
 
-# Monitoring the JDBC importer
+# Persisted state
 
 The JDBC importer writes the state after each execution step into a state file which can be set by the
-parameter `statefile`.
+parameter `statefile`, see above in the parameter documentation. Default setting is not writing 
+to state file.
 
-Also, metrics logging can be enabled to watch for the current transfer statistics. Example:
+Example:
 
-    "sql" : ...
+    "sql" : ...,
+    "statefile" : "statefile.json",
+    ...
+
+You can use the `statefile` as input for a next JDBC importer invocation, once it is saved. 
+This is useful if you have to restart the JDBC importer. Because the statefile is written
+in prettified JSON, it is also possible to adjust the 
+settings in the statefile if you need to synchronize with the JDBC source.
+
+Note: there must be enough space on disk to write the state file. If disk is full,
+JDBC importer will write zero length files and give error messages in the importer log.
+
+# Monitoring the JDBC importer
+
+Metrics logging can be enabled to watch for the current transfer statistics. 
+
+Example:
+
+    "sql" : ...,
+    "schedule" : ...,
+    "statefile" : "statefile.json",
     "metrics" : {
         "enabled" : true
         "interval" : "1m"
