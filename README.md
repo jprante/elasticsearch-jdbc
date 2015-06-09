@@ -41,20 +41,21 @@ about what happened.
 
 | Release date | Importer version | Elasticsearch version |
 | -------------| -----------------| ----------------------|
-| Jun  2015    | 1.5.2.0          | 1.5.2                 |
+| Jun 9 2015   | 1.6.0.0          | 1.6.0                 |
+| Jun   2015   | 1.5.2.0          | 1.5.2                 |
 
 
 ## Installation
 
 - download the JDBC importer distribution
 
-  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.5.2.0/elasticsearch-jdbc-1.5.2.0-dist.zip`
+  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.6.0.0/elasticsearch-jdbc-1.6.0.0-dist.zip`
 
 - unpack     
-    `unzip elasticsearch-jdbc-1.5.2.0-dist.zip`
+    `unzip elasticsearch-jdbc-1.6.0.0-dist.zip`
 
 - go to the unpacked directory (we call it $JDBC_IMPORTER_HOME)
-    `cd elasticsearch-jdbc-1.5.2.0`
+    `cd elasticsearch-jdbc-1.6.0.0`
 
 - if you do not find the JDBC driver jar in the `lib` directory, download it from your vendor's site 
     and put the driver jar into the `lib` folder
@@ -880,9 +881,9 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 3. Install JDBC importer
 
-    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.5.2.0/elasticsearch-jdbc-1.5.2.0-dist.zip`
+    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.6.0.0/elasticsearch-jdbc-1.6.0.0-dist.zip`
     
-   (update version 1.5.2.0 respectively)
+   (update version respectively)
 
 4. Download PostgreSQL JDBC driver
 
@@ -937,9 +938,9 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 3. Install JDBC importer
 
-    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.5.2.0/elasticsearch-jdbc-1.5.2.0-dist.zip`
+    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.6.0.0/elasticsearch-jdbc-1.6.0.0-dist.zip`
     
-   (update version 1.5.2.0 respectively)
+   (update version respectively)
 
 4. Download SQL Server JDBC driver from [the vendor](http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx)
 
