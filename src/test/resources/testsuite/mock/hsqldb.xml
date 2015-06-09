@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite" verbose="1">
+<suite name="Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="stopurl" value="jdbc:hsqldb:mem:test"/>
     <parameter name="driver" value="org.hsqldb.jdbcDriver"/>
     <parameter name="user" value="sa"/>
     <parameter name="password" value=""/>
 
-    <test name="RiverTests">
+    <test name="Tests">
         <parameter name="create" value="hsqldb/create-ordertables.sql"/>
         <parameter name="delete" value="hsqldb/delete-ordertables.sql"/>
         <parameter name="sql1"
@@ -22,7 +22,7 @@
         <parameter name="sql5"
                    value="select 'product' as &quot;_index&quot;, orders.department as &quot;_id&quot;, orders.product as &quot;orders.product&quot; from orders"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.mock.RiverMockTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.mock.MockTests"/>
         </classes>
     </test>
 

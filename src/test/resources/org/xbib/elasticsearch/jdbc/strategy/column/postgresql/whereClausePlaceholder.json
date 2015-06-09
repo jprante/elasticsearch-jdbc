@@ -1,0 +1,15 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "strategy" : "column",
+        "url" : "jdbc:postgresql://localhost:5432/test",
+        "user" : "test",
+        "password" : "test",
+        "sql": "SELECT \"id\" AS \"_id\", \"id\", \"name\" FROM \"products\" WHERE 1=1 AND $where",
+        "column_updated_at": "updated_at",
+        "column_created_at": "created_at",
+        "column_deleted_at": "deleted_at",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

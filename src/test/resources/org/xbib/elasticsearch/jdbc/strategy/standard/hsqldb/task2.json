@@ -1,0 +1,11 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:hsqldb:mem:test",
+        "user" : "sa",
+        "password" : "",
+        "sql" : "select * from products",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

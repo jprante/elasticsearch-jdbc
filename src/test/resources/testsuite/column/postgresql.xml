@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite (column strategy - postgresql)" verbose="1">
+<suite name="JDBC Test Suite (column strategy - postgresql)" verbose="1">
     <parameter name="starturl" value="jdbc:postgresql://localhost:5432/test"/>
     <parameter name="stopurl" value="jdbc:postgresql://localhost:5432/test"/>
     <parameter name="user" value="test"/>
     <parameter name="password" value="test"/>
 
-    <test name="River Data Tests (column strategy - postgresql)">
+    <test name="Sink Tests (column strategy - postgresql)">
         <parameter name="create" value="postgresql/create-producttables.sql"/>
         <parameter name="delete" value="postgresql/delete-producttables.sql"/>
         <parameter name="river-existedWhereClause" value="postgresql/river-existedWhereClause.json"/>
@@ -21,8 +21,8 @@
         <parameter name="sqlUpdate"
                     value="update &quot;products&quot; set &quot;deleted_at&quot;=? where &quot;id&quot;=?" />
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategySourceTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategyContextTests"/>
         </classes>
     </test>
 

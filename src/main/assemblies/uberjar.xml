@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<assembly>
+    <id>uberjar</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+            <includes>
+                <include>org.xbib.elasticsearch.importer:elasticsearch-jdbc</include>
+                <include>org.xbib.elasticsearch.plugin:elasticsearch-support</include>
+                <include>org.xbib.jdbc</include>
+                <include>org.elasticsearch:elasticsearch</include>
+                <include>org.apache.lucene:lucene-core</include>
+                <include>org.apache.logging.log4j</include>
+                <include>org.slf4j:slf4j-api</include>
+                <include>com.spatial4j:spatial4j</include>
+                <include>com.vividsolutions:jts</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

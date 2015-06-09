@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite (simple strategy - derby)" verbose="1">
+<suite name="JDBC Test Suite (simple strategy - derby)" verbose="1">
     <parameter name="starturl" value="jdbc:derby:memory:myDB;create=true"/>
     <parameter name="stopurl" value="jdbc:derby:memory:myDB;drop=true"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="River Tests (mock strategy - derby)">
+    <test name="Tests (mock strategy - derby)">
         <parameter name="create" value="derby/create-ordertables.sql"/>
         <parameter name="delete" value="derby/delete-ordertables.sql"/>
         <parameter name="sql1"
@@ -21,7 +21,7 @@
         <parameter name="sql5"
                    value="select &apos;product&apos; as &quot;_index&quot;, &quot;orders&quot;.&quot;department&quot; as &quot;_id&quot;, &quot;orders&quot;.&quot;product&quot; as &quot;orders.product&quot; from &quot;orders&quot; "/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.mock.RiverMockTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.mock.MockTests"/>
         </classes>
     </test>
 

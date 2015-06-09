@@ -1,0 +1,11 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:sqlite:file::memory:?cache=shared",
+        "user" : "",
+        "password" : "",
+        "sql" : "select * from \"orders\"",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

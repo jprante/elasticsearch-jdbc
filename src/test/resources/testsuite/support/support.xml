@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="JDBC River Test Suite (support)" verbose="1">
+<suite name="Test Suite (support)" verbose="1">
 
     <test name="Support Tests">
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.support.ValuesTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.support.ValueListenerTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.support.TimeWindowedTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.util.IndexableObjectTests"/>
+            <class name="org.xbib.elasticsearch.common.util.ValuesTests"/>
+            <class name="org.xbib.elasticsearch.common.util.ValueListenerTests"/>
+            <class name="org.xbib.elasticsearch.common.util.SQLCommandTests"/>
+            <class name="org.xbib.elasticsearch.common.util.TimeWindowedTests"/>
         </classes>
     </test>
 

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Test Suite (standard strategy - h2)" verbose="1">
+    <parameter name="starturl" value="jdbc:h2:./target/test"/>
+    <parameter name="stopurl" value="jdbc:h2:./target/test"/>
+    <parameter name="user" value=""/>
+    <parameter name="password" value=""/>
+
+    <test name="Source Test (standard strategy - h2)">
+        <parameter name="create" value="h2/create-ordertables.sql"/>
+        <parameter name="delete" value="h2/delete-ordertables.sql"/>
+        <parameter name="sql1" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql2" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql3" value="select * from &quot;products&quot; where &quot;amount&quot; is NULL"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="Sink Tests (standard strategy - h2)">
+        <parameter name="create" value="h2/create-ordertables.sql"/>
+        <parameter name="delete" value="h2/delete-ordertables.sql"/>
+        <parameter name="task1" value="h2/task1.json"/>
+        <parameter name="task2" value="h2/task2.json"/>
+        <parameter name="task3" value="h2/task3.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
+        </classes>
+    </test>
+
+    <test name="Job Tests (standard strategy - h2)">
+        <parameter name="create" value="h2/create-jobtables.sql"/>
+        <parameter name="delete" value="h2/delete-jobtables.sql"/>
+        <parameter name="task1" value="h2/jobtask1.json"/>
+        <parameter name="sql1" value="select count(*) from &quot;products&quot;"/>
+        <parameter name="sql2"
+                   value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
+        </classes>
+    </test>
+
+    <test name="Schedule Tests (standard strategy - h2)">
+        <parameter name="create" value="h2/create-ordertables.sql"/>
+        <parameter name="delete" value="h2/delete-ordertables.sql"/>
+        <parameter name="task6" value="h2/task6.json"/>
+        <parameter name="task7" value="h2/task7.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <parameter name="sql2"
+                   value="insert into &quot;logs&quot; (&quot;modified&quot;, &quot;message&quot;) values(?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests"/>
+        </classes>
+    </test>
+
+
+</suite>

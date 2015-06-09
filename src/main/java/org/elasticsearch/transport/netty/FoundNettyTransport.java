@@ -144,7 +144,7 @@ public class FoundNettyTransport extends NettyTransport {
     }
 
     @Override
-    void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         if (e.getCause() instanceof SSLException) {
             return;
         }

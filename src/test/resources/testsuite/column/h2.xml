@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite (column strategy - h2)" verbose="1">
+<suite name="JDBC Test Suite (column strategy - h2)" verbose="1">
     <parameter name="starturl" value="jdbc:h2:./target/test"/>
     <parameter name="stopurl" value="jdbc:h2:./target/test"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="River data tests (column strategy - h2)">
+    <test name="Sink tests (column strategy - h2)">
         <parameter name="create" value="h2/create-producttables.sql"/>
         <parameter name="delete" value="h2/delete-producttables.sql"/>
-        <parameter name="river-existedWhereClause" value="h2/river-existedWhereClause.json"/>
-        <parameter name="river-sqlForTestDeletions" value="h2/river-sqlForTestDeletions.json"/>
-        <parameter name="river-sqlForTestDeletionsAndWherePlaceholder" value="h2/river-sqlForTestDeletionsAndWherePlaceholder.json"/>
-        <parameter name="river-whereClausePlaceholder" value="h2/river-whereClausePlaceholder.json"/>
-        <parameter name="river-existedWhereClauseWithOverlap" value="h2/river-existedWhereClauseWithOverlap.json"/>
-        <parameter name="river-sqlparams" value="h2/river-sqlparams.json"/>
+        <parameter name="existedWhereClause" value="h2/existedWhereClause.json"/>
+        <parameter name="sqlForTestDeletions" value="h2/sqlForTestDeletions.json"/>
+        <parameter name="sqlForTestDeletionsAndWherePlaceholder" value="h2/sqlForTestDeletionsAndWherePlaceholder.json"/>
+        <parameter name="whereClausePlaceholder" value="h2/whereClausePlaceholder.json"/>
+        <parameter name="existedWhereClauseWithOverlap" value="h2/existedWhereClauseWithOverlap.json"/>
+        <parameter name="sqlparams" value="h2/sqlparams.json"/>
         <parameter name="sqlInsert"
                     value="insert into &quot;products&quot; (&quot;id&quot;, &quot;name&quot;, &quot;amount&quot;, &quot;price&quot;, &quot;created_at&quot;, &quot;updated_at&quot;, &quot;deleted_at&quot;) VALUES(?,?,?,?,?,?,?)" />
         <parameter name="sqlUpdate"
                     value="update &quot;products&quot; set &quot;deleted_at&quot;=? where &quot;id&quot;=?" />
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategySourceTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategyContextTests"/>
         </classes>
     </test>
 </suite>

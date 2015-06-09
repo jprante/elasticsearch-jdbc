@@ -1,0 +1,11 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:postgresql://localhost:5432/test",
+        "user" : "test",
+        "password" : "test",
+        "sql" : "select * from \"products\"",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

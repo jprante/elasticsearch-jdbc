@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite" verbose="1">
+<suite name="Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:oracle:thin:@//127.0.0.1:1521/test?autoReconnect=true"/>
     <parameter name="stopurl" value="jdbc:oracle:thin:@//127.0.0.1:1521/test"/>
     <parameter name="driver" value="oracle.jdbc.driver.OracleDriver"/>
     <parameter name="user" value="test"/>
     <parameter name="password" value="test"/>
 
-    <test name="River Tests">
+    <test name="Tests">
         <parameter name="create" value="oracle/create-ordertables.sql"/>
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
         <parameter name="sql1"
@@ -22,7 +22,7 @@
         <parameter name="sql5"
                    value="select 'product' as &quot;_index&quot;, &quot;orders&quot;.&quot;department&quot; as &quot;_id&quot;, &quot;orders&quot;.&quot;product&quot; as &quot;orders.product&quot; from &quot;orders&quot;"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.mock.RiverMockTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.mock.MockTests"/>
         </classes>
     </test>
 

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Test Suite" verbose="1">
+    <parameter name="starturl" value="jdbc:sqlite:file::memory:?cache=shared"/>
+    <parameter name="stopurl" value="jdbc:sqlite:file::memory:?cache=shared"/>
+    <parameter name="user" value=""/>
+    <parameter name="password" value=""/>
+
+    <test name="Source Tests">
+        <parameter name="create" value="sqlite/create-ordertables.sql"/>
+        <parameter name="delete" value="sqlite/delete-ordertables.sql"/>
+        <parameter name="sql1" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql2" value="select * from &quot;orders&quot;"/>
+        <parameter name="sql3" value="select * from &quot;products&quot; where &quot;amount&quot; is NULL"/>
+        <parameter name="sql4" value="select pay_by_quarter from &quot;sal_emp&quot;"/>
+        <parameter name="res1" value="{pay_by_quarter=10000}"/>
+        <parameter name="res2" value="{pay_by_quarter=[20000,25000]}"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests"/>
+        </classes>
+    </test>
+
+    <test name="Sink Tests">
+        <parameter name="create" value="sqlite/create-ordertables.sql"/>
+        <parameter name="delete" value="sqlite/delete-ordertables.sql"/>
+        <parameter name="task1" value="sqlite/task1.json"/>
+        <parameter name="task2" value="sqlite/task2.json"/>
+        <parameter name="task3" value="sqlite/task3.json"/>
+        <parameter name="sql1"
+                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
+        </classes>
+    </test>
+
+    <test name="Job Tests">
+        <parameter name="create" value="sqlite/create-jobtables.sql"/>
+        <parameter name="delete" value="sqlite/delete-jobtables.sql"/>
+        <parameter name="task1" value="sqlite/jobtask1.json"/>
+        <parameter name="sql1" value="select count(*) from &quot;products&quot;"/>
+        <parameter name="sql2"
+                   value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
+        <classes>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
+        </classes>
+    </test>
+
+</suite>

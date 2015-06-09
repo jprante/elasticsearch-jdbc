@@ -1,0 +1,13 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "schedule" : "0/5 0-59 0-23 ? * *",
+        "url" : "jdbc:h2:./target/test",
+        "user" : "",
+        "password" : "",
+        "sql" : "select * from \"products\"",
+        "bulk_flush_interval" : "1s",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:h2:./target/test",
+        "user" : "",
+        "password" : "",
+        "sql" : "select * from \"products\"",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

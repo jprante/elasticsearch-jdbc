@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite" verbose="1">
+<suite name="Test Suite" verbose="1">
     <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="driver" value="com.mysql.jdbc.Driver"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="River Source Data Tests">
+    <test name="Source Data Tests">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1"
@@ -22,7 +22,7 @@
         <parameter name="sql5"
                    value="select 'product' as &quot;_index&quot;, orders.department as &quot;_id&quot;, orders.product as &quot;orders.product&quot; from orders"/>
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.mock.RiverMockTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.mock.MockTests"/>
         </classes>
     </test>
 

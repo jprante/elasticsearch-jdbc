@@ -1,0 +1,23 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:hsqldb:mem:test",
+        "user" : "sa",
+        "password" : "",
+        "sql" : "select * from products",
+        "maxrows" : 50,
+        "index" : "my_index",
+        "type" : "my_type",
+        "index_settings" : {
+            "index" : {
+                "number_of_shards" : 2
+            }
+        },
+        "type_mapping" : {
+            "my_type" : {
+                "date_detection" : false,
+                "_timestamp" : { "enabled" : true, "store" : true }
+            }
+        }
+    }
+}

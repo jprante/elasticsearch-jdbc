@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="River Test Suite (column strategy - mysql)" verbose="1">
+<suite name="JDBC Test Suite (column strategy - mysql)" verbose="1">
     <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="user" value=""/>
     <parameter name="password" value=""/>
 
-    <test name="River data tests (column strategy - mysql)">
+    <test name="Sink tests (column strategy - mysql)">
         <parameter name="create" value="mysql/create-producttables.sql"/>
         <parameter name="delete" value="mysql/delete-producttables.sql"/>
         <parameter name="river-existedWhereClause" value="mysql/river-existedWhereClause.json"/>
@@ -21,8 +21,8 @@
         <parameter name="sqlUpdate"
                     value="update products set deleted_at=? where id=?" />
         <classes>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverSourceTests"/>
-            <class name="org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlowTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategySourceTests"/>
+            <class name="org.xbib.elasticsearch.jdbc.strategy.column.ColumnStrategyContextTests"/>
         </classes>
     </test>
 

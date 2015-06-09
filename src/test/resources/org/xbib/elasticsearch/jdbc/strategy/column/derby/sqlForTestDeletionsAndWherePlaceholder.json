@@ -1,0 +1,15 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "strategy" : "column",
+        "url" : "jdbc:derby:memory:myDB",
+        "user" : "",
+        "password" : "",
+        "sql": "SELECT \"id\" AS \"_id\", \"id\", \"name\" FROM \"products\" WHERE $where AND 1=1",
+        "column_updated_at": "updated_at",
+        "column_created_at": "created_at",
+        "column_deleted_at": "deleted_at",
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

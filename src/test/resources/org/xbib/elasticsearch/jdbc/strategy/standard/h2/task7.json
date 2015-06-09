@@ -1,0 +1,19 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "schedule" : "0/5 0-59 0-23 ? * *",
+        "timezone" : "Asia/Jerusalem",
+        "locale" : "iw_IL",
+        "url" : "jdbc:h2:./target/test",
+        "user" : "",
+        "password" : "",
+        "sql" : [
+            {
+               "statement" : "select \"message\" from \"logs\" where {fn timestampdiff(SQL_TSI_HOUR, \"modified\" ,?)} > 0",
+               "parameter" : [ "$now" ]
+            }
+        ],
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

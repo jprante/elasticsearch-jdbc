@@ -5,7 +5,7 @@
 
     <test name="Cron Tests">
         <classes>
-            <class name="org.xbib.cron.CronTest"/>
+            <class name="org.xbib.elasticsearch.common.cron.CronTest"/>
         </classes>
     </test>
 

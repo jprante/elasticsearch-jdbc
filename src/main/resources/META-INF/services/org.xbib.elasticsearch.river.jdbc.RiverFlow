@@ -1,2 +1,0 @@
-org.xbib.elasticsearch.river.jdbc.strategy.simple.SimpleRiverFlow
-org.xbib.elasticsearch.river.jdbc.strategy.column.ColumnRiverFlow

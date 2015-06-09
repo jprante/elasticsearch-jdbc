@@ -5,16 +5,16 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.xbib.elasticsearch.plugin</groupId>
-    <artifactId>elasticsearch-river-jdbc</artifactId>
-    <version>1.5.0.0</version>
+    <groupId>org.xbib.elasticsearch.importer</groupId>
+    <artifactId>elasticsearch-jdbc</artifactId>
+    <version>1.6.0.0</version>
 
     <packaging>jar</packaging>
 
-    <name>elasticsearch-river-jdbc</name>
-    <description>JDBC River for Elasticsearch</description>
+    <name>elasticsearch-jdbc</name>
+    <description>JDBC importer for Elasticsearch</description>
 
-    <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
+    <url>http://github.com/jprante/elasticsearch-jdbc</url>
 
     <inceptionYear>2012</inceptionYear>
 
@@ -35,14 +35,14 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</connection>
-        <developerConnection>scm:git:git@github.com:jprante/elasticsearch-river-jdbc.git</developerConnection>
-        <url>http://github.com/jprante/elasticsearch-river-jdbc</url>
+        <connection>scm:git:git@github.com:jprante/elasticsearch-jdbc.git</connection>
+        <developerConnection>scm:git:git@github.com:jprante/elasticsearch-jdbc.git</developerConnection>
+        <url>http://github.com/jprante/elasticsearch-jdbc</url>
     </scm>
 
     <issueManagement>
         <system>Github Issue Tracker</system>
-        <url>https://github.com/jprante/elasticsearch-river-jdbc/issues</url>
+        <url>https://github.com/jprante/elasticsearch-jdbc/issues</url>
     </issueManagement>
 
     <distributionManagement>
@@ -72,7 +72,8 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
-        <elasticsearch.version>1.5.0</elasticsearch.version>
+        <elasticsearch.version>1.6.0</elasticsearch.version>
+        <org.xbib.elasticsearch.support.version>1.6.0.0</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -83,7 +84,55 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.xbib.elasticsearch.plugin</groupId>
+            <artifactId>elasticsearch-support</artifactId>
+            <version>${org.xbib.elasticsearch.support.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.spatial4j</groupId>
+            <artifactId>spatial4j</artifactId>
+            <version>0.4.1</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <version>1.13</version>
+            <type>jar</type>
+            <scope>compile</scope>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+            <type>jar</type>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.2</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.2</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.xbib.jdbc</groupId>
             <artifactId>jdbc-driver-csv</artifactId>
@@ -91,28 +140,12 @@
             <type>jar</type>
             <scope>runtime</scope>
         </dependency>
-
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.8.8</version>
+            <version>6.8.21</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.1</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -123,22 +156,6 @@
                 <version>2.6</version>
             </extension>
         </extensions>
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>es-plugin.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>es-plugin.properties</exclude>
-                </excludes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -161,17 +178,26 @@
                         <fileset>
                             <directory>data</directory>
                         </fileset>
+                        <fileset>
+                            <directory>lib</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>logs</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>dist</directory>
+                        </fileset>
                     </filesets>
                 </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.18.1</version>
+                <version>2.17</version>
                 <configuration>
                     <properties>
                         <property>
                             <name>listener</name>
-                            <value>org.xbib.elasticsearch.river.jdbc.Listener</value>
+                            <value>org.xbib.elasticsearch.support.TestListener</value>
                         </property>
                     </properties>
                 </configuration>
@@ -190,13 +216,12 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.5.4</version>
                 <configuration>
-                    <outputDirectory>${project.build.directory}/releases/</outputDirectory>
+                    <outputDirectory>${basedir}/lib</outputDirectory>
                     <descriptors>
-                        <descriptor>${basedir}/src/main/assemblies/plugin.xml</descriptor>
+                        <descriptor>${basedir}/src/main/assemblies/uberjar.xml</descriptor>
                     </descriptors>
-                    <appendAssemblyId>true</appendAssemblyId>
                 </configuration>
                 <executions>
                     <execution>
@@ -215,21 +240,56 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.2</version>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>validate</phase>
+                        <id>copy</id>
+                        <phase>prepare-package</phase>
                         <goals>
-                            <goal>create</goal>
+                            <goal>copy</goal>
                         </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.h2database</groupId>
+                                    <artifactId>h2</artifactId>
+                                    <version>1.4.181</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.hsqldb</groupId>
+                                    <artifactId>hsqldb</artifactId>
+                                    <version>2.3.2</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>mysql</groupId>
+                                    <artifactId>mysql-connector-java</artifactId>
+                                    <version>5.1.33</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.postgresql</groupId>
+                                    <artifactId>postgresql</artifactId>
+                                    <version>9.3-1102-jdbc41</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.derby</groupId>
+                                    <artifactId>derby</artifactId>
+                                    <version>10.11.1.1</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.xbib.jdbc</groupId>
+                                    <artifactId>jdbc-driver-csv</artifactId>
+                                    <version>1.0.0</version>
+                                    <outputDirectory>${basedir}/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <doCheck>false</doCheck>
-                    <doUpdate>false</doUpdate>
-                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
@@ -266,7 +326,7 @@
             <plugin>
                 <groupId>com.github.github</groupId>
                 <artifactId>site-maven-plugin</artifactId>
-                <version>0.10</version>
+                <version>0.11</version>
                 <configuration>
                     <message>Building site for ${project.version}</message>
                 </configuration>
@@ -297,7 +357,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>2.18.1</version>
+                <version>2.17</version>
             </plugin>
         </plugins>
     </reporting>
@@ -367,7 +427,7 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/derby.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/derby.xml</suiteXmlFile>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/derby.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
@@ -402,7 +462,7 @@
                                  Has to be investigated.
                                 -->
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/h2.xml</suiteXmlFile>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/h2.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/h2.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>
@@ -431,7 +491,7 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/hsqldb.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/hsqldb.xml</suiteXmlFile>
                                 <suiteXmlFile>${basedir}/src/test/resources/testsuite/column/hsqldb.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
@@ -461,7 +521,7 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/mysql.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/mysql.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>
@@ -490,7 +550,7 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/postgresql.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/postgresql.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>
@@ -520,7 +580,7 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/sqlite.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/sqlite.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>
@@ -551,7 +611,7 @@
                             </systemPropertyVariables>
                             <useSystemClassLoader>false</useSystemClassLoader>
                             <suiteXmlFiles>
-                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/simple/oracle.xml</suiteXmlFile>
+                                <suiteXmlFile>${basedir}/src/test/resources/testsuite/standard/oracle.xml</suiteXmlFile>
                             </suiteXmlFiles>
                         </configuration>
                     </plugin>
@@ -590,6 +650,38 @@
                             <javadocExecutable>/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/javadoc</javadocExecutable>
                             <additionalparam>-Xdoclint:none</additionalparam>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>dist</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.5.4</version>
+                        <configuration>
+                            <outputDirectory>${basedir}/dist</outputDirectory>
+                            <descriptors>
+                                <descriptor>${basedir}/src/main/assemblies/dist.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

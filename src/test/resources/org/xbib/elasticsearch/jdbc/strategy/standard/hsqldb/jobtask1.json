@@ -1,0 +1,19 @@
+{
+    "type" : "jdbc",
+    "jdbc" : {
+        "url" : "jdbc:hsqldb:mem:test",
+        "user" : "sa",
+        "password" : "",
+        "sql" : [
+            {
+                "statement" : "select * from products"
+            },
+            {
+                "statement" : "delete from products where \"_job\" = ?",
+                "parameter" : [ "$job" ]
+            }
+        ],
+        "index" : "my_index",
+        "type" : "my_type"
+    }
+}

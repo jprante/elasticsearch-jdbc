@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 
 public class TestFoundNettyTransportModule {
@@ -62,15 +63,12 @@ public class TestFoundNettyTransportModule {
 
         try {
             node1 = NodeBuilder.nodeBuilder().settings(nodeSettings).node();
-
             NodesInfoResponse nodesInfo = node1.client().admin().cluster().prepareNodesInfo().setTransport(true).get();
-
             TransportAddress transportAddress = nodesInfo.getNodes()[0].getTransport().address().publishAddress();
-
             transportClient = new TransportClient(settings);
             transportClient.addTransportAddress(transportAddress);
-
-            assertEquals(ClusterHealthStatus.GREEN, transportClient.admin().cluster().prepareHealth().get().getStatus());
+            ClusterHealthStatus status = transportClient.admin().cluster().prepareHealth().get().getStatus();
+            assertTrue(status == ClusterHealthStatus.YELLOW || status == ClusterHealthStatus.GREEN);
         } finally {
             try {
                 if(transportClient != null) transportClient.close();
@@ -94,15 +92,12 @@ public class TestFoundNettyTransportModule {
 
         try {
             node1 = NodeBuilder.nodeBuilder().settings(settings).node();
-
             NodesInfoResponse nodesInfo = node1.client().admin().cluster().prepareNodesInfo().setTransport(true).get();
-
             TransportAddress transportAddress = nodesInfo.getNodes()[0].getTransport().address().publishAddress();
-
             transportClient = new TransportClient(settings);
             transportClient.addTransportAddress(transportAddress);
-
-            assertEquals(ClusterHealthStatus.GREEN, transportClient.admin().cluster().prepareHealth().get().getStatus());
+            ClusterHealthStatus status = transportClient.admin().cluster().prepareHealth().get().getStatus();
+            assertTrue(status == ClusterHealthStatus.YELLOW || status == ClusterHealthStatus.GREEN);
         } finally {
             try {
                 if(transportClient != null) transportClient.close();
