@@ -7,8 +7,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.plugin.jdbc.classloader.uri.URIClassLoader;
-import org.xbib.elasticsearch.plugin.jdbc.client.transport.BulkTransportClient;
+import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,8 +48,7 @@ public class IngestTests {
                 .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(10))) //  ping timeout
                 .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                 .put("path.plugins", ".dontexist") // pointing to a non-exiting folder means, this disables loading site plugins
-                        // adding our custom class loader is tricky, actions may not be registered to ActionService
-                .classLoader(getClassLoader(getClass().getClassLoader(), home));
+                ;
         if (settings.get("transport.type") != null) {
             clientSettings.put("transport.type", settings.get("transport.type"));
         }
@@ -75,16 +73,4 @@ public class IngestTests {
         }
     }
 
-    private ClassLoader getClassLoader(ClassLoader parent, File home) {
-        URIClassLoader classLoader = new URIClassLoader(parent);
-        File[] libs = new File(home + "/lib").listFiles();
-        if (libs != null) {
-            for (File file : libs) {
-                if (file.getName().toLowerCase().endsWith(".jar")) {
-                    classLoader.addURI(file.toURI());
-                }
-            }
-        }
-        return classLoader;
-    }
 }

@@ -128,10 +128,6 @@ public class MockSink implements Sink<MockContext> {
     }
 
     @Override
-    public void release() throws IOException {
-    }
-
-    @Override
     public void shutdown() throws IOException {
     }
 

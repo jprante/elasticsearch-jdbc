@@ -1,8 +1,8 @@
 package org.xbib.elasticsearch.river.jdbc.util;
 
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.plugin.jdbc.util.IndexableObject;
-import org.xbib.elasticsearch.plugin.jdbc.util.PlainIndexableObject;
+import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.common.util.PlainIndexableObject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
