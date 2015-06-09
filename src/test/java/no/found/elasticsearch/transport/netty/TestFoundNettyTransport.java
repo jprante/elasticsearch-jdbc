@@ -11,6 +11,7 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.SettingsModule;
 import org.elasticsearch.indices.breaker.CircuitBreakerModule;
+import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.threadpool.ThreadPoolModule;
 import org.elasticsearch.transport.TransportModule;
 import org.elasticsearch.transport.netty.FoundNettyTransport;
@@ -34,7 +35,7 @@ public class TestFoundNettyTransport {
         modules.add(new SettingsModule(settings));
         modules.add(new ClusterNameModule(settings));
         modules.add(new TransportModule(settings));
-        modules.add(new ThreadPoolModule(settings));
+        modules.add(new ThreadPoolModule(new ThreadPool(settings)));
         modules.add(new CircuitBreakerModule(settings));
 
         Injector injector = modules.createInjector();

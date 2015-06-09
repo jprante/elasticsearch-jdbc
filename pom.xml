@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.importer</groupId>
     <artifactId>elasticsearch-jdbc</artifactId>
-    <version>1.5.2.0</version>
+    <version>1.6.0.0</version>
 
     <packaging>jar</packaging>
 
@@ -72,8 +72,8 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
-        <elasticsearch.version>1.5.2</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>1.5.2.2</org.xbib.elasticsearch.support.version>
+        <elasticsearch.version>1.6.0</elasticsearch.version>
+        <org.xbib.elasticsearch.support.version>1.6.0.0</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
