@@ -426,7 +426,9 @@ public class SimpleRiverFlow<RC extends RiverContext> implements RiverFlow<RC> {
     }
 
     public void shutdown() throws Exception {
-        riverContext.shutdown();
+        if (riverContext != null) {
+            riverContext.shutdown();
+        }
     }
 
 }

@@ -57,7 +57,7 @@ public interface RiverMouth<RC extends RiverContext> {
      * @param ingestFactory the ingest factory
      * @return this river mouth
      */
-    RiverMouth setIngestFactory(IngestFactory ingestFactory);
+    RiverMouth setIngestFactory(IngestFactory ingestFactory) throws IOException;
 
     /**
      * Get the metrics of this river mouth

@@ -43,8 +43,6 @@ import org.xbib.elasticsearch.plugin.jdbc.client.Metric;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -109,12 +107,6 @@ public class BulkNodeClient implements Ingest {
     }
 
     @Override
-    public BulkNodeClient maxRequestWait(TimeValue timeValue) {
-        // ignore, not implemented
-        return this;
-    }
-
-    @Override
     public BulkNodeClient flushIngestInterval(TimeValue flushInterval) {
         this.flushInterval = flushInterval;
         return this;
@@ -123,16 +115,6 @@ public class BulkNodeClient implements Ingest {
     @Override
     public BulkNodeClient newClient(Settings settings) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BulkNodeClient newClient(Map<String, String> client) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<String> getConnectedNodes() {
-        return Arrays.asList(client.toString());
     }
 
     @Override

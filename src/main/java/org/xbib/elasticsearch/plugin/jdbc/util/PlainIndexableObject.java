@@ -238,10 +238,10 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof  IndexableObject)) {
+        if (!(o instanceof IndexableObject)) {
             return false;
         }
-        IndexableObject indexableObject = (IndexableObject)o;
+        IndexableObject indexableObject = (IndexableObject) o;
         return new EqualsBuilder()
                 .append(optype(), indexableObject.optype())
                 .append(index(), indexableObject.index())

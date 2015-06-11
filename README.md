@@ -17,28 +17,18 @@ is limited in the way to reconstruct deeply nested objects to JSON and process o
 Though it would be possible to extend the JDBC plugin with a maaping feature where all the object properties
 could be specified, the current solution is focused on rather simple tabular data streams.
 
-Creating a JDBC river is easy:
+# This plugin is future-proof
 
-- install the plugin
-
-- download a JDBC driver jar from your vendor's site (for example MySQL) and put the jar into the folder of the plugin `$ES_HOME/plugins/jdbc`.
-
-Assuming you have a table of name `orders`, you can issue this simple command from the command line
-
-    curl -XPUT 'localhost:9200/_river/my_jdbc_river/_meta' -d '{
-        "type" : "jdbc",
-        "jdbc" : {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "sql" : "select * from orders"
-        }
-    }'
+Note, JDBC plugin is not only a river, but also a standalone module. Because Elasicsearch river API is deprecated,
+this is an important feature. It means JDBC plugin is future-proof. All future versions of Elasticsearch
+will be supported.
 
 ## Recent versions
 
 | Release date | Plugin version | Elasticsearch version |
 | -------------| ---------------| ----------------------|
+| Apr 18, 2015 | 1.5.0.4        | 1.5.0                 |
+| Apr 18, 2015 | 1.4.4.4        | 1.4.4                 |
 | Mar 24, 2015 | 1.5.0.0        | 1.5.0                 |
 | Mar 24, 2015 | 1.4.4.0        | 1.4.4                 |
 | Feb 19, 2015 | 1.4.0.10       | 1.4.0                 |
@@ -67,7 +57,7 @@ Assuming you have a table of name `orders`, you can issue this simple command fr
 
 ## Installation
 
-    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.5.0.0/elasticsearch-river-jdbc-1.5.0.0.zip
+    ./bin/plugin --install jdbc --url http://xbib.org/repository/org/xbib/elasticsearch/plugin/elasticsearch-river-jdbc/1.5.0.4/elasticsearch-river-jdbc-1.5.0.4.zip
 
 Do not forget to restart the node after installing.
 

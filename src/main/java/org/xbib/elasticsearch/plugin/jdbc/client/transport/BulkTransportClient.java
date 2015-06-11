@@ -27,7 +27,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.collect.ImmutableSet;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -39,7 +38,6 @@ import org.xbib.elasticsearch.plugin.jdbc.client.Ingest;
 import org.xbib.elasticsearch.plugin.jdbc.client.Metric;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Client using the BulkProcessor of Elasticsearch
@@ -94,28 +92,17 @@ public class BulkTransportClient extends BaseIngestTransportClient implements In
     }
 
     @Override
-    public BulkTransportClient maxRequestWait(TimeValue timeout) {
-        // ignore, not supported
-        return this;
-    }
-
-    @Override
     public BulkTransportClient flushIngestInterval(TimeValue flushInterval) {
         this.flushInterval = flushInterval;
         return this;
     }
 
-    public BulkTransportClient newClient(Client client) {
+    public BulkTransportClient newClient(Client client) throws IOException {
         return this.newClient(findSettings());
     }
 
     @Override
-    public BulkTransportClient newClient(Map<String, String> settings) {
-        return this.newClient(ImmutableSettings.settingsBuilder().put(settings).build());
-    }
-
-    @Override
-    public BulkTransportClient newClient(Settings settings) {
+    public BulkTransportClient newClient(Settings settings) throws IOException {
         super.newClient(settings);
         resetSettings();
         this.metric = new Metric();
