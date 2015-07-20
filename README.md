@@ -41,15 +41,16 @@ about what happened.
 
 | Release date | Importer version | Elasticsearch version |
 | -------------| -----------------| ----------------------|
-| Jun 9 2015   | 1.6.0.0          | 1.6.0                 |
-| Jun   2015   | 1.5.2.0          | 1.5.2                 |
+| Jul 20 2015  | 1.7.0.0          | 1.7.0                 |
+| Jun  9 2015  | 1.6.0.0          | 1.6.0                 |
+| Jun    2015  | 1.5.2.0          | 1.5.2                 |
 
 
 ## Installation
 
 - download the JDBC importer distribution
 
-  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.6.0.0/elasticsearch-jdbc-1.6.0.0-dist.zip`
+  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.7.0.0/elasticsearch-jdbc-1.7.0.0-dist.zip`
 
 - unpack     
     `unzip elasticsearch-jdbc-1.6.0.0-dist.zip`
