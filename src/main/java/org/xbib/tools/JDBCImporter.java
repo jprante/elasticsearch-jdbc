@@ -112,8 +112,9 @@ public class JDBCImporter extends Importer {
             this.context = StrategyLoader.newContext(strategy);
             logger.info("strategy {}: settings = {}, context = {}",
                     strategy, settings.getAsMap(), context);
+            context.setSettings(settings);
         }
-        context.setSettings(settings);
+       
         context.execute();
     }
 

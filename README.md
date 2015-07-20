@@ -728,7 +728,7 @@ Try something like this
 		"type" : "jdbc",
 		"jdbc" : {
 			"driver" : "org.xbib.jdbc.csv.CsvDriver",
-			"url" : "jdbc:csv:mydatadir?columnTypes=&separator=,",
+			"url" : "jdbc:xbib:csv:mydatadir?columnTypes=&separator=,",
 			"user" : "",
 			"password" : "",
 			"sql" : "select * from mycsvfile"
