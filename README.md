@@ -48,15 +48,17 @@ about what happened.
 
 ## Installation
 
+- in the following steps replace `<version>` by one of the versions above, e.g. `1.7.0.0`
+
 - download the JDBC importer distribution
 
-  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.7.0.0/elasticsearch-jdbc-1.7.0.0-dist.zip`
+  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
 
 - unpack     
-    `unzip elasticsearch-jdbc-1.6.0.0-dist.zip`
+    `unzip elasticsearch-jdbc-<version>-dist.zip`
 
 - go to the unpacked directory (we call it $JDBC_IMPORTER_HOME)
-    `cd elasticsearch-jdbc-1.6.0.0`
+    `cd elasticsearch-jdbc-<version>`
 
 - if you do not find the JDBC driver jar in the `lib` directory, download it from your vendor's site 
     and put the driver jar into the `lib` folder
@@ -882,7 +884,7 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 3. Install JDBC importer
 
-    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.6.0.0/elasticsearch-jdbc-1.6.0.0-dist.zip`
+    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
     
    (update version respectively)
 
@@ -939,7 +941,7 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 3. Install JDBC importer
 
-    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/1.6.0.0/elasticsearch-jdbc-1.6.0.0-dist.zip`
+    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
     
    (update version respectively)
 
