@@ -1,24 +1,8 @@
 /*
- * This is the MIT license: http://www.opensource.org/licenses/mit-license.php
- *
- * Copyright (c) 2010-2012, Found IT A/S.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this
- * software and associated documentation files (the "Software"), to deal in the Software
- * without restriction, including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
- * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
- * FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * Copyright (c) 2013, Found AS.
+ * See LICENSE for details.
  */
+
 package org.elasticsearch.transport.netty;
 
 import no.found.elasticsearch.transport.netty.FoundAuthenticatingChannelHandler;
@@ -49,25 +33,34 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A transport that works with Found Elasticsearch.
+ *
  * <p>New settings introduced by this transport:</p>
+ *
  * <ul>
  * <li>{@code transport.found.host-suffixes}: A comma-separated list of host suffixes that
  * trigger our attempt to authenticate with Found Elasticsearch. Defaults to
- * {@code foundcluster.com, found.no}".</li>
+ * {@code found.io,foundcluster.com,found.no}".</li>
+ *
  * <li>{@code transport.found.ssl-ports}: A comma-separated list of ports that trigger our
  * SSL support. Defaults to {@code 9343}".</li>
+ *
  * <li>{@code transport.found.api-key}: An API-key which is used to authorize this client
  * when connecting to Found Elasticsearch. API-keys are managed via the console as
  * a list of Strings under the root level key "api_keys". Defaults to
  * {@code missing-api-key}</li>
+ *
  * <li>{@code transport.found.connection-keep-alive-interval}: The interval in which to send
  * keep-alive messages. Defaults to {@code 20s}. Set to 0 to disable.</li>
+ *
  * <li>{@code transport.found.ssl.unsafe_allow_self_signed}: Whether to accept self-signed
  * certificates when using SSL. This is unsafe and allows for MITM-attacks, but
  * may be useful for testing. Defaults to {@code false}.</li>
  * </ul>
+ *
  * <p><b>The transport is backwards-compatible with the default transport.</b></p>
+ *
  * <p>Example configuration:</p>
+ *
  * <pre>
  * {@code // Build the settings for our client.
  *   Settings settings = ImmutableSettings.settingsBuilder()
@@ -85,10 +78,12 @@ import java.util.concurrent.TimeUnit;
  *   // Instantiate a TransportClient and add Found Elasticsearch to the list of addresses to connect to.
  *   // Only port 9343 (SSL-encrypted) is currently supported.
  *   Client client = new TransportClient(settings)
- *       .addTransportAddress(new InetSocketTransportAddress("YOUR_CLUSTER_ID-REGION.foundcluster.com", 9343));
+ *       .addTransportAddress(new InetSocketTransportAddress("YOUR_CLUSTER_ID.REGION.PROVIDER.found.io", 9343));
  * }
  * </pre>
+ *
  * <p>Example usage:</p>
+ *
  * <pre>
  * {@code
  *  System.out.print("Getting cluster health... "); System.out.flush();
@@ -125,7 +120,7 @@ public class FoundNettyTransport extends NettyTransport {
 
         keepAliveInterval = settings.getAsTime("transport.found.connection-keep-alive-interval", new TimeValue(20000, TimeUnit.MILLISECONDS));
         unsafeAllowSelfSigned = settings.getAsBoolean("transport.found.ssl.unsafe_allow_self_signed", false);
-        hostSuffixes = settings.getAsArray("transport.found.host-suffixes", new String[]{".foundcluster.com", ".found.no"});
+        hostSuffixes = settings.getAsArray("transport.found.host-suffixes", new String[]{".found.io", ".foundcluster.com", ".found.no"});
 
         List<Integer> ports = new LinkedList<Integer>();
         for (String strPort : settings.getAsArray("transport.found.ssl-ports", new String[]{"9343"})) {
@@ -144,7 +139,7 @@ public class FoundNettyTransport extends NettyTransport {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    protected void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         if (e.getCause() instanceof SSLException) {
             return;
         }
