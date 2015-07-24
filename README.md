@@ -526,7 +526,7 @@ line them up into JSON arrays. For allowing this, a bracket notation is used to 
 elements that repeat in each child.
 
 Note, because of limitations in identifying SQL column groups, nested document structures may lead to
-repititions of the same group. Fortunately, this is harmless to Elasticsearch queries.
+repetitions of the same group. Fortunately, this is harmless to Elasticsearch queries.
 
 Example:
 
