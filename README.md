@@ -318,12 +318,12 @@ Quartz cron expression format (see below for syntax)
 
 ## Time scheduled execution
 
-Setting a cron expression in the paramter `schedule` enables repeated (or time scheduled) runs.
+Setting a cron expression in the parameter `schedule` enables repeated (or time scheduled) runs.
 
 You can also define a list of cron expressions (in a JSON array) to schedule for many
 different time schedules.
 
-Example of a `schedule` paramter:
+Example of a `schedule` parameter:
 
         "schedule" : "0 0-59 0-23 ? * *"
 
@@ -454,7 +454,7 @@ will generate fewer JSON objects for the index `relations`.
 	index=relations id=Good {"contact":{"employee":["Müller","Meier","Schulze"],"customer":"Good"}}
 	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
 
-Note how the `employee` column is collapsed into a JSON array. The repeated occurence of the `_id` column
+Note how the `employee` column is collapsed into a JSON array. The repeated occurrence of the `_id` column
 controls how values are folded into arrays for making use of the Elasticsearch JSON data model.
 
 

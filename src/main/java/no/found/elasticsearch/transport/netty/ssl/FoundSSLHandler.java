@@ -325,7 +325,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
      * @param timer                    the {@link org.elasticsearch.common.netty.util.Timer} which will be used to process the timeout of the {@link #handshake()}.
      *                                 Be aware that the given {@link org.elasticsearch.common.netty.util.Timer} will not get stopped automaticly, so it is up to you to cleanup
      *                                 once you not need it anymore
-     * @param handshakeTimeoutInMillis the time in milliseconds after whic the {@link #handshake()}  will be failed, and so the future notified
+     * @param handshakeTimeoutInMillis the time in milliseconds after which the {@link #handshake()} will be failed, and so the future notified
      */
     public FoundSSLHandler(SSLEngine engine, SslBufferPool bufferPool, boolean startTls, Executor delegatedTaskExecutor,
                            Timer timer, long handshakeTimeoutInMillis) {
