@@ -779,8 +779,8 @@ Example:
     "schedule" : ...,
     "statefile" : "statefile.json",
     "metrics" : {
-        "enabled" : true
-        "interval" : "1m"
+        "enabled" : true,
+        "interval" : "1m",
         "logger" : {
             "plain" : false,
             "json" : true
