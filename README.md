@@ -12,7 +12,7 @@ indexing into [Elasticsearch](http://www.elasticsearch.org).
 
 The JDBC importer was designed for tabular data. If you have tables with many joins, the JDBC importer
 is limited in the way to reconstruct deeply nested objects to JSON and process object semantics like object identity.
-Though it would be possible to extend the JDBC importer with a maaping feature where all the object properties
+Though it would be possible to extend the JDBC importer with a mapping feature where all the object properties
 could be specified, the current solution is focused on rather simple tabular data streams.
 
 Assuming you have a table of name `orders` with a primary key in column `id`, 
