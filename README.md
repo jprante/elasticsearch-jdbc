@@ -422,13 +422,13 @@ One of the advantage of SQL queries is the join operation. From many tables, new
 	        "url" : "jdbc:mysql://localhost:3306/test",
 	        "user" : "",
 	        "password" : "",
-	        "sql" : "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department"
+	        "sql" : "select \"relations\" as \"_index\", orders.customer as \"_id\", orders.customer as \"contact.customer\", employees.name as \"contact.employee\" from orders left join employees on employees.department = orders.department order by _id"
 	    }
 	}
 
 For example, these rows from SQL
 
-	mysql> select "relations" as "_index", orders.customer as "_id", orders.customer as "contact.customer", employees.name as "contact.employee"  from orders left join employees on employees.department = orders.department;
+	mysql> select "relations" as "_index", orders.customer as "_id", orders.customer as "contact.customer", employees.name as "contact.employee"  from orders left join employees on employees.department = orders.department order by _id;
 	+-----------+-------+------------------+------------------+
 	| _index    | _id   | contact.customer | contact.employee |
 	+-----------+-------+------------------+------------------+
@@ -455,7 +455,7 @@ will generate fewer JSON objects for the index `relations`.
 	index=relations id=Bad {"contact":{"employee":"Jones","customer":"Bad"}}
 
 Note how the `employee` column is collapsed into a JSON array. The repeated occurrence of the `_id` column
-controls how values are folded into arrays for making use of the Elasticsearch JSON data model.
+controls how values are folded into arrays for making use of the Elasticsearch JSON data model. Make sure your SQL query is ordered by `_id`.
 
 
 ## Column names for JSON document construction
