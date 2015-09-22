@@ -83,8 +83,8 @@ public class JDBCImporter extends Importer {
             setConcreteIndex(index);
             logger.info("index name = {}, concrete index name = {}", getIndex(), getConcreteIndex());
         }
-        Integer maxbulkactions = settings.getAsInt("maxbulkactions", 1000);
-        Integer maxconcurrentbulkrequests = settings.getAsInt("maxconcurrentbulkrequests",
+        Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
+        Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                 Runtime.getRuntime().availableProcessors());
         ingest.maxActionsPerBulkRequest(maxbulkactions)
                 .maxConcurrentBulkRequests(maxconcurrentbulkrequests);
