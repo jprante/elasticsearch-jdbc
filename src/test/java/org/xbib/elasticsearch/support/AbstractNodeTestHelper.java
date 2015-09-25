@@ -39,6 +39,12 @@ import org.elasticsearch.transport.TransportInfo;
 import org.testng.Assert;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,15 +86,18 @@ public abstract class AbstractNodeTestHelper extends Assert {
         return hosts != null ? hosts.toArray(new String[hosts.size()]) : new String[]{};
     }
 
+    protected String getHome() {
+        return System.getProperty("path.home");
+    }
+
     protected Settings getNodeSettings() {
         return ImmutableSettings
                 .settingsBuilder()
                 .put("cluster.name", getClusterName())
+                .put("path.home", getHome())
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replica", 0)
                 .put("cluster.routing.schedule", "50ms")
-                .put("gateway.type", "none")
-                .put("index.store.type", "ram")
                 .put("http.enabled", false)
                 .put("discovery.zen.multicast.enabled", true)
                 .build();
@@ -122,9 +131,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
     }
 
     public Node buildNode(String id) {
-        String settingsSource = getClass().getName().replace('.', '/') + ".yml";
         Settings finalSettings = settingsBuilder()
-                .loadFromClasspath(settingsSource)
                 .put(getNodeSettings())
                 .put("name", id)
                 .build();
@@ -184,7 +191,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
         return client;
     }
 
-    public void stopNodes() {
+    public void stopNodes() throws IOException {
         logger.info("stopping clients");
         for (Client client : clients.values()) {
             client.close();
@@ -196,6 +203,25 @@ public abstract class AbstractNodeTestHelper extends Assert {
             node.close();
         }
         nodes.clear();
+        logger.info("deleting data files");
+        deleteFiles();
+    }
+
+    private void deleteFiles() throws IOException {
+        Path directory = Paths.get(getHome() + "/data");
+        Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
 }

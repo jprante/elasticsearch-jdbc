@@ -37,10 +37,11 @@ you can issue this from the command line
 And that's it. Now you can check your Elasticsearch cluster for the index `jdbc` or your Elasticsearch logs
 about what happened.
 
-## Recent versions
+## Compatibility matrix
 
 | Release date | Importer version | Elasticsearch version |
 | -------------| -----------------| ----------------------|
+| Sep 25 2015  | 1.7.2.0          | 1.7.2                 |
 | Aug 10 2015  | 1.7.1.0          | 1.7.1                 |
 | Jul 24 2015  | 1.7.0.1          | 1.7.0                 |
 | Jul 24 2015  | 1.6.0.1          | 1.6.0                 |

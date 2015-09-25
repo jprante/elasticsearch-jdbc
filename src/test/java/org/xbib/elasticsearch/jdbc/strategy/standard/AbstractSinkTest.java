@@ -265,6 +265,9 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     }
 
     public boolean waitFor(Context context, Context.State state, long millis) throws InterruptedException {
+        if (context == null) {
+            return true;
+        }
         long t0 = System.currentTimeMillis();
         boolean found;
         do {

@@ -7,7 +7,6 @@ import org.xbib.tools.JDBCImporter;
 
 public class JDBCImporterTest {
 
-    @Test
     public void testImporter() throws Exception {
         final JDBCImporter importer = JDBCImporter.getInstance();
         Settings settings = ImmutableSettings.settingsBuilder()
