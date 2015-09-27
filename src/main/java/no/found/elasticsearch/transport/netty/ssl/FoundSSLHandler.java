@@ -502,9 +502,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
 
     /**
      * Return the {@link org.elasticsearch.common.netty.channel.ChannelFuture} that will get notified if the inbound of the {@link javax.net.ssl.SSLEngine} will get closed.
-     * <p/>
      * This method will return the same {@link org.elasticsearch.common.netty.channel.ChannelFuture} all the time.
-     * <p/>
      * For more informations see the apidocs of {@link javax.net.ssl.SSLEngine}
      */
     public ChannelFuture getSSLEngineInboundCloseFuture() {
@@ -523,7 +521,6 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
      * If set to {@code true}, the {@link org.elasticsearch.common.netty.channel.Channel} will automatically get closed
      * one a {@link javax.net.ssl.SSLException} was caught. This is most times what you want, as after this
      * its almost impossible to recover.
-     * <p/>
      * Anyway the default is {@code false} to not break compatibility with older releases. This
      * will be changed to {@code true} in the next major release.
      */
@@ -674,7 +671,6 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
 
     /**
      * Checks if the given {@link Throwable} can be ignore and just "swallowed"
-     * <p/>
      * When an ssl connection is closed a close_notify message is sent.
      * After that the peer also sends close_notify however, it's not mandatory to receive
      * the close_notify. The party who sent the initial close_notify can close the connection immediately
@@ -1531,7 +1527,6 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
 
     /**
      * Loop over all the pending writes and fail them.
-     * <p/>
      * See <a href="https://github.com/netty/netty/issues/305">#305</a> for more details.
      */
     @Override
