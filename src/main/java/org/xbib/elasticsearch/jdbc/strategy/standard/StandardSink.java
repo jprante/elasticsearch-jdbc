@@ -92,7 +92,9 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (ingest == null) {
             if (context.getIngestFactory() != null) {
                 ingest = context.getIngestFactory().create();
-                ingest.setMetric(metric);
+                if(ingest != null) {
+                    ingest.setMetric(metric);
+                }
             } else {
                 logger.warn("no ingest factory found");
             }
