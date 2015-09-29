@@ -144,13 +144,6 @@ public interface Sink<C extends Context> {
     void delete(IndexableObject object) throws IOException;
 
     /**
-     * Flush data to the sink
-     *
-     * @throws IOException when flush fails
-     */
-    void flushIngest() throws IOException;
-
-    /**
      * Shutdown and release all resources, e.g. bulk processor and client
      * @throws IOException when shutdown fails
      */

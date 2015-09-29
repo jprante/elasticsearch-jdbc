@@ -17,18 +17,21 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.joda.time.format.DateTimeFormat;
+import org.elasticsearch.common.lang3.StringUtils;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
-import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.support.client.Ingest;
 import org.xbib.elasticsearch.support.client.Metric;
 
@@ -45,8 +48,6 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
     private final static Logger logger = LogManager.getLogger("importer.jdbc.sink.standard");
 
     protected C context;
-
-    protected Ingest ingest;
 
     protected Settings indexSettings;
 
@@ -89,16 +90,8 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public synchronized void beforeFetch() throws IOException {
-        if (ingest == null) {
-            if (context.getIngestFactory() != null) {
-                ingest = context.getIngestFactory().create();
-                if(ingest != null) {
-                    ingest.setMetric(metric);
-                }
-            } else {
-                logger.warn("no ingest factory found");
-            }
-        }
+        Ingest ingest = context.getOrCreateIngest(metric);
+
         if (ingest == null) {
             logger.warn("no ingest found");
             return;
@@ -121,31 +114,26 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public synchronized void afterFetch() throws IOException {
+        Ingest ingest = context.getIngest();
         if (ingest == null) {
             return;
         }
-        logger.debug("afterFetch: flush ingest");
-        flushIngest();
         logger.debug("afterFetch: stop bulk");
         ingest.stopBulk(index);
         logger.debug("afterFetch: refresh index");
         ingest.refreshIndex(index);
-        logger.debug("afterFetch: before ingest shutdown");
-        ingest.shutdown();
-        ingest = null;
+
         logger.debug("afterFetch: after ingest shutdown");
     }
 
     @Override
     public synchronized void shutdown() {
-        if (ingest == null) {
+        Ingest ingest = context.getIngest();
+        if(ingest == null) {
             return;
         }
         try {
-            logger.info("shutdown in progress");
-            flushIngest();
             ingest.stopBulk(index);
-            ingest.shutdown();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
@@ -198,6 +186,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public void index(IndexableObject object, boolean create) throws IOException {
+        Ingest ingest = context.getIngest();
         if (ingest == null) {
             return;
         }
@@ -210,6 +199,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (Strings.hasLength(object.id())) {
             setId(object.id());
         }
+
         IndexRequest request = Requests.indexRequest(this.index)
                 .type(this.type)
                 .id(getId())
@@ -230,14 +220,25 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (object.meta(ControlKeys._ttl.name()) != null) {
             request.ttl(Long.parseLong(object.meta(ControlKeys._ttl.name())));
         }
-        if (logger.isTraceEnabled()) {
-            logger.trace("adding bulk index action {}", request.source().toUtf8());
+
+        ActionRequest req = request;
+        if(StringUtils.equals("update",object.optype())) {
+            req = new UpdateRequest(this.index,this.type,getId())
+                    .doc(object.build())
+                    .upsert(request);
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("adding bulk action {}", req.toString());
+            }
+
+            ingest.action(req);
         }
-        ingest.bulkIndex(request);
     }
 
     @Override
     public void delete(IndexableObject object) {
+        Ingest ingest = context.getIngest();
+
         if (ingest == null) {
             return;
         }
@@ -267,22 +268,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (logger.isTraceEnabled()) {
             logger.trace("adding bulk delete action {}/{}/{}", request.index(), request.type(), request.id());
         }
-        ingest.bulkDelete(request);
-    }
-
-    @Override
-    public void flushIngest() throws IOException {
-        if (ingest == null) {
-            return;
-        }
-        ingest.flushIngest();
-        // wait for all outstanding bulk requests before continuing. Estimation is 60 seconds
-        try {
-            ingest.waitForResponses(TimeValue.timeValueSeconds(60));
-        } catch (InterruptedException e) {
-            logger.warn("interrupted while waiting for responses");
-            Thread.currentThread().interrupt();
-        }
+        ingest.action(request);
     }
 
 }
