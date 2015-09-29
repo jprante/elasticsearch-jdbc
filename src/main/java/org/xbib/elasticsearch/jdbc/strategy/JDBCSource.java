@@ -157,12 +157,28 @@ public interface JDBCSource<C extends Context> extends Source<C> {
     JDBCSource<C> setResultSetConcurrency(String resultSetConcurrency);
 
     /**
-     * Should null values in columns be ignored for indexing
+     * Should null values in columns be ignored for indexing. Default is false
      *
      * @param shouldIgnoreNull true if null values in columns should be ignored for indexing
      * @return this context
      */
     JDBCSource<C> shouldIgnoreNull(boolean shouldIgnoreNull);
+
+    /**
+     * Should geo values in columns be detected for indexing. Default is true
+     *
+     * @param shouldDetectGeo true if geo values in columns should be detected for indexing
+     * @return this context
+     */
+    JDBCSource<C> shouldDetectGeo(boolean shouldDetectGeo);
+
+    /**
+     * Should json structures in columns be parsed for indexing. Default is true
+     *
+     * @param shouldDetectJson true if json structures in columns should be parsed for indexing
+     * @return this context
+     */
+    JDBCSource<C> shouldDetectJson(boolean shouldDetectJson);
 
     /**
      * Should result set metadata be used in parameter variables

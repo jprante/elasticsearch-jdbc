@@ -41,7 +41,7 @@ about what happened.
 
 | Release date | Importer version | Elasticsearch version |
 | -------------| -----------------| ----------------------|
-| Sep 25 2015  | 1.7.2.0          | 1.7.2                 |
+| Sep 29 2015  | 1.7.2.1          | 1.7.2                 |
 | Jul 24 2015  | 1.7.0.1          | 1.7.0                 |
 | Jul 24 2015  | 1.6.0.1          | 1.6.0                 |
 | Jun    2015  | 1.5.2.0          | 1.5.2                 |
@@ -216,6 +216,10 @@ Here is the list of parameters for the `jdbc` block in the definition.
 `resultset_concurrency` - the JDBC result set concurrency, can be CONCUR_READ_ONLY, CONCUR_UPDATABLE. Default is CONCUR_UPDATABLE
 
 `ignore_null_values` - if NULL values should be ignored when constructing JSON documents. Default is `false`
+
+`detect_geo` - if geo polygons / points in SQL columns should be parsed when constructing JSON documents. Default is `true`
+
+`detect_json` - if json structures in SQL columns should be parsed when constructing JSON documents. Default is `true`
 
 `prepare_database_metadata` - if the driver metadata should be prepared as parameters.  Default is `false`
 

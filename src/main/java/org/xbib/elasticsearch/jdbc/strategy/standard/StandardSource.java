@@ -115,6 +115,10 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     private boolean shouldIgnoreNull;
 
+    private boolean shouldDetectGeo;
+
+    private boolean shouldDetectJson;
+
     private boolean shouldPrepareResultSetMetadata;
 
     private boolean shouldPrepareDatabaseMetadata;
@@ -319,7 +323,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return resultSetConcurrency;
     }
 
-    public StandardSource<C>  shouldIgnoreNull(boolean shouldIgnoreNull) {
+    public StandardSource<C> shouldIgnoreNull(boolean shouldIgnoreNull) {
         this.shouldIgnoreNull = shouldIgnoreNull;
         return this;
     }
@@ -328,7 +332,25 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return shouldIgnoreNull;
     }
 
-    public StandardSource<C>  shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
+    public StandardSource<C> shouldDetectGeo(boolean shouldDetectGeo) {
+        this.shouldDetectGeo = shouldDetectGeo;
+        return this;
+    }
+
+    public boolean shouldDetectGeo() {
+        return shouldDetectGeo;
+    }
+
+    public StandardSource<C> shouldDetectJson(boolean shouldDetectJson) {
+        this.shouldDetectJson = shouldDetectJson;
+        return this;
+    }
+
+    public boolean shouldDetectJson() {
+        return shouldDetectJson;
+    }
+
+    public StandardSource<C> shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
         this.shouldPrepareResultSetMetadata = shouldPrepareResultSetMetadata;
         return this;
     }
@@ -337,7 +359,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return shouldPrepareResultSetMetadata;
     }
 
-    public StandardSource<C>  shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
+    public StandardSource<C> shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
         this.shouldPrepareDatabaseMetadata = shouldPrepareDatabaseMetadata;
         return this;
     }
@@ -355,7 +377,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return lastResultSetMetadata;
     }
 
-    public StandardSource<C>  setLastDatabaseMetadata(Map<String, Object> lastDatabaseMetadata) {
+    public StandardSource<C> setLastDatabaseMetadata(Map<String, Object> lastDatabaseMetadata) {
         this.lastDatabaseMetadata = lastDatabaseMetadata;
         return this;
     }
@@ -364,7 +386,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return lastDatabaseMetadata;
     }
 
-    public StandardSource<C>  setLastRowCount(long lastRowCount) {
+    public StandardSource<C> setLastRowCount(long lastRowCount) {
         this.lastRowCount = lastRowCount;
         return this;
     }
@@ -669,7 +691,9 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     }
                     SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
                             .output(context.getSink())
-                            .shouldIgnoreNull(shouldIgnoreNull());
+                            .shouldIgnoreNull(shouldIgnoreNull())
+                            .shouldDetectGeo(shouldDetectGeo())
+                            .shouldDetectJson(shouldDetectJson());
                     merge(command, results, listener);
                 }
             } else {
@@ -704,7 +728,9 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 results = executeQuery(statement);
                 SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
                         .output(context.getSink())
-                        .shouldIgnoreNull(shouldIgnoreNull());
+                        .shouldIgnoreNull(shouldIgnoreNull())
+                        .shouldDetectGeo(shouldDetectGeo())
+                        .shouldDetectJson(shouldDetectJson());
                 merge(command, results, listener);
             } else {
                 statement = prepareUpdate(command.getSQL());
