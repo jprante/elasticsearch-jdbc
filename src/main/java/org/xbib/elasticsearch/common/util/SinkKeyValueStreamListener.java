@@ -53,6 +53,8 @@ public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListene
                 output.index(object, false);
             } else if ("index".equals(object.optype())) {
                 output.index(object, false);
+            } else if ("update".equals(object.optype())) {
+                output.index(object, false);
             } else if ("create".equals(object.optype())) {
                 output.index(object, true);
             } else if ("delete".equals(object.optype())) {
