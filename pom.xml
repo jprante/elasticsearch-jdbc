@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.importer</groupId>
     <artifactId>elasticsearch-jdbc</artifactId>
-    <version>1.7.0.1</version>
+    <version>1.7.2.0</version>
 
     <packaging>jar</packaging>
 
@@ -72,8 +72,8 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
-        <elasticsearch.version>1.7.0</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>1.7.0.0</org.xbib.elasticsearch.support.version>
+        <elasticsearch.version>1.7.2</elasticsearch.version>
+        <org.xbib.elasticsearch.support.version>1.7.2.1</org.xbib.elasticsearch.support.version>
     </properties>
 
     <dependencies>
@@ -627,28 +627,6 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skipTests>true</skipTests>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>doclint-java8-disable</id>
-            <activation>
-                <os>
-                    <name>mac os x</name>
-                </os>
-                <jdk>[1.8,</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <javadocExecutable>/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home/bin/javadoc</javadocExecutable>
-                            <additionalparam>-Xdoclint:none</additionalparam>
                         </configuration>
                     </plugin>
                 </plugins>

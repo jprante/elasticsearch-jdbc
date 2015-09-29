@@ -51,7 +51,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * if it's connecting to a pre-configured SSL-port (which usually should be 9343).
  * Additionally, it sends a header message that contains identifies and authenticates
  * the client to the service. The service will then respond with a header response.
- * If the header response is "OK" (200 <= status code <= 299), the connection has
+ * If the header response is "OK" (200 &lt;= status code &lt;= 299), the connection has
  * been established and the original Elasticsearch transport pipeline handlers are
  * added to the pipeline and this handler removes itself from the pipeline.
  */

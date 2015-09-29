@@ -50,7 +50,7 @@ public class FoundTransportHeader {
      * cluster and API-key.
      *
      * @return The ChannelBuffer containing the header.
-     * @throws java.io.IOException
+     * @throws java.io.IOException if error
      */
     public ChannelBuffer getHeaderBuffer() throws IOException {
         byte[] clusterNameBytes = clusterName.getBytes(StandardCharsets.UTF_8);

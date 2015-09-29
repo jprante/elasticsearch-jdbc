@@ -144,6 +144,14 @@ public interface Sink<C extends Context> {
     void delete(IndexableObject object) throws IOException;
 
     /**
+     * Update operation. Indicating that an object should be updated.
+     *
+     * @param object the structured object
+     * @throws IOException when delete fails
+     */
+    void update(IndexableObject object) throws IOException;
+
+    /**
      * Flush data to the sink
      *
      * @throws IOException when flush fails

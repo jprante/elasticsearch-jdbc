@@ -74,6 +74,14 @@ public class MockSink implements Sink<MockContext> {
         logger.info("size after delete {}", data.size());
     }
 
+    @Override
+    public void update(IndexableObject object) throws IOException {
+        logger.info("update {} = {}", object.toString(), object.build());
+        data.put(object, object.build());
+        counter++;
+        logger.info("size after update {}", data.size());
+    }
+
     public Map<IndexableObject, String> data() {
         return data;
     }
