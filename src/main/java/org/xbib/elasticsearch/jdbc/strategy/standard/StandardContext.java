@@ -437,11 +437,17 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                         settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
                     }
                 }
-                ingest.maxActionsPerBulkRequest(maxbulkactions)
-                        .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                        .maxVolumePerBulkRequest(maxvolume)
-                        .flushIngestInterval(flushinterval)
-                        .newClient(settingsBuilder.build());
+                try {
+                    ingest.maxActionsPerBulkRequest(maxbulkactions)
+                            .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
+                            .maxVolumePerBulkRequest(maxvolume)
+                            .flushIngestInterval(flushinterval)
+                            .newClient(settingsBuilder.build());
+                } catch (Exception e) {
+                    logger.error("ingest not properly build, shutting down ingest",e);
+                    ingest.shutdown();
+                    ingest = null;
+                }
                 return ingest;
             }
         };
