@@ -78,6 +78,8 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     private Throwable throwable;
 
+    private Ingest ingest;
+
     private final static List<Future> futures = new LinkedList<>();
 
     private final static SourceMetric sourceMetric = new SourceMetric().start();
@@ -177,6 +179,24 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         return throwable;
     }
 
+    public Ingest getIngest() {
+        return ingest;
+    }
+
+    public Ingest getOrCreateIngest(Metric metric) throws IOException {
+        if (ingest == null) {
+            if (getIngestFactory() != null) {
+                ingest = getIngestFactory().create();
+                if (ingest != null) {
+                    ingest.setMetric(metric);
+                }
+            } else {
+                logger.warn("no ingest factory found");
+            }
+        }
+        return ingest;
+    }
+
     public DateTime getDateOfThrowable() {
         return dateOfThrowable;
     }
@@ -230,7 +250,18 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             logger.error(e.getMessage(), e);
         }
         try {
+
+            logger.debug("afterFetch: flush ingest");
+            flushIngest();
+
             getSink().afterFetch();
+
+            logger.debug("afterFetch: before ingest shutdown");
+            if(ingest != null) {
+                ingest.shutdown();
+                ingest = null;
+            }
+
         } catch (Throwable e) {
             setThrowable(e);
             logger.error(e.getMessage(), e);
@@ -250,6 +281,13 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 logger.error(e.getMessage(), e);
             }
         }
+
+        try {
+            flushIngest();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
         if (sink != null) {
             try {
                 sink.shutdown();
@@ -257,8 +295,29 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 logger.error(e.getMessage(), e);
             }
         }
+
+        if (ingest != null) {
+            logger.info("shutdown in progress");
+            ingest.shutdown();
+            ingest = null;
+        }
+
         logger.info("shutdown completed");
         writeState();
+    }
+
+    public void flushIngest() throws IOException {
+        if (ingest == null) {
+            return;
+        }
+        ingest.flushIngest();
+        // wait for all outstanding bulk requests before continuing. Estimation is 60 seconds
+        try {
+            ingest.waitForResponses(TimeValue.timeValueSeconds(60));
+        } catch (InterruptedException e) {
+            logger.warn("interrupted while waiting for responses");
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -400,6 +459,8 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         source.setContext(this);
         sink.setContext(this);
     }
+
+
 
     private IngestFactory createIngestFactory(final Settings settings) {
         return new IngestFactory() {

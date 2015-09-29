@@ -124,10 +124,6 @@ public class MockSink implements Sink<MockContext> {
     }
 
     @Override
-    public void flushIngest() throws IOException {
-    }
-
-    @Override
     public void shutdown() throws IOException {
     }
 
