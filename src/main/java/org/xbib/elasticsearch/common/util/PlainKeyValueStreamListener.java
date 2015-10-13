@@ -189,27 +189,27 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
     }
 
     protected void map(K k, V v, IndexableObject current) throws IOException {
-        if (ControlKeys._optype.name().equals(k)) {
+        if (ControlKeys._optype.name().equalsIgnoreCase(k.toString())) {
             current.optype(v.toString());
-        } else if (ControlKeys._index.name().equals(k)) {
+        } else if (ControlKeys._index.name().equalsIgnoreCase(k.toString())) {
             current.index(v.toString());
-        } else if (ControlKeys._type.name().equals(k)) {
+        } else if (ControlKeys._type.name().equalsIgnoreCase(k.toString())) {
             current.type(v.toString());
-        } else if (ControlKeys._id.name().equals(k)) {
+        } else if (ControlKeys._id.name().equalsIgnoreCase(k.toString())) {
             current.id(v.toString());
-        } else if (ControlKeys._version.name().equals(k)) {
-            current.meta(k.toString(), v.toString());
-        } else if (ControlKeys._routing.name().equals(k)) {
-            current.meta(k.toString(), v.toString());
-        } else if (ControlKeys._parent.name().equals(k)) {
-            current.meta(k.toString(), v.toString());
-        } else if (ControlKeys._timestamp.name().equals(k)) {
-            current.meta(k.toString(), v.toString());
-        } else if (ControlKeys._ttl.name().equals(k)) {
-            current.meta(k.toString(), v.toString());
-        } else if (ControlKeys._job.name().equals(k)) {
-            current.meta(k.toString(), v.toString());
-        } else if (ControlKeys._source.name().equals(k)) {
+        } else if (ControlKeys._version.name().equalsIgnoreCase(k.toString())) {
+            current.meta(ControlKeys._version.name(), v.toString());
+        } else if (ControlKeys._routing.name().equalsIgnoreCase(k.toString())) {
+            current.meta(ControlKeys._routing.name(), v.toString());
+        } else if (ControlKeys._parent.name().equalsIgnoreCase(k.toString())) {
+            current.meta(ControlKeys._parent.name(), v.toString());
+        } else if (ControlKeys._timestamp.name().equalsIgnoreCase(k.toString())) {
+            current.meta(ControlKeys._timestamp.name(), v.toString());
+        } else if (ControlKeys._ttl.name().equalsIgnoreCase(k.toString())) {
+            current.meta(ControlKeys._ttl.name(), v.toString());
+        } else if (ControlKeys._job.name().equalsIgnoreCase(k.toString())) {
+            current.meta(ControlKeys._job.name(), v.toString());
+        } else if (ControlKeys._source.name().equalsIgnoreCase(k.toString())) {
             current.source(JsonXContent.jsonXContent.createParser(v.toString()).map());
         }
     }
