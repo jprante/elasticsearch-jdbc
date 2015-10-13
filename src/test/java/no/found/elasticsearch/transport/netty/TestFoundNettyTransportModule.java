@@ -4,7 +4,6 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.inject.Injector;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
@@ -21,13 +20,16 @@ import static org.testng.Assert.assertTrue;
 
 
 public class TestFoundNettyTransportModule {
+
     @Test
     public void testInjection() throws Exception {
-        Settings settings = ImmutableSettings.settingsBuilder()
-            .put("transport.type", "org.elasticsearch.transport.netty.FoundNettyTransport")
-            .build();
+        Settings settings = Settings.settingsBuilder()
+                .put("transport.type", "org.elasticsearch.transport.netty.FoundNettyTransport")
+                .put("path.home", System.getProperty("path.home"))
+                .put("plugin.types", FoundTransportPlugin.class)
+                .build();
 
-        TransportClient client = new TransportClient(settings);
+        TransportClient client = TransportClient.builder().settings(settings).build();
 
         Field injectorField = client.getClass().getDeclaredField("injector");
         injectorField.setAccessible(true);
@@ -38,10 +40,12 @@ public class TestFoundNettyTransportModule {
 
     @Test
     public void testNotInjected() throws Exception {
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.settingsBuilder()
+                .put("path.home", System.getProperty("path.home"))
+                .put("plugin.types", FoundTransportPlugin.class)
                 .build();
 
-        TransportClient client = new TransportClient(settings);
+        TransportClient client = TransportClient.builder().settings(settings).build();
 
         Field injectorField = client.getClass().getDeclaredField("injector");
         injectorField.setAccessible(true);
@@ -52,11 +56,16 @@ public class TestFoundNettyTransportModule {
 
     @Test
     public void testBackwardsCompatibilityWithOnlyClientUsingModule() throws Exception {
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.settingsBuilder()
                 .put("transport.type", "org.elasticsearch.transport.netty.FoundNettyTransport")
+                .put("path.home", System.getProperty("path.home"))
+                .put("plugin.types", FoundTransportPlugin.class)
                 .build();
 
-        Settings nodeSettings = ImmutableSettings.settingsBuilder().put("gateway.type", "none").build();
+        Settings nodeSettings = Settings.settingsBuilder()
+                .put("path.home", System.getProperty("path.home"))
+                .put("plugin.types", FoundTransportPlugin.class)
+                .build();
 
         Node node1 = null;
         TransportClient transportClient = null;
@@ -65,7 +74,7 @@ public class TestFoundNettyTransportModule {
             node1 = NodeBuilder.nodeBuilder().settings(nodeSettings).node();
             NodesInfoResponse nodesInfo = node1.client().admin().cluster().prepareNodesInfo().setTransport(true).get();
             TransportAddress transportAddress = nodesInfo.getNodes()[0].getTransport().address().publishAddress();
-            transportClient = new TransportClient(settings);
+            transportClient = TransportClient.builder().settings(settings).build();
             transportClient.addTransportAddress(transportAddress);
             ClusterHealthStatus status = transportClient.admin().cluster().prepareHealth().get().getStatus();
             assertTrue(status == ClusterHealthStatus.YELLOW || status == ClusterHealthStatus.GREEN);
@@ -82,9 +91,10 @@ public class TestFoundNettyTransportModule {
 
     @Test
     public void testBackwardsCompatibilityWithClientAndServerUsingModule() throws Exception {
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.settingsBuilder()
                 .put("transport.type", "org.elasticsearch.transport.netty.FoundNettyTransport")
-                .put("gateway.type", "none")
+                .put("path.home", System.getProperty("path.home"))
+                .put("plugin.types", FoundTransportPlugin.class)
                 .build();
 
         Node node1 = null;
@@ -94,7 +104,7 @@ public class TestFoundNettyTransportModule {
             node1 = NodeBuilder.nodeBuilder().settings(settings).node();
             NodesInfoResponse nodesInfo = node1.client().admin().cluster().prepareNodesInfo().setTransport(true).get();
             TransportAddress transportAddress = nodesInfo.getNodes()[0].getTransport().address().publishAddress();
-            transportClient = new TransportClient(settings);
+            transportClient = TransportClient.builder().settings(settings).build();
             transportClient.addTransportAddress(transportAddress);
             ClusterHealthStatus status = transportClient.admin().cluster().prepareHealth().get().getStatus();
             assertTrue(status == ClusterHealthStatus.YELLOW || status == ClusterHealthStatus.GREEN);

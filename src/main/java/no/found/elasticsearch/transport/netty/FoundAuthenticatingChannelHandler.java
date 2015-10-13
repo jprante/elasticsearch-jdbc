@@ -24,16 +24,17 @@ package no.found.elasticsearch.transport.netty;
 import no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.netty.buffer.ChannelBuffer;
-import org.elasticsearch.common.netty.buffer.ChannelBuffers;
-import org.elasticsearch.common.netty.channel.ChannelHandlerContext;
-import org.elasticsearch.common.netty.channel.ChannelStateEvent;
-import org.elasticsearch.common.netty.channel.Channels;
-import org.elasticsearch.common.netty.channel.DownstreamMessageEvent;
-import org.elasticsearch.common.netty.channel.ExceptionEvent;
-import org.elasticsearch.common.netty.channel.MessageEvent;
-import org.elasticsearch.common.netty.channel.SimpleChannelHandler;
-import org.elasticsearch.common.netty.channel.UpstreamMessageEvent;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.DownstreamMessageEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.UpstreamMessageEvent;
 import org.elasticsearch.common.unit.TimeValue;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * A {@link org.elasticsearch.common.netty.channel.ChannelHandler} that can work with both Found Elasticsearch and the
+ * A {@link ChannelHandler} that can work with both Found Elasticsearch and the
  * default Elasticsearch transport pipeline.
  * For Found Elasticsearch, it adds an SSL handler at the beginning of the pipeline
  * if it's connecting to a pre-configured SSL-port (which usually should be 9343).

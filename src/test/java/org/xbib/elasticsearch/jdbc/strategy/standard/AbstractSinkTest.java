@@ -17,11 +17,9 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.indices.IndexMissingException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
@@ -123,7 +121,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
         try {
             client("1").admin().indices().prepareDelete(index).execute().actionGet();
             logger.info("index {} deleted", index);
-        } catch (IndexMissingException e) {
+        } catch (Exception e) {
             logger.warn(e.getMessage());
         }
         stopNodes();
@@ -142,7 +140,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     protected Context createContext(String resource) throws Exception {
         waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.settingsBuilder()
                 .loadFromStream("test", in)
                 .put("jdbc.elasticsearch.cluster", getClusterName())
                 .putArray("jdbc.elasticsearch.host", getHosts())
@@ -283,10 +281,10 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
                 Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m",""));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 BulkTransportClient ingest = new BulkTransportClient();
-                Settings clientSettings = ImmutableSettings.settingsBuilder()
+                Settings clientSettings = Settings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster"))
                         .putArray("host", getHosts())
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
@@ -298,11 +296,11 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                         .build();
                 logger.info("ingest factory: client settings = {}", clientSettings);
-                ingest.maxActionsPerBulkRequest(maxbulkactions)
-                        .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                        .maxVolumePerBulkRequest(maxvolume)
+                ingest.maxActionsPerRequest(maxbulkactions)
+                        .maxConcurrentRequests(maxconcurrentbulkrequests)
+                        .maxVolumePerRequest(maxvolume)
                         .flushIngestInterval(flushinterval)
-                        .newClient(clientSettings);
+                        .init(clientSettings);
                 return ingest;
             }
         };

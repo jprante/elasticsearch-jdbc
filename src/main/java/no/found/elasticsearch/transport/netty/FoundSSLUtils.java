@@ -22,7 +22,6 @@
 package no.found.elasticsearch.transport.netty;
 
 import no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler;
-import org.elasticsearch.common.collect.Sets;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -34,6 +33,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -48,9 +49,11 @@ public final class FoundSSLUtils {
 
         SSLEngine engine = createSslEngine(unsafeAllowSelfSigned, inetSocketAddress, hostString);
 
-        Set supported = Sets.newHashSet(engine.getSupportedCipherSuites());
+        Set<String> supported = new HashSet<>();
+        Collections.addAll(supported, engine.getSupportedCipherSuites());
 
-        Set preferred = Sets.newHashSet("TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        Set<String> preferred = new HashSet<>();
+        Collections.addAll(preferred, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
                 "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
                 "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
                 "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
@@ -107,7 +110,9 @@ public final class FoundSSLUtils {
                 "SSL_RSA_WITH_RC4_128_MD5",
                 "TLS_EMPTY_RENEGOTIATION_INFO_SCSV");
 
-        Set<String> usable = Sets.intersection(preferred, supported);
+        Set<String> usable = new HashSet<>();
+        usable.addAll(supported);
+        usable.retainAll(preferred);
         String[] usableArray = usable.toArray(new String[usable.size()]);
         if (usableArray.length > 0) {
             engine.setEnabledCipherSuites(usableArray);

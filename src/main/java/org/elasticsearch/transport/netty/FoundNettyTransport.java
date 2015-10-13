@@ -11,11 +11,12 @@ import org.elasticsearch.Version;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.netty.bootstrap.ClientBootstrap;
-import org.elasticsearch.common.netty.channel.ChannelHandlerContext;
-import org.elasticsearch.common.netty.channel.ChannelPipeline;
-import org.elasticsearch.common.netty.channel.ChannelPipelineFactory;
-import org.elasticsearch.common.netty.channel.ExceptionEvent;
+import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.elasticsearch.common.network.NetworkService;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -103,8 +104,10 @@ public class FoundNettyTransport extends NettyTransport {
     private final ScheduledExecutorService scheduler;
 
     @Inject
-    public FoundNettyTransport(Settings settings, ThreadPool threadPool, NetworkService networkService, ClusterName clusterName, BigArrays bigArrays, Version version) {
-        super(settings, threadPool, networkService, bigArrays, version);
+    public FoundNettyTransport(Settings settings, ThreadPool threadPool, NetworkService networkService,
+                               ClusterName clusterName, BigArrays bigArrays, Version version,
+                               NamedWriteableRegistry namedWriteableRegistry) {
+        super(settings, threadPool, networkService, bigArrays, version, namedWriteableRegistry);
 
         if (settings.getAsBoolean("client.transport.ignore_cluster_name", false)) {
             logger.warn("client.transport.ignore_cluster_name has been set to true! " +
@@ -181,7 +184,7 @@ public class FoundNettyTransport extends NettyTransport {
 
         if (node.address() instanceof InetSocketTransportAddress) {
             InetSocketTransportAddress oldAddress = (InetSocketTransportAddress) node.address();
-            InetSocketTransportAddress newAddress = new InetSocketTransportAddress(oldAddress.address().getHostString(), oldAddress.address().getPort());
+            InetSocketTransportAddress newAddress = new InetSocketTransportAddress(oldAddress.address().getAddress(), oldAddress.address().getPort());
 
             boolean oldResolved = !oldAddress.address().isUnresolved();
             boolean newResolved = !newAddress.address().isUnresolved();

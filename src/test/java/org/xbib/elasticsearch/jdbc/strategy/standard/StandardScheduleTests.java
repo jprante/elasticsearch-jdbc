@@ -76,7 +76,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
     }
 
     private JDBCImporter createImporter(String resource) throws Exception {
-        final JDBCImporter importer = JDBCImporter.getInstance();
+        final JDBCImporter importer = new JDBCImporter();
         Context context = createContext(resource);
         logger.info("createImporter: set context {}", context);
         importer.setContext(context);

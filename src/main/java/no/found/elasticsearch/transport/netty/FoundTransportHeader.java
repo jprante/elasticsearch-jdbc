@@ -22,8 +22,8 @@
 package no.found.elasticsearch.transport.netty;
 
 import org.elasticsearch.Version;
-import org.elasticsearch.common.netty.buffer.ChannelBuffer;
-import org.elasticsearch.common.netty.buffer.ChannelBuffers;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 

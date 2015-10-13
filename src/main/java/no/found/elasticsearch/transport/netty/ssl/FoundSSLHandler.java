@@ -16,27 +16,28 @@
 package no.found.elasticsearch.transport.netty.ssl;
 
 import no.found.elasticsearch.transport.netty.ssl.internal.NonReentrantLock;
-import org.elasticsearch.common.netty.buffer.ChannelBuffer;
-import org.elasticsearch.common.netty.buffer.ChannelBuffers;
-import org.elasticsearch.common.netty.channel.Channel;
-import org.elasticsearch.common.netty.channel.ChannelDownstreamHandler;
-import org.elasticsearch.common.netty.channel.ChannelEvent;
-import org.elasticsearch.common.netty.channel.ChannelFuture;
-import org.elasticsearch.common.netty.channel.ChannelFutureListener;
-import org.elasticsearch.common.netty.channel.ChannelHandlerContext;
-import org.elasticsearch.common.netty.channel.ChannelStateEvent;
-import org.elasticsearch.common.netty.channel.Channels;
-import org.elasticsearch.common.netty.channel.DefaultChannelFuture;
-import org.elasticsearch.common.netty.channel.DownstreamMessageEvent;
-import org.elasticsearch.common.netty.channel.ExceptionEvent;
-import org.elasticsearch.common.netty.channel.MessageEvent;
-import org.elasticsearch.common.netty.handler.codec.frame.FrameDecoder;
-import org.elasticsearch.common.netty.logging.InternalLogger;
-import org.elasticsearch.common.netty.logging.InternalLoggerFactory;
-import org.elasticsearch.common.netty.util.Timeout;
-import org.elasticsearch.common.netty.util.Timer;
-import org.elasticsearch.common.netty.util.TimerTask;
-import org.elasticsearch.common.netty.util.internal.DetectionUtil;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelDownstreamHandler;
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.DefaultChannelFuture;
+import org.jboss.netty.channel.DownstreamMessageEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import org.jboss.netty.util.Timeout;
+import org.jboss.netty.util.Timer;
+import org.jboss.netty.util.TimerTask;
+import org.jboss.netty.util.internal.DetectionUtil;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
@@ -56,22 +57,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
-import static org.elasticsearch.common.netty.channel.Channels.failedFuture;
-import static org.elasticsearch.common.netty.channel.Channels.fireExceptionCaught;
-import static org.elasticsearch.common.netty.channel.Channels.fireExceptionCaughtLater;
-import static org.elasticsearch.common.netty.channel.Channels.future;
-import static org.elasticsearch.common.netty.channel.Channels.succeededFuture;
-import static org.elasticsearch.common.netty.channel.Channels.write;
+import static org.jboss.netty.channel.Channels.failedFuture;
+import static org.jboss.netty.channel.Channels.fireExceptionCaught;
+import static org.jboss.netty.channel.Channels.fireExceptionCaughtLater;
+import static org.jboss.netty.channel.Channels.future;
+import static org.jboss.netty.channel.Channels.succeededFuture;
+import static org.jboss.netty.channel.Channels.write;
 
 /**
  * Adds <a href="http://en.wikipedia.org/wiki/Transport_Layer_Security">SSL
- * &middot; TLS</a> and StartTLS support to a {@link org.elasticsearch.common.netty.channel.Channel}.  Please refer
+ * &middot; TLS</a> and StartTLS support to a {@link Channel}.  Please refer
  * to the <strong>"SecureChat"</strong> example in the distribution or the web
  * site for the detailed usage.
  * <h3>Beginning the handshake</h3>
  * You must make sure not to write a message while the
  * {@linkplain #handshake() handshake} is in progress unless you are
- * renegotiating.  You will be notified by the {@link org.elasticsearch.common.netty.channel.ChannelFuture} which is
+ * renegotiating.  You will be notified by the {@link ChannelFuture} which is
  * returned by the {@link #handshake()} method when the handshake
  * process succeeds or fails.
  * <h3>Handshake</h3>
@@ -99,7 +100,7 @@ import static org.elasticsearch.common.netty.channel.Channels.write;
  * <h3>Closing the session</h3>
  * To close the SSL session, the {@link #close()} method should be
  * called to send the {@code close_notify} message to the remote peer.  One
- * exception is when you close the {@link org.elasticsearch.common.netty.channel.Channel} - {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler}
+ * exception is when you close the {@link Channel} - {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler}
  * intercepts the close request and send the {@code close_notify} message
  * before the channel closure automatically.  Once the SSL session is closed,
  * it is not reusable, and consequently you should create a new
@@ -107,7 +108,7 @@ import static org.elasticsearch.common.netty.channel.Channels.write;
  * following section.
  * <h3>Restarting the session</h3>
  * To restart the SSL session, you must remove the existing closed
- * {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} from the {@link org.elasticsearch.common.netty.channel.ChannelPipeline}, insert a new
+ * {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} from the {@link ChannelPipeline}, insert a new
  * {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} with a new {@link javax.net.ssl.SSLEngine} into the pipeline,
  * and start the handshake process as described in the first section.
  * <h3>Implementing StartTLS</h3>
@@ -125,12 +126,12 @@ import static org.elasticsearch.common.netty.channel.Channels.write;
  * <ol>
  * <li>create a new {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} instance with {@code startTls} flag set
  * to {@code true},</li>
- * <li>insert the {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} to the {@link org.elasticsearch.common.netty.channel.ChannelPipeline}, and</li>
+ * <li>insert the {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} to the {@link ChannelPipeline}, and</li>
  * <li>write a StartTLS response.</li>
  * </ol>
  * Please note that you must insert {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} <em>before</em> sending
  * the StartTLS response.  Otherwise the client can send begin SSL handshake
- * before {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} is inserted to the {@link org.elasticsearch.common.netty.channel.ChannelPipeline}, causing
+ * before {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} is inserted to the {@link ChannelPipeline}, causing
  * data corruption.
  * The client-side implementation is much simpler.
  * <ol>
@@ -138,7 +139,7 @@ import static org.elasticsearch.common.netty.channel.Channels.write;
  * <li>wait for the StartTLS response,</li>
  * <li>create a new {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} instance with {@code startTls} flag set
  * to {@code false},</li>
- * <li>insert the {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} to the {@link org.elasticsearch.common.netty.channel.ChannelPipeline}, and</li>
+ * <li>insert the {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler} to the {@link ChannelPipeline}, and</li>
  * <li>Initiate SSL handshake by calling {@link no.found.elasticsearch.transport.netty.ssl.FoundSSLHandler#handshake()}.</li>
  * </ol>
  * <h3>Known issues</h3>
@@ -159,8 +160,8 @@ import static org.elasticsearch.common.netty.channel.Channels.write;
  */
 public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHandler {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(FoundSSLHandler.class);
+    private static final ESLogger logger =
+            ESLoggerFactory.getLogger(FoundSSLHandler.class.getName());
 
     private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
 
@@ -318,8 +319,8 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
      *                                 by the {@link javax.net.ssl.SSLEngine}
      * @param delegatedTaskExecutor    the {@link java.util.concurrent.Executor} which will execute the delegated task
      *                                 that {@link javax.net.ssl.SSLEngine#getDelegatedTask()} will return
-     * @param timer                    the {@link org.elasticsearch.common.netty.util.Timer} which will be used to process the timeout of the {@link #handshake()}.
-     *                                 Be aware that the given {@link org.elasticsearch.common.netty.util.Timer} will not get stopped automaticly, so it is up to you to cleanup
+     * @param timer                    the {@link Timer} which will be used to process the timeout of the {@link #handshake()}.
+     *                                 Be aware that the given {@link Timer} will not get stopped automaticly, so it is up to you to cleanup
      *                                 once you not need it anymore
      * @param handshakeTimeoutInMillis the time in milliseconds after which the {@link #handshake()} will be failed, and so the future notified
      */
@@ -353,7 +354,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     /**
      * Starts an SSL / TLS handshake for the specified channel.
      *
-     * @return a {@link org.elasticsearch.common.netty.channel.ChannelFuture} which is notified when the handshake
+     * @return a {@link ChannelFuture} which is notified when the handshake
      * succeeds or fails.
      */
     public ChannelFuture handshake() {
@@ -478,9 +479,9 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     }
 
     /**
-     * Enables or disables the automatic handshake once the {@link org.elasticsearch.common.netty.channel.Channel} is
+     * Enables or disables the automatic handshake once the {@link Channel} is
      * connected. The value will only have affect if its set before the
-     * {@link org.elasticsearch.common.netty.channel.Channel} is connected.
+     * {@link Channel} is connected.
      */
     public void setIssueHandshake(boolean issueHandshake) {
         this.issueHandshake = issueHandshake;
@@ -494,8 +495,8 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     }
 
     /**
-     * Return the {@link org.elasticsearch.common.netty.channel.ChannelFuture} that will get notified if the inbound of the {@link javax.net.ssl.SSLEngine} will get closed.
-     * This method will return the same {@link org.elasticsearch.common.netty.channel.ChannelFuture} all the time.
+     * Return the {@link ChannelFuture} that will get notified if the inbound of the {@link javax.net.ssl.SSLEngine} will get closed.
+     * This method will return the same {@link ChannelFuture} all the time.
      * For more informations see the apidocs of {@link javax.net.ssl.SSLEngine}
      */
     public ChannelFuture getSSLEngineInboundCloseFuture() {
@@ -503,7 +504,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     }
 
     /**
-     * Return the timeout (in ms) after which the {@link org.elasticsearch.common.netty.channel.ChannelFuture} of {@link #handshake()} will be failed, while
+     * Return the timeout (in ms) after which the {@link ChannelFuture} of {@link #handshake()} will be failed, while
      * a handshake is in progress
      */
     public long getHandshakeTimeout() {
@@ -511,7 +512,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     }
 
     /**
-     * If set to {@code true}, the {@link org.elasticsearch.common.netty.channel.Channel} will automatically get closed
+     * If set to {@code true}, the {@link Channel} will automatically get closed
      * one a {@link javax.net.ssl.SSLException} was caught. This is most times what you want, as after this
      * its almost impossible to recover.
      * Anyway the default is {@code false} to not break compatibility with older releases. This
@@ -728,14 +729,14 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     }
 
     /**
-     * Returns {@code true} if the given {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} is encrypted. Be aware that this method
-     * will not increase the readerIndex of the given {@link org.elasticsearch.common.netty.buffer.ChannelBuffer}.
+     * Returns {@code true} if the given {@link ChannelBuffer} is encrypted. Be aware that this method
+     * will not increase the readerIndex of the given {@link ChannelBuffer}.
      *
-     * @param buffer The {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} to read from. Be aware that it must have at least 5 bytes to read,
+     * @param buffer The {@link ChannelBuffer} to read from. Be aware that it must have at least 5 bytes to read,
      *               otherwise it will throw an {@link IllegalArgumentException}.
      * @return encrypted
-     * {@code true} if the {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} is encrypted, {@code false} otherwise.
-     * @throws IllegalArgumentException Is thrown if the given {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} has not at least 5 bytes to read.
+     * {@code true} if the {@link ChannelBuffer} is encrypted, {@code false} otherwise.
+     * @throws IllegalArgumentException Is thrown if the given {@link ChannelBuffer} has not at least 5 bytes to read.
      */
     public static boolean isEncrypted(ChannelBuffer buffer) {
         return getEncryptedPacketLength(buffer) != -1;
@@ -743,14 +744,14 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
 
     /**
      * Return how much bytes can be read out of the encrypted data. Be aware that this method will not increase
-     * the readerIndex of the given {@link org.elasticsearch.common.netty.buffer.ChannelBuffer}.
+     * the readerIndex of the given {@link ChannelBuffer}.
      *
-     * @param buffer The {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} to read from. Be aware that it must have at least 5 bytes to read,
+     * @param buffer The {@link ChannelBuffer} to read from. Be aware that it must have at least 5 bytes to read,
      *               otherwise it will throw an {@link IllegalArgumentException}.
      * @return length
      * The length of the encrypted packet that is included in the buffer. This will
-     * return {@code -1} if the given {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} is not encrypted at all.
-     * @throws IllegalArgumentException Is thrown if the given {@link org.elasticsearch.common.netty.buffer.ChannelBuffer} has not at least 5 bytes to read.
+     * return {@code -1} if the given {@link ChannelBuffer} is not encrypted at all.
+     * @throws IllegalArgumentException Is thrown if the given {@link ChannelBuffer} has not at least 5 bytes to read.
      */
     private static int getEncryptedPacketLength(ChannelBuffer buffer) {
         if (buffer.readableBytes() < 5) {
@@ -881,7 +882,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
 
     /**
      * Reads a big-endian short integer from the buffer.  Please note that we do not use
-     * {@link org.elasticsearch.common.netty.buffer.ChannelBuffer#getShort(int)} because it might be a little-endian buffer.
+     * {@link ChannelBuffer#getShort(int)} because it might be a little-endian buffer.
      */
     private static short getShort(ChannelBuffer buf, int offset) {
         return (short) (buf.getByte(offset) << 8 | buf.getByte(offset + 1) & 0xFF);
@@ -1496,7 +1497,7 @@ public class FoundSSLHandler extends FrameDecoder implements ChannelDownstreamHa
     }
 
     /**
-     * Calls {@link #handshake()} once the {@link org.elasticsearch.common.netty.channel.Channel} is connected
+     * Calls {@link #handshake()} once the {@link Channel} is connected
      */
     @Override
     public void channelConnected(final ChannelHandlerContext ctx, final ChannelStateEvent e) throws Exception {

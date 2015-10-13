@@ -16,9 +16,8 @@
 package org.xbib.elasticsearch.common.util;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
-
-import static org.elasticsearch.common.collect.Sets.newHashSet;
 
 /**
  * The names of keys with a special meaning for controlling Elasticsearch indexing.
@@ -30,7 +29,7 @@ public enum ControlKeys {
     _optype, _index, _type, _id, _version, _timestamp, _ttl, _routing, _parent, _source, _job;
 
     public static Set<String> makeSet() {
-        Set<String> set = newHashSet();
+        Set<String> set = new HashSet<>();
         for (ControlKeys k : EnumSet.allOf(ControlKeys.class)) {
             set.add(k.name());
         }

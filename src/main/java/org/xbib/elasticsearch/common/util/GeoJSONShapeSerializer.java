@@ -11,7 +11,6 @@ import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import org.elasticsearch.ElasticsearchIllegalArgumentException;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
@@ -50,14 +49,14 @@ public class GeoJSONShapeSerializer {
             } else if (geometry instanceof MultiPolygon) {
                 serializeMulitPolygon((MultiPolygon) geometry, builder);
             } else {
-                throw new ElasticsearchIllegalArgumentException("Geometry type [" + geometry.getGeometryType() + "] not supported");
+                throw new IllegalArgumentException("Geometry type [" + geometry.getGeometryType() + "] not supported");
             }
         } else if (shape instanceof com.spatial4j.core.shape.Point) {
             serializePoint((com.spatial4j.core.shape.Point) shape, builder);
         } else if (shape instanceof Rectangle) {
             serializeRectangle((Rectangle) shape, builder);
         } else {
-            throw new ElasticsearchIllegalArgumentException("Shape type [" + shape.getClass().getSimpleName() + "] not supported");
+            throw new IllegalArgumentException("Shape type [" + shape.getClass().getSimpleName() + "] not supported");
         }
     }
 

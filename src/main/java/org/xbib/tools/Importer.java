@@ -18,6 +18,7 @@ package org.xbib.tools;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesAction;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -27,13 +28,10 @@ import org.xbib.elasticsearch.support.client.Ingest;
 import org.xbib.elasticsearch.support.client.ingest.IngestTransportClient;
 import org.xbib.elasticsearch.support.client.mock.MockTransportClient;
 import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
-import org.xbib.metrics.MeterMetric;
 import org.xbib.pipeline.AbstractPipeline;
 import org.xbib.pipeline.Pipeline;
-import org.xbib.pipeline.PipelineException;
 import org.xbib.pipeline.PipelineProvider;
-import org.xbib.pipeline.PipelineRequest;
-import org.xbib.pipeline.simple.MetricSimplePipelineExecutor;
+import org.xbib.pipeline.MetricSimplePipelineExecutor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,36 +39,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static org.elasticsearch.common.collect.Lists.newLinkedList;
-import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
+import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
-public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<T, R>>
-        extends AbstractPipeline<SettingsPipelineElement, PipelineException>
+public abstract class Importer
+        extends AbstractPipeline<SettingsPipelineRequest>
         implements Runnable, CommandLineInterpreter {
 
     private final static Logger logger = LogManager.getLogger("importer");
 
-    private final static SettingsPipelineElement pipelineElement = new SettingsPipelineElement();
-
     protected static Settings settings;
 
-    protected static Queue<Settings> input;
-
-    private MetricSimplePipelineExecutor<T, R, P> executor;
+    private MetricSimplePipelineExecutor<SettingsPipelineRequest, Pipeline<SettingsPipelineRequest>> executor;
 
     private ThreadPoolExecutor threadPoolExecutor;
-
-    private boolean done = false;
 
     private List<Future> futures;
 
@@ -107,12 +98,12 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
     }
 
     @Override
-    public Importer<T, R, P> reader(String resourceName, InputStream in) {
+    public Importer reader(String resourceName, InputStream in) {
         setSettings(settingsBuilder().loadFromStream(resourceName, in).build());
         return this;
     }
 
-    public Importer<T, R, P> setSettings(Settings newSettings) {
+    public Importer setSettings(Settings newSettings) {
         settings = newSettings;
         String statefile = settings.get("jdbc.statefile");
         if (statefile != null) {
@@ -146,7 +137,7 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
                     } catch (CancellationException e) {
                         logger.warn("schedule canceled");
                     } catch (InterruptedException e) {
-                        logger.error(e.getMessage(), e);
+                        logger.error(e.getMessage());
                     } catch (ExecutionException e) {
                         logger.error(e.getMessage(), e);
                     }
@@ -189,26 +180,26 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
     }
 
     protected void prepare() throws IOException {
-        input = new ConcurrentLinkedQueue<Settings>();
-        input.add(settings);
-        if (settings.getAsBoolean("parallel", false)) {
-            for (int i = 1; i < settings.getAsInt("concurrency", 1); i++) {
-                input.add(settings);
-            }
-        }
-        logger.debug("input = {}", input);
         if (ingest == null) {
             Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
             Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                     Runtime.getRuntime().availableProcessors());
             ingest = createIngest();
-            ingest.maxActionsPerBulkRequest(maxbulkactions)
-                    .maxConcurrentBulkRequests(maxconcurrentbulkrequests);
+            ingest.maxActionsPerRequest(maxbulkactions)
+                    .maxConcurrentRequests(maxconcurrentbulkrequests);
         }
         createIndex(getIndex());
+        setQueue(new ArrayBlockingQueue<SettingsPipelineRequest>(32));
+        SettingsPipelineRequest element = new SettingsPipelineRequest().set(settings);
+        getQueue().offer(element);
+        if (settings.getAsBoolean("parallel", false)) {
+            for (int i = 1; i < settings.getAsInt("concurrency", 1); i++) {
+                getQueue().offer(element);
+            }
+        }
     }
 
-    protected Importer<T, R, P> cleanup() throws IOException {
+    protected Importer cleanup() throws IOException {
         logger.debug("cleanup (no op)");
         return this;
     }
@@ -219,24 +210,7 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
     }
 
     @Override
-    public boolean hasNext() {
-        return !done && !input.isEmpty();
-    }
-
-    @Override
-    public SettingsPipelineElement next() {
-        Settings settings = input.poll();
-        done = settings == null;
-        pipelineElement.set(settings);
-        if (done) {
-            logger.debug("done is true");
-            return pipelineElement;
-        }
-        return pipelineElement;
-    }
-
-    @Override
-    public void newRequest(Pipeline<MeterMetric, SettingsPipelineElement> pipeline, SettingsPipelineElement request) {
+    public void newRequest(Pipeline<SettingsPipelineRequest> pipeline, SettingsPipelineRequest request) {
         try {
             process(request.get());
         } catch (Exception ex) {
@@ -244,17 +218,12 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
         }
     }
 
-    @Override
-    public void error(Pipeline<MeterMetric, SettingsPipelineElement> pipeline, SettingsPipelineElement request, PipelineException error) {
-        logger.error(error.getMessage(), error);
-    }
-
-    protected abstract PipelineProvider<P> pipelineProvider();
+    protected abstract PipelineProvider<Pipeline<SettingsPipelineRequest>> pipelineProvider();
 
     protected abstract void process(Settings settings) throws Exception;
 
     protected List<Future> schedule(Settings settings) {
-        List<Future> futures = newLinkedList();
+        List<Future> futures = new LinkedList<>();
         if (threadPoolExecutor != null) {
             logger.info("already scheduled");
             return futures;
@@ -282,8 +251,9 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
     }
 
     protected void execute() throws ExecutionException, InterruptedException {
-        logger.debug("executing");
-        executor = new MetricSimplePipelineExecutor<T, R, P>()
+        logger.debug("executing (queue={})", getQueue().size());
+        executor = new MetricSimplePipelineExecutor<SettingsPipelineRequest, Pipeline<SettingsPipelineRequest>>()
+                .setQueue(getQueue())
                 .setConcurrency(settings.getAsInt("concurrency", 1))
                 .setPipelineProvider(pipelineProvider())
                 .prepare()
@@ -345,7 +315,7 @@ public abstract class Importer<T, R extends PipelineRequest, P extends Pipeline<
         if (ingest.client() == null) {
             return alias;
         }
-        GetAliasesResponse getAliasesResponse = ingest.client().admin().indices().prepareGetAliases(alias).execute().actionGet();
+        GetAliasesResponse getAliasesResponse = ingest.client().prepareExecute(GetAliasesAction.INSTANCE).setAliases(alias).execute().actionGet();
         if (!getAliasesResponse.getAliases().isEmpty()) {
             return getAliasesResponse.getAliases().keys().iterator().next().value;
         }

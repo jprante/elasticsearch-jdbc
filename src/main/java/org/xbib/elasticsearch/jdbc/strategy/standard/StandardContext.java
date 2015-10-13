@@ -17,16 +17,14 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.common.joda.FormatDateTimeFormatter;
 import org.elasticsearch.common.joda.Joda;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
+import org.joda.time.DateTime;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.common.util.SourceMetric;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
@@ -102,7 +100,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext setSettings(Settings settings) {
         this.settings = settings;
-        ImmutableMap<String,String> map = settings.getAsMap();
+        Map<String,String> map = settings.getAsMap();
         if (map.containsKey("metrics.lastexecutionstart")) {
             DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
             sourceMetric.setLastExecutionStart(lastexecutionstart);
@@ -281,7 +279,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             if (!file.exists() || file.canWrite()) {
                 Writer writer = new FileWriter(statefile);
                 FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
-                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
+                Settings.Builder settingsBuilder = Settings.settingsBuilder()
                         .put(settings)
                         .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
                         .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()))
@@ -412,10 +410,10 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 BulkTransportClient ingest = new BulkTransportClient();
-                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
+                Settings.Builder settingsBuilder = Settings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                         .putArray("host", settings.getAsArray("elasticsearch.host"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
@@ -432,17 +430,17 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 // copy found.no transport settings
                 Settings foundTransportSettings = settings.getAsSettings("transport.found");
                 if (foundTransportSettings != null) {
-                    ImmutableMap<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
+                    Map<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
                     for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
                         settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
                     }
                 }
                 try {
-                    ingest.maxActionsPerBulkRequest(maxbulkactions)
-                            .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                            .maxVolumePerBulkRequest(maxvolume)
+                    ingest.maxActionsPerRequest(maxbulkactions)
+                            .maxConcurrentRequests(maxconcurrentbulkrequests)
+                            .maxVolumePerRequest(maxvolume)
                             .flushIngestInterval(flushinterval)
-                            .newClient(settingsBuilder.build());
+                            .init(settingsBuilder.build());
                 } catch (Exception e) {
                     logger.error("ingest not properly build, shutting down ingest",e);
                     ingest.shutdown();

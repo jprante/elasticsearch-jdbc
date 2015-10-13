@@ -15,8 +15,6 @@
  */
 package org.xbib.elasticsearch.common.util;
 
-import org.elasticsearch.common.base.Strings;
-
 import java.util.Locale;
 
 public class LocaleUtil {

@@ -22,8 +22,6 @@ import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.network.NetworkUtils;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
@@ -37,16 +35,17 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.TransportInfo;
 import org.testng.Assert;
+import org.xbib.elasticsearch.plugin.support.SupportPlugin;
+import org.xbib.elasticsearch.support.network.NetworkUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.elasticsearch.common.collect.Maps.newHashMap;
-import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 public abstract class AbstractNodeTestHelper extends Assert {
@@ -62,9 +61,11 @@ public abstract class AbstractNodeTestHelper extends Assert {
 
     protected final String type = "my_type";
 
-    private Map<String, Node> nodes = newHashMap();
+    private Map<String, Node> nodes = new HashMap<>();
 
-    private Map<String, Client> clients = newHashMap();
+    private Map<String, Client> clients = new HashMap<>();
+
+    private List<String> hosts;
 
     protected void setClusterName() {
         this.cluster = "test-jdbc-cluster-" + NetworkUtils.getLocalAddress().getHostName() + "-" + clusterCount.getAndIncrement();
@@ -74,23 +75,24 @@ public abstract class AbstractNodeTestHelper extends Assert {
         return this.cluster;
     }
 
-    private List<String> hosts;
-
     protected String[] getHosts() {
         return hosts != null ? hosts.toArray(new String[hosts.size()]) : new String[]{};
     }
 
+    protected String getHome() {
+        return System.getProperty("path.home");
+    }
+
     protected Settings getNodeSettings() {
-        return ImmutableSettings
+        return Settings
                 .settingsBuilder()
                 .put("cluster.name", getClusterName())
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replica", 0)
                 .put("cluster.routing.schedule", "50ms")
-                .put("gateway.type", "none")
-                .put("index.store.type", "ram")
                 .put("http.enabled", false)
                 .put("discovery.zen.multicast.enabled", true)
+                .put("path.home", getHome())
                 .build();
     }
 
@@ -122,9 +124,7 @@ public abstract class AbstractNodeTestHelper extends Assert {
     }
 
     public Node buildNode(String id) {
-        String settingsSource = getClass().getName().replace('.', '/') + ".yml";
-        Settings finalSettings = settingsBuilder()
-                .loadFromClasspath(settingsSource)
+        Settings finalSettings = Settings.settingsBuilder()
                 .put(getNodeSettings())
                 .put("name", id)
                 .build();
@@ -192,7 +192,6 @@ public abstract class AbstractNodeTestHelper extends Assert {
         clients.clear();
         logger.info("stopping and closing nodes");
         for (Node node : nodes.values()) {
-            node.stop();
             node.close();
         }
         nodes.clear();

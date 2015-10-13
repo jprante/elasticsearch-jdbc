@@ -22,11 +22,12 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.format.DateTimeFormat;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
@@ -68,7 +69,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     @Override
     public StandardSink<C> newInstance() {
-        return new StandardSink<C>();
+        return new StandardSink<>();
     }
 
     @Override
@@ -104,12 +105,16 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
             logger.warn("no ingest found");
             return;
         }
-        if (ingest.client() != null && !ingest.client().admin().indices().prepareExists(index).execute().actionGet().isExists()) {
-            logger.info("creating index {} with settings = {} and mappings = {}",
-                    index,
-                    indexSettings != null ? indexSettings.getAsMap() : "",
-                    indexMappings != null ? indexMappings : "");
-            ingest.newIndex(index, indexSettings, indexMappings);
+        if (ingest.client() != null) {
+                logger.info("creating index {} with settings = {} and mappings = {}",
+                        index,
+                        indexSettings != null ? indexSettings.getAsMap() : "",
+                        indexMappings != null ? indexMappings : "");
+                try {
+                    ingest.newIndex(index, indexSettings, indexMappings);
+                } catch (IndexAlreadyExistsException e) {
+                    logger.warn(e.getMessage());
+                }
         }
         long startRefreshInterval = indexSettings != null ?
                 indexSettings.getAsTime("bulk." + index + ".refresh_interval.start",

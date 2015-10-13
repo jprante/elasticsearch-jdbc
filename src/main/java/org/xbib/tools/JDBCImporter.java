@@ -30,9 +30,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
-
-import static org.elasticsearch.common.collect.Queues.newConcurrentLinkedQueue;
 
 /**
  * Standalone importer for JDBC
@@ -41,22 +41,18 @@ public class JDBCImporter extends Importer {
 
     private final static Logger logger = LogManager.getLogger("importer.jdbc");
 
-    private final static JDBCImporter INSTANCE = new JDBCImporter();
-
     protected Context context;
 
     private volatile boolean closed;
 
-    public static JDBCImporter getInstance() {
-        return INSTANCE;
-    }
-
     @Override
-    protected PipelineProvider<Pipeline> pipelineProvider() {
-        return new PipelineProvider<Pipeline>() {
+    protected PipelineProvider<Pipeline<SettingsPipelineRequest>> pipelineProvider() {
+        return new PipelineProvider<Pipeline<SettingsPipelineRequest>>() {
             @Override
-            public Pipeline get() {
-                return INSTANCE;
+            public Pipeline<SettingsPipelineRequest> get() {
+                JDBCImporter jdbcImporter = new JDBCImporter();
+                jdbcImporter.setQueue(getQueue());
+                return jdbcImporter;
             }
         };
     }
@@ -86,11 +82,13 @@ public class JDBCImporter extends Importer {
         Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
         Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                 Runtime.getRuntime().availableProcessors());
-        ingest.maxActionsPerBulkRequest(maxbulkactions)
-                .maxConcurrentBulkRequests(maxconcurrentbulkrequests);
+        ingest.maxActionsPerRequest(maxbulkactions)
+                .maxConcurrentRequests(maxconcurrentbulkrequests);
         createIndex(getConcreteIndex());
-        input = newConcurrentLinkedQueue();
-        input.offer(settings);
+        BlockingQueue<SettingsPipelineRequest> queue = new ArrayBlockingQueue<>(32);
+        setQueue(queue);
+        SettingsPipelineRequest element = new SettingsPipelineRequest().set(settings);
+        getQueue().offer(element);
         logger.debug("prepare ended");
     }
 
@@ -129,9 +127,7 @@ public class JDBCImporter extends Importer {
 
     public Set<Context.State> getStates() {
         Set<Context.State> states = new HashSet<>();
-        if (INSTANCE.getContext() != null) {
-            states.add(INSTANCE.getContext().getState());
-        }
+        states.add(getContext().getState());
         return states;
     }
 

@@ -1,11 +1,9 @@
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.indices.IndexMissingException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
@@ -108,7 +106,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         try {
             client("1").admin().indices().delete(new DeleteIndexRequest(index)).actionGet();
             logger.info("index {} deleted", index);
-        } catch (IndexMissingException e) {
+        } catch (Exception e) {
             logger.warn(e.getMessage());
         }
         stopNodes();
@@ -118,7 +116,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
         logger.info("creating context");
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.settingsBuilder()
                 .loadFromStream("test", in)
                 .build().getAsSettings("jdbc");
         context = newContext();
@@ -129,7 +127,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
     protected Settings createSettings(String resource)
             throws IOException {
         InputStream in = getClass().getResourceAsStream(resource);
-        Settings settings = ImmutableSettings.settingsBuilder()
+        Settings settings = Settings.settingsBuilder()
                 .loadFromStream("test", in)
                 .build().getAsSettings("jdbc");
         in.close();
@@ -164,10 +162,10 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
                 Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 BulkTransportClient ingest = new BulkTransportClient();
-                Settings clientSettings = ImmutableSettings.settingsBuilder()
+                Settings clientSettings = Settings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", getClusterName()))
                         .putArray("host", getHosts())
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
@@ -178,11 +176,11 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
                         .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
                         .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                         .build();
-                ingest.maxActionsPerBulkRequest(maxbulkactions)
-                        .maxConcurrentBulkRequests(maxconcurrentbulkrequests)
-                        .maxVolumePerBulkRequest(maxvolume)
+                ingest.maxActionsPerRequest(maxbulkactions)
+                        .maxConcurrentRequests(maxconcurrentbulkrequests)
+                        .maxVolumePerRequest(maxvolume)
                         .flushIngestInterval(flushinterval)
-                        .newClient(clientSettings);
+                        .init(clientSettings);
                 return ingest;
             }
         };

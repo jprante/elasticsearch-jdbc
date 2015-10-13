@@ -176,7 +176,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
                 }
                 // JSON content?
                 if (shouldDetectJson) {
-                    map = JsonXContent.jsonXContent.createParser(s).mapAndClose();
+                    map = JsonXContent.jsonXContent.createParser(s).map();
                 }
             } catch (Exception e) {
                 // ignore
@@ -210,7 +210,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         } else if (ControlKeys._job.name().equals(k)) {
             current.meta(k.toString(), v.toString());
         } else if (ControlKeys._source.name().equals(k)) {
-            current.source(JsonXContent.jsonXContent.createParser(v.toString()).mapAndClose());
+            current.source(JsonXContent.jsonXContent.createParser(v.toString()).map());
         }
     }
 

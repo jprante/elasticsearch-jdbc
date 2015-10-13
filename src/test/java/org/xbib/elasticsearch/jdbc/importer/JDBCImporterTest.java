@@ -1,6 +1,5 @@
 package org.xbib.elasticsearch.jdbc.importer;
 
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.Test;
 import org.xbib.tools.JDBCImporter;
@@ -8,8 +7,8 @@ import org.xbib.tools.JDBCImporter;
 public class JDBCImporterTest {
 
     public void testImporter() throws Exception {
-        final JDBCImporter importer = JDBCImporter.getInstance();
-        Settings settings = ImmutableSettings.settingsBuilder()
+        final JDBCImporter importer = new JDBCImporter();
+        Settings settings = Settings.settingsBuilder()
                 .put("url", "jdbc:mysql://localhost:3306/test")
                 .put("password", "")
                 .put("sql", "select * from test")

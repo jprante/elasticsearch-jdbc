@@ -17,9 +17,9 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.joda.time.DateTime;
-import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.common.unit.TimeValue;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.ExceptionFormatter;
 import org.xbib.elasticsearch.common.util.SourceMetric;
@@ -61,8 +61,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
-
-import static org.elasticsearch.common.collect.Lists.newLinkedList;
 
 /**
  * Standard source implementation.
@@ -895,8 +893,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             // no register given, return without doing anything
             return;
         }
-        List<String> keys = newLinkedList();
-        List<Object> values = newLinkedList();
+        List<String> keys = new LinkedList<>();
+        List<Object> values = new LinkedList<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String k = entry.getKey();
             Map<String, Object> v = (Map<String, Object>) entry.getValue();

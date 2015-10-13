@@ -23,13 +23,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import static org.elasticsearch.common.collect.Lists.newLinkedList;
-import static org.elasticsearch.common.collect.Maps.newHashMap;
 
 /**
  * The SQL command
@@ -40,11 +38,11 @@ public class SQLCommand {
 
     private static final Pattern STATEMENT_PATTERN = Pattern.compile("^\\s*(update|insert)", Pattern.CASE_INSENSITIVE);
 
-    private List<Object> params = newLinkedList();
+    private List<Object> params = new LinkedList<>();
 
     private boolean write;
 
-    private Map<String, Object> register = newHashMap();
+    private Map<String, Object> register = new HashMap<>();
 
     private boolean callable;
 

@@ -24,7 +24,7 @@
         "type_mapping" : {
             "my_type" : {
                 "date_detection" : false,
-                "_timestamp" : { "enabled" : true, "store" : true }
+                "_timestamp" : { "enabled" : true }
             }
         }
     }
