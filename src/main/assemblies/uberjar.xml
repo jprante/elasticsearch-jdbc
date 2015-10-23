@@ -17,6 +17,7 @@
                 <include>org.xbib.jdbc</include>
                 <include>org.elasticsearch:elasticsearch</include>
                 <include>org.apache.lucene:lucene-core</include>
+                <include>org.apache.lucene:lucene-analyzers-common</include><!-- grrr -->
                 <include>org.apache.logging.log4j</include>
                 <include>org.slf4j:slf4j-api</include>
                 <include>com.spatial4j:spatial4j</include>
