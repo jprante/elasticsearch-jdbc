@@ -395,4 +395,22 @@ public class ValueListenerTests extends Assert {
 
     }
 
+    @Test
+    public void testArrayObject() throws Exception {
+        List<String> columns = Arrays.asList("_id", "tag[name]");
+        List<Object> row1 = new LinkedList<Object>();
+        row1.add(1);
+        row1.add("tag1");
+        MockSink output = new MockSink();
+        new SinkKeyValueStreamListener<String, Object>()
+                .shouldIgnoreNull(true)
+                .output(output)
+                .begin()
+                .keys(columns)
+                .values(row1)
+                .end();
+        System.err.println("res="+ output.data().toString());
+
+    }
+
 }
