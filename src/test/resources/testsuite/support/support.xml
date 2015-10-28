@@ -8,7 +8,6 @@
             <class name="org.xbib.elasticsearch.common.util.ValuesTests"/>
             <class name="org.xbib.elasticsearch.common.util.ValueListenerTests"/>
             <class name="org.xbib.elasticsearch.common.util.SQLCommandTests"/>
-            <class name="org.xbib.elasticsearch.common.util.TimeWindowedTests"/>
         </classes>
     </test>
 
