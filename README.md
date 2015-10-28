@@ -41,6 +41,7 @@ about what happened.
 
 | Release date | Importer version | Elasticsearch version |
 | -------------| -----------------| ----------------------|
+| Oct 28 2015  | 2.0.0.0          | 2.0.0                 |
 | Sep 29 2015  | 1.7.2.1          | 1.7.2                 |
 | Jul 24 2015  | 1.7.0.1          | 1.7.0                 |
 | Jul 24 2015  | 1.6.0.1          | 1.6.0                 |
