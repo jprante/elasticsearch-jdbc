@@ -37,15 +37,21 @@ you can issue this from the command line
 And that's it. Now you can check your Elasticsearch cluster for the index `jdbc` or your Elasticsearch logs
 about what happened.
 
-## Recent versions
+## Compatibiblity matrix
 
-| Release date | Importer version | Elasticsearch version |
-| -------------| -----------------| ----------------------|
-| Oct 28 2015  | 2.0.0.0          | 2.0.0                 |
-| Sep 29 2015  | 1.7.2.1          | 1.7.2                 |
-| Jul 24 2015  | 1.7.0.1          | 1.7.0                 |
-| Jul 24 2015  | 1.6.0.1          | 1.6.0                 |
-| Jun    2015  | 1.5.2.0          | 1.5.2                 |
+| Release date | JDBC Importer version | Elasticsearch version |
+| -------------| ----------------------| ----------------------|
+| Oct 28 2015  | 2.0.0.0               | 2.0.0                 |
+| Sep 29 2015  | 1.7.2.1               | 1.7.2                 |
+| Jul 24 2015  | 1.7.0.1               | 1.7.0                 |
+| Jul 24 2015  | 1.6.0.1               | 1.6.0                 |
+| Jun    2015  | 1.5.2.0               | 1.5.2                 |
+  
+## Quick links
+
+JDBC importer 2.0.0.0
+
+`http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/2.0.0.0/elasticsearch-jdbc-2.0.0.0-dist.zip`
 
 ## Installation
 
