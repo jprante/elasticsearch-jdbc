@@ -5,6 +5,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
+import org.xbib.elasticsearch.common.metrics.ElasticsearchIngestMetric;
 import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.File;
@@ -62,7 +63,7 @@ public class IngestTests {
                     .maxConcurrentRequests(maxconcurrentbulkrequests)
                     .maxVolumePerRequest(maxvolume)
                     .flushIngestInterval(flushinterval)
-                    .init(clientSettings.build());
+                    .init(clientSettings.build(), new ElasticsearchIngestMetric());
         } catch (UnknownHostException e) {
             // ok
         } catch (NoNodeAvailableException e) {

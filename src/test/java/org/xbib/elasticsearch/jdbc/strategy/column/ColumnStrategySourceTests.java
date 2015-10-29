@@ -7,6 +7,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.joda.time.DateTime;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.mock.MockSink;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.common.util.PlainIndexableObject;
@@ -148,15 +149,15 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
     private void testColumnStrategy(MockSink sink, String resource, String sql, ProductFixture[] fixtures, int expectedHits)
             throws Exception {
         createData(sql, fixtures);
-        createContext(resource);
+        context = createContext(resource);
         context.setSink(sink);
         source.fetch();
         assertEquals(sink.data().size(), expectedHits);
     }
 
-    private void createContext(String resource) throws IOException {
+    protected ColumnContext createContext(String resource) throws IOException {
         Settings settings = createSettings(resource);
-        context = newContext();
+        ColumnContext context = newContext();
         context.setSettings(settings);
         context.setLastRunTimeStamp(LAST_RUN_TIME);
         context.setLastRunTimeStampOverlap(getLastRunTimestampOverlap(settings));
@@ -166,6 +167,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
                 .columnDeletedAt(settings.get("column_deleted_at"))
                 .columnEscape(true);
         source.setStatements(SQLCommand.parse(settings.getAsStructuredMap()));
+        return context;
     }
 
     private TimeValue getLastRunTimestampOverlap(Settings settings) {

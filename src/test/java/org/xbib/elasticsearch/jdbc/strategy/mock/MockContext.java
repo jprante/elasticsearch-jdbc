@@ -19,7 +19,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.xbib.elasticsearch.jdbc.strategy.Source;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
-import org.xbib.elasticsearch.support.client.IngestFactory;
 
 public class MockContext implements Context<Source,Sink> {
 
@@ -86,20 +85,10 @@ public class MockContext implements Context<Source,Sink> {
     }
 
     @Override
-    public Context setIngestFactory(IngestFactory ingestFactory) {
-        return this;
-    }
-
-    @Override
     public void log() {
     }
 
     @Override
     public void shutdown() {
     }
-
-    @Override
-    public void resetCounter() {
-    }
-
 }

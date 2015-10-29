@@ -22,7 +22,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.ExceptionFormatter;
-import org.xbib.elasticsearch.common.util.SourceMetric;
+import org.xbib.elasticsearch.common.metrics.SourceMetric;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.common.util.SinkKeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
@@ -141,7 +141,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     private boolean shouldTreatBinaryAsString;
 
-    private SourceMetric metric;
+    private final static SourceMetric sourceMetric = new SourceMetric().start();
 
     @Override
     public String strategy() {
@@ -165,14 +165,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     }
 
     @Override
-    public StandardSource<C> setMetric(SourceMetric metric) {
-        this.metric = metric;
-        return this;
-    }
-
-    @Override
     public SourceMetric getMetric() {
-        return metric;
+        return sourceMetric;
     }
 
     @Override
@@ -602,10 +596,10 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         logger.debug("{} executing SQL without params: {}", this, command);
                         execute(command);
                     }
-                    if (metric != null) {
-                        metric.getSucceeded().inc();
-                        metric.setLastExecutionStart(dateTime);
-                        metric.setLastExecutionEnd(new DateTime());
+                    if (sourceMetric != null) {
+                        sourceMetric.getSucceeded().inc();
+                        sourceMetric.setLastExecutionStart(dateTime);
+                        sourceMetric.setLastExecutionEnd(new DateTime());
                     }
                 } catch (SQLRecoverableException e) {
                     long millis = getMaxRetryWait().getMillis();
@@ -621,23 +615,23 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                         logger.debug("retrying, executing SQL without params: {}", command);
                         execute(command);
                     }
-                    if (metric != null) {
-                        metric.getSucceeded().inc();
-                        metric.setLastExecutionStart(dateTime);
-                        metric.setLastExecutionEnd(new DateTime());
+                    if (sourceMetric != null) {
+                        sourceMetric.getSucceeded().inc();
+                        sourceMetric.setLastExecutionStart(dateTime);
+                        sourceMetric.setLastExecutionEnd(new DateTime());
                     }
                 }
             }
         } catch (Exception e) {
-            if (metric != null) {
-                metric.getFailed().inc();
-                metric.setLastExecutionStart(dateTime);
-                metric.setLastExecutionEnd(new DateTime());
+            if (sourceMetric != null) {
+                sourceMetric.getFailed().inc();
+                sourceMetric.setLastExecutionStart(dateTime);
+                sourceMetric.setLastExecutionEnd(new DateTime());
             }
             throw new IOException(e);
         } finally {
-            if (metric != null) {
-                metric.incCounter();
+            if (sourceMetric != null) {
+                sourceMetric.incCounter();
             }
         }
     }
@@ -800,14 +794,14 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         }
         beforeRows(command, results, listener);
         long rows = 0L;
-        if (metric != null) {
-            metric.resetCurrentRows();
+        if (sourceMetric != null) {
+            sourceMetric.resetCurrentRows();
         }
         while (nextRow(command, results, listener)) {
             rows++;
-            if (metric != null) {
-                metric.getCurrentRows().inc();
-                metric.getTotalRows().inc();
+            if (sourceMetric != null) {
+                sourceMetric.getCurrentRows().inc();
+                sourceMetric.getTotalRows().inc();
             }
         }
         setLastRowCount(rows);
@@ -1110,8 +1104,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 }
                 values.add(value);
                 getLastRow().put("$row." + metadata.getColumnLabel(i), value);
-                if (value != null && metric != null) {
-                    metric.getTotalSizeInBytes().inc(value.toString().length());
+                if (value != null && sourceMetric != null) {
+                    sourceMetric.getTotalSizeInBytes().inc(value.toString().length());
                 }
             } catch (ParseException e) {
                 logger.warn("parse error for value {}, using null instead", results.getObject(i));
@@ -1290,7 +1284,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 String state = context.getState().name();
                 statement.setString(i, state);
             } else if ("$metrics.counter".equals(s) || "$job".equals(s)) { // $job for legacy support
-                Long counter = metric != null ? metric.getCounter() : -0L;
+                Long counter = sourceMetric != null ? sourceMetric.getCounter() : 0L;
                 statement.setLong(i, counter);
             } else if ("$lastrowcount".equals(s)) {
                 statement.setLong(i, getLastRowCount());
@@ -1300,22 +1294,22 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             } else if ("$lastexception".equals(s)) {
                 statement.setString(i, ExceptionFormatter.format(context.getThrowable()));
             } else if ("$metrics.lastexecutionstart".equals(s)) {
-                DateTime dateTime = metric != null ? metric.getLastExecutionStart() : null;
+                DateTime dateTime = sourceMetric != null ? sourceMetric.getLastExecutionStart() : null;
                 statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
             } else if ("$metrics.lastexecutionend".equals(s)) {
-                DateTime dateTime = metric != null ? metric.getLastExecutionEnd() : null;
+                DateTime dateTime = sourceMetric != null ? sourceMetric.getLastExecutionEnd() : null;
                 statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
             } else if ("$metrics.totalrows".equals(s)) {
-                Long count = metric != null && metric.getTotalRows() != null ? metric.getTotalRows().count() : -1L;
+                Long count = sourceMetric != null && sourceMetric.getTotalRows() != null ? sourceMetric.getTotalRows().count() : -1L;
                 statement.setLong(i, count);
             } else if ("$metrics.totalbytes".equals(s)) {
-                Long count = metric != null && metric.getTotalSizeInBytes() != null ? metric.getTotalSizeInBytes().count() : -1L;
+                Long count = sourceMetric != null && sourceMetric.getTotalSizeInBytes() != null ? sourceMetric.getTotalSizeInBytes().count() : -1L;
                 statement.setLong(i, count);
             } else if ("$metrics.failed".equals(s)) {
-                Long count = metric != null && metric.getFailed() != null ? metric.getFailed().count() : -1L;
+                Long count = sourceMetric != null && sourceMetric.getFailed() != null ? sourceMetric.getFailed().count() : -1L;
                 statement.setLong(i, count);
             } else if ("$metrics.succeeded".equals(s)) {
-                Long count = metric != null && metric.getSucceeded() != null ? metric.getSucceeded().count() : -1L;
+                Long count = sourceMetric != null && sourceMetric.getSucceeded() != null ? sourceMetric.getSucceeded().count() : -1L;
                 statement.setLong(i, count);
             } else if (shouldPrepareDatabaseMetadata()) {
                 for (String k : getLastDatabaseMetadata().keySet()) {

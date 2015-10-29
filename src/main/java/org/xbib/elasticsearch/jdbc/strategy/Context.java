@@ -81,11 +81,7 @@ public interface Context<S extends Source, T extends Sink> {
 
     State getState();
 
-    Context setIngestFactory(IngestFactory ingestFactory);
-
     void log();
 
     void shutdown();
-
-    void resetCounter();
 }

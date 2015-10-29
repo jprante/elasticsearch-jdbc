@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.xbib.elasticsearch.common.util;
+package org.xbib.elasticsearch.common.metrics;
 
 import org.elasticsearch.common.metrics.CounterMetric;
 import org.joda.time.DateTime;

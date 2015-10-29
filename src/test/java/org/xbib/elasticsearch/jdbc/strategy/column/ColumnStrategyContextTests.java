@@ -30,10 +30,11 @@ public class ColumnStrategyContextTests extends AbstractColumnStrategyTest {
             public void fetch() {
             }
         };
+        MockSink mockSink = new MockSink();
         context.setSettings(settings)
-                .setSink(new MockSink())
-                .setSource(source)
-                .setIngestFactory(createIngestFactory(settings));
+                .setSink(mockSink)
+                .setSource(source);
+        //mockSink.setIngestFactory(createIngestFactory(settings));
         context.execute();
         assertNotNull(context.getLastRunTimestamp());
     }
@@ -54,10 +55,11 @@ public class ColumnStrategyContextTests extends AbstractColumnStrategyTest {
 
             }
         };
+        MockSink mockSink = new MockSink();
         context.setSettings(settings)
-                .setSink(new MockSink())
-                .setSource(source)
-                .setIngestFactory(createIngestFactory(settings));
+                .setSink(mockSink)
+                .setSource(source);
+        //mockSink.setIngestFactory(createIngestFactory(settings));
         context.setLastRunTimeStamp(lastRunAt);
         context.execute();
     }

@@ -16,8 +16,9 @@
 package org.xbib.elasticsearch.jdbc.strategy;
 
 import org.elasticsearch.common.settings.Settings;
+import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.IndexableObject;
-import org.xbib.elasticsearch.support.client.Metric;
+import org.xbib.elasticsearch.support.client.IngestFactory;
 
 import java.io.IOException;
 import java.util.Map;
@@ -49,6 +50,10 @@ public interface Sink<C extends Context> {
      * @return this sink
      */
     Sink<C> setContext(C context);
+
+    Sink setIngestFactory(IngestFactory ingestFactory);
+
+    IngestFactory getIngestFactory();
 
     /**
      * Set index settings
@@ -164,7 +169,5 @@ public interface Sink<C extends Context> {
      */
     void shutdown() throws IOException;
 
-    Sink setMetric(Metric metric);
-
-    Metric getMetric();
+    SinkMetric getMetric();
 }

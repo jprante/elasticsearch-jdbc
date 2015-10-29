@@ -18,7 +18,7 @@ package org.xbib.elasticsearch.jdbc.strategy.mock;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
-import org.xbib.elasticsearch.common.util.SourceMetric;
+import org.xbib.elasticsearch.common.metrics.SourceMetric;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.jdbc.strategy.Source;
 
@@ -300,11 +300,6 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
 
     @Override
     public void shutdown() throws IOException {
-    }
-
-    @Override
-    public Source setMetric(SourceMetric metric) {
-        return this;
     }
 
     @Override

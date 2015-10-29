@@ -23,16 +23,19 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
-import org.xbib.elasticsearch.jdbc.strategy.Sink;
+import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.Metric;
+import org.xbib.elasticsearch.support.client.IngestFactory;
+import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.IOException;
 import java.util.Map;
@@ -48,6 +51,8 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     protected C context;
 
+    private IngestFactory ingestFactory;
+
     protected Ingest ingest;
 
     protected Settings indexSettings;
@@ -60,7 +65,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
 
     protected String id;
 
-    private Metric metric;
+    private final static SinkMetric sinkMetric = new SinkMetric().start();
 
     @Override
     public String strategy() {
@@ -75,32 +80,24 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
     @Override
     public StandardSink<C> setContext(C context) {
         this.context = context;
+        if (ingest == null) {
+            try {
+                ingest = createIngestFactory(context.getSettings()).create();
+            } catch (IOException e) {
+
+            }
+        }
         return this;
     }
 
-    @Override
-    public StandardSink<C> setMetric(Metric metric) {
-        this.metric = metric;
-        return this;
-    }
 
     @Override
-    public Metric getMetric() {
-        return metric;
+    public SinkMetric getMetric() {
+        return sinkMetric;
     }
 
     @Override
     public synchronized void beforeFetch() throws IOException {
-        if (ingest == null) {
-            if (context.getIngestFactory() != null) {
-                ingest = context.getIngestFactory().create();
-                if(ingest != null) {
-                    ingest.setMetric(metric);
-                }
-            } else {
-                logger.warn("no ingest factory found");
-            }
-        }
         if (ingest == null) {
             logger.warn("no ingest found");
             return;
@@ -325,6 +322,65 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
             logger.warn("interrupted while waiting for responses");
             Thread.currentThread().interrupt();
         }
+    }
+
+    @Override
+    public StandardSink setIngestFactory(IngestFactory ingestFactory) {
+        this.ingestFactory = ingestFactory;
+        return this;
+    }
+
+    @Override
+    public IngestFactory getIngestFactory() {
+        return ingestFactory;
+    }
+
+    private IngestFactory createIngestFactory(final Settings settings) {
+        return new IngestFactory() {
+            @Override
+            public Ingest create() throws IOException {
+                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
+                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
+                        Runtime.getRuntime().availableProcessors() * 2);
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
+                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
+                BulkTransportClient ingest = new BulkTransportClient();
+                Settings.Builder settingsBuilder = Settings.settingsBuilder()
+                        .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
+                        .putArray("host", settings.getAsArray("elasticsearch.host"))
+                        .put("port", settings.getAsInt("elasticsearch.port", 9300))
+                        .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
+                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
+                        .put("name", "importer") // prevents lookup of names.txt, we don't have it
+                        .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
+                        .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
+                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))); // for sniff sampling
+                // optional found.no transport plugin
+                if (settings.get("transport.type") != null) {
+                    settingsBuilder.put("transport.type", settings.get("transport.type"));
+                }
+                // copy found.no transport settings
+                Settings foundTransportSettings = settings.getAsSettings("transport.found");
+                if (foundTransportSettings != null) {
+                    Map<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
+                    for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
+                        settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
+                    }
+                }
+                try {
+                    ingest.maxActionsPerRequest(maxbulkactions)
+                            .maxConcurrentRequests(maxconcurrentbulkrequests)
+                            .maxVolumePerRequest(maxvolume)
+                            .flushIngestInterval(flushinterval)
+                            .init(settingsBuilder.build(), sinkMetric);
+                } catch (Exception e) {
+                    logger.error("ingest not properly build, shutting down ingest",e);
+                    ingest.shutdown();
+                    ingest = null;
+                }
+                return ingest;
+            }
+        };
     }
 
 }

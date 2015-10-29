@@ -18,8 +18,6 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
@@ -28,9 +26,6 @@ import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
-import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.IngestFactory;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -53,6 +48,8 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     protected final static Logger logger = LogManager.getLogger("test.target");
 
     protected static JDBCSource source;
+
+    protected Context context;
 
     public abstract JDBCSource newSource();
 
@@ -130,7 +127,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     protected void perform(String resource) throws Exception {
         // perform a single step
         logger.info("before execution");
-        Context context = createContext(resource);
+        this.context = createContext(resource);
         logger.info("execution");
         context.execute();
         boolean b = waitFor(context, Context.State.IDLE, 5000L);
@@ -147,8 +144,7 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
                 .build()
                 .getAsSettings("jdbc");
         Context context = newContext();
-        context.setSettings(settings)
-                .setIngestFactory(createIngestFactory(settings));
+        context.setSettings(settings);
         logger.info("created context {} with cluster name {}", context, getClusterName());
         return context;
     }
@@ -272,37 +268,5 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
             }
         } while (!found && System.currentTimeMillis() - t0 < millis);
         return found;
-    }
-
-    protected IngestFactory createIngestFactory(final Settings settings) {
-        return new IngestFactory() {
-            @Override
-            public Ingest create() throws IOException {
-                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
-                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
-                        Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m",""));
-                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
-                BulkTransportClient ingest = new BulkTransportClient();
-                Settings clientSettings = Settings.settingsBuilder()
-                        .put("cluster.name", settings.get("elasticsearch.cluster"))
-                        .putArray("host", getHosts())
-                        .put("port", settings.getAsInt("elasticsearch.port", 9300))
-                        .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
-                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "importer") // prevents lookup of names.txt, we don't have it, and marks this node as "feeder"
-                        .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
-                        .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
-                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
-                        .build();
-                logger.info("ingest factory: client settings = {}", clientSettings);
-                ingest.maxActionsPerRequest(maxbulkactions)
-                        .maxConcurrentRequests(maxconcurrentbulkrequests)
-                        .maxVolumePerRequest(maxvolume)
-                        .flushIngestInterval(flushinterval)
-                        .init(clientSettings);
-                return ingest;
-            }
-        };
     }
 }

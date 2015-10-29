@@ -23,6 +23,7 @@
                 <include>com.google.guava:guava</include>
                 <include>joda-time:joda-time</include>
                 <include>com.carrotsearch:hppc</include>
+                <include>com.twitter:jsr166e</include>
                 <include>com.spatial4j:spatial4j</include>
                 <include>com.vividsolutions:jts</include>
                 <include>org.apache.logging.log4j</include>

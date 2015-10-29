@@ -20,23 +20,17 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.joda.FormatDateTimeFormatter;
 import org.elasticsearch.common.joda.Joda;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.joda.time.DateTime;
+import org.xbib.elasticsearch.common.metrics.MetricsLogger;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
-import org.xbib.elasticsearch.common.util.SourceMetric;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.common.util.SQLCommand;
-import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.IngestFactory;
-import org.xbib.elasticsearch.support.client.Metric;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
-import org.xbib.tools.MetricsLogger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -64,8 +58,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     private Settings settings;
 
-    private IngestFactory ingestFactory;
-
     private S source;
 
     private Sink sink;
@@ -77,10 +69,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     private Throwable throwable;
 
     private final static List<Future> futures = new LinkedList<>();
-
-    private final static SourceMetric sourceMetric = new SourceMetric().start();
-
-    private final static Metric sinkMetric = new Metric().start();
 
     @Override
     public String strategy() {
@@ -100,21 +88,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext setSettings(Settings settings) {
         this.settings = settings;
-        Map<String,String> map = settings.getAsMap();
-        if (map.containsKey("metrics.lastexecutionstart")) {
-            DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
-            sourceMetric.setLastExecutionStart(lastexecutionstart);
-        }
-        if (map.containsKey("metrics.lastexecutionend")) {
-            DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
-            sourceMetric.setLastExecutionEnd(lastexecutionend);
-        }
-        if (map.containsKey("metrics.counter")) {
-            int counter = Integer.parseInt(settings.get("metrics.counter"));
-            if (counter > 0) {
-                sourceMetric.setCounter(counter);
-            }
-        }
         if (settings.getAsBoolean("metrics.enabled",false) && futures.isEmpty()) {
             Thread thread = new MetricsThread();
             ScheduledThreadPoolExecutor scheduledthreadPoolExecutor =
@@ -132,19 +105,23 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     }
 
     @Override
-    public StandardContext setIngestFactory(IngestFactory ingestFactory) {
-        this.ingestFactory = ingestFactory;
-        return this;
-    }
-
-    public IngestFactory getIngestFactory() {
-        return ingestFactory;
-    }
-
-    @Override
     public StandardContext setSource(S source) {
         this.source = source;
-        source.setMetric(sourceMetric);
+        Map<String,String> map = settings.getAsMap();
+        if (map.containsKey("metrics.lastexecutionstart")) {
+            DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
+            source.getMetric().setLastExecutionStart(lastexecutionstart);
+        }
+        if (map.containsKey("metrics.lastexecutionend")) {
+            DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
+            source.getMetric().setLastExecutionEnd(lastexecutionend);
+        }
+        if (map.containsKey("metrics.counter")) {
+            int counter = Integer.parseInt(settings.get("metrics.counter"));
+            if (counter > 0) {
+                source.getMetric().setCounter(counter);
+            }
+        }
         return this;
     }
 
@@ -156,7 +133,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public StandardContext setSink(Sink sink) {
         this.sink = sink;
-        sink.setMetric(sinkMetric);
         return this;
     }
 
@@ -196,12 +172,11 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     @Override
     public void beforeFetch() throws Exception {
         logger.debug("before fetch");
-        if (ingestFactory == null) {
-            this.ingestFactory = createIngestFactory(settings);
-        }
         Sink sink = createSink();
         S source = createSource();
         prepareContext(source, sink);
+        sink.setContext(this);
+        source.setContext(this);
         getSink().beforeFetch();
         getSource().beforeFetch();
     }
@@ -259,16 +234,9 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         writeState();
     }
 
-    @Override
-    public void resetCounter() {
-        if (sourceMetric != null) {
-            sourceMetric.setCounter(0);
-        }
-    }
-
     protected void writeState() {
         String statefile = settings.get("statefile");
-        if (statefile == null || sourceMetric == null) {
+        if (statefile == null || source == null || source.getMetric() == null) {
             return;
         }
         try {
@@ -281,9 +249,9 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
                 Settings.Builder settingsBuilder = Settings.settingsBuilder()
                         .put(settings)
-                        .put("metrics.lastexecutionstart", formatter.printer().print(sourceMetric.getLastExecutionStart()))
-                        .put("metrics.lastexecutionend", formatter.printer().print(sourceMetric.getLastExecutionEnd()))
-                        .put("metrics.counter", sourceMetric.getCounter());
+                        .put("metrics.lastexecutionstart", formatter.printer().print(source.getMetric().getLastExecutionStart()))
+                        .put("metrics.lastexecutionend", formatter.printer().print(source.getMetric().getLastExecutionEnd()))
+                        .put("metrics.counter", source.getMetric().getCounter());
                 XContentBuilder builder = jsonBuilder().prettyPrint()
                         .startObject()
                         .field("type", "jdbc")
@@ -399,56 +367,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 .shouldTreatBinaryAsString(shouldTreatBinaryAsString);
         setSource(source);
         setSink(sink);
-        source.setContext(this);
-        sink.setContext(this);
-    }
-
-    private IngestFactory createIngestFactory(final Settings settings) {
-        return new IngestFactory() {
-            @Override
-            public Ingest create() throws IOException {
-                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
-                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
-                        Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
-                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
-                BulkTransportClient ingest = new BulkTransportClient();
-                Settings.Builder settingsBuilder = Settings.settingsBuilder()
-                        .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
-                        .putArray("host", settings.getAsArray("elasticsearch.host"))
-                        .put("port", settings.getAsInt("elasticsearch.port", 9300))
-                        .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
-                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "importer") // prevents lookup of names.txt, we don't have it
-                        .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
-                        .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
-                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))); // for sniff sampling
-                // optional found.no transport plugin
-                if (settings.get("transport.type") != null) {
-                    settingsBuilder.put("transport.type", settings.get("transport.type"));
-                }
-                // copy found.no transport settings
-                Settings foundTransportSettings = settings.getAsSettings("transport.found");
-                if (foundTransportSettings != null) {
-                    Map<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
-                    for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
-                        settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
-                    }
-                }
-                try {
-                    ingest.maxActionsPerRequest(maxbulkactions)
-                            .maxConcurrentRequests(maxconcurrentbulkrequests)
-                            .maxVolumePerRequest(maxvolume)
-                            .flushIngestInterval(flushinterval)
-                            .init(settingsBuilder.build());
-                } catch (Exception e) {
-                    logger.error("ingest not properly build, shutting down ingest",e);
-                    ingest.shutdown();
-                    ingest = null;
-                }
-                return ingest;
-            }
-        };
     }
 
     private final static MetricsLogger metricsLogger = new MetricsLogger();

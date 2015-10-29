@@ -8,7 +8,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.plugin.support.SupportPlugin;
+import org.xbib.elasticsearch.common.metrics.ElasticsearchIngestMetric;
 import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.IOException;
@@ -64,7 +64,7 @@ public class IngestTest {
                     .maxConcurrentRequests(maxconcurrentbulkrequests)
                     .maxVolumePerRequest(maxvolume)
                     .flushIngestInterval(flushinterval)
-                    .init(clientSettings.build());
+                    .init(clientSettings.build(), new ElasticsearchIngestMetric());
             logger.info("connected");
         } catch (UnknownHostException e) {
             // ok
@@ -121,7 +121,7 @@ public class IngestTest {
                     .maxConcurrentRequests(maxconcurrentbulkrequests)
                     .maxVolumePerRequest(maxvolume)
                     .flushIngestInterval(flushinterval)
-                    .init(clientSettings.build());
+                    .init(clientSettings.build(), new ElasticsearchIngestMetric());
             logger.info("connected");
         } catch (UnknownHostException e) {
             // ok

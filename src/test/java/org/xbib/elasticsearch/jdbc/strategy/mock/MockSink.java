@@ -18,9 +18,10 @@ package org.xbib.elasticsearch.jdbc.strategy.mock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
+import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
-import org.xbib.elasticsearch.support.client.Metric;
+import org.xbib.elasticsearch.support.client.IngestFactory;
 
 import java.io.IOException;
 import java.util.Map;
@@ -92,6 +93,16 @@ public class MockSink implements Sink<MockContext> {
     }
 
     @Override
+    public MockSink setIngestFactory(IngestFactory ingestFactory) {
+        return this;
+    }
+
+    @Override
+    public IngestFactory getIngestFactory() {
+        return null;
+    }
+
+    @Override
     public Sink setIndex(String index) {
         return this;
     }
@@ -140,12 +151,7 @@ public class MockSink implements Sink<MockContext> {
     }
 
     @Override
-    public Sink setMetric(Metric metric) {
-        return this;
-    }
-
-    @Override
-    public Metric getMetric() {
+    public SinkMetric getMetric() {
         return null;
     }
 

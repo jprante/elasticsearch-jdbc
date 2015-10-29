@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.xbib.tools;
+package org.xbib.elasticsearch.common.metrics;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.xbib.elasticsearch.common.util.FormatUtil;
-import org.xbib.elasticsearch.common.util.SourceMetric;
-import org.xbib.elasticsearch.support.client.Metric;
 
 import java.text.NumberFormat;
 
@@ -39,7 +37,7 @@ public class MetricsLogger {
 
     private final static NumberFormat formatter = NumberFormat.getNumberInstance();
 
-    public void writeMetrics(Settings settings, Metric metric) throws Exception {
+    public void writeMetrics(Settings settings, SinkMetric metric) throws Exception {
         long submitted = metric.getSubmitted().count();
         long succeeded = metric.getSucceeded().count();
         long failed = metric.getFailed().count();

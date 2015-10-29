@@ -2,16 +2,12 @@ package org.xbib.elasticsearch.jdbc.strategy.column;
 
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
+import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
-import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.IngestFactory;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -112,16 +108,15 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         stopNodes();
     }
 
-    protected void create(String resource) throws Exception {
+    protected Context createContext(String resource) throws Exception {
         waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
-        logger.info("creating context");
-        Settings settings = Settings.settingsBuilder()
-                .loadFromStream("test", in)
-                .build().getAsSettings("jdbc");
-        context = newContext();
-        context.setSettings(settings)
-                .setIngestFactory(createIngestFactory(settings));
+        Settings settings = createSettings(resource);
+        Context context = newContext();
+        context.setSettings(settings);
+        //context.getSink().setIngestFactory(createIngestFactory(settings));
+        logger.info("created context {} with cluster name {}", context, getClusterName());
+        return context;
     }
 
     protected Settings createSettings(String resource)
@@ -129,7 +124,10 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         InputStream in = getClass().getResourceAsStream(resource);
         Settings settings = Settings.settingsBuilder()
                 .loadFromStream("test", in)
-                .build().getAsSettings("jdbc");
+                .put("jdbc.elasticsearch.cluster", getClusterName())
+                .putArray("jdbc.elasticsearch.host", getHosts())
+                .build()
+                .getAsSettings("jdbc");
         in.close();
         return settings;
     }
@@ -155,34 +153,4 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
         br.close();
     }
 
-    protected IngestFactory createIngestFactory(final Settings settings) {
-        return new IngestFactory() {
-            @Override
-            public Ingest create() throws IOException {
-                Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
-                Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
-                        Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
-                TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
-                BulkTransportClient ingest = new BulkTransportClient();
-                Settings clientSettings = Settings.settingsBuilder()
-                        .put("cluster.name", settings.get("elasticsearch.cluster", getClusterName()))
-                        .putArray("host", getHosts())
-                        .put("port", settings.getAsInt("elasticsearch.port", 9300))
-                        .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
-                        .put("autodiscover", settings.getAsBoolean("elasticsearch.autodiscover", false))
-                        .put("name", "importer") // prevents lookup of names.txt, we don't have it
-                        .put("client.transport.ignore_cluster_name", false) // ignore cluster name setting
-                        .put("client.transport.ping_timeout", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) //  ping timeout
-                        .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
-                        .build();
-                ingest.maxActionsPerRequest(maxbulkactions)
-                        .maxConcurrentRequests(maxconcurrentbulkrequests)
-                        .maxVolumePerRequest(maxvolume)
-                        .flushIngestInterval(flushinterval)
-                        .init(clientSettings);
-                return ingest;
-            }
-        };
-    }
 }
