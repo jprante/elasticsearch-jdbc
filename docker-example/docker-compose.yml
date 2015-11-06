@@ -1,0 +1,16 @@
+postgresql:
+  build: .
+  dockerfile: Dockerfile_postgresql
+  hostname: postgresql
+  environment:
+    - POSTGRES_DB=test
+    - POSTGRES_USER=test
+    - POSTGRES_PASSWORD=password
+  ports:
+    - "127.0.0.1:5432:5432"
+elasticsearch:
+  build: .
+  dockerfile: Dockerfile_elasticsearch
+  command: -Des.cluster.name="test" -Des.node.name="test1" -Des.network.bind_host=0.0.0.0
+  ports:
+    - "127.0.0.1:9200:9200"
