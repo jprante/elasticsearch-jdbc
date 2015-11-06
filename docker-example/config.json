@@ -1,0 +1,30 @@
+{
+  "type": "jdbc",
+  "jdbc": {
+    "url": "jdbc:postgresql://{{ .Env.DATABASE_PORT_5432_TCP_ADDR }}:5432/test?loglevel=0",
+    "user": "test",
+    "password": "password",
+    "sql": "select * from city",
+    "index_settings": {
+      "index": {
+        "number_of_shards": 10
+      }
+    },
+    "index": "world",
+    "type": "city",
+    "elasticsearch": {
+      "cluster": "test",
+      "host": "{{ .Env.ELASTICSEARCH_PORT_9300_TCP_ADDR }}",
+      "port": "9300"
+    },
+    "statefile": "/statefile.json",
+    "metrics": {
+      "enabled": true,
+      "interval": "1m",
+      "logger": {
+        "plain": false,
+        "json": true
+      }
+    }
+  }
+}
