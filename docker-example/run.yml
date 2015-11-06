@@ -3,5 +3,5 @@ elasticsearchjdbc:
   dockerfile: Dockerfile_elasticsearchjdbc
   hostname: elasticsearchjdbc
   external_links:
-    - test_postgresql_1:database
-    - test_elasticsearch_1:elasticsearch
+    - dockerexample_postgresql_1:database
+    - dockerexample_elasticsearch_1:elasticsearch
