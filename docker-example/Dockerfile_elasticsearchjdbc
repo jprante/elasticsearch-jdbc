@@ -13,6 +13,9 @@ RUN wget -O /tmp/elasticsearch-jdbc-1.7.3.0.zip  http://xbib.org/repository/org/
  && unzip -d /opt /tmp/elasticsearch-jdbc-1.7.3.0.zip \
  && ln -s /opt/elasticsearch-jdbc-1.7.3.0 /opt/elasticsearch-jdbc
 
+# Get the jdbc driver for postgresql 9.4
+RUN wget -O /opt/elasticsearch-jdbc-1.7.3.0/lib/postgresql-9.4-1205.jdbc42.jar https://jdbc.postgresql.org/download/postgresql-9.4-1205.jdbc42.jar
+
 # Touch log file
 RUN mkdir -p /opt/elasticsearch-jdbc/logs \
  && touch /opt/elasticsearch-jdbc/logs/jdbc.log
