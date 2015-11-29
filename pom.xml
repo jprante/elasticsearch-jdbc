@@ -7,7 +7,7 @@
 
     <groupId>org.xbib.elasticsearch.importer</groupId>
     <artifactId>elasticsearch-jdbc</artifactId>
-    <version>2.0.0.1</version>
+    <version>2.1.0.0</version>
 
     <packaging>jar</packaging>
 
@@ -72,8 +72,8 @@
         <github.global.server>github</github.global.server>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compiler.version>1.7</java.compiler.version>
-        <elasticsearch.version>2.0.0</elasticsearch.version>
-        <org.xbib.elasticsearch.support.version>2.0.0.1</org.xbib.elasticsearch.support.version>
+        <elasticsearch.version>2.1.0</elasticsearch.version>
+        <org.xbib.elasticsearch.helper.version>2.1.0.0</org.xbib.elasticsearch.helper.version>
     </properties>
 
     <dependencies>
@@ -86,8 +86,8 @@
         </dependency>
         <dependency>
             <groupId>org.xbib.elasticsearch.plugin</groupId>
-            <artifactId>elasticsearch-support</artifactId>
-            <version>${org.xbib.elasticsearch.support.version}</version>
+            <artifactId>elasticsearch-helper</artifactId>
+            <version>${org.xbib.elasticsearch.helper.version}</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
@@ -211,7 +211,7 @@
                     <properties>
                         <property>
                             <name>listener</name>
-                            <value>org.xbib.elasticsearch.support.TestListener</value>
+                            <value>org.xbib.elasticsearch.util.TestListener</value>
                         </property>
                     </properties>
                     <systemProperties>

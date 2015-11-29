@@ -6,7 +6,7 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.common.metrics.ElasticsearchIngestMetric;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
+import org.xbib.elasticsearch.helper.client.transport.BulkTransportClient;
 
 import java.io.File;
 import java.io.IOException;

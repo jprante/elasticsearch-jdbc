@@ -33,12 +33,13 @@ import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
-import org.xbib.elasticsearch.support.client.Ingest;
-import org.xbib.elasticsearch.support.client.IngestFactory;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
+import org.xbib.elasticsearch.helper.client.Ingest;
+import org.xbib.elasticsearch.helper.client.IngestFactory;
+import org.xbib.elasticsearch.helper.client.transport.BulkTransportClient;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Standard sink implementation. This implementation uses bulk processing,
@@ -321,6 +322,8 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         } catch (InterruptedException e) {
             logger.warn("interrupted while waiting for responses");
             Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            logger.warn("exception while executing", e);
         }
     }
 

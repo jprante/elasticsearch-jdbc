@@ -20,8 +20,8 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
 import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.helper.client.IngestFactory;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
-import org.xbib.elasticsearch.support.client.IngestFactory;
 
 import java.io.IOException;
 import java.util.Map;

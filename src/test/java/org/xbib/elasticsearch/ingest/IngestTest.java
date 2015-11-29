@@ -1,6 +1,5 @@
 package org.xbib.elasticsearch.ingest;
 
-import no.found.elasticsearch.transport.netty.FoundTransportPlugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
@@ -9,7 +8,7 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.common.metrics.ElasticsearchIngestMetric;
-import org.xbib.elasticsearch.support.client.transport.BulkTransportClient;
+import org.xbib.elasticsearch.helper.client.transport.BulkTransportClient;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -103,19 +102,7 @@ public class IngestTest {
                 .put("client.transport.nodes_sampler_interval", settings.getAsTime("elasticsearch.timeout", TimeValue.timeValueSeconds(5))) // for sniff sampling
                 .put("path.plugins", ".dontexist") // pointing to a non-exiting folder means, this disables loading site plugins
                 .put("path.home", System.getProperty("path.home"))
-                .put("plugin.types", FoundTransportPlugin.class.getName())
                 ;
-        if (settings.get("transport.type") != null) {
-            clientSettings.put("transport.type", settings.get("transport.type"));
-        }
-        // copy found.no transport settings
-        Settings foundTransportSettings = settings.getAsSettings("transport.found");
-        if (foundTransportSettings != null) {
-            Map<String,String> foundTransportSettingsMap = foundTransportSettings.getAsMap();
-            for (Map.Entry<String,String> entry : foundTransportSettingsMap.entrySet()) {
-                clientSettings.put("transport.found." + entry.getKey(), entry.getValue());
-            }
-        }
         try {
             ingest.maxActionsPerRequest(maxbulkactions)
                     .maxConcurrentRequests(maxconcurrentbulkrequests)

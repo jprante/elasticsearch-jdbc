@@ -7,7 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
-import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
+import org.xbib.elasticsearch.util.NodeTestUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import java.sql.Statement;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper {
+public abstract class AbstractColumnStrategyTest extends NodeTestUtils {
 
     protected static ColumnSource source;
 
@@ -34,10 +34,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
     public void beforeMethod(String starturl, String user, String password, @Optional String resourceName)
             throws Exception {
         startNodes();
-
         logger.info("nodes started");
-
-        waitForYellow("1");
         source = newSource();
         source.setUrl(starturl)
                 .setUser(user)
@@ -109,7 +106,7 @@ public abstract class AbstractColumnStrategyTest extends AbstractNodeTestHelper 
     }
 
     protected Context createContext(String resource) throws Exception {
-        waitForYellow("1");
+        //waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
         Settings settings = createSettings(resource);
         Context context = newContext();

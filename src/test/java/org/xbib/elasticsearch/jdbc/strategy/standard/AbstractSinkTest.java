@@ -25,7 +25,7 @@ import org.testng.annotations.Parameters;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.support.AbstractNodeTestHelper;
+import org.xbib.elasticsearch.util.NodeTestUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
+public abstract class AbstractSinkTest extends NodeTestUtils {
 
     protected final static Logger logger = LogManager.getLogger("test.target");
 
@@ -61,7 +61,6 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
             throws Exception {
         startNodes();
         logger.info("nodes started");
-        waitForYellow("1");
         source = newSource()
                 .setUrl(starturl)
                 .setUser(user)
@@ -135,7 +134,6 @@ public abstract class AbstractSinkTest extends AbstractNodeTestHelper {
     }
 
     protected Context createContext(String resource) throws Exception {
-        waitForYellow("1");
         InputStream in = getClass().getResourceAsStream(resource);
         Settings settings = Settings.settingsBuilder()
                 .loadFromStream("test", in)
