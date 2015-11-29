@@ -37,13 +37,14 @@ you can issue this from the command line
 And that's it. Now you can check your Elasticsearch cluster for the index `jdbc` or your Elasticsearch logs
 about what happened.
 
-## Compatibiblity matrix
+## Compatiblity matrix
 
 | Release date | JDBC Importer version | Elasticsearch version |
 | -------------| ----------------------| ----------------------|
 | Nov 29 2015  | 2.1.0.0               | 2.1.0                 |
 | Oct 29 2015  | 2.0.0.1               | 2.0.0                 |
 | Oct 28 2015  | 2.0.0.0               | 2.0.0                 |
+| Oct 23 2015  | 1.7.3.0               | 1.7.3                 |
 | Sep 29 2015  | 1.7.2.1               | 1.7.2                 |
 | Jul 24 2015  | 1.7.0.1               | 1.7.0                 |
 | Jul 24 2015  | 1.6.0.1               | 1.6.0                 |
@@ -79,7 +80,7 @@ JDBC importer 2.1.0.0
 ## Bundled drivers
 
 The JDBC importer comes with open source JDBC drivers bundled for your convenience. 
-They are not part of the JDBC importer, hence, there is no support and no gurarantuee the bundled drivers will work.
+They are not part of the JDBC importer, hence, there is no support and no guarantee the bundled drivers will work.
 Please read the JDBC driver license files attached in the distribution.
 JDBC importer does not link against the code of the drivers. If you do not want the drivers jars,
 they can be safely removed or replaced by other JDBC drivers at your choice.
