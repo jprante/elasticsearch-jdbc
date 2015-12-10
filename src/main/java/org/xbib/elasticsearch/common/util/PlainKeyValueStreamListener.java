@@ -19,6 +19,7 @@ import com.spatial4j.core.context.SpatialContext;
 import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.shape.Shape;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 
@@ -161,7 +162,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
         }
         // create current object from values by sequentially merging the values
         for (int i = 0; i < keys.size() && i < values.size(); i++) {
-            Map map = null;
+            Object v = null;
             try {
                 String s = values.get(i).toString();
                 // geo content?
@@ -176,12 +177,23 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
                 }
                 // JSON content?
                 if (shouldDetectJson) {
-                    map = JsonXContent.jsonXContent.createParser(s).map();
+                    XContentParser parser = JsonXContent.jsonXContent.createParser(s);
+                    XContentParser.Token token = parser.currentToken();
+                    if(token == null) {
+                        token = parser.nextToken();
+                    }
+                    if (token == XContentParser.Token.START_OBJECT) {
+                        v = parser.map();
+                    } else if (token == XContentParser.Token.START_ARRAY) {
+                        v = parser.list();
+                    }
                 }
             } catch (Exception e) {
                 // ignore
             }
-            Object v = map != null && !map.isEmpty() ? map : values.get(i);
+            if(v == null || (v instanceof Map && ((Map) v).isEmpty())) {
+                v = values.get(i);
+            }
             Map<String, Object> m = merge(current.source(), keys.get(i), v);
             current.source(m);
         }
