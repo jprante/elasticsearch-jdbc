@@ -165,7 +165,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
             } else {
                 try {
                     builder.value(o);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     throw new IOException("unknown object class for value:" + o.getClass().getName() + " " + o);
                 }
             }

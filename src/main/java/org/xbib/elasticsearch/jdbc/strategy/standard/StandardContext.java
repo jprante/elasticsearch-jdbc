@@ -186,7 +186,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         logger.debug("fetch");
         try {
             getSource().fetch();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             setThrowable(e);
             logger.error(e.getMessage(), e);
         }
@@ -198,13 +198,13 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         writeState();
         try {
             getSource().afterFetch();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             setThrowable(e);
             logger.error(e.getMessage(), e);
         }
         try {
             getSink().afterFetch();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             setThrowable(e);
             logger.error(e.getMessage(), e);
         }

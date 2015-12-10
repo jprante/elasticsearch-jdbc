@@ -53,7 +53,7 @@ public abstract class AbstractPipeline<R extends PipelineRequest>
             close();
         } catch (InterruptedException e) {
             logger.warn("interrupted");
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.error(t.getMessage(), t);
             throw t;
         }

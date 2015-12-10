@@ -27,7 +27,7 @@ public class Runner {
             InputStream in = args.length > 1 ? new FileInputStream(args[1]) : System.in;
             commandLineInterpreter.reader("args", in).run(true);
             in.close();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }

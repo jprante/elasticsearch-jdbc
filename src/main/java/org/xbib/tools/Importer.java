@@ -146,7 +146,7 @@ public abstract class Importer
             } else {
                 execute();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
         } finally {
             try {
@@ -154,7 +154,7 @@ public abstract class Importer
                 if (executor != null) {
                     executor.shutdown();
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
             }
         }
@@ -165,7 +165,7 @@ public abstract class Importer
         try {
             prepare();
             execute();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
         } finally {
             try {
@@ -173,7 +173,7 @@ public abstract class Importer
                 if (executor != null) {
                     executor.shutdown();
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
             }
         }
