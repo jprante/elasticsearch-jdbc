@@ -158,6 +158,7 @@ public class JDBCImporter extends Importer {
 
     public Thread shutdownHook() {
         return new Thread() {
+            @Override
             public void run() {
                 try {
                     shutdown();
@@ -169,6 +170,7 @@ public class JDBCImporter extends Importer {
         };
     }
 
+    @Override
     public synchronized void shutdown() throws Exception {
         if (closed) {
             return;

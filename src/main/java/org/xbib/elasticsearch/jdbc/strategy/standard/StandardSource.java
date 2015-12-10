@@ -218,6 +218,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return this;
     }
 
+    @Override
     public StandardSource<C> setAutoCommit(boolean autocommit) {
         this.autocommit = autocommit;
         return this;
@@ -227,6 +228,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return autocommit;
     }
 
+    @Override
     public StandardSource<C>  setFetchSize(int fetchSize) {
         this.fetchSize = fetchSize;
         return this;
@@ -236,6 +238,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return fetchSize;
     }
 
+    @Override
     public StandardSource<C>  setMaxRows(int maxRows) {
         this.maxRows = maxRows;
         return this;
@@ -245,6 +248,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return maxRows;
     }
 
+    @Override
     public StandardSource<C>  setRetries(int retries) {
         this.retries = retries;
         return this;
@@ -254,6 +258,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return retries;
     }
 
+    @Override
     public StandardSource<C>  setMaxRetryWait(TimeValue maxretrywait) {
         this.maxretrywait = maxretrywait;
         return this;
@@ -263,6 +268,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return maxretrywait;
     }
 
+    @Override
     public StandardSource<C>  setRounding(String rounding) {
         if ("ceiling".equalsIgnoreCase(rounding)) {
             this.rounding = BigDecimal.ROUND_CEILING;
@@ -288,6 +294,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return rounding;
     }
 
+    @Override
     public StandardSource<C>  setScale(int scale) {
         this.scale = scale;
         return this;
@@ -297,6 +304,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return scale;
     }
 
+    @Override
     public StandardSource<C>  setResultSetType(String resultSetType) {
         this.resultSetType = resultSetType;
         return this;
@@ -306,6 +314,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return resultSetType;
     }
 
+    @Override
     public StandardSource<C>  setResultSetConcurrency(String resultSetConcurrency) {
         this.resultSetConcurrency = resultSetConcurrency;
         return this;
@@ -315,6 +324,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return resultSetConcurrency;
     }
 
+    @Override
     public StandardSource<C> shouldIgnoreNull(boolean shouldIgnoreNull) {
         this.shouldIgnoreNull = shouldIgnoreNull;
         return this;
@@ -324,6 +334,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return shouldIgnoreNull;
     }
 
+    @Override
     public StandardSource<C> shouldDetectGeo(boolean shouldDetectGeo) {
         this.shouldDetectGeo = shouldDetectGeo;
         return this;
@@ -333,6 +344,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return shouldDetectGeo;
     }
 
+    @Override
     public StandardSource<C> shouldDetectJson(boolean shouldDetectJson) {
         this.shouldDetectJson = shouldDetectJson;
         return this;
@@ -342,6 +354,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return shouldDetectJson;
     }
 
+    @Override
     public StandardSource<C> shouldPrepareResultSetMetadata(boolean shouldPrepareResultSetMetadata) {
         this.shouldPrepareResultSetMetadata = shouldPrepareResultSetMetadata;
         return this;
@@ -351,6 +364,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return shouldPrepareResultSetMetadata;
     }
 
+    @Override
     public StandardSource<C> shouldPrepareDatabaseMetadata(boolean shouldPrepareDatabaseMetadata) {
         this.shouldPrepareDatabaseMetadata = shouldPrepareDatabaseMetadata;
         return this;
@@ -387,6 +401,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return lastRowCount;
     }
 
+    @Override
     public StandardSource<C>  setColumnNameMap(Map<String, Object> columnNameMap) {
         this.columnNameMap = columnNameMap;
         return this;
@@ -405,6 +420,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return lastRow;
     }
 
+    @Override
     public StandardSource<C> setStatements(List<SQLCommand> sql) {
         this.sql = sql;
         return this;
@@ -423,6 +439,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return isTimestampDiffSupported;
     }
 
+    @Override
     public StandardSource<C> setQueryTimeout(int queryTimeout) {
         this.queryTimeout = queryTimeout;
         return this;
@@ -432,6 +449,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return queryTimeout;
     }
 
+    @Override
     public StandardSource<C> setConnectionProperties(Map<String, Object> connectionProperties) {
         this.connectionProperties = connectionProperties;
         return this;
@@ -441,6 +459,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         return connectionProperties;
     }
 
+    @Override
     public StandardSource<C> shouldTreatBinaryAsString(boolean shouldTreatBinaryAsString) {
         this.shouldTreatBinaryAsString = shouldTreatBinaryAsString;
         return this;

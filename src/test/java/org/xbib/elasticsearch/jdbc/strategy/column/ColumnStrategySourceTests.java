@@ -155,6 +155,7 @@ public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
         assertEquals(sink.data().size(), expectedHits);
     }
 
+    @Override
     protected ColumnContext createContext(String resource) throws IOException {
         Settings settings = createSettings(resource);
         ColumnContext context = newContext();

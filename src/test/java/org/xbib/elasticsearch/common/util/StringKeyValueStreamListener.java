@@ -39,6 +39,7 @@ public class StringKeyValueStreamListener extends PlainKeyValueStreamListener<St
      * @return this value listener
      * @throws IOException
      */
+    @Override
     public StringKeyValueStreamListener end(IndexableObject object) throws IOException {
         if (object.isEmpty()) {
             return this;
