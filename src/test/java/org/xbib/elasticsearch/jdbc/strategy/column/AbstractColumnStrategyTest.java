@@ -1,6 +1,7 @@
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -119,7 +120,7 @@ public abstract class AbstractColumnStrategyTest extends NodeTestUtils {
     protected Settings createSettings(String resource)
             throws IOException {
         InputStream in = getClass().getResourceAsStream(resource);
-        Settings settings = Settings.settingsBuilder()
+        Settings settings = ImmutableSettings.settingsBuilder()
                 .loadFromStream("test", in)
                 .put("jdbc.elasticsearch.cluster", getClusterName())
                 .putArray("jdbc.elasticsearch.host", getHosts())

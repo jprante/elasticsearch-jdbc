@@ -1,7 +1,7 @@
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
+import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.settings.Settings;
-import org.joda.time.DateTime;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.jdbc.strategy.mock.MockSink;

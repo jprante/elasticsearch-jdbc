@@ -19,7 +19,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesAction;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.cron.CronExpression;
@@ -48,8 +50,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 public abstract class Importer
         extends AbstractPipeline<SettingsPipelineRequest>
@@ -99,7 +99,7 @@ public abstract class Importer
 
     @Override
     public Importer reader(String resourceName, InputStream in) {
-        setSettings(settingsBuilder().loadFromStream(resourceName, in).build());
+        setSettings(ImmutableSettings.settingsBuilder().loadFromStream(resourceName, in).build());
         return this;
     }
 
@@ -111,7 +111,7 @@ public abstract class Importer
                 File file = new File(statefile);
                 if (file.exists() && file.isFile() && file.canRead()) {
                     InputStream stateFileInputStream = new FileInputStream(file);
-                    settings = settingsBuilder().put(settings).loadFromStream("statefile", stateFileInputStream).build();
+                    settings = ImmutableSettings.settingsBuilder().put(settings).loadFromStream("statefile", stateFileInputStream).build();
                     logger.info("loaded state from {}", statefile);
                 } else {
                     logger.warn("can't read from {}, skipped", statefile);
@@ -298,7 +298,7 @@ public abstract class Importer
                             indexSettingsInput, indexMappingsInput);
                     indexSettingsInput.close();
                     indexMappingsInput.close();
-                    ingest.startBulk(getConcreteIndex(), -1, 1000);
+                    ingest.startBulk(getConcreteIndex());
                 }
             } catch (Exception e) {
                 if (!settings.getAsBoolean("ignoreindexcreationerror", false)) {
@@ -315,7 +315,8 @@ public abstract class Importer
         if (ingest.client() == null) {
             return alias;
         }
-        GetAliasesResponse getAliasesResponse = ingest.client().prepareExecute(GetAliasesAction.INSTANCE).setAliases(alias).execute().actionGet();
+        GetAliasesRequestBuilder getAliasesRequestBuilder = new GetAliasesRequestBuilder(ingest.client().admin().indices(), alias);
+        GetAliasesResponse getAliasesResponse = getAliasesRequestBuilder.execute().actionGet();
         if (!getAliasesResponse.getAliases().isEmpty()) {
             return getAliasesResponse.getAliases().keys().iterator().next().value;
         }

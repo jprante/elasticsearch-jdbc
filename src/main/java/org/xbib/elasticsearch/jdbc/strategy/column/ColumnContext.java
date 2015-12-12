@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
+import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.unit.TimeValue;
-import org.joda.time.DateTime;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardContext;
 
@@ -27,7 +27,6 @@ public class ColumnContext<S extends ColumnSource> extends StandardContext<S> {
     public static final String LAST_RUN_TIME = "last_run_time";
 
     public static final String CURRENT_RUN_STARTED_TIME = "current_run_started_time";
-
 
     private DateTime lastRunTimestamp;
 

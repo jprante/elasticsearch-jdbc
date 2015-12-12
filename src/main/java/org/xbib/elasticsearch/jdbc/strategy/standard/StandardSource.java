@@ -17,9 +17,9 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.DateTimeZone;
 import org.elasticsearch.common.unit.TimeValue;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.ExceptionFormatter;
 import org.xbib.elasticsearch.common.metrics.SourceMetric;

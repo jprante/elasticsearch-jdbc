@@ -3,6 +3,7 @@ package org.xbib.elasticsearch.ingest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
@@ -24,17 +25,17 @@ public class IngestTest {
         // disable DNS caching for failover
         Security.setProperty("networkaddress.cache.ttl", "0");
 
-        Settings settings = Settings.settingsBuilder()
+        Settings settings = ImmutableSettings.settingsBuilder()
                 .putArray("elasticsearch.host", new String[]{"localhost:9300", "localhost:9301"})
                 .build();
 
         Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
         Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                 Runtime.getRuntime().availableProcessors() * 2);
-        ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
+        ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
         TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
         BulkTransportClient ingest = new BulkTransportClient();
-        Settings.Builder clientSettings = Settings.settingsBuilder()
+        ImmutableSettings.Builder clientSettings = ImmutableSettings.settingsBuilder()
                 .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                 .putArray("host", settings.getAsArray("elasticsearch.host"))
                 .put("port", settings.getAsInt("elasticsearch.port", 9300))
@@ -77,7 +78,7 @@ public class IngestTest {
         // disable DNS caching for failover
         Security.setProperty("networkaddress.cache.ttl", "0");
 
-        Settings settings = Settings.settingsBuilder()
+        Settings settings = ImmutableSettings.settingsBuilder()
                 .putArray("elasticsearch.host", new String[]{"localhost:9300", "localhost:9301"})
                 // enable found.no transport module
                 .put("transport.type", "org.elasticsearch.transport.netty.FoundNettyTransport")
@@ -87,10 +88,10 @@ public class IngestTest {
         Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
         Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                 Runtime.getRuntime().availableProcessors() * 2);
-        ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
+        ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
         TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
         BulkTransportClient ingest = new BulkTransportClient();
-        Settings.Builder clientSettings = Settings.settingsBuilder()
+        Settings.Builder clientSettings = ImmutableSettings.settingsBuilder()
                 .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                 .putArray("host", settings.getAsArray("elasticsearch.host"))
                 .put("port", settings.getAsInt("elasticsearch.port", 9300))

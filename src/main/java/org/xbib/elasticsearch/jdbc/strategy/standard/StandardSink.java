@@ -22,13 +22,14 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.joda.time.format.DateTimeFormat;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
@@ -120,7 +121,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         long stopRefreshInterval = indexSettings != null ?
                 indexSettings.getAsTime("bulk." + index + ".refresh_interval.stop",
                         indexSettings.getAsTime("index.refresh_interval", TimeValue.timeValueSeconds(1))).getMillis() : 1000L;
-        ingest.startBulk(index, startRefreshInterval, stopRefreshInterval);
+        ingest.startBulk(index);
     }
 
     @Override
@@ -307,7 +308,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (logger.isTraceEnabled()) {
             logger.trace("adding bulk update action {}/{}/{}", request.index(), request.type(), request.id());
         }
-        ingest.bulkUpdate(request);
+        //ingest.bulkUpdate(request);
     }
 
     @Override
@@ -322,8 +323,6 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         } catch (InterruptedException e) {
             logger.warn("interrupted while waiting for responses");
             Thread.currentThread().interrupt();
-        } catch (ExecutionException e) {
-            logger.warn("exception while executing", e);
         }
     }
 
@@ -345,10 +344,10 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
                 Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 10000);
                 Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors() * 2);
-                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
+                ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m"));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 BulkTransportClient ingest = new BulkTransportClient();
-                Settings.Builder settingsBuilder = Settings.settingsBuilder()
+                ImmutableSettings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                         .putArray("host", settings.getAsArray("elasticsearch.host"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))

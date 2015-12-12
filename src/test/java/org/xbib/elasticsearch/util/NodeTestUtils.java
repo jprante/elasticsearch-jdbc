@@ -7,15 +7,15 @@ import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.node.MockNode;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.plugins.Plugin;
+import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortBuilder;
@@ -25,7 +25,6 @@ import org.elasticsearch.transport.TransportInfo;
 import org.testng.Assert;
 import org.xbib.elasticsearch.helper.client.ClientHelper;
 import org.xbib.elasticsearch.helper.network.NetworkUtils;
-import org.xbib.elasticsearch.plugin.helper.HelperPlugin;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -35,16 +34,11 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 public class NodeTestUtils extends Assert {
 
@@ -69,6 +63,7 @@ public class NodeTestUtils extends Assert {
         try {
             setClusterName();
             startNode("1");
+            startNode("2");
             findNodeAddresses();
             ClientHelper.waitForCluster(client("1"), ClusterHealthStatus.GREEN, TimeValue.timeValueSeconds(30));
             logger.info("ready");
@@ -93,7 +88,7 @@ public class NodeTestUtils extends Assert {
     }
 
     protected void setClusterName() {
-        this.cluster = "test-helper-plugin-cluster-"
+        this.cluster = "test-jdbc-cluster-"
                 + NetworkUtils.getLocalAddress().getHostName()
                 + "-" + System.getProperty("user.name")
                 + "-" + counter.incrementAndGet();
@@ -108,7 +103,7 @@ public class NodeTestUtils extends Assert {
     }
 
     protected Settings getNodeSettings() {
-        return settingsBuilder()
+        return ImmutableSettings.settingsBuilder()
                 .put("cluster.name", cluster)
                 .put("cluster.routing.schedule", "50ms")
                 .put("cluster.routing.allocation.disk.threshold_enabled", false)
@@ -127,20 +122,14 @@ public class NodeTestUtils extends Assert {
         return System.getProperty("path.home");
     }
 
-    public static Node createNode() {
-        Settings nodeSettings = Settings.settingsBuilder()
+    /*public static Node createNode() {
+        Settings nodeSettings = ImmutableSettings.settingsBuilder()
                 .put("path.home", System.getProperty("path.home"))
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replica", 0)
                 .build();
-        // ES 2.1 renders NodeBuilder as useless
-        //Node node = NodeBuilder.nodeBuilder().settings(nodeSettings).local(true).build().start();
-        Set<Class<? extends Plugin>> plugins = new HashSet<>();
-        plugins.add(HelperPlugin.class);
-        Node node = new MockNode(nodeSettings, plugins);
-        node.start();
-        return node;
-    }
+        return NodeBuilder.nodeBuilder().settings(nodeSettings).local(true).build().start();
+    }*/
 
     public void startNode(String id) throws IOException {
         buildNode(id).start();
@@ -184,15 +173,12 @@ public class NodeTestUtils extends Assert {
     }
 
     private Node buildNode(String id) throws IOException {
-        Settings nodeSettings = settingsBuilder()
+        Settings nodeSettings = ImmutableSettings.settingsBuilder()
                 .put(getNodeSettings())
                 .put("name", id)
                 .build();
         logger.info("settings={}", nodeSettings.getAsMap());
-        // ES 2.1 renders NodeBuilder as useless
-        Set<Class<? extends Plugin>> plugins = new HashSet<>();
-        plugins.add(HelperPlugin.class);
-        Node node = new MockNode(nodeSettings, plugins);
+        Node node = NodeBuilder.nodeBuilder().settings(nodeSettings).build().start();
         AbstractClient client = (AbstractClient)node.client();
         nodes.put(id, node);
         clients.put(id, client);
@@ -240,11 +226,12 @@ public class NodeTestUtils extends Assert {
         for (SearchHit hit : hits) {
             if (hit.getFields().get("_timestamp") == null) {
                 logger.warn("type mapping was not correctly applied for _timestamp field");
+            } else {
+                Long curr = hit.getFields().get("_timestamp").getValue();
+                logger.info("timestamp = {}", curr);
+                assertTrue(curr <= prev);
+                prev = curr;
             }
-            Long curr = hit.getFields().get("_timestamp").getValue();
-            logger.info("timestamp = {}", curr);
-            assertTrue(curr <= prev);
-            prev = curr;
         }
         logger.info("{}/{} = {} hits", index, type, hits.getTotalHits());
         assertEquals(hits.getTotalHits(), expectedHits);

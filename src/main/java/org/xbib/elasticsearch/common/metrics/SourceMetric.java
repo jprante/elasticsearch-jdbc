@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.common.metrics;
 
+import org.elasticsearch.common.joda.time.DateTime;
 import org.elasticsearch.common.metrics.CounterMetric;
-import org.joda.time.DateTime;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

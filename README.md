@@ -16,7 +16,7 @@ Though it would be possible to extend the JDBC importer with a mapping feature w
 could be specified, the current solution is focused on rather simple tabular data streams.
 
 Assuming you have a table of name `orders` with a primary key in column `id`, 
-you can issue this from the command line
+you can issue this script from the command line
 
     bin=$JDBC_IMPORTER_HOME/bin
     lib=$JDBC_IMPORTER_HOME/lib

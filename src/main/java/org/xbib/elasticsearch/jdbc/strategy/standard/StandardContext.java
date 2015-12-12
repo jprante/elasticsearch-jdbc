@@ -19,11 +19,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.joda.FormatDateTimeFormatter;
 import org.elasticsearch.common.joda.Joda;
+import org.elasticsearch.common.joda.time.DateTime;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
-import org.joda.time.DateTime;
 import org.xbib.elasticsearch.common.metrics.MetricsLogger;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
@@ -247,7 +248,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             if (!file.exists() || file.canWrite()) {
                 Writer writer = new FileWriter(statefile);
                 FormatDateTimeFormatter formatter = Joda.forPattern("dateOptionalTime");
-                Settings.Builder settingsBuilder = Settings.settingsBuilder()
+                Settings.Builder settingsBuilder = ImmutableSettings.settingsBuilder()
                         .put(settings)
                         .put("metrics.lastexecutionstart", formatter.printer().print(source.getMetric().getLastExecutionStart()))
                         .put("metrics.lastexecutionend", formatter.printer().print(source.getMetric().getLastExecutionEnd()))
