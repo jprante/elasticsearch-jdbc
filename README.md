@@ -5,6 +5,8 @@ Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons
 [Follow me on twitter](https://twitter.com/xbib)
 
 # JDBC importer for Elasticsearch
+
+[![Join the chat at https://gitter.im/jprante/elasticsearch-jdbc](https://badges.gitter.im/jprante/elasticsearch-jdbc.svg)](https://gitter.im/jprante/elasticsearch-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Travis](https://api.travis-ci.org/jprante/elasticsearch-jdbc.png)
 
 The Java Database Connection (JDBC) importer allows to fetch data from JDBC sources for
