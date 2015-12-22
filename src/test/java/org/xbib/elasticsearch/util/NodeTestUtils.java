@@ -15,7 +15,6 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.MockNode;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortBuilder;
@@ -24,8 +23,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.TransportInfo;
 import org.testng.Assert;
 import org.xbib.elasticsearch.helper.client.ClientHelper;
-import org.xbib.elasticsearch.helper.network.NetworkUtils;
-import org.xbib.elasticsearch.plugin.helper.HelperPlugin;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -35,14 +32,10 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
@@ -54,10 +47,6 @@ public class NodeTestUtils extends Assert {
 
     private Map<String, AbstractClient> clients = new HashMap<>();
 
-    private AtomicInteger counter = new AtomicInteger();
-
-    private String cluster;
-
     // note, this must be same name as in json specs
     protected final String index = "my_index";
 
@@ -67,7 +56,6 @@ public class NodeTestUtils extends Assert {
 
     public void startNodes() {
         try {
-            setClusterName();
             startNode("1");
             findNodeAddresses();
             ClientHelper.waitForCluster(client("1"), ClusterHealthStatus.GREEN, TimeValue.timeValueSeconds(30));
@@ -92,54 +80,21 @@ public class NodeTestUtils extends Assert {
         }
     }
 
-    protected void setClusterName() {
-        this.cluster = "test-helper-plugin-cluster-"
-                + NetworkUtils.getLocalAddress().getHostName()
-                + "-" + System.getProperty("user.name")
-                + "-" + counter.incrementAndGet();
-    }
-
-    protected String getClusterName() {
-        return cluster;
-    }
-
     protected String[] getHosts() {
         return hosts != null ? hosts.toArray(new String[hosts.size()]) : new String[]{};
     }
 
     protected Settings getNodeSettings() {
         return settingsBuilder()
-                .put("cluster.name", cluster)
-                .put("cluster.routing.schedule", "50ms")
-                .put("cluster.routing.allocation.disk.threshold_enabled", false)
-                .put("discovery.zen.multicast.enabled", true)
-                .put("discovery.zen.multicast.ping_timeout", "5s")
+                .put("cluster.name", "elasticsearch")
                 .put("http.enabled", false)
-                .put("threadpool.bulk.size", Runtime.getRuntime().availableProcessors())
-                .put("threadpool.bulk.queue_size", 16 * Runtime.getRuntime().availableProcessors()) // default is 50, too low
                 .put("index.number_of_replicas", 0)
                 .put("path.home", getHome())
                 .build();
     }
 
-
     protected String getHome() {
         return System.getProperty("path.home");
-    }
-
-    public static Node createNode() {
-        Settings nodeSettings = Settings.settingsBuilder()
-                .put("path.home", System.getProperty("path.home"))
-                .put("index.number_of_shards", 1)
-                .put("index.number_of_replica", 0)
-                .build();
-        // ES 2.1 renders NodeBuilder as useless
-        //Node node = NodeBuilder.nodeBuilder().settings(nodeSettings).local(true).build().start();
-        Set<Class<? extends Plugin>> plugins = new HashSet<>();
-        plugins.add(HelperPlugin.class);
-        Node node = new MockNode(nodeSettings, plugins);
-        node.start();
-        return node;
     }
 
     public void startNode(String id) throws IOException {
@@ -189,10 +144,7 @@ public class NodeTestUtils extends Assert {
                 .put("name", id)
                 .build();
         logger.info("settings={}", nodeSettings.getAsMap());
-        // ES 2.1 renders NodeBuilder as useless
-        Set<Class<? extends Plugin>> plugins = new HashSet<>();
-        plugins.add(HelperPlugin.class);
-        Node node = new MockNode(nodeSettings, plugins);
+        Node node = new MockNode(nodeSettings);
         AbstractClient client = (AbstractClient)node.client();
         nodes.put(id, node);
         clients.put(id, client);

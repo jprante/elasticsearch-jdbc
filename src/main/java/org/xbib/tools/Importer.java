@@ -24,10 +24,8 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.cron.CronExpression;
 import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
+import org.xbib.elasticsearch.helper.client.ClientBuilder;
 import org.xbib.elasticsearch.helper.client.Ingest;
-import org.xbib.elasticsearch.helper.client.ingest.IngestTransportClient;
-import org.xbib.elasticsearch.helper.client.mock.MockTransportClient;
-import org.xbib.elasticsearch.helper.client.transport.BulkTransportClient;
 import org.xbib.pipeline.AbstractPipeline;
 import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
@@ -89,12 +87,6 @@ public abstract class Importer
 
     protected String getConcreteIndex() {
         return concreteIndex;
-    }
-
-    protected Ingest createIngest() {
-        return settings.getAsBoolean("mock", false) ? new MockTransportClient() :
-                "ingest".equals(settings.get("client")) ? new IngestTransportClient() :
-                        new BulkTransportClient();
     }
 
     @Override
@@ -181,12 +173,12 @@ public abstract class Importer
 
     protected void prepare() throws IOException {
         if (ingest == null) {
-            Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
-            Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
-                    Runtime.getRuntime().availableProcessors());
-            ingest = createIngest();
-            ingest.maxActionsPerRequest(maxbulkactions)
-                    .maxConcurrentRequests(maxconcurrentbulkrequests);
+            ingest = ClientBuilder.builder()
+                    .put("cluster.name", settings.get("cluster.name", "elasticsearch"))
+                    .put(ClientBuilder.MAX_ACTIONS_PER_REQUEST, settings.getAsInt("max_bulk_actions", 1000))
+                    .put(ClientBuilder.MAX_CONCURRENT_REQUESTS, settings.getAsInt("max_concurrent_bulk_requests",
+                            Runtime.getRuntime().availableProcessors()))
+                    .toBulkTransportClient();
         }
         createIndex(getIndex());
         setQueue(new ArrayBlockingQueue<SettingsPipelineRequest>(32));

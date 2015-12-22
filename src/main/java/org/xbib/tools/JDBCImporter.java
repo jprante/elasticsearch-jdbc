@@ -18,6 +18,7 @@ package org.xbib.tools;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
+import org.xbib.elasticsearch.helper.client.ClientBuilder;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
 import org.xbib.pipeline.Pipeline;
@@ -65,7 +66,12 @@ public class JDBCImporter extends Importer {
         }
         Security.setProperty("networkaddress.cache.ttl", "0");
         Runtime.getRuntime().addShutdownHook(shutdownHook());
-        ingest = createIngest();
+        ingest = ClientBuilder.builder()
+                .put("cluster.name", settings.get("cluster.name", "elasticsearch"))
+                .put(ClientBuilder.MAX_ACTIONS_PER_REQUEST, settings.getAsInt("max_bulk_actions", 1000))
+                .put(ClientBuilder.MAX_CONCURRENT_REQUESTS, settings.getAsInt("max_concurrent_bulk_requests",
+                        Runtime.getRuntime().availableProcessors()))
+                .toBulkTransportClient();
         String index = settings.get("index");
         if (index != null) {
             setIndex(index);
@@ -79,11 +85,6 @@ public class JDBCImporter extends Importer {
             setConcreteIndex(index);
             logger.info("index name = {}, concrete index name = {}", getIndex(), getConcreteIndex());
         }
-        Integer maxbulkactions = settings.getAsInt("max_bulk_actions", 1000);
-        Integer maxconcurrentbulkrequests = settings.getAsInt("max_concurrent_bulk_requests",
-                Runtime.getRuntime().availableProcessors());
-        ingest.maxActionsPerRequest(maxbulkactions)
-                .maxConcurrentRequests(maxconcurrentbulkrequests);
         createIndex(getConcreteIndex());
         BlockingQueue<SettingsPipelineRequest> queue = new ArrayBlockingQueue<>(32);
         setQueue(queue);

@@ -112,7 +112,7 @@ public abstract class AbstractColumnStrategyTest extends NodeTestUtils {
         Context context = newContext();
         context.setSettings(settings);
         //context.getSink().setIngestFactory(createIngestFactory(settings));
-        logger.info("created context {} with cluster name {}", context, getClusterName());
+        logger.info("created context {} with cluster name {}", context, "elasticsearch");
         return context;
     }
 
@@ -121,7 +121,7 @@ public abstract class AbstractColumnStrategyTest extends NodeTestUtils {
         InputStream in = getClass().getResourceAsStream(resource);
         Settings settings = Settings.settingsBuilder()
                 .loadFromStream("test", in)
-                .put("jdbc.elasticsearch.cluster", getClusterName())
+                .put("jdbc.elasticsearch.cluster", "elasticsearch")
                 .putArray("jdbc.elasticsearch.host", getHosts())
                 .build()
                 .getAsSettings("jdbc");

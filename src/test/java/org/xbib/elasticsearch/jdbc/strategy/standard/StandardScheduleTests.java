@@ -15,6 +15,7 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
+import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
@@ -77,6 +78,10 @@ public class StandardScheduleTests extends AbstractSinkTest {
 
     private JDBCImporter createImporter(String resource) throws Exception {
         final JDBCImporter importer = new JDBCImporter();
+        Settings settings = Settings.builder()
+                .put("jdbc.cluster.name", "elasticsearch")
+                .build();
+        importer.setSettings(settings);
         Context context = createContext(resource);
         logger.info("createImporter: set context {}", context);
         importer.setContext(context);

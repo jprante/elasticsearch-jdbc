@@ -32,10 +32,10 @@ import org.joda.time.format.DateTimeFormat;
 import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
+import org.xbib.elasticsearch.helper.client.ClientBuilder;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
 import org.xbib.elasticsearch.helper.client.Ingest;
 import org.xbib.elasticsearch.helper.client.IngestFactory;
-import org.xbib.elasticsearch.helper.client.transport.BulkTransportClient;
 
 import java.io.IOException;
 import java.util.Map;
@@ -85,7 +85,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
             try {
                 ingest = createIngestFactory(context.getSettings()).create();
             } catch (IOException e) {
-
+                logger.error(e.getMessage(), e);
             }
         }
         return this;
@@ -116,10 +116,11 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         }
         long startRefreshInterval = indexSettings != null ?
                 indexSettings.getAsTime("bulk." + index + ".refresh_interval.start",
-                        TimeValue.timeValueSeconds(-1)).getMillis() : -1L;
+                        TimeValue.timeValueMillis(-1L)).getMillis() : -1L;
         long stopRefreshInterval = indexSettings != null ?
                 indexSettings.getAsTime("bulk." + index + ".refresh_interval.stop",
                         indexSettings.getAsTime("index.refresh_interval", TimeValue.timeValueSeconds(1))).getMillis() : 1000L;
+        logger.info("start bulk mode, refresh at start = {}, refresh at stop = {}", startRefreshInterval, stopRefreshInterval);
         ingest.startBulk(index, startRefreshInterval, stopRefreshInterval);
     }
 
@@ -347,7 +348,6 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
                         Runtime.getRuntime().availableProcessors() * 2);
                 ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
-                BulkTransportClient ingest = new BulkTransportClient();
                 Settings.Builder settingsBuilder = Settings.settingsBuilder()
                         .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
                         .putArray("host", settings.getAsArray("elasticsearch.host"))
@@ -370,18 +370,14 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
                         settingsBuilder.put("transport.found." + entry.getKey(), entry.getValue());
                     }
                 }
-                try {
-                    ingest.maxActionsPerRequest(maxbulkactions)
-                            .maxConcurrentRequests(maxconcurrentbulkrequests)
-                            .maxVolumePerRequest(maxvolume)
-                            .flushIngestInterval(flushinterval)
-                            .init(settingsBuilder.build(), sinkMetric);
-                } catch (Exception e) {
-                    logger.error("ingest not properly build, shutting down ingest",e);
-                    ingest.shutdown();
-                    ingest = null;
-                }
-                return ingest;
+                return ClientBuilder.builder()
+                        .put(settings)
+                        .put(ClientBuilder.MAX_ACTIONS_PER_REQUEST, maxbulkactions)
+                        .put(ClientBuilder.MAX_CONCURRENT_REQUESTS, maxconcurrentbulkrequests)
+                        .put(ClientBuilder.MAX_VOLUME_PER_REQUEST, maxvolume)
+                        .put(ClientBuilder.FLUSH_INTERVAL, flushinterval)
+                        .setMetric(sinkMetric)
+                        .toBulkTransportClient();
             }
         };
     }
