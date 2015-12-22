@@ -2,9 +2,8 @@
 
 Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons Attribution-NoDerivs 3.0 Unported.
 
-[Follow me on twitter](https://twitter.com/xbib)
-
 # JDBC importer for Elasticsearch
+
 ![Travis](https://api.travis-ci.org/jprante/elasticsearch-jdbc.png)
 
 The Java Database Connection (JDBC) importer allows to fetch data from JDBC sources for
@@ -50,7 +49,8 @@ about what happened.
 | Jul 24 2015  | 1.7.0.1               | 1.7.0                 |
 | Jul 24 2015  | 1.6.0.1               | 1.6.0                 |
 | Jun    2015  | 1.5.2.0               | 1.5.2                 |
-  
+
+
 ## Quick links
 
 JDBC importer 2.1.1.0
@@ -94,6 +94,15 @@ The Maven project site is available at [Github](http://jprante.github.io/elastic
 
 All feedback is welcome! If you find issues, please post them at
 [Github](https://github.com/jprante/elasticsearch-jdbc/issues)
+
+# Contact
+
+[Follow me on twitter](https://twitter.com/xbib)
+
+You find this software useful and want to honor me for my work? Please donate. 
+Donations will also help to keep up the development of open source Elasticsearch add-ons.
+
+[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GVHFQYZ9WZ8HG)
 
 # Documentation
 
