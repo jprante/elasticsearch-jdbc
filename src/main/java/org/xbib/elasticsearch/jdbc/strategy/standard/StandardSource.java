@@ -929,7 +929,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     logger.debug("registerOutParameter: n={} type={}", n, toJDBCType(type));
                     try {
                         statement.registerOutParameter(n, toJDBCType(type));
-                    } catch (Throwable t) {
+                    } catch (Exception e) {
                         logger.warn("can't register out parameter " + n + " of type " + type);
                     }
                 }
