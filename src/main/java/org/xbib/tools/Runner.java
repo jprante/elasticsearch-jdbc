@@ -25,7 +25,7 @@ public class Runner {
             Class clazz = Class.forName(args[0]);
             CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
             InputStream in = args.length > 1 ? new FileInputStream(args[1]) : System.in;
-            commandLineInterpreter.reader("args", in).run(true);
+            commandLineInterpreter.run("args", in);
             in.close();
         } catch (Throwable e) {
             e.printStackTrace();

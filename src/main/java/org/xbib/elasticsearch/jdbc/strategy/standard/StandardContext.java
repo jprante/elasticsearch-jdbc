@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -170,6 +169,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void beforeFetch() throws Exception {
         logger.debug("before fetch");
         Sink sink = createSink();
@@ -188,7 +188,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             getSource().fetch();
         } catch (Throwable e) {
             setThrowable(e);
-            logger.error(e.getMessage(), e);
+            logger.error("at fetch: " + e.getMessage(), e);
         }
     }
 
@@ -200,13 +200,13 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             getSource().afterFetch();
         } catch (Throwable e) {
             setThrowable(e);
-            logger.error(e.getMessage(), e);
+            logger.error("after fetch: " + e.getMessage(), e);
         }
         try {
             getSink().afterFetch();
         } catch (Throwable e) {
             setThrowable(e);
-            logger.error(e.getMessage(), e);
+            logger.error("after fetch: " + e.getMessage(), e);
         }
     }
 
@@ -220,14 +220,14 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
             try {
                 source.shutdown();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.error("source shutdown: " + e.getMessage(), e);
             }
         }
         if (sink != null) {
             try {
                 sink.shutdown();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.error("sink shutdown: " + e.getMessage(), e);
             }
         }
         logger.info("shutdown completed");
@@ -293,22 +293,10 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     protected Sink createSink() throws IOException {
         Sink sink = StrategyLoader.newSink(strategy());
         logger.info("found sink class {}", sink);
-        String index = settings.get("index", "jdbc");
-        String type = settings.get("type", "jdbc");
-        sink.setIndex(index).setType(type);
-        Map<String,Object> map = settings.getAsStructuredMap();
-        if (map.containsKey("index_settings")) {
-            Settings loadedSettings = settings.getAsSettings("index_settings");
-            sink.setIndexSettings(loadedSettings);
-        }
-        if (map.containsKey("type_mapping")) {
-            XContentBuilder builder = jsonBuilder()
-                    .map(settings.getAsSettings("type_mapping").getAsStructuredMap());
-            sink.setTypeMapping(Collections.singletonMap(type, builder.string()));
-        }
         return sink;
     }
 
+    @SuppressWarnings("unchecked")
     protected void prepareContext(S source, Sink sink) throws IOException {
         Map<String, Object> params = settings.getAsStructuredMap();
         List<SQLCommand> sql = SQLCommand.parse(params);

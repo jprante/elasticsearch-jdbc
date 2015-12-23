@@ -40,8 +40,7 @@ about what happened.
 
 | Release date | JDBC Importer version | Elasticsearch version |
 | -------------| ----------------------| ----------------------|
-| Dec 23 2015  | 2.1.1.1               | 2.1.1                 |
-| Dec 22 2015  | 2.1.1.0               | 2.1.1                 |
+| Dec 23 2015  | 2.1.1.2               | 2.1.1                 |
 | Nov 29 2015  | 2.1.0.0               | 2.1.0                 |
 | Oct 29 2015  | 2.0.0.1               | 2.0.0                 |
 | Oct 28 2015  | 2.0.0.0               | 2.0.0                 |
@@ -54,9 +53,9 @@ about what happened.
 
 ## Quick links
 
-JDBC importer 2.1.1.1
+JDBC importer 2.1.1.2
 
-`http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/2.1.1.1/elasticsearch-jdbc-2.1.1.1-dist.zip`
+`http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/2.1.1.2/elasticsearch-jdbc-2.1.1.2-dist.zip`
 
 ## Installation
 

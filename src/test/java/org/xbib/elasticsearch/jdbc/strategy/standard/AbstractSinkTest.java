@@ -136,14 +136,13 @@ public abstract class AbstractSinkTest extends NodeTestUtils {
     protected Context createContext(String resource) throws Exception {
         InputStream in = getClass().getResourceAsStream(resource);
         Settings settings = Settings.settingsBuilder()
-                .loadFromStream("test", in)
                 .put("jdbc.elasticsearch.cluster", "elasticsearch")
                 .putArray("jdbc.elasticsearch.host", getHosts())
+                .loadFromStream("test", in)
                 .build()
                 .getAsSettings("jdbc");
         Context context = newContext();
         context.setSettings(settings);
-        logger.info("created context {} with cluster name {}", context, "elasticsearch");
         return context;
     }
 

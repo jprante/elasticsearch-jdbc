@@ -15,12 +15,14 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
-import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
 import org.xbib.tools.JDBCImporter;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.Charset;
 
 public class StandardScheduleTests extends AbstractSinkTest {
 
@@ -76,19 +78,16 @@ public class StandardScheduleTests extends AbstractSinkTest {
         assertTrue(hits > 99L);
     }
 
-    private JDBCImporter createImporter(String resource) throws Exception {
+    private JDBCImporter createImporter(final String resource) throws Exception {
         final JDBCImporter importer = new JDBCImporter();
-        Settings settings = Settings.builder()
-                .put("jdbc.cluster.name", "elasticsearch")
-                .build();
-        importer.setSettings(settings);
         Context context = createContext(resource);
-        logger.info("createImporter: set context {}", context);
+        logger.info("createImporter: setting context {}", context);
         importer.setContext(context);
-        // dispatch in new thread
+        logger.info("createImporter: settings = {}", context.getSettings());
+        // dispatch in a thread
         new Thread() {
             public void run() {
-                importer.run(true);
+                importer.run();
             }
         }.start();
         return importer;

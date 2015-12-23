@@ -51,26 +51,6 @@ public interface Sink<C extends Context> {
      */
     Sink<C> setContext(C context);
 
-    Sink setIngestFactory(IngestFactory ingestFactory);
-
-    IngestFactory getIngestFactory();
-
-    /**
-     * Set index settings
-     *
-     * @param indexSettings the index settings
-     * @return this sink
-     */
-    Sink setIndexSettings(Settings indexSettings);
-
-    /**
-     * Set index type mappings
-     *
-     * @param typeMapping the index type mappings
-     * @return this sink
-     */
-    Sink setTypeMapping(Map<String, String> typeMapping);
-
     /**
      * Executed before source fetch
      *

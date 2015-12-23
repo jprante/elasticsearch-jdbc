@@ -19,8 +19,6 @@ import java.io.InputStream;
 
 public interface CommandLineInterpreter {
 
-    CommandLineInterpreter reader(String resourceName, InputStream in);
-
-    void run(boolean bootstrap) throws Exception;
+    void run(String resourceName, InputStream in) throws Exception;
 
 }
