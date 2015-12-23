@@ -67,7 +67,7 @@ public class JDBCImporter extends Importer {
         Security.setProperty("networkaddress.cache.ttl", "0");
         Runtime.getRuntime().addShutdownHook(shutdownHook());
         ingest = ClientBuilder.builder()
-                .put("cluster.name", settings.get("cluster.name", "elasticsearch"))
+                .put("cluster.name", settings.get("cluster.name", settings.get("cluster", "elasticsearch")))
                 .put(ClientBuilder.MAX_ACTIONS_PER_REQUEST, settings.getAsInt("max_bulk_actions", 1000))
                 .put(ClientBuilder.MAX_CONCURRENT_REQUESTS, settings.getAsInt("max_concurrent_bulk_requests",
                         Runtime.getRuntime().availableProcessors()))

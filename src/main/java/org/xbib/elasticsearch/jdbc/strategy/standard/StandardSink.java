@@ -349,7 +349,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
                 ByteSizeValue maxvolume = settings.getAsBytesSize("max_bulk_volume", ByteSizeValue.parseBytesSizeValue("10m", ""));
                 TimeValue flushinterval = settings.getAsTime("flush_interval", TimeValue.timeValueSeconds(5));
                 Settings.Builder settingsBuilder = Settings.settingsBuilder()
-                        .put("cluster.name", settings.get("elasticsearch.cluster", "elasticsearch"))
+                        .put("cluster.name", settings.get("elasticsearch.cluster.name", settings.get("elasticsearch.cluster", "elasticsearch")))
                         .putArray("host", settings.getAsArray("elasticsearch.host"))
                         .put("port", settings.getAsInt("elasticsearch.port", 9300))
                         .put("sniff", settings.getAsBoolean("elasticsearch.sniff", false))
