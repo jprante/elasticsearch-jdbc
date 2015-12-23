@@ -232,6 +232,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
      * @return this value listener
      * @throws java.io.IOException if this method fails
      */
+    @Override
     public KeyValueStreamListener<K, V> end() throws IOException {
         if (prev != null) {
             prev.source(current.source());

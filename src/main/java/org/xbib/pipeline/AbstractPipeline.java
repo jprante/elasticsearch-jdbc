@@ -29,6 +29,7 @@ public abstract class AbstractPipeline<R extends PipelineRequest>
         return this;
     }
 
+    @Override
     public BlockingQueue<R> getQueue() {
         return queue;
     }

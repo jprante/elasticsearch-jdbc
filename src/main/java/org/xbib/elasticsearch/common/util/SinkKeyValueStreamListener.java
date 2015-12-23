@@ -32,16 +32,19 @@ public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListene
         return this;
     }
 
+    @Override
     public SinkKeyValueStreamListener<K, V> shouldIgnoreNull(boolean shouldIgnoreNull) {
         super.shouldIgnoreNull(shouldIgnoreNull);
         return this;
     }
 
+    @Override
     public SinkKeyValueStreamListener<K, V> shouldDetectGeo(boolean shouldDetectGeo) {
         super.shouldDetectGeo(shouldDetectGeo);
         return this;
     }
 
+    @Override
     public SinkKeyValueStreamListener<K, V> shouldDetectJson(boolean shouldDetectJson) {
         super.shouldDetectJson(shouldDetectJson);
         return this;
@@ -54,6 +57,7 @@ public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListene
      * @return this value listener
      * @throws java.io.IOException if this method fails
      */
+    @Override
     public SinkKeyValueStreamListener<K, V> end(IndexableObject object) throws IOException {
         if (object.isEmpty()) {
             return this;

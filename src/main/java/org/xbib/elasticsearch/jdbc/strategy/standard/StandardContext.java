@@ -371,6 +371,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     private final static MetricsLogger metricsLogger = new MetricsLogger();
 
+    @Override
     public void log() {
         try {
             if (source != null) {
@@ -385,6 +386,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     }
 
     class MetricsThread extends Thread {
+        @Override
         public void run() {
             log();
         }

@@ -87,6 +87,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
         importer.setContext(context);
         // dispatch in new thread
         new Thread() {
+            @Override
             public void run() {
                 importer.run(true);
             }

@@ -42,6 +42,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      *
      * @return a new source instance
      */
+    @Override
     JDBCSource<C> newInstance();
 
     /**
@@ -50,6 +51,7 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @param context the context
      * @return this source
      */
+    @Override
     JDBCSource<C> setContext(C context);
 
     /**

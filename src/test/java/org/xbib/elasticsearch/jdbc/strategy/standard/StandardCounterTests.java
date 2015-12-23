@@ -35,6 +35,7 @@ public class StandardCounterTests extends AbstractSinkTest {
         return new StandardContext();
     }
 
+    @Override
     protected void perform(String resource) throws Exception {
         // perform a single step
         logger.info("before execution, resetting counter");
