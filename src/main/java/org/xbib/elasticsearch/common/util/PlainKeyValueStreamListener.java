@@ -18,12 +18,14 @@ package org.xbib.elasticsearch.common.util;
 import com.spatial4j.core.context.SpatialContext;
 import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.shape.Shape;
+import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -355,7 +357,10 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
      * @return a new structured object
      */
     private IndexableObject newObject() {
-        return new PlainIndexableObject().ignoreNull(shouldIgnoreNull);
+        Map<String,String> map = new HashMap<>();
+        map.put("ignore_null", Boolean.toString(shouldIgnoreNull));
+        map.put("force_array", "false");
+        return new PlainIndexableObject(new ToXContent.MapParams(map));
     }
 
     private boolean shouldAutoGenID() {

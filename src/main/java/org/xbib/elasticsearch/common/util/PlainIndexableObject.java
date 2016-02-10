@@ -32,21 +32,20 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  */
 public class PlainIndexableObject implements IndexableObject, ToXContent, Comparable<IndexableObject> {
 
-    private Map<String, String> meta;
+    private final Map<String, String> meta;
 
     private Map<String, Object> core;
 
-    private boolean ignoreNull;
+    private final Params params;
 
     public PlainIndexableObject() {
-        this.meta = new LinkedHashMap<String, String>();
-        this.core = new LinkedHashMap<String, Object>();
+        this(ToXContent.EMPTY_PARAMS);
     }
 
-    @Override
-    public IndexableObject ignoreNull(boolean ignorenull) {
-        this.ignoreNull = ignorenull;
-        return this;
+    public PlainIndexableObject(Params params) {
+        this.meta = new LinkedHashMap<String, String>();
+        this.core = new LinkedHashMap<String, Object>();
+        this.params = params;
     }
 
     @Override
@@ -123,7 +122,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
     @Override
     public String build() throws IOException {
         XContentBuilder builder = jsonBuilder();
-        toXContent(builder, ToXContent.EMPTY_PARAMS);
+        toXContent(builder, params);
         return builder.string();
     }
 
@@ -151,7 +150,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
         }
         for (Map.Entry<String, Object> k : map.entrySet()) {
             Object o = k.getValue();
-            if (ignoreNull && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
+            if (params.paramAsBoolean("ignore_null", false) && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
                 continue;
             }
             builder.field(k.getKey());
@@ -184,7 +183,7 @@ public class PlainIndexableObject implements IndexableObject, ToXContent, Compar
         int exists = 0;
         for (Map.Entry<String, Object> k : map.entrySet()) {
             Object o = k.getValue();
-            if (ignoreNull && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
+            if (params.paramAsBoolean("ignore_null", false)  && (o == null || (o instanceof Values) && ((Values) o).isNull())) {
                 continue;
             }
             exists++;

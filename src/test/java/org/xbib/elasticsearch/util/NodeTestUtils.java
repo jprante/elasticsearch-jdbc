@@ -1,6 +1,5 @@
 package org.xbib.elasticsearch.util;
 
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
@@ -22,7 +21,6 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.TransportInfo;
 import org.testng.Assert;
-import org.xbib.elasticsearch.helper.client.ClientHelper;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -58,7 +56,6 @@ public class NodeTestUtils extends Assert {
         try {
             startNode("1");
             findNodeAddresses();
-            ClientHelper.waitForCluster(client("1"), ClusterHealthStatus.GREEN, TimeValue.timeValueSeconds(30));
             logger.info("ready");
         } catch (Throwable t) {
             logger.error("startNodes failed", t);

@@ -1,0 +1,66 @@
+dependencies {
+    testCompile "org.hsqldb:hsqldb:2.3.2"
+}
+
+task hsqldbIntegrationTest(type: Test) {
+    systemProperty 'path.home', projectDir.absolutePath + "build"
+    systemProperty 'java.io.tmpdir', projectDir.absolutePath + "build/tmp"
+    ext.useDefaultListeners = true
+    ext.workingDirectory = 'build/'
+    useTestNG() {
+        testLogging.showStandardStreams = false
+        suiteXmlBuilder().suite(name: 'gradle-testng-jdbc-hsqldb', verbose: '1') {
+            parameter(name: 'starturl', value: 'jdbc:hsqldb:mem:test')
+            parameter(name: 'stopurl', value: 'jdbc:hsqldb:mem:test')
+            parameter(name: 'user', value: 'sa')
+            parameter(name: 'password', value: '')
+            test(name: 'hsqldb Source Tests') {
+                parameter(name: 'create', value: 'hsqldb/create-ordertables.sql')
+                parameter(name: 'delete', value: 'hsqldb/delete-ordertables.sql')
+                parameter(name: 'sql1', value: 'select * from orders')
+                parameter(name: 'sql2', value: 'select * from orders')
+                parameter(name: 'sql3', value: 'select * from products where amount is null')
+                classes([:]) {
+                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests')
+                }
+            }
+            test(name: 'hsqldb Sink Tests') {
+                parameter(name: 'create', value: 'hsqldb/create-ordertables.sql')
+                parameter(name: 'delete', value: 'hsqldb/delete-ordertables.sql')
+                parameter(name: 'task1', value: 'hsqldb/task1.json')
+                parameter(name: 'task2', value: 'hsqldb/task2.json')
+                parameter(name: 'task3', value: 'hsqldb/task3.json')
+                parameter(name: 'sql1', value: 'insert into products (name, amount, price) values(?,?,?)')
+                classes([:]) {
+                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests')
+                }
+            }
+            test(name: 'hsqldb Job Tests') {
+                parameter(name: 'create', value: 'hsqldb/create-jobtables.sql')
+                parameter(name: 'delete', value: 'hsqldb/delete-jobtables.sql')
+                parameter(name: 'task1', value: 'hsqldb/jobtask1.json')
+                parameter(name: 'sql1', value: 'select count(*) from products')
+                parameter(name: 'sql2', value: 'insert into products ("_job", "name", "amount", "price") values(?,?,?,?)')
+                classes([:]) {
+                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests')
+                }
+            }
+            test(name: 'hsqldb Schedule Tests') {
+                parameter(name: 'create', value: 'hsqldb/create-ordertables.sql')
+                parameter(name: 'delete', value: 'hsqldb/delete-ordertables.sql')
+                parameter(name: 'task6', value: 'hsqldb/task6.json')
+                parameter(name: 'task7', value: 'hsqldb/task7.json')
+                parameter(name: 'sql1', value: 'insert into products ("name", "amount", "price") values(?,?,?)')
+                parameter(name: 'sql2', value: 'insert into logs (modified, message) values(?,?)')
+                classes([:]) {
+                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests')
+                }
+            }
+        }
+    }
+    options {
+        listeners << 'org.xbib.elasticsearch.util.TestListener'
+        listeners << 'org.uncommons.reportng.HTMLReporter'
+        listeners << 'org.uncommons.reportng.JUnitXMLReporter'
+    }
+}

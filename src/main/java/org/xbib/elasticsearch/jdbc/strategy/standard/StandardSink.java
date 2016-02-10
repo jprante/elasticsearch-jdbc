@@ -17,7 +17,6 @@ package org.xbib.elasticsearch.jdbc.strategy.standard;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesAction;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -119,6 +118,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
                     logger.warn(e.getMessage());
                 }
             }
+            ingest.waitForCluster("YELLOW", TimeValue.timeValueSeconds(30));
         }
     }
 
@@ -354,7 +354,7 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         }
         if (ingest.client() != null) {
             try {
-                ingest.waitForCluster(ClusterHealthStatus.YELLOW, TimeValue.timeValueSeconds(30));
+                ingest.waitForCluster("YELLOW", TimeValue.timeValueSeconds(30));
                 if (settings.getAsStructuredMap().containsKey("index_settings")) {
                     Settings indexSettings = settings.getAsSettings("index_settings");
                     Map<String,String> mappings = new HashMap<>();

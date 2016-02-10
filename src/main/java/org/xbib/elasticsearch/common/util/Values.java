@@ -163,13 +163,13 @@ public class Values<O extends Object> implements ToXContent {
             builder.nullValue();
             return builder;
         }
-        if (this.values.length > 1) {
+        if (this.values.length > 1 || params.paramAsBoolean("force_array", false)) {
             builder.startArray();
         }
         for (O aValue : this.values) {
             builder.value(aValue);
         }
-        if (this.values.length > 1) {
+        if (this.values.length > 1 || params.paramAsBoolean("force_array", false)) {
             builder.endArray();
         }
         return builder;

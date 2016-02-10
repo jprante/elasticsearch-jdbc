@@ -13,7 +13,7 @@ import java.text.ParseException;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class GeometryTest {
+public class GeometryTests {
 
     protected final static Logger logger = LogManager.getLogger("test.geo");
 

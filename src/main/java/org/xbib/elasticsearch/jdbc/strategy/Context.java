@@ -16,7 +16,6 @@
 package org.xbib.elasticsearch.jdbc.strategy;
 
 import org.elasticsearch.common.settings.Settings;
-import org.xbib.elasticsearch.helper.client.IngestFactory;
 
 public interface Context<S extends Source, T extends Sink> {
 
