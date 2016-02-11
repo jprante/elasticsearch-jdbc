@@ -1,12 +1,12 @@
 dependencies {
-    testCompile "org.hsqldb:hsqldb:2.3.2"
+    testCompile "org.hsqldb:hsqldb:2.3.3"
 }
 
 task hsqldbIntegrationTest(type: Test) {
-    systemProperty 'path.home', projectDir.absolutePath + "build"
-    systemProperty 'java.io.tmpdir', projectDir.absolutePath + "build/tmp"
+    systemProperty 'path.home', projectDir.absolutePath + '/build'
+    systemProperty 'java.io.tmpdir', projectDir.absolutePath + '/build/tmp'
     ext.useDefaultListeners = true
-    ext.workingDirectory = 'build/'
+    ext.workingDirectory = projectDir.absolutePath + '/build'
     useTestNG() {
         testLogging.showStandardStreams = false
         suiteXmlBuilder().suite(name: 'gradle-testng-jdbc-hsqldb', verbose: '1') {

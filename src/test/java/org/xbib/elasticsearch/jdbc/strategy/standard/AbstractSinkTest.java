@@ -213,6 +213,7 @@ public abstract class AbstractSinkTest extends NodeTestUtils {
             long job = 0L;
             add(connection, sql, job, UUID.randomUUID().toString().substring(0, 32), amount, price);
         }
+        logger.info("executed {} adds", size);
         if (!connection.getAutoCommit()) {
             connection.commit();
         }
@@ -239,13 +240,12 @@ public abstract class AbstractSinkTest extends NodeTestUtils {
         BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         String sql;
         while ((sql = br.readLine()) != null) {
-
             try {
-                logger.trace("executing {}", sql);
+                logger.info("executing {}", sql);
                 Statement p = connection.createStatement();
                 p.execute(sql);
                 p.close();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 // ignore
                 logger.error(sql + " failed. Reason: " + e.getMessage());
             } finally {

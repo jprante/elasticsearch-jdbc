@@ -21,13 +21,10 @@ ext {
       'jdbc-driver-csv': '1.0.0',
       'junit' : '4.12',
       'testng':  '6.9.10',
-      'h2' : '1.4.181',
-      'hsqldb' : '2.3.2',
-      'derby' : '10.11.1.1',
       'mysql' : '5.1.33',
       'postgresql' : '9.3-1102-jdcb41'
     ]
-    databases = ['h2', 'hsqldb']
+    databases = ['derby', 'h2', 'hsqldb']
 }
 
 buildscript {
@@ -81,7 +78,7 @@ configurations {
 
 dependencies {
     compile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
-    compile 'org.xbib.elasticsearch.plugins:elasticsearch-helper:' + versions.'elasticsearch-helper'
+    compile 'org.xbib.elasticsearch.plugin:elasticsearch-helper:' + versions.'elasticsearch-helper'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:' + versions.log4j
     compile 'org.apache.logging.log4j:log4j-core:'+ versions.log4j
     compile('com.vividsolutions:jts:1.13') {
@@ -94,6 +91,7 @@ dependencies {
     // http://www.oracle.com/technetwork/database/features/jdbc/jdbc-drivers-12c-download-1958347.html
     // releaseJars 'com.oracle:ojdbc7:12.1.0.1'
     testCompile 'org.testng:testng:' + versions.testng
+    testCompile 'net.java.dev.jna:jna:' + versions.jna
     // Workaround for a known issue with TestNG 6.x: explicitly add Guice (Gradle will fail to run tests otherwise)
     testCompile 'com.google.inject:guice:3.0'
     testCompile 'org.uncommons:reportng:1.1.4'
@@ -101,6 +99,7 @@ dependencies {
     testCompile 'org.apache.logging.log4j:log4j-core:'+ versions.log4j
     integrationTestCompile 'org.testng:testng:' + versions.testng
     integrationTestCompile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
+    integrationTestCompile 'net.java.dev.jna:jna:' + versions.jna
     wagon 'org.apache.maven.wagon:wagon-ssh-external:' + versions.wagon
 }
 
@@ -149,16 +148,6 @@ task integrationTest(type: Test, dependsOn: [':unpackPlugin']) {
     systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
     systemProperty 'path.home', projectDir.absolutePath
 }
-
-/*databases.each { database ->
-    task "${database}IntegrationTest"(type: Test) {
-        testClassesDir = sourceSets.integrationTest.output.classesDir
-        classpath = configurations.integrationTestCompile
-        classpath += sourceSets.integrationTest.output
-        systemProperty 'path.home', projectDir.absolutePath
-        testLogging.showStandardStreams = true
-    }
-}*/
 
 tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")

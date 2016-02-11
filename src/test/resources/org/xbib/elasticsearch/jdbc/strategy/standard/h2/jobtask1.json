@@ -1,7 +1,7 @@
 {
     "type" : "jdbc",
     "jdbc" : {
-        "url" : "jdbc:h2:./target/test",
+        "url" : "jdbc:h2:./build/test",
         "user" : "",
         "password" : "",
         "sql" : [

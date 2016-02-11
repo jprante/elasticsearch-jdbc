@@ -2,7 +2,7 @@
     "type" : "jdbc",
     "jdbc" : {
         "schedule" : "0/5 0-59 0-23 ? * *",
-        "url" : "jdbc:h2:./target/test",
+        "url" : "jdbc:h2:./build/test",
         "user" : "",
         "password" : "",
         "sql" : "select * from \"products\"",
