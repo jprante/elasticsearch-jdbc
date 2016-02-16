@@ -15,7 +15,7 @@ is limited in the way to reconstruct deeply nested objects to JSON and process o
 Though it would be possible to extend the JDBC importer with a maaping feature where all the object properties
 could be specified, the current solution is focused on rather simple tabular data streams.
 
-Assuming you have a table of name `orders` with a primary key in column `id`, 
+Assuming you have a table of name `orders` with a primary key in column `id`,
 you can issue this from the command line
 
     bin=$JDBC_IMPORTER_HOME/bin
@@ -41,6 +41,7 @@ about what happened.
 
 | Release date | Importer version | Elasticsearch version |
 | -------------| -----------------| ----------------------|
+| Feb 16 2016  | 1.7.5.0          | 1.7.5                 |
 | Sep 25 2015  | 1.7.2.0          | 1.7.2                 |
 | Aug 10 2015  | 1.7.1.0          | 1.7.1                 |
 | Jul 24 2015  | 1.7.0.1          | 1.7.0                 |
@@ -61,16 +62,16 @@ about what happened.
 - go to the unpacked directory (we call it $JDBC_IMPORTER_HOME)
     `cd elasticsearch-jdbc-<version>`
 
-- if you do not find the JDBC driver jar in the `lib` directory, download it from your vendor's site 
+- if you do not find the JDBC driver jar in the `lib` directory, download it from your vendor's site
     and put the driver jar into the `lib` folder
 
-- modify script in the `bin` directory to your needs (Elasticsearch cluster address) 
+- modify script in the `bin` directory to your needs (Elasticsearch cluster address)
 
 - run script with a command that starts `org.xbib.tools.JDBCImporter` with the `lib` directory on the classpath
 
 ## Bundled drivers
 
-The JDBC importer comes with open source JDBC drivers bundled for your convenience. 
+The JDBC importer comes with open source JDBC drivers bundled for your convenience.
 They are not part of the JDBC importer, hence, there is no support and no gurarantuee the bundled drivers will work.
 Please read the JDBC driver license files attached in the distribution.
 JDBC importer does not link against the code of the drivers. If you do not want the drivers jars,
@@ -90,7 +91,7 @@ All feedback is welcome! If you find issues, please post them at
 The relational data is internally transformed into structured JSON objects for the schema-less
 indexing model of Elasticsearch documents.
 
-The importer can fetch data from RDBMS while multithreaded bulk mode ensures high throughput when 
+The importer can fetch data from RDBMS while multithreaded bulk mode ensures high throughput when
 indexing to Elasticsearch.
 
 ## JDBC importer definition file
@@ -103,9 +104,9 @@ The general form of a JDBC import specification is a JSON object.
 	         <definition>
 	    }
 	}
-	
+
 Example:
-	
+
 	{
 	    "type" : "jdbc",
 	    "jdbc" : {
@@ -193,7 +194,7 @@ Here is the list of parameters for the `jdbc` block in the definition.
    * `$metrics.totalbytes` - total number of bytes fetched
    * `$metrics.failed` - total number of failed SQL executions
    * `$metrics.succeeded` - total number of succeeded SQL executions
-   
+
 `locale` - the default locale (used for parsing numerical values, floating point character. Recommended values is "en_US")
 
 `timezone` - the timezone for JDBC setTimestamp() calls when binding parameters with timestamp values
@@ -261,7 +262,7 @@ Quartz cron expression format (see below for syntax)
 
 `type_mapping` - optional mapping for the Elasticsearch index type
 
-`statefile` - name of a file where the JDBC importer reads or writes state information 
+`statefile` - name of a file where the JDBC importer reads or writes state information
 
 `metrics.lastexecutionstart` - the UTC date/time of the begin of the last execution of a single fetch
 
@@ -331,7 +332,7 @@ Example of a `schedule` paramter:
 
 This executes JDBC importer every minute, every hour, all the days in the week/month/year.
 
-The following documentation about the syntax of the cron expression is copied from the Quartz 
+The following documentation about the syntax of the cron expression is copied from the Quartz
 scheduler javadoc page.
 
 Cron expressions provide the ability to specify complex time combinations such as
@@ -616,9 +617,9 @@ will result into the following JSON documents
 
 ## How to update a table?
 
-The JDBC importer allows to write data into the database for maintenance purpose. 
+The JDBC importer allows to write data into the database for maintenance purpose.
 
-Writing back data into the database makes sense for acknowledging fetched data. 
+Writing back data into the database makes sense for acknowledging fetched data.
 
 Example:
 
@@ -643,7 +644,7 @@ Example:
     }
 
 In this example, the DB administrator has prepared product rows and attached a `_job` column to it
-to enumerate the product updates incrementally. The assertion is that Elasticsearch should 
+to enumerate the product updates incrementally. The assertion is that Elasticsearch should
 delete all products from the database after they are indexed successfully. The parameter `$job`
 is a counter. The importer state is saved in a file, so the counter is persisted.
 
@@ -672,19 +673,19 @@ column `mytimestamp`:
 
 ## Stored procedures or callable statements
 
-Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates. 
+Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates.
 See also [Using Stored Procedures](http://docs.oracle.com/javase/tutorial/jdbc/basics/storedprocedures.html)
 from where the example is taken.
 
     create procedure GET_SUPPLIER_OF_COFFEE(
-        IN coffeeName varchar(32), 
-        OUT supplierName varchar(40)) 
-        begin 
-            select SUPPLIERS.SUP_NAME into supplierName 
-            from SUPPLIERS, COFFEES 
-            where SUPPLIERS.SUP_ID = COFFEES.SUP_ID 
-            and coffeeName = COFFEES.COF_NAME; 
-            select supplierName; 
+        IN coffeeName varchar(32),
+        OUT supplierName varchar(40))
+        begin
+            select SUPPLIERS.SUP_NAME into supplierName
+            from SUPPLIERS, COFFEES
+            where SUPPLIERS.SUP_ID = COFFEES.SUP_ID
+            and coffeeName = COFFEES.COF_NAME;
+            select supplierName;
         end
 
 Now it is possible to call the procedure from the JDBC importer and index the result in Elasticsearch.
@@ -754,7 +755,7 @@ https://github.com/jprante/jdbc-driver-csv
 # Persisted state
 
 The JDBC importer writes the state after each execution step into a state file which can be set by the
-parameter `statefile`, see above in the parameter documentation. Default setting is not writing 
+parameter `statefile`, see above in the parameter documentation. Default setting is not writing
 to state file.
 
 Example:
@@ -763,9 +764,9 @@ Example:
     "statefile" : "statefile.json",
     ...
 
-You can use the `statefile` as input for a next JDBC importer invocation, once it is saved. 
+You can use the `statefile` as input for a next JDBC importer invocation, once it is saved.
 This is useful if you have to restart the JDBC importer. Because the statefile is written
-in prettified JSON, it is also possible to adjust the 
+in prettified JSON, it is also possible to adjust the
 settings in the statefile if you need to synchronize with the JDBC source.
 
 Note: there must be enough space on disk to write the state file. If disk is full,
@@ -773,7 +774,7 @@ JDBC importer will write zero length files and give error messages in the import
 
 # Monitoring the JDBC importer
 
-Metrics logging can be enabled to watch for the current transfer statistics. 
+Metrics logging can be enabled to watch for the current transfer statistics.
 
 Example:
 
@@ -814,36 +815,36 @@ When you use the ``strategy`` parameter, the JDBC importer tries to load additio
 falling back to the ``standard`` strategy.
 
 You can implement your own strategy by adding your implementation jars to the lib folder and
-declaring the implementing classes in the ``META-INF/services`` directory. 
+declaring the implementing classes in the ``META-INF/services`` directory.
 
 So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy
 to the unmodified JDBC importer jar.
 
 ### Source
 
-The `Source` models the data producing side. Beside defining the JDBC connect parameters, 
+The `Source` models the data producing side. Beside defining the JDBC connect parameters,
 it manages a dual-channel connection to the data producer for reading and for writing.
 The reading channel is used for fetching data, while the writing channel can update the source.
 
-The `Source` API can be inspected at 
+The `Source` API can be inspected at
 http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Source.html
 
 ### Sink
 
-The `Sink` is the abstraction of the destination where all the data is flowing from the source. 
+The `Sink` is the abstraction of the destination where all the data is flowing from the source.
 It controls the resource usage of the bulk indexing method of Elasticsearch. T
-hrottling is possible by limiting the number of bulk actions per request or by the 
+hrottling is possible by limiting the number of bulk actions per request or by the
 maximum number of concurrent request.
 
-The `Sink` API can be inspected at 
+The `Sink` API can be inspected at
 http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Sink.html
 
 ### Context
 
-The `Context` is the abstraction to the thread which performs data fetching from the source 
-and transports it to the mouth. A 'move' is considered a single step in the execution cycle. 
+The `Context` is the abstraction to the thread which performs data fetching from the source
+and transports it to the mouth. A 'move' is considered a single step in the execution cycle.
 
-The `Context` API can be inspected at 
+The `Context` API can be inspected at
 http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Context.html
 
 ## Strategies
@@ -865,7 +866,7 @@ In the ``sql`` parameter, a series of SQL statements can be defined which are ex
 ## Your custom strategy
 
 If you want to extend the JDBC importer, for example by your custom password authentication, you could
-extend `org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource`. 
+extend `org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource`.
 Then, declare your strategy classes in `META-INF/services`. Add your
 jar to the classpath and add the `strategy` parameter to the specifications.
 
@@ -886,7 +887,7 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 3. Install JDBC importer
 
     `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
-    
+
    (update version respectively)
 
 4. Download PostgreSQL JDBC driver
@@ -943,7 +944,7 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 3. Install JDBC importer
 
     `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
-    
+
    (update version respectively)
 
 4. Download SQL Server JDBC driver from [the vendor](http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx)
@@ -1062,13 +1063,13 @@ jar to the classpath and add the `strategy` parameter to the specifications.
 
 ## Geo shapes
 
-The JDBC importer understands WKT http://en.wikipedia.org/wiki/Well-known_text 
+The JDBC importer understands WKT http://en.wikipedia.org/wiki/Well-known_text
 "POINT" and "POLYGON" formats and converts them to GeoJSON.
 
 With MySQL, the `astext` function can format WKT from columns of type `geometry`.
 
 Example:
-	
+
 	mysql -u root test <<EOT
 	drop table if exists test.geom;
 	create table test.geom (
@@ -1078,7 +1079,7 @@ Example:
 	set @g = 'POLYGON((0 0,10 0,10 10,0 10,0 0),(5 5,7 5,7 7,5 7, 5 5))';
 	insert into test.geom values (0, GeomFromText(@g));
 	EOT
-	
+
 	curl -XDELETE 'localhost:9200/myjdbc'
 	echo '
 	{
@@ -1141,7 +1142,7 @@ Elasticsearch field names. For this, a column name map can be used like this:
 
 ## Connection properties for JDBC driver
 
-For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL, 
+For some JDBC drivers, advanced parameters can be passed that are not specified in the driver URL,
 but in the JDBC connection properties. You can specifiy connection properties like this:
 
     {
