@@ -9,3 +9,5 @@
 /.classpath
 /.project
 *~
+/.gradle
+/build

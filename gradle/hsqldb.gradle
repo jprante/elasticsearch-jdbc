@@ -1,5 +1,5 @@
 dependencies {
-    testCompile "org.hsqldb:hsqldb:2.3.3"
+    testCompile 'org.hsqldb:hsqldb:' + versions.hsqldb
 }
 
 task hsqldbIntegrationTest(type: Test) {
