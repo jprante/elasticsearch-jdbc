@@ -1,8 +1,8 @@
 @echo off
 
 set DIR=%~dp0
-set LIB="%DIR%\..\lib\*"
-set BIN="%DIR%\..\bin\*"
+set LIB=%DIR%..\lib\*
+set BIN=%DIR%..\bin
 
 REM ???
 echo {^
@@ -20,7 +20,5 @@ echo {^
         },^
         "index" : "metawiki"^
       }^
-}
-
-"%JAVA_HOME%\bin\java" -cp "%LIB%" -Dlog4j.configurationFile="%BIN%\log4j2.xml" "org.xbib.tools.Runner" "org.xbib.tools.JDBCImporter"
+}^ | "%JAVA_HOME%\bin\java" -cp "%LIB%" -Dlog4j.configurationFile="%BIN%\log4j2.xml" "org.xbib.tools.Runner" "org.xbib.tools.JDBCImporter"
 
