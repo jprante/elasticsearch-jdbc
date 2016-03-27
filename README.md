@@ -718,7 +718,7 @@ the first time you run the script, it will generate the statefile.json file like
   }
 }
 ```
-after this, you select incremental data from table.
+after this, you can select incremental data from table.
 
 There is a problem here, the first time you run the script, it can't select any data from table, it have two solutions here:
 * in another script, do full-import, later you can use the incremental script to select incremental data
