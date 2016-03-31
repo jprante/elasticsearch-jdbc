@@ -78,6 +78,7 @@ public class JDBCImporter
     }
 
     public JDBCImporter setSettings(Settings newSettings) {
+        logger.debug("settings = {}", newSettings.getAsMap());
         settings = newSettings;
         String statefile = settings.get("jdbc.statefile");
         if (statefile != null) {
@@ -86,7 +87,25 @@ public class JDBCImporter
                 if (file.exists() && file.isFile() && file.canRead()) {
                     InputStream stateFileInputStream = new FileInputStream(file);
                     settings = settingsBuilder().put(settings).loadFromStream("statefile", stateFileInputStream).build();
-                    logger.info("loaded state from {}", statefile);
+                    logger.info("loaded state from {}, settings {}", statefile, settings.getAsMap());
+                } else {
+                    logger.warn("can't read from {}, skipped", statefile);
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+        return this;
+    }
+    public JDBCImporter reloadSettings(Settings oldSettings) {
+        String statefile = oldSettings.get("statefile");
+        if (statefile != null) {
+            try {
+                File file = new File(statefile);
+                if (file.exists() && file.isFile() && file.canRead()) {
+                    InputStream stateFileInputStream = new FileInputStream(file);
+                    settings = settingsBuilder().put(oldSettings).loadFromStream("statefile", stateFileInputStream).build();
+                    logger.info("reloaded state from {}, settings {} ", statefile, settings.getAsMap());
                 } else {
                     logger.warn("can't read from {}, skipped", statefile);
                 }
@@ -148,6 +167,7 @@ public class JDBCImporter
 
     private void prepare() throws IOException, InterruptedException {
         logger.debug("prepare started");
+        this.reloadSettings(settings);
         if (settings.getAsStructuredMap().containsKey("jdbc")) {
             settings = settings.getAsSettings("jdbc");
         }
