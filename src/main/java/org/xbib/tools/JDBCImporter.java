@@ -167,7 +167,7 @@ public class JDBCImporter
 
     private void prepare() throws IOException, InterruptedException {
         logger.debug("prepare started");
-        this.reloadSettings(settings);
+        this.reloadSettings(settings); // reload settings to solve the schedule bug
         if (settings.getAsStructuredMap().containsKey("jdbc")) {
             settings = settings.getAsSettings("jdbc");
         }
