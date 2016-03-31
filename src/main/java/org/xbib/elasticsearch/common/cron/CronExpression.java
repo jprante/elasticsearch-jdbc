@@ -28,6 +28,7 @@ import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.Collections;
 
 public final class CronExpression implements Cloneable {
 
@@ -289,8 +290,8 @@ public final class CronExpression implements Cloneable {
             if (exprOn <= YEAR) {
                 storeExpressionVals(0, "*", YEAR);
             }
-            TreeSet<Integer> dow = getSet(DAY_OF_WEEK);
-            TreeSet<Integer> dom = getSet(DAY_OF_MONTH);
+            Set<Integer> dow = getSet(DAY_OF_WEEK);
+            Set<Integer> dom = getSet(DAY_OF_MONTH);
             boolean dayOfMSpec = !dom.contains(NO_SPEC);
             boolean dayOfWSpec = !dow.contains(NO_SPEC);
             if (!dayOfMSpec || dayOfWSpec) {
@@ -497,7 +498,7 @@ public final class CronExpression implements Cloneable {
             } else {
                 throw new ParseException("'L' option is not valid here (pos=" + i + ")", i);
             }
-            TreeSet<Integer> set = getSet(type);
+            Set<Integer> set = getSet(type);
             set.add(val);
             i++;
             return i;
@@ -512,7 +513,7 @@ public final class CronExpression implements Cloneable {
             if (val > 31) {
                 throw new ParseException("'W' option does not make sense with values larger than 31 (max number of days in a month)", i);
             }
-            TreeSet<Integer> set = getSet(type);
+            Set<Integer> set = getSet(type);
             set.add(val);
             i++;
             return i;
@@ -530,7 +531,7 @@ public final class CronExpression implements Cloneable {
             } catch (Exception e) {
                 throw new ParseException("numeric value between 1 and 5 must follow the '#' option", i);
             }
-            TreeSet<Integer> set = getSet(type);
+            Set<Integer> set = getSet(type);
             set.add(val);
             i++;
             return i;
@@ -705,7 +706,7 @@ public final class CronExpression implements Cloneable {
 
     protected void addToSet(int val, int end, int incr, int type)
             throws ParseException {
-        TreeSet<Integer> set = getSet(type);
+        Set<Integer> set = getSet(type);
         if (type == SECOND || type == MINUTE) {
             if ((val < 0 || val > 59 || end > 59) && (val != ALL_SPEC_INT)) {
                 throw new ParseException(
@@ -836,7 +837,7 @@ public final class CronExpression implements Cloneable {
         }
     }
 
-    private TreeSet<Integer> getSet(int type) {
+    private Set<Integer> getSet(int type) {
         switch (type) {
             case SECOND:
                 return seconds;
@@ -853,7 +854,7 @@ public final class CronExpression implements Cloneable {
             case YEAR:
                 return years;
             default:
-                return null;
+                return Collections.emptySet();
         }
     }
 
