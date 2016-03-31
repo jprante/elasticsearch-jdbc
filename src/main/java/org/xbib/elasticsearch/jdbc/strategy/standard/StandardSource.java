@@ -717,6 +717,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
             if (command.isQuery()) {
                 statement = prepareQuery(command.getSQL());
                 bind(statement, command.getParameters());
+                logger.info("execute sql is {} ", statement.toString());
                 results = executeQuery(statement);
                 SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
                         .output(context.getSink())

@@ -105,15 +105,18 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     @Override
     public StandardContext setSource(S source) {
+        logger.debug("set Source");
         this.source = source;
         Map<String,String> map = settings.getAsMap();
         if (map.containsKey("metrics.lastexecutionstart")) {
             DateTime lastexecutionstart = DateTime.parse(settings.get("metrics.lastexecutionstart"));
             source.getMetric().setLastExecutionStart(lastexecutionstart);
+            logger.debug("lastexecutionstart {}", lastexecutionstart);
         }
         if (map.containsKey("metrics.lastexecutionend")) {
             DateTime lastexecutionend = DateTime.parse(settings.get("metrics.lastexecutionend"));
             source.getMetric().setLastExecutionEnd(lastexecutionend);
+            logger.debug("lastexecutionend {}", lastexecutionend);
         }
         if (map.containsKey("metrics.counter")) {
             int counter = Integer.parseInt(settings.get("metrics.counter"));
