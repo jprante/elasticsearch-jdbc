@@ -916,7 +916,7 @@ public final class CronExpression implements Cloneable {
             int sec = cl.get(Calendar.SECOND);
             int min = cl.get(Calendar.MINUTE);
             st = seconds.tailSet(sec);
-            if (st.size() != 0) {
+            if (!st.isEmpty()) {
                 sec = st.first();
             } else {
                 sec = seconds.first();
@@ -928,7 +928,7 @@ public final class CronExpression implements Cloneable {
             int hr = cl.get(Calendar.HOUR_OF_DAY);
             t = -1;
             st = minutes.tailSet(min);
-            if (st.size() != 0) {
+            if (!st.isEmpty()) {
                 t = min;
                 min = st.first();
             } else {
@@ -946,7 +946,7 @@ public final class CronExpression implements Cloneable {
             int day = cl.get(Calendar.DAY_OF_MONTH);
             t = -1;
             st = hours.tailSet(hr);
-            if (st.size() != 0) {
+            if (!st.isEmpty()) {
                 t = hr;
                 hr = st.first();
             } else {
@@ -1047,7 +1047,7 @@ public final class CronExpression implements Cloneable {
                         day = daysOfMonth.first();
                         mon++;
                     }
-                } else if (st.size() != 0) {
+                } else if (!st.isEmpty()) {
                     t = day;
                     day = st.first();
                     int lastDay = getLastDayOfMonth(mon, cl.get(Calendar.YEAR));
@@ -1143,7 +1143,7 @@ public final class CronExpression implements Cloneable {
                     int dow = daysOfWeek.first(); // desired
                     // d-o-w
                     st = daysOfWeek.tailSet(cDow);
-                    if (st.size() > 0) {
+                    if (!st.isEmpty()) {
                         dow = st.first();
                     }
 
@@ -1187,7 +1187,7 @@ public final class CronExpression implements Cloneable {
                 return null;
             }
             st = months.tailSet(mon);
-            if (st.size() != 0) {
+            if (!st.isEmpty()) {
                 t = mon;
                 mon = st.first();
             } else {
@@ -1206,7 +1206,7 @@ public final class CronExpression implements Cloneable {
             cl.set(Calendar.MONTH, mon - 1);
             year = cl.get(Calendar.YEAR);
             st = years.tailSet(year);
-            if (st.size() != 0) {
+            if (!st.isEmpty()) {
                 t = year;
                 year = st.first();
             } else {
