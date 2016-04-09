@@ -15,8 +15,6 @@
  */
 package org.xbib.elasticsearch.common.metrics;
 
-import org.xbib.metrics.ElasticsearchIngestMetric;
-
 public class SinkMetric extends ElasticsearchIngestMetric {
 
     public SinkMetric start() {

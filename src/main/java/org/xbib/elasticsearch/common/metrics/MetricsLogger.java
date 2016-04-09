@@ -38,11 +38,11 @@ public class MetricsLogger {
     private final static NumberFormat formatter = NumberFormat.getNumberInstance();
 
     public void writeMetrics(Settings settings, SinkMetric metric) throws Exception {
-        long submitted = metric.getSubmitted().count();
-        long succeeded = metric.getSucceeded().count();
-        long failed = metric.getFailed().count();
+        long submitted = metric.getSubmitted().getCount();
+        long succeeded = metric.getSucceeded().getCount();
+        long failed = metric.getFailed().getCount();
         long elapsed = metric.elapsed() / 1000000;
-        long bytes = metric.getTotalIngestSizeInBytes().count();
+        long bytes = metric.getTotalIngestSizeInBytes().getCount();
         double dps = submitted * 1000.0 / elapsed;
         double avg = bytes / (submitted + 1); // avoid div by zero
         double mbps = (bytes * 1024.0 / elapsed) / 1048576.0;
