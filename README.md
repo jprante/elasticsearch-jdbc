@@ -682,11 +682,12 @@ column `mytimestamp`:
         "type" : "jdbc",
         "jdbc" : {
 	        "url" : "jdbc:mysql://localhost:3306/test",
+            "statefile" : "statefile.json",
 	        "user" : "",
 	        "password" : "",
             "sql" : [
                 {
-                    "statement" : "select * from \"products\" where \"mytimestamp\" > ?",
+                    "statement" : "select * from products where mytimestamp > ?",
                     "parameter" : [ "$metrics.lastexecutionstart" ]
                 }
             ],
@@ -694,6 +695,35 @@ column `mytimestamp`:
             "type" : "my_jdbc_type"
         }
     }
+
+the first time you run the script, it will generate the statefile.json file like this
+```
+{
+  "type" : "jdbc",
+  "jdbc" : { 
+    "password" : "",
+    "index" : "my_jdbc_index",
+    "statefile" : "statefile.json",
+    "metrics" : { 
+      "lastexecutionstart" : "2016-03-27T06:37:09.165Z",
+      "lastexecutionend" : "2016-03-27T06:37:09.501Z",
+      "counter" : "1" 
+    },  
+    "type" : "my_jdbc_type",
+    "user" : "",
+    "url" : "jdbc:mysql://localhost:3306/test",
+    "sql" : [ { 
+      "statement" : "select * from products where mytimestamp > ?", 
+      "parameter" : [ "$metrics.lastexecutionstart" ]
+    } ] 
+  }
+}
+```
+after this, you can select incremental data from table.
+
+There is a problem here, the first time you run the script, it can't select any data from table, it have two solutions here:
+* in another script, do full-import, later you can use the incremental script to select incremental data
+* define a statefile.json file before the first time you run the incremental script, set the lastexecutionstart to 0, so that you can select all the data from table.
 
 ## Stored procedures or callable statements
 
