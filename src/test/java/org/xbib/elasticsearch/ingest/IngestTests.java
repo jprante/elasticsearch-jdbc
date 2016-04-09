@@ -5,9 +5,9 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
+import org.xbib.elasticsearch.common.metrics.ElasticsearchIngestMetric;
 import org.xbib.elasticsearch.helper.client.ClientBuilder;
 import org.xbib.elasticsearch.helper.client.Ingest;
-import org.xbib.metrics.ElasticsearchIngestMetric;
 
 import java.io.IOException;
 import java.security.Security;
