@@ -1296,7 +1296,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 statement.setString(i, ExceptionFormatter.format(context.getThrowable()));
             } else if ("$metrics.lastexecutionstart".equals(s)) {
                 DateTime dateTime = sourceMetric != null ? sourceMetric.getLastExecutionStart() : null;
-                statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
+                statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : new Timestamp(new DateTime(0).getMillis()));
             } else if ("$metrics.lastexecutionend".equals(s)) {
                 DateTime dateTime = sourceMetric != null ? sourceMetric.getLastExecutionEnd() : null;
                 statement.setTimestamp(i, dateTime != null ? new Timestamp(dateTime.getMillis()) : null);
