@@ -1,13 +1,15 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '1.2.2'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
-def xbibGroup = 'org.xbib.elasticsearch.importer'
-def xbibVersion = '2.2.0.1'
+group = 'org.xbib.elasticsearch.importer'
+version = '2.3.1.0'
 
-group = xbibGroup
-version = xbibVersion
+println "Host: " + java.net.InetAddress.getLocalHost()
+println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
+println "Build: group: '${project.group}', name: '${project.name}', version: '${project.version}'"
+println "Timestamp: " + java.time.Instant.now().atZone(java.time.ZoneId.systemDefault()).toString()
 
 ext {
     pluginName = 'elasticsearch-jdbc'
@@ -15,8 +17,8 @@ ext {
     pluginDescription = 'JDBC importer service for Elasticsearch'
 
     versions = [
-      'elasticsearch' : '2.2.0',
-      'elasticsearch-helper' : '2.2.0.3',
+      'elasticsearch' : '2.3.1',
+      'elasticsearch-helper' : '2.3.1.0',
       'log4j': '2.5',
       'wagon' : '2.10',
       'jsr166e': '1.1.0',

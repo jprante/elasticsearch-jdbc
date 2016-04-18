@@ -2,5 +2,3 @@ sudo: false
 language: java
 jdk:
   - oraclejdk8
-
-script: ./bin/travis/run-tests.sh
