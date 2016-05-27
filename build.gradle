@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.xbib.elasticsearch.importer'
-version = '2.3.1.0'
+version = '2.3.2.0'
 
 println "Host: " + java.net.InetAddress.getLocalHost()
 println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
@@ -17,8 +17,8 @@ ext {
     pluginDescription = 'JDBC importer service for Elasticsearch'
 
     versions = [
-      'elasticsearch' : '2.3.1',
-      'elasticsearch-helper' : '2.3.1.0',
+      'elasticsearch' : '2.3.2',
+      'elasticsearch-helper' : '2.3.2.0',
       'log4j': '2.5',
       'wagon' : '2.10',
       'jsr166e': '1.1.0',
