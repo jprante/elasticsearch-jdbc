@@ -687,6 +687,8 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                             .shouldDetectGeo(shouldDetectGeo())
                             .shouldDetectJson(shouldDetectJson());
                     merge(command, results, listener);
+                } else {
+                    throw new SQLException("can't connect to source " + url);
                 }
             } else {
                 // use write connection
