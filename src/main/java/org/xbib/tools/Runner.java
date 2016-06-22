@@ -17,21 +17,32 @@ package org.xbib.tools;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Runner {
 
-    public static void main(String[] args) {
-        try {
-            Class clazz = Class.forName(args[0]);
-            CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
-            InputStream in = args.length > 1 ? new FileInputStream(args[1]) : System.in;
-            commandLineInterpreter.run("args", in);
-            in.close();
-        } catch (Throwable e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.exit(0);
-    }
+	public static void main(String[] args) {
+		try {
+			Class clazz = Class.forName(args[0]);
+			CommandLineInterpreter commandLineInterpreter = (CommandLineInterpreter) clazz.newInstance();
+			List<InputStream> inputs = new ArrayList<InputStream>();
+			if (args.length > 1) {
+				for (int i = 1; i < args.length; i++) {
+					inputs.add(new FileInputStream(args[i]));
+				}
+			} else {
+				inputs.add(System.in);
+			}
+			InputStream in = args.length > 1 ? new FileInputStream(args[1]) : System.in;
+			commandLineInterpreter.run("args", inputs);
+			in.close();
+		} catch (Throwable e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.exit(0);
+	}
 
 }

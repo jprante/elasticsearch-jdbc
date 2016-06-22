@@ -16,9 +16,10 @@
 package org.xbib.tools;
 
 import java.io.InputStream;
+import java.util.List;
 
 public interface CommandLineInterpreter {
 
-    void run(String resourceName, InputStream in) throws Exception;
+    void run(String resourceName, List<InputStream> in) throws Exception;
 
 }
