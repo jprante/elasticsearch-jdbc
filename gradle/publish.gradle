@@ -1,0 +1,104 @@
+
+task xbibUpload(type: Upload) {
+    configuration = configurations.archives
+    uploadDescriptor = true
+    repositories {
+        if (project.hasProperty("xbibUsername")) {
+            mavenDeployer {
+                configuration = configurations.wagon
+                repository(url: 'scpexe://xbib.org/repository') {
+                    authentication(userName: xbibUsername, privateKey: xbibPrivateKey)
+                }
+            }
+        }
+    }
+}
+
+task sonaTypeUpload(type: Upload) {
+    configuration = configurations.archives
+    uploadDescriptor = true
+    repositories {
+        if (project.hasProperty('ossrhUsername')) {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2') {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+                snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots') {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+                pom.project {
+                    name name
+                    description description
+                    packaging 'jar'
+                    inceptionYear '2012'
+                    url scmUrl
+                    organization {
+                        name 'xbib'
+                        url 'http://xbib.org'
+                    }
+                    developers {
+                        developer {
+                            id user
+                            name 'Jörg Prante'
+                            email 'joergprante@gmail.com'
+                            url 'https://github.com/jprante'
+                        }
+                    }
+                    scm {
+                        url scmUrl
+                        connection scmConnection
+                        developerConnection scmDeveloperConnection
+                    }
+                    licenses {
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+task hbzUpload(type: Upload) {
+    configuration = configurations.archives
+    uploadDescriptor = true
+    repositories {
+        if (project.hasProperty('hbzUserName')) {
+            mavenDeployer {
+                configuration = configurations.wagon
+                beforeDeployment { MavenDeployment deployment ->
+                    signing.signPom(deployment)
+                }
+                repository(url: uri(hbzUrl)) {
+                    authentication(userName: hbzUserName, privateKey: hbzPrivateKey)
+                }
+                pom.project {
+                    developers {
+                        developer {
+                            id 'jprante'
+                            name 'Jörg Prante'
+                            email 'joergprante@gmail.com'
+                            url 'https://github.com/jprante'
+                        }
+                    }
+                    scm {
+                        url 'https://github.com/xbib/elasticsearch-webapp-libraryservice'
+                        connection 'scm:git:git://github.com/xbib/elasticsaerch-webapp-libraryservice.git'
+                        developerConnection 'scm:git:git://github.com/xbib/elasticsaerch-webapp-libraryservice.git'
+                    }
+                    inceptionYear '2016'
+                    licenses {
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
