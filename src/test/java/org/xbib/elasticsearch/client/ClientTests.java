@@ -1,4 +1,4 @@
-package org.xbib.elasticsearch.ingest;
+package org.xbib.elasticsearch.client;
 
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.common.settings.Settings;
@@ -7,16 +7,16 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.common.metrics.ElasticsearchIngestMetric;
 import org.xbib.elasticsearch.helper.client.ClientBuilder;
-import org.xbib.elasticsearch.helper.client.Ingest;
+import org.xbib.elasticsearch.helper.client.ClientAPI;
 
 import java.io.IOException;
 import java.security.Security;
 import java.util.Map;
 
-public class IngestTests {
+public class ClientTests {
 
     @Test
-    public void testIngest() throws IOException {
+    public void testClient() throws IOException {
         // disable DNS caching for failover
         Security.setProperty("networkaddress.cache.ttl", "0");
 
@@ -56,7 +56,7 @@ public class IngestTests {
             }
         }
         try {
-            Ingest ingest = ClientBuilder.builder()
+            ClientAPI clientAPI = ClientBuilder.builder()
                     .put(settings)
                     .put(ClientBuilder.MAX_ACTIONS_PER_REQUEST, maxbulkactions)
                     .put(ClientBuilder.MAX_CONCURRENT_REQUESTS, maxconcurrentbulkrequests)
@@ -70,7 +70,7 @@ public class IngestTests {
     }
 
     @Test
-    public void testFoundNoIngest() throws IOException {
+    public void testFoundSettings() throws IOException {
         // disable DNS caching for failover
         Security.setProperty("networkaddress.cache.ttl", "0");
 
@@ -100,7 +100,7 @@ public class IngestTests {
                 .put("path.home", System.getProperty("path.home"))
                 ;
         try {
-            Ingest ingest = ClientBuilder.builder()
+            ClientAPI clientAPI = ClientBuilder.builder()
                     .put(settings)
                     .put(ClientBuilder.MAX_ACTIONS_PER_REQUEST, maxbulkactions)
                     .put(ClientBuilder.MAX_CONCURRENT_REQUESTS, maxconcurrentbulkrequests)

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.xbib.elasticsearch.importer'
-version = '2.3.3.1'
+version = '2.3.4.0'
 
 println "Host: " + java.net.InetAddress.getLocalHost()
 println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
@@ -22,8 +22,8 @@ ext {
     scmConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     versions = [
-      'elasticsearch' : '2.3.3',
-      'elasticsearch-helper' : '2.3.3.1',
+      'elasticsearch' : '2.3.4',
+      'elasticsearch-helper' : '2.3.4.0',
       'log4j': '2.5',
       'wagon' : '2.10',
       'jsr166e': '1.1.0',
