@@ -1,4 +1,3 @@
-
 package org.xbib.pipeline;
 
 import java.io.IOException;
@@ -9,9 +8,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A simple pipeline executor.
@@ -21,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipeline<R>>
     implements PipelineExecutor<R,P> {
 
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
 
     private BlockingQueue<R> queue;
 
@@ -36,6 +33,10 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
     private List<Throwable> exceptions;
 
     private int concurrency;
+
+    public SimplePipelineExecutor(ExecutorService executorService) {
+        this.executorService = executorService;
+    }
 
     @Override
     public SimplePipelineExecutor<R,P> setConcurrency(int concurrency) {
@@ -69,9 +70,6 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
         if (provider == null) {
             throw new IllegalStateException("no provider set");
         }
-        if (executorService == null) {
-            this.executorService = Executors.newFixedThreadPool(concurrency);
-        }
         if (queue == null) {
             throw new IllegalStateException("no queue set");
         }
@@ -96,9 +94,6 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
         }
         if (pipelines.isEmpty()) {
             throw new IllegalStateException("pipelines empty");
-        }
-        if (executorService == null) {
-            this.executorService = Executors.newFixedThreadPool(concurrency);
         }
         futures = new LinkedList<>();
         for (Callable<R> pipeline : pipelines) {
@@ -136,16 +131,6 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
 
     @Override
     public void shutdown() throws InterruptedException, IOException {
-        if (executorService == null) {
-            return;
-        }
-        executorService.shutdown();
-        if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
-            executorService.shutdownNow();
-            if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
-                throw new IOException("pool did not terminate");
-            }
-        }
     }
 
     /**

@@ -10,7 +10,7 @@ public class JDBCImporterTest {
         final JDBCImporter importer = new JDBCImporter();
         Settings settings = Settings.settingsBuilder()
                 .put("url", "jdbc:mysql://localhost:3306/test")
-                .put("password", "")
+                //.put("password", "")
                 .put("sql", "select * from test")
                 .put("index", "jdbc")
                 .put("type", "jdbc")

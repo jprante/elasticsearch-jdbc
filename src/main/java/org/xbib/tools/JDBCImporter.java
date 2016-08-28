@@ -26,7 +26,7 @@ import org.xbib.elasticsearch.jdbc.strategy.Context;
 import org.xbib.pipeline.AbstractPipeline;
 import org.xbib.pipeline.Pipeline;
 import org.xbib.pipeline.PipelineProvider;
-import org.xbib.pipeline.MetricSimplePipelineExecutor;
+import org.xbib.pipeline.SimplePipelineExecutor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,6 +41,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -60,7 +62,7 @@ public class JDBCImporter
 
     private static Settings settings = Settings.EMPTY;
 
-    private MetricSimplePipelineExecutor<SettingsPipelineRequest, Pipeline<SettingsPipelineRequest>> executor;
+    private ExecutorService executorService;
 
     private ThreadPoolExecutor threadPoolExecutor;
 
@@ -97,6 +99,7 @@ public class JDBCImporter
         }
         return this;
     }
+
     public JDBCImporter reloadSettings(Settings oldSettings) {
         String statefile = oldSettings.get("statefile");
         if (statefile != null) {
@@ -176,6 +179,7 @@ public class JDBCImporter
         setQueue(queue);
         SettingsPipelineRequest element = new SettingsPipelineRequest().set(settings);
         getQueue().put(element);
+        this.executorService = Executors.newFixedThreadPool(settings.getAsInt("concurrency", 1));
         logger.debug("prepare ended");
     }
 
@@ -229,9 +233,8 @@ public class JDBCImporter
 
     private void execute() throws ExecutionException, InterruptedException {
         logger.debug("executing (queue={})", getQueue().size());
-        executor = new MetricSimplePipelineExecutor<SettingsPipelineRequest, Pipeline<SettingsPipelineRequest>>()
+        new SimplePipelineExecutor<SettingsPipelineRequest, Pipeline<SettingsPipelineRequest>>(executorService)
                 .setQueue(getQueue())
-                .setConcurrency(settings.getAsInt("concurrency", 1))
                 .setPipelineProvider(pipelineProvider())
                 .prepare()
                 .execute()
@@ -255,10 +258,12 @@ public class JDBCImporter
             threadPoolExecutor.shutdownNow();
             threadPoolExecutor = null;
         }
-        // close pipeline
-        if (executor != null) {
-            executor.shutdown();
-            executor = null;
+        executorService.shutdown();
+        if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
+            executorService.shutdownNow();
+            if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
+                throw new IOException("pool did not terminate");
+            }
         }
         // shut down active context at last
         if (context != null) {
