@@ -40,6 +40,7 @@ about what happened.
 
 | Release date | JDBC Importer version | Elasticsearch version |
 | -------------| ----------------------| ----------------------|
+| Aug 28 2016  | 2.3.4.1               | 2.3.4                 |
 | Aug  1 2016  | 2.3.4.0               | 2.3.4                 |
 | Jul  6 2016  | 2.3.3.1               | 2.3.3                 |
 | May 28 2016  | 2.3.3.0               | 2.3.3                 |
