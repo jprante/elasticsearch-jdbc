@@ -1138,8 +1138,8 @@ jar to the classpath and add the `strategy` parameter to the specifications.
         "type" : "jdbc",
         "jdbc" : {
             "url" : "jdbc:postgres://localhost:5432/test",
-            "user" : "",
-            "password" : "",
+            "user" : "test",
+            "password" : "test",
             "locale" : "en_GB",
             "sql" : "select geonameid as _id, name, admin1_code, admin2_code, admin3_code, round(ST_Y(geom)::numeric,8) as \"location.lat\", round(ST_X(geom)::numeric,8) as \"location.lon\" from geo",
             "index" : "myjdbc",
