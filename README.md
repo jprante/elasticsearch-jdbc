@@ -1115,6 +1115,81 @@ jar to the classpath and add the `strategy` parameter to the specifications.
        }
    }'
    ```
+   
+## Index simple geo coordinates from Postgres/PostGIS geometry field in Elasticsearch
+
+1. install Postgres and PostGIS
+
+2. start Postgres on localhost:5432 (default)
+
+3. prepare a 'test' database in Postgres, connect to the database using psql and create the PostGIS extension `CREATE EXTENSION POSTGIS`
+
+4. create user 'test' with password 'test', quit psql
+
+5. import geo table (includes geom field of type geometry) from "geo.sql" psql -U test -d test < src/test/resources/geo.sql
+
+6. then run this script. IMPORTANT: note the use of explicit rounding and scale parameter, by default PostGIS will output floats, these will cause you problems in your geom_point in Elasticsearch unless you use specific casts, you have been warned!
+   ```
+   curl -XDELETE 'localhost:9200/myjdbc'
+   bin=$JDBC_IMPORTER_HOME/bin
+   lib=$JDBC_IMPORTER_HOME/lib
+   echo '
+   {
+        "type" : "jdbc",
+        "jdbc" : {
+            "url" : "jdbc:postgres://localhost:5432/test",
+            "user" : "test",
+            "password" : "test",
+            "locale" : "en_GB",
+            "sql" : "select geonameid as _id, name, admin1_code, admin2_code, admin3_code, round(ST_Y(geom)::numeric,8) as \"location.lat\", round(ST_X(geom)::numeric,8) as \"location.lon\" from geo",
+            "index" : "myjdbc",
+            "type" : "mytype",
+            "scale" : 8,
+            "index_settings" : {
+                "index" : {
+                    "number_of_shards" : 1
+                }
+            },
+            "type_mapping": {
+                "mytype" : {
+                    "properties" : {
+                        "location" : {
+                            "type" : "geo_point"
+                        }
+                    }
+                }
+            }
+        }
+   }'  | java \
+                  -cp "${lib}/*" \
+                  -Dlog4j.configurationFile=${bin}/log4j2.xml \
+                  org.xbib.tools.Runner \
+                  org.xbib.tools.JDBCImporter
+   echo "sleeping while importer should run..."
+   sleep 10
+   curl -XGET 'localhost:9200/myjdbc/_refresh'
+   curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
+   {
+      "query": {
+         "filtered": {
+           "query": {
+              "match_all": {
+               }
+           },
+           "filter": {
+               "geo_distance" : {
+                   "distance" : "20km",
+                   "location" : {
+                        "lat" : 51.477347,
+                        "lon" : -0.000850
+                    }
+                }
+            }
+         }
+       }
+   }'
+   ```
+
 
 ## Geo shapes
 
