@@ -1,4 +1,22 @@
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+    classifier 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier 'javadoc'
+}
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+if (project.hasProperty('signing.keyId')) {
+    signing {
+        sign configurations.archives
+    }
+}
+
 task xbibUpload(type: Upload) {
     configuration = configurations.archives
     uploadDescriptor = true
@@ -28,10 +46,13 @@ task sonaTypeUpload(type: Upload) {
                     authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
                 pom.project {
-                    name name
+                    groupId project.group
+                    artifactId project.name
+                    version project.version
+                    name project.name
                     description description
                     packaging 'jar'
-                    inceptionYear '2012'
+                    inceptionYear '2016'
                     url scmUrl
                     organization {
                         name 'xbib'
@@ -39,7 +60,7 @@ task sonaTypeUpload(type: Upload) {
                     }
                     developers {
                         developer {
-                            id user
+                            id scmUser
                             name 'Jörg Prante'
                             email 'joergprante@gmail.com'
                             url 'https://github.com/jprante'
@@ -50,47 +71,6 @@ task sonaTypeUpload(type: Upload) {
                         connection scmConnection
                         developerConnection scmDeveloperConnection
                     }
-                    licenses {
-                        license {
-                            name 'The Apache License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-task hbzUpload(type: Upload) {
-    configuration = configurations.archives
-    uploadDescriptor = true
-    repositories {
-        if (project.hasProperty('hbzUserName')) {
-            mavenDeployer {
-                configuration = configurations.wagon
-                beforeDeployment { MavenDeployment deployment ->
-                    signing.signPom(deployment)
-                }
-                repository(url: uri(hbzUrl)) {
-                    authentication(userName: hbzUserName, privateKey: hbzPrivateKey)
-                }
-                pom.project {
-                    developers {
-                        developer {
-                            id 'jprante'
-                            name 'Jörg Prante'
-                            email 'joergprante@gmail.com'
-                            url 'https://github.com/jprante'
-                        }
-                    }
-                    scm {
-                        url 'https://github.com/xbib/elasticsearch-webapp-libraryservice'
-                        connection 'scm:git:git://github.com/xbib/elasticsaerch-webapp-libraryservice.git'
-                        developerConnection 'scm:git:git://github.com/xbib/elasticsaerch-webapp-libraryservice.git'
-                    }
-                    inceptionYear '2016'
                     licenses {
                         license {
                             name 'The Apache License, Version 2.0'

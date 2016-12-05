@@ -1,8 +1,6 @@
-dependencies {
-    testCompile 'org.hsqldb:hsqldb:' + versions.hsqldb
-}
 
-task hsqldbIntegrationTest(type: Test) {
+task hsqldbIntegrationTest(type: Test, group: 'database') {
+    systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
     systemProperty 'path.home', projectDir.absolutePath + '/build'
     systemProperty 'java.io.tmpdir', projectDir.absolutePath + '/build/tmp'
     ext.useDefaultListeners = true
@@ -21,7 +19,7 @@ task hsqldbIntegrationTest(type: Test) {
                 parameter(name: 'sql2', value: 'select * from orders')
                 parameter(name: 'sql3', value: 'select * from products where amount is null')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests')
+                    'class'(name: 'org.xbib.importer.jdbc.SourceTests')
                 }
             }
             test(name: 'hsqldb Sink Tests') {
@@ -32,10 +30,10 @@ task hsqldbIntegrationTest(type: Test) {
                 parameter(name: 'task3', value: 'hsqldb/task3.json')
                 parameter(name: 'sql1', value: 'insert into products (name, amount, price) values(?,?,?)')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests')
+                    'class'(name: 'org.xbib.importer.jdbc.SinkTests')
                 }
             }
-            test(name: 'hsqldb Job Tests') {
+            /*test(name: 'hsqldb Job Tests') {
                 parameter(name: 'create', value: 'hsqldb/create-jobtables.sql')
                 parameter(name: 'delete', value: 'hsqldb/delete-jobtables.sql')
                 parameter(name: 'task1', value: 'hsqldb/jobtask1.json')
@@ -55,11 +53,11 @@ task hsqldbIntegrationTest(type: Test) {
                 classes([:]) {
                     'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests')
                 }
-            }
+            }*/
         }
     }
     options {
-        listeners << 'org.xbib.elasticsearch.util.TestListener'
+        listeners << 'org.xbib.importer.TestListener'
         listeners << 'org.uncommons.reportng.HTMLReporter'
         listeners << 'org.uncommons.reportng.JUnitXMLReporter'
     }

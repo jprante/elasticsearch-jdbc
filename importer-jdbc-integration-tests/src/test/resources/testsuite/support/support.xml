@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Test Suite (support)" verbose="1">
+
+    <test name="Support Tests">
+        <classes>
+            <class name="org.xbib.importer.util.ValuesTests"/>
+            <class name="org.xbib.importer.util.TabularDataStreamTests"/>
+            <class name="org.xbib.importer.util.SQLCommandTests"/>
+        </classes>
+    </test>
+
+</suite>

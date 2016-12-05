@@ -1,0 +1,31 @@
+{
+  "input" : {
+    "jdbc": {
+      "myproducts" : {
+        "url": "jdbc:h2:./build/test",
+        "user": "",
+        "password": "",
+        "sql": "select * from \"products\"",
+        "index": "my_index",
+        "type": "my_type"
+      }
+    }
+  },
+  "output" : {
+    "elasticsearch": {
+      "maxbulkactions" : 1000,
+      "maxconcurrentbulkrequests" : 4,
+      "index" : {
+        "default" : {
+          "name" : "my_index",
+          "type" : "my_type",
+          "replica" : 1,
+          "retention" : {
+            "enabled" : true,
+            "mintokeep" : 2
+          }
+        }
+      }
+    }
+  }
+}

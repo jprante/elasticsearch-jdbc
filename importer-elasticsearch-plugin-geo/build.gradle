@@ -1,0 +1,11 @@
+println "Build: group: ${project.group} name: ${project.name} version: ${project.version}"
+
+ext {
+    description 'Elasticsearch Importer Geo Plugin'
+}
+
+dependencies {
+    compile project(':importer-elasticsearch')
+    compile 'com.spatial4j:spatial4j:0.5'
+    compile 'com.vividsolutions:jts-core:1.14.0'
+}

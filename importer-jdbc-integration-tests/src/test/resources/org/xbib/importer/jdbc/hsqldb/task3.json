@@ -1,0 +1,45 @@
+{
+  "input" : {
+    "jdbc": {
+      "my50products" : {
+        "url": "jdbc:hsqldb:mem:test",
+        "user": "sa",
+        "password": "",
+        "sql": "select * from products",
+        "maxrows": 50
+      }
+    }
+  },
+  "output" : {
+    "elasticsearch": {
+      "maxbulkactions" : 1000,
+      "maxconcurrentbulkrequests" : 4,
+      "index" : {
+        "default" : {
+          "name" : "my_index",
+          "type" : "my_type",
+          "settings" : {
+            "index": {
+              "number_of_shards": 2
+            }
+          },
+          "mapping" : {
+            "my_type" : {
+              "properties" : {
+                "timestamp": {
+                  "type": "date",
+                  "store" : true
+                }
+              }
+            }
+          },
+          "replica" : 1,
+          "retention" : {
+            "enabled" : true,
+            "mintokeep" : 2
+          }
+        }
+      }
+    }
+  }
+}

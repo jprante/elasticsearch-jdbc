@@ -1,8 +1,6 @@
-dependencies {
-    testCompile 'org.apache.derby:derby:' + versions.derby
-}
 
-task derbyIntegrationTest(type: Test) {
+task derbyIntegrationTest(type: Test, group: 'database') {
+    systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
     systemProperty 'path.home', projectDir.absolutePath + '/build'
     systemProperty 'java.io.tmpdir', projectDir.absolutePath + '/build/tmp'
     ext.useDefaultListeners = true
@@ -14,17 +12,17 @@ task derbyIntegrationTest(type: Test) {
             parameter(name: 'stopurl', value: 'jdbc:derby:memory:myDB;drop=true')
             parameter(name: 'user', value: '')
             parameter(name: 'password', value: '')
-            test(name: 'derby Source Tests') {
+            test(name: 'Derby Source Tests') {
                 parameter(name: 'create', value: 'derby/create-ordertables.sql')
                 parameter(name: 'delete', value: 'derby/delete-ordertables.sql')
                 parameter(name: 'sql1', value: 'select * from "orders"')
                 parameter(name: 'sql2', value: 'select * from "orders"')
                 parameter(name: 'sql3', value: 'select * from "products" where "amount" is NULL')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests')
+                    'class'(name: 'org.xbib.importer.jdbc.SourceTests')
                 }
             }
-            test(name: 'derby Sink Tests') {
+            test(name: 'Derby Sink Tests') {
                 parameter(name: 'create', value: 'derby/create-ordertables.sql')
                 parameter(name: 'delete', value: 'derby/delete-ordertables.sql')
                 parameter(name: 'task1', value: 'derby/task1.json')
@@ -32,9 +30,10 @@ task derbyIntegrationTest(type: Test) {
                 parameter(name: 'task3', value: 'derby/task3.json')
                 parameter(name: 'sql1', value: 'insert into "products" ("name", "amount", "price") values(?,?,?)')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests')
+                    'class'(name: 'org.xbib.importer.jdbc.SinkTests')
                 }
             }
+            /*
             test(name: 'derby Job Tests') {
                 parameter(name: 'create', value: 'derby/create-jobtables.sql')
                 parameter(name: 'delete', value: 'derby/delete-jobtables.sql')
@@ -55,11 +54,11 @@ task derbyIntegrationTest(type: Test) {
                 classes([:]) {
                     'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests')
                 }
-            }
+            }*/
         }
     }
     options {
-        listeners << 'org.xbib.elasticsearch.util.TestListener'
+        listeners << 'org.xbib.importer.TestListener'
         listeners << 'org.uncommons.reportng.HTMLReporter'
         listeners << 'org.uncommons.reportng.JUnitXMLReporter'
     }

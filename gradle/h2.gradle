@@ -1,8 +1,6 @@
-dependencies {
-    testCompile 'com.h2database:h2:' + versions.h2
-}
 
-task h2IntegrationTest(type: Test) {
+task h2IntegrationTest(type: Test, group: 'database') {
+    systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
     systemProperty 'path.home', projectDir.absolutePath + "/build"
     systemProperty 'java.io.tmpdir', projectDir.absolutePath + "/build/tmp"
     ext.useDefaultListeners = true
@@ -21,7 +19,7 @@ task h2IntegrationTest(type: Test) {
                 parameter(name: 'sql2', value: 'select * from "orders"')
                 parameter(name: 'sql3', value: 'select * from "products" where "amount" is NULL')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests')
+                    'class'(name: 'org.xbib.importer.jdbc.SourceTests')
                 }
             }
             test(name: 'h2 Sink Tests') {
@@ -32,9 +30,10 @@ task h2IntegrationTest(type: Test) {
                 parameter(name: 'task3', value: 'h2/task3.json')
                 parameter(name: 'sql1', value: 'insert into "products" ("name", "amount", "price") values(?,?,?)')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests')
+                    'class'(name: 'org.xbib.importer.jdbc.SinkTests')
                 }
             }
+            /**
             test(name: 'h2 Job Tests') {
                 parameter(name: 'create', value: 'h2/create-jobtables.sql')
                 parameter(name: 'delete', value: 'h2/delete-jobtables.sql')
@@ -55,11 +54,11 @@ task h2IntegrationTest(type: Test) {
                 classes([:]) {
                     'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests')
                 }
-            }
+            }*/
         }
     }
     options {
-        listeners << 'org.xbib.elasticsearch.util.TestListener'
+        listeners << 'org.xbib.importer.TestListener'
         listeners << 'org.uncommons.reportng.HTMLReporter'
         listeners << 'org.uncommons.reportng.JUnitXMLReporter'
     }

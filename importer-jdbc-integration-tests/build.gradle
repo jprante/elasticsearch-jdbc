@@ -1,0 +1,72 @@
+println "Build: group: ${project.group} name: ${project.name} version: ${project.version}"
+
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    compile project(':importer')
+    compile project(':importer-elasticsearch')
+    compile project(':importer-elasticsearch-plugin-geo')
+    compile project(':importer-jdbc')
+    testCompile 'org.testng:testng:6.9.13.6'
+    testCompile 'org.uncommons:reportng:1.1.4'
+    // for reportng
+    testCompile 'com.google.inject:guice:4.1.0'
+    // for distribution
+    testCompile 'org.xbib.jdbc:jdbc-driver-csv:1.1.0'
+    testCompile 'org.apache.derby:derby:10.12.1.1'
+    testCompile 'com.h2database:h2:1.4.191'
+    testCompile 'org.hsqldb:hsqldb:2.3.3'
+    testCompile 'mysql:mysql-connector-java:5.1.38'
+    testCompile 'org.postgresql:postgresql:9.4.1208.jre7'
+    // download from Oracle JDBC download site (needs registration)
+    // http://www.oracle.com/technetwork/database/features/jdbc/jdbc-drivers-12c-download-1958347.html
+    // testCompile 'com.oracle:ojdbc7:12.1.0.1'
+}
+
+ext {
+    databases = ['derby', 'h2', 'hsqldb']
+}
+
+test {
+    useTestNG() {
+        systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
+        testLogging.showStandardStreams = false
+        suiteXmlBuilder().suite(name: 'gradle-testng-xbib-importer-jdbc', verbose: '1') {
+            test(name : 'Util Tests') {
+                classes([:]) {
+                    'class'(name: 'org.xbib.importer.util.CronTests')
+                    'class'(name: 'org.xbib.importer.util.DocumentTests')
+                    'class'(name: 'org.xbib.importer.util.SQLCommandTests')
+                    'class'(name: 'org.xbib.importer.util.TabularDataStreamTests')
+                    'class'(name: 'org.xbib.importer.util.ValuesTests')
+                }
+            }
+        }
+    }
+    options {
+        listeners << 'org.xbib.importer.TestListener'
+        listeners << 'org.uncommons.reportng.HTMLReporter'
+        listeners << 'org.uncommons.reportng.JUnitXMLReporter'
+    }
+    ext.useDefaultListeners = true
+    ext.workingDirectory = 'build/'
+}
+
+
+databases.each { database ->
+    apply from: rootProject.file("gradle/${database}.gradle")
+}
+
+check {
+    databases.each { database ->
+        dependsOn "${database}IntegrationTest"
+    }
+}
+
+clean {
+    delete "derby.log"
+}

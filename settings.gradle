@@ -1,0 +1,6 @@
+rootProject.name = name
+include 'importer'
+include 'importer-elasticsearch'
+include 'importer-elasticsearch-plugin-geo'
+include 'importer-jdbc'
+include 'importer-jdbc-integration-tests'

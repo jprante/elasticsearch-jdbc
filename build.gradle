@@ -1,201 +1,71 @@
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id "org.sonarqube" version "2.2"
+    id "org.xbib.gradle.plugin.jbake" version "1.2.1"
 }
 
-group = 'org.xbib.elasticsearch.importer'
-version = '2.3.4.1'
-
-println "Host: " + java.net.InetAddress.getLocalHost()
-println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
-println "Build: group: '${project.group}', name: '${project.name}', version: '${project.version}'"
+printf "Host: %s\nOS: %s %s %s\nJVM: %s %s %s %s\nGroovy: %s\nGradle: %s\n" +
+        "Build: group: ${project.group} name: ${project.name} version: ${project.version}\n",
+        InetAddress.getLocalHost(),
+        System.getProperty("os.name"),
+        System.getProperty("os.arch"),
+        System.getProperty("os.version"),
+        System.getProperty("java.version"),
+        System.getProperty("java.vm.version"),
+        System.getProperty("java.vm.vendor"),
+        System.getProperty("java.vm.name"),
+        GroovySystem.getVersion(),
+        gradle.gradleVersion
 
 ext {
-    pluginName = 'elasticsearch-jdbc'
-    pluginClassname  = 'org.xbib.elasticsearch.plugin.jdbc.JDBCPlugin'
-    pluginDescription = 'JDBC importer service for Elasticsearch'
-    user = 'jprante'
-    name = 'elasticsearch-jdbc'
-    description = 'JDBC importer for Elasticsearch'
-    scmUrl = 'https://github.com/' + user + '/' + name
-    scmConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
-    scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
-    versions = [
-      'elasticsearch' : '2.3.4',
-      'elasticsearch-helper' : '2.3.4.0',
-      'log4j': '2.5',
-      'wagon' : '2.10',
-      'jsr166e': '1.1.0',
-      'jna' : '4.1.0',
-      'spatial4j': '0.5',
-      'jts' : '1.13',
-      'jdbc-driver-csv': '1.0.0',
-      'junit' : '4.12',
-      'testng':  '6.9.10',
-      'derby' : '10.12.1.1',
-      'h2' : '1.4.191',
-      'hsqldb' : '2.3.3',
-      'mysql' : '5.1.38',
-      'postgresql' : '9.4.1208.jre7'
-    ]
-    databases = ['derby', 'h2', 'hsqldb']
+    scmUser = 'jprante'
+    scmName = 'elasticsearch-jdbc'
+    scmUrl = "https://github.com/${scmUser}/${scmName}"
+    scmConnection = "scm:git:git://github.com/${scmUser}/${scmName}.git"
+    scmDeveloperConnection = "scm:git:git://github.com/${scmUser}/${scmName}.git"
 }
-
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
-    mavenLocal()
     mavenCentral()
-    jcenter()
-    maven {
-        url "http://xbib.org/repository"
-    }
 }
 
-sourceSets {
-    integrationTest {
-        java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir file('src/integration-test/java')
+apply plugin: 'build-dashboard'
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+    apply plugin: 'findbugs'
+    apply plugin: 'pmd'
+    apply plugin: 'checkstyle'
+    apply plugin: "jacoco"
+
+    repositories {
+        mavenCentral()
+    }
+
+    configurations {
+        wagon
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.apache.logging.log4j:log4j-core:2.7'
+        testCompile 'org.apache.logging.log4j:log4j-jul:2.7'
+        wagon 'org.apache.maven.wagon:wagon-ssh-external:2.10'
+    }
+
+    test {
+        testLogging {
+            showStandardStreams = false
+            exceptionFormat = 'full'
         }
-        resources {
-            srcDir file('src/integration-test/resources')
-        }
+        systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
     }
-}
 
-configurations.all {
-    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-configurations {
-    wagon
-    integrationTestCompile.extendsFrom testCompile
-    integrationTestRuntime.extendsFrom testRuntime
-    driverJars
-}
-
-dependencies {
-    compile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
-    compile 'org.xbib.elasticsearch.plugin:elasticsearch-helper:' + versions.'elasticsearch-helper'
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:' + versions.log4j
-    compile 'org.apache.logging.log4j:log4j-core:'+ versions.log4j
-    compile('com.vividsolutions:jts:' + versions.jts) {
-        exclude group: 'xerces'
+    checkstyle {
+        configFile = rootProject.file('config/checkstyle/checkstyle.xml')
     }
-    testCompile 'org.testng:testng:' + versions.testng
-    testCompile 'net.java.dev.jna:jna:' + versions.jna
-    // Workaround for a known issue with TestNG 6.x: explicitly add Guice (Gradle will fail to run tests otherwise)
-    testCompile 'com.google.inject:guice:3.0'
-    testCompile 'org.uncommons:reportng:1.1.4'
-    testCompile 'org.apache.logging.log4j:log4j-slf4j-impl:' + versions.log4j
-    testCompile 'org.apache.logging.log4j:log4j-core:'+ versions.log4j
-    integrationTestCompile 'org.testng:testng:' + versions.testng
-    integrationTestCompile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
-    integrationTestCompile 'net.java.dev.jna:jna:' + versions.jna
-    // for distribution
-    driverJars('org.xbib.jdbc:jdbc-driver-csv:' + versions.'jdbc-driver-csv') {
-        exclude group: 'org.apache.logging.log4j'
-    }
-    driverJars 'org.apache.derby:derby:' + versions.derby
-    driverJars 'com.h2database:h2:' + versions.h2
-    driverJars 'org.hsqldb:hsqldb:' + versions.hsqldb
-    driverJars 'mysql:mysql-connector-java:' + versions.mysql
-    driverJars 'org.postgresql:postgresql:' + versions.postgresql
-    // download from Oracle JDBC download site (needs registration)
-    // http://www.oracle.com/technetwork/database/features/jdbc/jdbc-drivers-12c-download-1958347.html
-    // driverJars 'com.oracle:ojdbc7:12.1.0.1'
-    wagon 'org.apache.maven.wagon:wagon-ssh-external:' + versions.wagon
-}
 
-task integrationTest(type: Test, dependsOn: [':unpackPlugin']) {
-    testClassesDir = sourceSets.integrationTest.output.classesDir
-    classpath = configurations.integrationTestCompile
-    classpath += fileTree('plugins/' + pluginName).include('*.jar')
-    classpath += sourceSets.integrationTest.output
-    // remove identical jars from classpath, otherwise Elasticsearch will complain a "jar hell"
-    //classpath -= configurations.releaseJars
-    outputs.upToDateWhen { false }
-    systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
-    systemProperty 'path.home', projectDir.absolutePath
+    apply from: rootProject.file('gradle/sonarqube.gradle')
+    apply from: rootProject.file('gradle/publish.gradle')
 }
-
-tasks.withType(Test) {
-    reports.html.destination = file("${reporting.baseDir}/${name}")
-}
-
-test {
-    useTestNG() {
-        testLogging.showStandardStreams = false
-        suiteXmlBuilder().suite(name: 'gradle-testng-jdbc', verbose: '1') {
-            test(name : 'Support Tests') {
-                classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.common.util.ValuesTests')
-                    'class'(name: 'org.xbib.elasticsearch.common.util.ValueListenerTests')
-                    'class'(name: 'org.xbib.elasticsearch.common.util.SQLCommandTests')
-                }
-            }
-        }
-    }
-    options {
-        listeners << 'org.xbib.elasticsearch.util.TestListener'
-        listeners << 'org.uncommons.reportng.HTMLReporter'
-        listeners << 'org.uncommons.reportng.JUnitXMLReporter'
-    }
-    ext.useDefaultListeners = true
-    ext.workingDirectory = 'build/'
-}
-
-databases.each { database ->
-    apply from: rootProject.file("gradle/${database}.gradle")
-}
-
-check {
-    databases.each { database ->
-        dependsOn "${database}IntegrationTest"
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    from sourceSets.main.allSource
-    into 'build/tmp/sources'
-    classifier 'sources'
-}
-
-task buildDistZip(type: Zip, dependsOn: jar) {
-    into(project.name + '-' + project.version + '/lib') {
-        from configurations.runtime.allArtifacts.files
-        from configurations.runtime
-        from configurations.driverJars
-    }
-    into(project.name + '-' + project.version + '/bin') {
-        from 'bin'
-    }
-    classifier = 'dist'
-}
-
-shadowJar {
-    baseName =  project.name
-    version = project.version
-    classifier = 'all'
-    manifest {
-        attributes 'Main-Class': 'org.xbib.tools.Runner'
-    }
-}
-
-artifacts {
-    archives sourcesJar, shadowJar, buildDistZip
-}
-
-if (project.hasProperty('signing.keyId')) {
-    signing {
-        sign configurations.archives
-    }
-}
-
-apply from: 'gradle/publish.gradle'

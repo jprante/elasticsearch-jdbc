@@ -1,8 +1,4 @@
-/data
-/work
-/logs
 /.idea
-/target
 .DS_Store
 *.iml
 /.settings
@@ -10,4 +6,4 @@
 /.project
 *~
 /.gradle
-/build
+build

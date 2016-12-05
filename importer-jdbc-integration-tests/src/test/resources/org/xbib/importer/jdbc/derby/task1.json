@@ -1,0 +1,30 @@
+{
+  "input" : {
+    "jdbc": {
+      "myorders" : {
+        "url": "jdbc:derby:memory:myDB",
+        "user": "",
+        "password": "",
+        "sql": "select * from \"orders\"",
+        "output": "elasticsearch"
+      }
+    }
+  },
+  "output" : {
+    "elasticsearch": {
+      "maxbulkactions" : 1000,
+      "maxconcurrentbulkrequests" : 4,
+      "index" : {
+        "default" : {
+          "name" : "my_index",
+          "type" : "my_type",
+          "replica" : 1,
+          "retention" : {
+            "enabled" : true,
+            "mintokeep" : 2
+          }
+        }
+      }
+    }
+  }
+}

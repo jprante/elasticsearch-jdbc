@@ -1,0 +1,9 @@
+println "Build: group: ${project.group} name: ${project.name} version: ${project.version}"
+
+ext {
+    description 'Elasticsearch Importer'
+}
+
+dependencies {
+    compile project(':importer')
+}

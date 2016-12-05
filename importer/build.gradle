@@ -1,0 +1,12 @@
+println "Build: group: ${project.group} name: ${project.name} version: ${project.version}"
+
+
+ext {
+    description 'Importer framework'
+}
+
+dependencies {
+    compile 'org.xbib:elasticsearch-extras-client:5.0.1.0'
+    compile 'org.xbib:content-core:1.0.6'
+    compile 'org.xbib:time:1.0.0'
+}
