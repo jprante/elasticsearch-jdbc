@@ -15,8 +15,6 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesAction;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -33,6 +31,8 @@ import org.elasticsearch.index.VersionType;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.ControlKeys;
 import org.xbib.elasticsearch.common.util.IndexableObject;
@@ -56,7 +56,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
  */
 public class StandardSink<C extends StandardContext> implements Sink<C> {
 
-    private final static Logger logger = LogManager.getLogger("importer.jdbc.sink.standard");
+    private final static Logger logger = LoggerFactory.getLogger("importer.jdbc.sink.standard");
 
     protected C context;
 

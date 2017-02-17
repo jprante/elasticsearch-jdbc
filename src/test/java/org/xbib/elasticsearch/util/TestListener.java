@@ -15,15 +15,15 @@
  */
 package org.xbib.elasticsearch.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 public class TestListener implements ITestListener {
 
-    private final Logger logger = LogManager.getLogger("test.Listener");
+    private final Logger logger = LoggerFactory.getLogger("test.Listener");
 
     @Override
     public void onTestStart(ITestResult result) {

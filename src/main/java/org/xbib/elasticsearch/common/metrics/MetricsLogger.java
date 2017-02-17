@@ -15,10 +15,10 @@
  */
 package org.xbib.elasticsearch.common.metrics;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbib.elasticsearch.common.util.FormatUtil;
 
 import java.text.NumberFormat;
@@ -27,13 +27,13 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class MetricsLogger {
 
-    private final static Logger plainsourcelogger = LogManager.getLogger("metrics.source.plain");
+    private final static Logger plainsourcelogger = LoggerFactory.getLogger("metrics.source.plain");
 
-    private final static Logger plainsinklogger = LogManager.getLogger("metrics.sink.plain");
+    private final static Logger plainsinklogger = LoggerFactory.getLogger("metrics.sink.plain");
 
-    private final static Logger jsonsourcelogger = LogManager.getLogger("metrics.source.json");
+    private final static Logger jsonsourcelogger = LoggerFactory.getLogger("metrics.source.json");
 
-    private final static Logger jsonsinklogger = LogManager.getLogger("metrics.sink.json");
+    private final static Logger jsonsinklogger = LoggerFactory.getLogger("metrics.sink.json");
 
     private final static NumberFormat formatter = NumberFormat.getNumberInstance();
 
