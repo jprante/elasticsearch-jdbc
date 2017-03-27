@@ -152,6 +152,14 @@ public class JDBCImporter
             logger.error(e.getMessage(), e);
         } finally {
             try {
+            	executorService.shutdown();
+                if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                    if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
+                        throw new IOException("pool did not terminate");
+                    }
+                }
+            	
                 if (context != null) {
                     context.shutdown();
                     context = null;
