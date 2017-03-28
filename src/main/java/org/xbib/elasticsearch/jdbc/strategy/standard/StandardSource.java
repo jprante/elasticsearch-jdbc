@@ -598,8 +598,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     }
                     if (sourceMetric != null) {
                         sourceMetric.getSucceeded().inc();
-                        sourceMetric.setLastExecutionStart(dateTime);
-                        sourceMetric.setLastExecutionEnd(new DateTime());
                     }
                 } catch (SQLRecoverableException e) {
                     long millis = getMaxRetryWait().getMillis();
@@ -617,21 +615,19 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     }
                     if (sourceMetric != null) {
                         sourceMetric.getSucceeded().inc();
-                        sourceMetric.setLastExecutionStart(dateTime);
-                        sourceMetric.setLastExecutionEnd(new DateTime());
                     }
                 }
             }
         } catch (Exception e) {
             if (sourceMetric != null) {
                 sourceMetric.getFailed().inc();
-                sourceMetric.setLastExecutionStart(dateTime);
-                sourceMetric.setLastExecutionEnd(new DateTime());
             }
             throw new IOException(e);
         } finally {
             if (sourceMetric != null) {
                 sourceMetric.incCounter();
+                sourceMetric.setLastExecutionStart(dateTime);
+                sourceMetric.setLastExecutionEnd(new DateTime());
             }
         }
     }

@@ -18,6 +18,7 @@ package org.xbib.tools;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.elasticsearch.common.cron.CronExpression;
 import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
@@ -119,11 +120,15 @@ public class JDBCImporter
         return this;
     }
 
-    @Override
-    public void run(String resourceName, InputStream in) {
-        setSettings(settingsBuilder().loadFromStream(resourceName, in).build());
-        run();
-    }
+	@Override
+	public void run(String resourceName, List<InputStream> in) {
+		Builder builder = settingsBuilder();
+		for (int i = 0; i < in.size(); i++) {
+			builder.loadFromStream(resourceName, in.get(i));
+		}
+		setSettings(builder.build());
+		run();
+	}
 
     @Override
     public void run() {
