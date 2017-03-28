@@ -15,10 +15,10 @@
  */
 package org.xbib.tools;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbib.elasticsearch.common.cron.CronExpression;
 import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
@@ -54,7 +54,7 @@ public class JDBCImporter
         extends AbstractPipeline<SettingsPipelineRequest>
         implements Runnable, CommandLineInterpreter {
 
-    private final static Logger logger = LogManager.getLogger("importer.jdbc");
+    private final static Logger logger = LoggerFactory.getLogger("importer.jdbc");
 
     private Context context;
 

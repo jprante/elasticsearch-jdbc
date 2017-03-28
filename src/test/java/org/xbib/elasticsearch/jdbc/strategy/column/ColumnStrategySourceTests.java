@@ -1,10 +1,10 @@
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
@@ -25,7 +25,7 @@ import java.util.Random;
 
 public class ColumnStrategySourceTests extends AbstractColumnStrategyTest {
 
-    private final static Logger logger = LogManager.getLogger("test.column.source");
+    private final static Logger logger = LoggerFactory.getLogger("test.column.source");
 
     private Random random = new Random();
 
