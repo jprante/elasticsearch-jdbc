@@ -11,3 +11,5 @@
 *~
 /.gradle
 /build
+/bin/logs
+/*.log
