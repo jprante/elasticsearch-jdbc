@@ -9,7 +9,6 @@ public class ConfigInfo {
     private String type = "jdbc";
     @SerializedName("jdbc")
     private JdbcConfigInfo jdbcConfigInfo;
-    private String index = "s_movie";
 
     public String getType() {
         return type;
@@ -27,11 +26,4 @@ public class ConfigInfo {
         this.jdbcConfigInfo = jdbcConfigInfo;
     }
 
-    public String getIndex() {
-        return index;
-    }
-
-    public void setIndex(String index) {
-        this.index = index;
-    }
 }

@@ -15,6 +15,8 @@ public class JdbcConfigInfo {
     private Boolean treat_binary_as_string = true;
     @SerializedName("elasticsearch")
     private ElasticsearchConfigInfo elasticsearchConfigInfo;
+    private String index = "s_movie";
+
 
     public String getUrl() {
         return url;
@@ -64,4 +66,12 @@ public class JdbcConfigInfo {
         this.elasticsearchConfigInfo = elasticsearchConfigInfo;
     }
 
+
+    public String getIndex() {
+        return index;
+    }
+
+    public void setIndex(String index) {
+        this.index = index;
+    }
 }
