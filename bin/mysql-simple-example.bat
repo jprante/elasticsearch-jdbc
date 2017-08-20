@@ -2,7 +2,7 @@
 
 set DIR=%~dp0
 echo "You are in path %DIR%"
-set LIB=%DIR%..\build\libs\*
+set LIB=%DIR%..\lib\*
 echo "LIB path %LIB%"
 set BIN=%DIR%..\bin
 echo "BIN path %BIN%"
