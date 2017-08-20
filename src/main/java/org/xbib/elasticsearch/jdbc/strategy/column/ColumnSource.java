@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.column;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource;
@@ -42,7 +42,7 @@ import java.util.List;
  */
 public class ColumnSource<C extends ColumnContext> extends StandardSource<C> {
 
-    private static final Logger logger = LogManager.getLogger("importer.jdbc.source.column");
+    private static final Logger logger = LoggerFactory.getLogger("importer.jdbc.source.column");
 
     private static final String WHERE_CLAUSE_PLACEHOLDER = "$where";
 

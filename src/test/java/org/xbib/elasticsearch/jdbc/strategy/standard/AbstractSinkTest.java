@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +45,7 @@ import java.util.UUID;
 
 public abstract class AbstractSinkTest extends NodeTestUtils {
 
-    protected final static Logger logger = LogManager.getLogger("test.target");
+    protected final static Logger logger = LoggerFactory.getLogger("test.target");
 
     protected static JDBCSource source;
 

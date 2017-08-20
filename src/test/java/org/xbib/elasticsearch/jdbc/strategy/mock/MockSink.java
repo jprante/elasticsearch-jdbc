@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.mock;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xbib.elasticsearch.common.metrics.SinkMetric;
 import org.xbib.elasticsearch.common.util.IndexableObject;
 import org.xbib.elasticsearch.jdbc.strategy.Sink;
@@ -27,7 +27,7 @@ import java.util.TreeMap;
 
 public class MockSink implements Sink<MockContext> {
 
-    private final static Logger logger = LogManager.getLogger(MockSink.class);
+    private final static Logger logger = LoggerFactory.getLogger(MockSink.class);
 
     private Map<IndexableObject, String> data;
 

@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
@@ -37,7 +37,7 @@ import java.util.List;
 
 public class StandardSourceTests extends AbstractSourceTest {
 
-    private static final Logger logger = LogManager.getLogger(StandardSourceTests.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(StandardSourceTests.class.getName());
 
     @Override
     public JDBCSource newSource() {

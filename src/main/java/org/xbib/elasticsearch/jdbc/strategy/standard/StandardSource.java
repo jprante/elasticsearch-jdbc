@@ -15,8 +15,8 @@
  */
 package org.xbib.elasticsearch.jdbc.strategy.standard;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.elasticsearch.common.unit.TimeValue;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -71,7 +71,7 @@ import java.util.TimeZone;
  */
 public class StandardSource<C extends StandardContext> implements JDBCSource<C> {
 
-    private final static Logger logger = LogManager.getLogger("importer.jdbc.source.standard");
+    private final static Logger logger = LoggerFactory.getLogger("importer.jdbc.source.standard");
 
     protected C context;
 

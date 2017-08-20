@@ -1,8 +1,8 @@
 
 package org.xbib.pipeline;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractPipeline<R extends PipelineRequest>
         implements Pipeline<R> {
 
-    private final static Logger logger = LogManager.getLogger(AbstractPipeline.class);
+    private final static Logger logger = LoggerFactory.getLogger(AbstractPipeline.class);
 
     private BlockingQueue<R> queue;  //= new SynchronousQueue<>(true);
 
