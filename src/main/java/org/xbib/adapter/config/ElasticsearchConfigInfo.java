@@ -8,7 +8,6 @@ public class ElasticsearchConfigInfo {
     private String cluster = "elasticsearch";
     private String host = "localhost";
     private Integer port = 9300;
-//    private String index = "s_movie";
 
     public String getCluster() {
         return cluster;
@@ -34,11 +33,4 @@ public class ElasticsearchConfigInfo {
         this.port = port;
     }
 
-//    public String getIndex() {
-//        return index;
-//    }
-//
-//    public void setIndex(String index) {
-//        this.index = index;
-//    }
 }

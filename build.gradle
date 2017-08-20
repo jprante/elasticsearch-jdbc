@@ -100,13 +100,7 @@ configurations {
     integrationTestRuntime.extendsFrom testRuntime
     driverJars
 }
-//jar {
-//    enabled = true
-//}
-//bootJar {
-//    classifier = 'boot'
-//    mainClass = 'org.xbib.Application'
-//}
+
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-web') {
         // exclude logback for now, since they used log4j

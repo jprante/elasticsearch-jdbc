@@ -1,5 +1,6 @@
 package org.xbib.adapter.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -7,7 +8,9 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ConfigInfo {
     private String type = "jdbc";
-    @SerializedName("jdbc")
+
+    @SerializedName("jdbc") // map field to Json name
+    @JsonProperty("jdbc") // map json name to field
     private JdbcConfigInfo jdbcConfigInfo;
 
     public String getType() {

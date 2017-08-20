@@ -1,5 +1,6 @@
 package org.xbib.adapter.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -14,6 +15,7 @@ public class JdbcConfigInfo {
     private String sql =  "select * from s_movie";
     private Boolean treat_binary_as_string = true;
     @SerializedName("elasticsearch")
+    @JsonProperty("elasticsearch")
     private ElasticsearchConfigInfo elasticsearchConfigInfo;
     private String index = "s_movie";
 
