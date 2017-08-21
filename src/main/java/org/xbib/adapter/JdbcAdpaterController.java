@@ -22,39 +22,42 @@ public class JdbcAdpaterController {
     Map<String, JDBCImporter> map = new HashMap<>();
 
     @GetMapping("run/{id}")
-    public ResponseEntity<String> run(@PathVariable String id){
+    public ResponseEntity<String> run(@PathVariable String id) {
         JDBCImporter jdbcImporter = map.get(id);
         jdbcImporter.run();
         return ResponseEntity.ok("running..." + id);
     }
 
     @GetMapping("shutdown/{id}")
-    public ResponseEntity<String> shutdown(@PathVariable String id){
+    public ResponseEntity<String> shutdown(@PathVariable String id) {
         JDBCImporter jdbcImporter = map.get(id);
         jdbcImporter.run();
         return ResponseEntity.ok("shutdown..." + id);
     }
 
     @PostMapping("config")
-    public ResponseEntity<ConfigInfo> saveConfig(@RequestBody ConfigInfo configInfo){
+    public ResponseEntity<ConfigInfo> saveConfig(@RequestBody ConfigInfo configInfo) {
+        String index = configInfo.getJdbcConfigInfo().getIndex();
+        if (!map.containsKey(index)) {
 
-        Gson gson = new Gson();
-        String json = gson.toJson(configInfo);
-        Settings settings = settingsBuilder().loadFromSource(json).build();
+            Gson gson = new Gson();
+            String json = gson.toJson(configInfo);
+            Settings settings = settingsBuilder().loadFromSource(json).build();
 
-        JDBCImporter jdbcImporter = new JDBCImporter();
-        jdbcImporter.setSettings(settings);
-
-        map.put("importer" + jdbcImporter.hashCode(), jdbcImporter);
+            JDBCImporter jdbcImporter = new JDBCImporter();
+            jdbcImporter.setSettings(settings);
+            map.put("importer-" + index, jdbcImporter);
+        }
         return ResponseEntity.ok(configInfo);
+
     }
 
     @GetMapping("list")
-    public ResponseEntity<List<ConfigedItem>> getImporters(){
+    public ResponseEntity<List<ConfigedItem>> getImporters() {
         List<ConfigedItem> configedItems = new ArrayList<>();
 
         Iterator iterator = map.keySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             String key = (String) iterator.next();
 
             ConfigedItem configedItem = new ConfigedItem();
