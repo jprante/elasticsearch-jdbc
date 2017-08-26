@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.xbib.adapter.SavedSettings;
 import org.xbib.elasticsearch.common.cron.CronExpression;
 import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
@@ -122,6 +123,11 @@ public class JDBCImporter
     @Override
     public void run(String resourceName, InputStream in) {
         setSettings(settingsBuilder().loadFromStream(resourceName, in).build());
+        run();
+    }
+
+    public void run(String index) {
+        setSettings(SavedSettings.getSettings(index));
         run();
     }
 
