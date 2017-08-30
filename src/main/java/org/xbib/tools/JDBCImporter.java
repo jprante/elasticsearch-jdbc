@@ -257,6 +257,8 @@ public class JDBCImporter
     }
 
     public synchronized void shutdown() throws Exception {
+        logger.debug("shutdown...");
+
         if (shutdown) {
             return;
         }

@@ -1,3 +1,4 @@
+// build script is only for gradle, not for app
 buildscript {
     ext {
         springBootVersion = '1.5.6.RELEASE'
@@ -14,11 +15,13 @@ buildscript {
     }
 }
 
+// new way to apply plugin, started from gradle-v2.1
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
+// standard properties
 group = 'org.xbib.elasticsearch.importer'
 version = '2.3.4.1'
 
@@ -26,6 +29,7 @@ println "Host: " + java.net.InetAddress.getLocalHost()
 println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
 println "Build: group: '${project.group}', name: '${project.name}', version: '${project.version}'"
 
+// custom properties
 ext {
     pluginName = 'elasticsearch-jdbc'
     pluginClassname  = 'org.xbib.elasticsearch.plugin.jdbc.JDBCPlugin'
@@ -58,7 +62,11 @@ ext {
 
 apply plugin: 'java'
 apply plugin: 'maven'
+// https://docs.gradle.org/current/userguide/signing_plugin.html
+// The signing plugin adds the ability to digitally sign built files and artifacts.
+// These digital signatures can then be used to prove who built the artifact the signature is attached to as well as other information such as when the signature was generated.
 apply plugin: 'signing'
+//Gradle plugin to create fat/uber JARs, apply file transforms, and relocate packages for applications and libraries. Gradle version of Maven's Shade plugin
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.springframework.boot'
 
