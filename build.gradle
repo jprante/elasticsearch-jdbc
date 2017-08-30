@@ -4,9 +4,9 @@ buildscript {
     }
     repositories {
         mavenLocal()
-        maven {
-            url 'http://maven.aliyun.com/nexus/content/groups/public/'
-        }
+//        maven {
+//            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+//        }
         mavenCentral()
     }
     dependencies {
@@ -65,9 +65,9 @@ apply plugin: 'org.springframework.boot'
 
 repositories {
     mavenLocal()
-    maven {
-        url 'http://maven.aliyun.com/nexus/content/groups/public/'
-    }
+//    maven {
+//        url 'http://maven.aliyun.com/nexus/content/groups/public/'
+//    }
     mavenCentral()
     jcenter()
     maven {
@@ -89,11 +89,14 @@ sourceSets {
 }
 
 configurations.all {
+    // don't cache cache dynamic versions
     resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+    // don't cache changing modules at all
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 configurations {
+    // TODO: how to use configurations?
     wagon
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
@@ -104,14 +107,20 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.1'
     compile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
+    // helper for bulk api
     compile 'org.xbib.elasticsearch.plugin:elasticsearch-helper:' + versions.'elasticsearch-helper'
+    // math: 2d linear geometry
     compile('com.vividsolutions:jts:' + versions.jts) {
         exclude group: 'xerces'
     }
+    // testng is stronger than junit
     testCompile 'org.testng:testng:' + versions.testng
+    //Java Native Access, lile .dll
     testCompile 'net.java.dev.jna:jna:' + versions.jna
     // Workaround for a known issue with TestNG 6.x: explicitly add Guice (Gradle will fail to run tests otherwise)
+    // BTW, guice is 100 times faster than spring, good for small app
     testCompile 'com.google.inject:guice:3.0'
+    // ReportNG is a simple HTML reporting plug-in for the TestNG unit-testing framework
     testCompile 'org.uncommons:reportng:1.1.4'
     integrationTestCompile 'org.testng:testng:' + versions.testng
     integrationTestCompile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
@@ -123,12 +132,16 @@ dependencies {
     driverJars 'org.apache.derby:derby:' + versions.derby
     driverJars 'com.h2database:h2:' + versions.h2
     driverJars 'org.hsqldb:hsqldb:' + versions.hsqldb
+    // add mysql to compile for spring boot app
     compile 'mysql:mysql-connector-java:' + versions.mysql
     driverJars 'mysql:mysql-connector-java:' + versions.mysql
     driverJars 'org.postgresql:postgresql:' + versions.postgresql
     // download from Oracle JDBC download site (needs registration)
     // http://www.oracle.com/technetwork/database/features/jdbc/jdbc-drivers-12c-download-1958347.html
     // driverJars 'com.oracle:ojdbc7:12.1.0.1'
+
+    // Wagon provider that gets and puts artifacts using SSH protocol with a preinstalled SSH client
+    // only for gradle/publish.gradle
     wagon 'org.apache.maven.wagon:wagon-ssh-external:' + versions.wagon
 }
 
