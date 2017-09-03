@@ -887,8 +887,8 @@ http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/
 ### Sink
 
 The `Sink` is the abstraction of the destination where all the data is flowing from the source. 
-It controls the resource usage of the bulk indexing method of Elasticsearch. T
-hrottling is possible by limiting the number of bulk actions per request or by the 
+It controls the resource usage of the bulk indexing method of Elasticsearch.
+Throttling is possible by limiting the number of bulk actions per request or by the
 maximum number of concurrent request.
 
 The `Sink` API can be inspected at 

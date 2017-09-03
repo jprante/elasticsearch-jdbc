@@ -51,12 +51,22 @@ import java.util.concurrent.TimeUnit;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
+/**
+ * 1. implements CommandLineInterpreter, use with Runner, pass JDBCImporter as a parameter to run it in command line
+ * 2. implements Runnable, run it as thread
+ * 3. extends AbstractPipeline, TODO: what is this?
+ */
 public class JDBCImporter
         extends AbstractPipeline<SettingsPipelineRequest>
         implements Runnable, CommandLineInterpreter {
 
     private final static Logger logger = LoggerFactory.getLogger("importer.jdbc");
 
+    /**
+     * see developer notes
+     * The `Context` is the abstraction to the thread which performs data fetching from the source
+     * and transports it to the mouth. A 'move' is considered a single step in the execution cycle.
+     */
     private Context context;
 
     private volatile boolean shutdown;
@@ -158,14 +168,14 @@ public class JDBCImporter
             logger.error(e.getMessage(), e);
         } finally {
             try {
-            	executorService.shutdown();
+                executorService.shutdown();
                 if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
                     executorService.shutdownNow();
                     if (!executorService.awaitTermination(15, TimeUnit.SECONDS)) {
                         throw new IOException("pool did not terminate");
                     }
                 }
-            	
+
                 if (context != null) {
                     context.shutdown();
                     context = null;
