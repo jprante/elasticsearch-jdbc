@@ -1,0 +1,12 @@
+// add it try testng by xml
+task testngXml(type: Test) {
+    useTestNG{
+        suites(file('src/test/resources/testsuite/cron/cron.xml'));
+    }
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+    onOutput { descriptor, event ->
+        logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+    }
+}

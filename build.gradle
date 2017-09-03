@@ -179,11 +179,13 @@ test {
 databases.each { database ->
     apply from: rootProject.file("gradle/${database}.gradle")
 }
+apply from: 'gradle/testngXmlSuite.gradle'
 
 check {
     databases.each { database ->
         dependsOn "${database}IntegrationTest"
     }
+//    dependsOn 'testngXmlSuite'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
