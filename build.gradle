@@ -50,6 +50,7 @@ ext {
       'h2' : '1.4.191',
       'mysql' : '5.1.38',
     ]
+    //, 'mysql'
     databases = ['h2']
 }
 
@@ -179,12 +180,11 @@ databases.each { database ->
     apply from: rootProject.file("gradle/${database}.gradle")
 }
 
-// disable default task, and will remove other databses, only use mysql and oracle, to make it light weight
-//check {
-//    databases.each { database ->
-//        dependsOn "${database}IntegrationTest"
-//    }
-//}
+check {
+    databases.each { database ->
+        dependsOn "${database}IntegrationTest"
+    }
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource

@@ -4,7 +4,7 @@
 <suite name="Test Suite (simple strategy - mysql)" verbose="1">
     <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
-    <parameter name="user" value=""/>
+    <parameter name="user" value="root"/>
     <parameter name="password" value=""/>
 
     <test name="Source Tests (simple strategy - mysql)">
