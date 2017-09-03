@@ -200,17 +200,17 @@ public class JDBCImporter
         }
         Runtime.getRuntime().addShutdownHook(shutdownHook());
         BlockingQueue<SettingsPipelineRequest> queue = new ArrayBlockingQueue<>(32);
-        setQueue(queue);
+        this.setQueue(queue);
         SettingsPipelineRequest element = new SettingsPipelineRequest().set(settings);
-        getQueue().put(element);
+        this.getQueue().put(element);
         this.executorService = Executors.newFixedThreadPool(settings.getAsInt("concurrency", 1));
         logger.debug("prepare ended");
     }
 
     @Override
-    public void newRequest(Pipeline<SettingsPipelineRequest> pipeline, SettingsPipelineRequest request) {
+    public void newRequest(Pipeline<SettingsPipelineRequest> pipeline, SettingsPipelineRequest settingsPipelineRequest) {
         try {
-            process(request.get());
+            process(settingsPipelineRequest.get());
         } catch (Exception ex) {
             logger.error("error while processing request: " + ex.getMessage(), ex);
         }

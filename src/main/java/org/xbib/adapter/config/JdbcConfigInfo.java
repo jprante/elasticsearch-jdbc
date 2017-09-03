@@ -12,7 +12,7 @@ public class JdbcConfigInfo {
     private String url = "jdbc:mysql://localhost:3306/sbes";
     private String user = "root";
     private String password = "";
-    private String sql =  "select * from s_movie";
+    private String sql =  "select *, s_movie_id as _id from s_movie";
     private Boolean treat_binary_as_string = true;
     @SerializedName("elasticsearch")
     @JsonProperty("elasticsearch")
