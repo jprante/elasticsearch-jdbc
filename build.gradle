@@ -237,4 +237,5 @@ if (project.hasProperty('signing.keyId')) {
     }
 }
 
+// apply script plugin from local
 apply from: 'gradle/publish.gradle'
