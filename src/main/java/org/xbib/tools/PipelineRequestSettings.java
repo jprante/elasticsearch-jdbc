@@ -18,7 +18,7 @@ package org.xbib.tools;
 import org.elasticsearch.common.settings.Settings;
 import org.xbib.pipeline.PipelineRequest;
 
-public class SettingsPipelineRequest implements PipelineRequest<Settings> {
+public class PipelineRequestSettings implements PipelineRequest<Settings> {
 
     private Settings settings;
 
@@ -28,7 +28,7 @@ public class SettingsPipelineRequest implements PipelineRequest<Settings> {
     }
 
     @Override
-    public SettingsPipelineRequest set(Settings settings) {
+    public PipelineRequestSettings set(Settings settings) {
         this.settings = settings;
         return this;
     }

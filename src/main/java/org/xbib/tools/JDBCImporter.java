@@ -57,7 +57,7 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
  * 3. extends AbstractPipeline, TODO: what is this?
  */
 public class JDBCImporter
-        extends AbstractPipeline<SettingsPipelineRequest>
+        extends AbstractPipeline<PipelineRequestSettings>
         implements Runnable, CommandLineInterpreter {
 
     private final static Logger logger = LoggerFactory.getLogger("importer.jdbc");
@@ -79,10 +79,10 @@ public class JDBCImporter
 
     private List<Future> futures;
 
-    protected PipelineProvider<Pipeline<SettingsPipelineRequest>> pipelineProvider() {
-        return new PipelineProvider<Pipeline<SettingsPipelineRequest>>() {
+    protected PipelineProvider<Pipeline<PipelineRequestSettings>> pipelineProvider() {
+        return new PipelineProvider<Pipeline<PipelineRequestSettings>>() {
             @Override
-            public Pipeline<SettingsPipelineRequest> get() {
+            public Pipeline<PipelineRequestSettings> get() {
                 JDBCImporter jdbcImporter = new JDBCImporter();
                 jdbcImporter.setQueue(getQueue());
                 return jdbcImporter;
@@ -199,18 +199,18 @@ public class JDBCImporter
             settings = settings.getAsSettings("jdbc");
         }
         Runtime.getRuntime().addShutdownHook(shutdownHook());
-        BlockingQueue<SettingsPipelineRequest> queue = new ArrayBlockingQueue<>(32);
+        BlockingQueue<PipelineRequestSettings> queue = new ArrayBlockingQueue<>(32);
         this.setQueue(queue);
-        SettingsPipelineRequest element = new SettingsPipelineRequest().set(settings);
+        PipelineRequestSettings element = new PipelineRequestSettings().set(settings);
         this.getQueue().put(element);
         this.executorService = Executors.newFixedThreadPool(settings.getAsInt("concurrency", 1));
         logger.debug("prepare ended");
     }
 
     @Override
-    public void newRequest(Pipeline<SettingsPipelineRequest> pipeline, SettingsPipelineRequest settingsPipelineRequest) {
+    public void newRequest(Pipeline<PipelineRequestSettings> pipeline, PipelineRequestSettings pipelineRequestSettings) {
         try {
-            process(settingsPipelineRequest.get());
+            process(pipelineRequestSettings.get());
         } catch (Exception ex) {
             logger.error("error while processing request: " + ex.getMessage(), ex);
         }
@@ -257,7 +257,7 @@ public class JDBCImporter
 
     private void execute() throws ExecutionException, InterruptedException {
         logger.debug("executing (queue={})", getQueue().size());
-        new SimplePipelineExecutor<SettingsPipelineRequest, Pipeline<SettingsPipelineRequest>>(executorService)
+        new SimplePipelineExecutor<PipelineRequestSettings, Pipeline<PipelineRequestSettings>>(executorService)
                 .setQueue(getQueue())
                 .setPipelineProvider(pipelineProvider())
                 .prepare()
