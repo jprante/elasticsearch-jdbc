@@ -125,7 +125,7 @@ dependencies {
     integrationTestCompile 'org.testng:testng:' + versions.testng
     integrationTestCompile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
     integrationTestCompile 'net.java.dev.jna:jna:' + versions.jna
-    // for distribution
+    // for distribution, will be used in buildDistZip
     driverJars('org.xbib.jdbc:jdbc-driver-csv:' + versions.'jdbc-driver-csv') {
         exclude group: 'org.apache.logging.log4j'
     }
