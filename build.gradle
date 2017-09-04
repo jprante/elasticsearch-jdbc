@@ -18,7 +18,6 @@ buildscript {
 // new way to apply plugin, started from gradle-v2.1
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
 // standard properties
@@ -54,12 +53,6 @@ ext {
 
 apply plugin: 'java'
 apply plugin: 'maven'
-// https://docs.gradle.org/current/userguide/signing_plugin.html
-// The signing plugin adds the ability to digitally sign built files and artifacts.
-// These digital signatures can then be used to prove who built the artifact the signature is attached to as well as other information such as when the signature was generated.
-apply plugin: 'signing'
-//Gradle plugin to create fat/uber JARs, apply file transforms, and relocate packages for applications and libraries. Gradle version of Maven's Shade plugin
-apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.springframework.boot'
 
 
@@ -183,42 +176,5 @@ check {
         dependsOn "${database}IntegrationTest"
     }
 //    dependsOn 'testngXmlSuite'
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    from sourceSets.main.allSource
-    into 'build/tmp/sources'
-    classifier 'sources'
-}
-
-task buildDistZip(type: Zip, dependsOn: jar) {
-    into(project.name + '-' + project.version + '/lib') {
-        from configurations.runtime.allArtifacts.files
-        from configurations.runtime
-        from configurations.driverJars
-    }
-    into(project.name + '-' + project.version + '/bin') {
-        from 'bin'
-    }
-    classifier = 'dist'
-}
-
-shadowJar {
-    baseName =  project.name
-    version = project.version
-    classifier = 'all'
-    manifest {
-        attributes 'Main-Class': 'org.xbib.tools.Runner'
-    }
-}
-
-artifacts {
-    archives sourcesJar, shadowJar, buildDistZip
-}
-
-if (project.hasProperty('signing.keyId')) {
-    signing {
-        sign configurations.archives
-    }
 }
 
