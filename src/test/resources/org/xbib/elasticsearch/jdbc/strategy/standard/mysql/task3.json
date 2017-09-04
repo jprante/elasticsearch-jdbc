@@ -2,7 +2,7 @@
     "type" : "jdbc",
     "jdbc" : {
         "url" : "jdbc:mysql://localhost:3306/test",
-        "user" : "",
+        "user" : "root",
         "password" : "",
         "sql" : "select * from products",
         "maxrows" : 50,

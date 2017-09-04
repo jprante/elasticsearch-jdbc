@@ -3,7 +3,7 @@
     "jdbc" : {
         "strategy" : "column",
         "url" : "jdbc:mysql://localhost:3306/test",
-        "user" : "",
+        "user" : "root",
         "password" : "",
         "sql": "SELECT id as _id, id, name FROM products WHERE 1=1 AND $where",
         "column_updated_at": "updated_at",

@@ -5,7 +5,7 @@
         "timezone" : "Asia/Jerusalem",
         "locale" : "iw_IL",
         "url" : "jdbc:mysql://localhost:3306/test",
-        "user" : "",
+        "user" : "root",
         "password" : "",
         "sql" : [
             {

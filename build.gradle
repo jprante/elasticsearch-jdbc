@@ -5,9 +5,9 @@ buildscript {
     }
     repositories {
         mavenLocal()
-        maven {
-            url 'http://maven.aliyun.com/nexus/content/groups/public/'
-        }
+//        maven {
+//            url 'http://maven.aliyun.com/nexus/content/groups/public/'
+//        }
         mavenCentral()
     }
     dependencies {
@@ -50,8 +50,8 @@ ext {
       'h2' : '1.4.191',
       'mysql' : '5.1.38',
     ]
-    //, 'mysql'
-    databases = ['h2']
+    //, 'h2'
+    databases = ['mysql']
 }
 
 apply plugin: 'java'
@@ -67,9 +67,9 @@ apply plugin: 'org.springframework.boot'
 
 repositories {
     mavenLocal()
-    maven {
-        url 'http://maven.aliyun.com/nexus/content/groups/public/'
-    }
+//    maven {
+//        url 'http://maven.aliyun.com/nexus/content/groups/public/'
+//    }
     mavenCentral()
     jcenter()
     maven {

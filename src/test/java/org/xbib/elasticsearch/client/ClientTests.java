@@ -17,7 +17,7 @@ public class ClientTests {
 
     @Test
     public void testClient() throws IOException {
-        // disable DNS caching for failover
+        // disable DNS caching for failover, ttl is Time-To-live
         Security.setProperty("networkaddress.cache.ttl", "0");
 
         Settings settings = Settings.settingsBuilder()

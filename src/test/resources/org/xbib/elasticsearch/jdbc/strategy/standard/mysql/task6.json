@@ -3,7 +3,7 @@
     "jdbc" : {
         "schedule" : "0/5 0-59 0-23 ? * *",
         "url" : "jdbc:mysql://localhost:3306/test",
-        "user" : "",
+        "user" : "root",
         "password" : "",
         "sql" : "select * from products",
         "bulk_flush_interval" : "1s",
