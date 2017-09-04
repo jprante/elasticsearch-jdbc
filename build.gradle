@@ -47,10 +47,8 @@ ext {
       'jdbc-driver-csv': '1.0.0',
       'junit' : '4.12',
       'testng':  '6.9.10',
-      'h2' : '1.4.191',
       'mysql' : '5.1.38',
     ]
-    //, 'h2'
     databases = ['mysql']
 }
 
@@ -129,7 +127,6 @@ dependencies {
     driverJars('org.xbib.jdbc:jdbc-driver-csv:' + versions.'jdbc-driver-csv') {
         exclude group: 'org.apache.logging.log4j'
     }
-    driverJars 'com.h2database:h2:' + versions.h2
     // add mysql to compile for spring boot app
     compile 'mysql:mysql-connector-java:' + versions.mysql
     driverJars 'mysql:mysql-connector-java:' + versions.mysql
