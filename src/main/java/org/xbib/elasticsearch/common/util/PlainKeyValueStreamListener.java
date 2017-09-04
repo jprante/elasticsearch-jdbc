@@ -266,7 +266,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
      * a head key position. Then, the prefix given in the path is considered
      * illegal.
      */
-    private final static Set<String> controlKeys = ControlKeys.makeSet();
+    private final static Set<String> controlKeys = ControlKeys.makeSetByValues();
 
     @SuppressWarnings({"unchecked"})
     protected Map<String, Object> merge(Map<String, Object> map, Object k, Object value) {
