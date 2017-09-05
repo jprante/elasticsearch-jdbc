@@ -22,6 +22,7 @@ import java.io.IOException;
  *
  * { "type": "Point", "coordinates": [100.0, 0.0] }
  */
+@Deprecated // no need to support geo stuff
 public class GeoJSONShapeSerializer {
 
     private GeoJSONShapeSerializer() {

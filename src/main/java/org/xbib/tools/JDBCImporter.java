@@ -51,14 +51,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
-/**
- * 1. implements CommandLineInterpreter, use with Runner, pass JDBCImporter as a parameter to run it in command line
- * 2. implements Runnable, run it as thread
- * 3. extends AbstractPipeline, TODO: what is this?
- */
+
 public class JDBCImporter
         extends AbstractPipeline<PipelineRequestSettings>
-        implements Runnable, CommandLineInterpreter {
+        implements Runnable {
 
     private final static Logger logger = LoggerFactory.getLogger("importer.jdbc");
 
@@ -128,12 +124,6 @@ public class JDBCImporter
             }
         }
         return this;
-    }
-
-    @Override
-    public void run(String resourceName, InputStream in) {
-        setSettings(settingsBuilder().loadFromStream(resourceName, in).build());
-        run();
     }
 
     public void run(String index) {
