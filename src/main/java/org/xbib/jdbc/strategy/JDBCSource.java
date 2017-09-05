@@ -20,7 +20,6 @@ import org.xbib.elasticsearch.common.keyvalue.KeyValueStreamListener;
 import org.xbib.elasticsearch.common.util.SQLCommand;
 
 import java.io.IOException;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -263,16 +262,6 @@ public interface JDBCSource<C extends Context> extends Source<C> {
      * @throws SQLException when SQL execution gives an error
      */
     JDBCSource<C> bind(PreparedStatement statement, List<Object> values) throws SQLException;
-
-    /**
-     * Register output variables for callable statement
-     *
-     * @param statement callable statement
-     * @param values    values
-     * @return this source
-     * @throws SQLException when SQL execution gives an error
-     */
-    JDBCSource<C> register(CallableStatement statement, Map<String, Object> values) throws SQLException;
 
     /**
      * Execute query

@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.Blob;
-import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -575,10 +574,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
         try {
             for (SQLCommand command : getStatements()) {
                 try {
-                    if (command.isCallable()) {
-                        logger.debug("{} executing callable SQL: {}", this, command);
-                        executeCallable(command);
-                    } else if (!command.getParameters().isEmpty()) {
+                    if (!command.getParameters().isEmpty()) {
                         logger.debug("{} executing SQL with params: {}", this, command);
                         executeWithParameter(command);
                     } else {
@@ -594,10 +590,7 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     long millis = getMaxRetryWait().getMillis();
                     logger.warn("retrying after " + millis / 1000 + " seconds, got exception ", e);
                     Thread.sleep(getMaxRetryWait().getMillis());
-                    if (command.isCallable()) {
-                        logger.debug("retrying, executing callable SQL: {}", command);
-                        executeCallable(command);
-                    } else if (!command.getParameters().isEmpty()) {
+                    if (!command.getParameters().isEmpty()) {
                         logger.debug("retrying, executing SQL with params: {}", command);
                         executeWithParameter(command);
                     } else {
@@ -724,49 +717,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     }
 
     /**
-     * Execute callable SQL command
-     *
-     * @param command the SQL command
-     * @throws SQLException when SQL execution gives an error
-     * @throws IOException  when input/output error occurs
-     */
-    private void executeCallable(SQLCommand command) throws Exception {
-        // call stored procedure
-        CallableStatement statement = null;
-        try {
-            // we do not make a difference betwwen read/write and we assume
-            // it is safe to use the read connection and query the DB
-            Connection connection = getConnectionForWriting();
-            logger.debug("{} using write connection {} for executing callable statement", this, connection);
-            if (connection != null) {
-                statement = connection.prepareCall(command.getSQL());
-                if (!command.getParameters().isEmpty()) {
-                    bind(statement, command.getParameters());
-                }
-                if (!command.getRegister().isEmpty()) {
-                    register(statement, command.getRegister());
-                }
-                boolean hasRows = statement.execute();
-                SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
-                        .output(context.getSink());
-                if (hasRows) {
-                    logger.debug("callable execution created result set");
-                    while (hasRows) {
-                        // merge result set, but use register
-                        merge(command, statement.getResultSet(), listener);
-                        hasRows = statement.getMoreResults();
-                    }
-                } else {
-                    // no result set, merge from registered params only
-                    merge(command, statement, listener);
-                }
-            }
-        } finally {
-            close(statement);
-        }
-    }
-
-    /**
      * Merge key/values from JDBC result set
      *
      * @param command  the SQL command that created this result set
@@ -860,73 +810,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     }
 
     /**
-     * Merge key/values from registered params of a callable statement
-     *
-     * @param statement callable statement
-     * @param listener  the value listener
-     * @throws SQLException when SQL execution gives an error
-     * @throws IOException  when input/output error occurs
-     */
-    @SuppressWarnings({"unchecked"})
-    private void merge(SQLCommand command, CallableStatement statement, KeyValueStreamListener listener)
-            throws SQLException, IOException {
-        Map<String, Object> map = command.getRegister();
-        if (map.isEmpty()) {
-            // no register given, return without doing anything
-            return;
-        }
-        List<String> keys = new LinkedList<>();
-        List<Object> values = new LinkedList<>();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String k = entry.getKey();
-            Map<String, Object> v = (Map<String, Object>) entry.getValue();
-            Integer pos = (Integer) v.get("pos"); // the parameter position of the value
-            String field = (String) v.get("field"); // the field for indexing the value (if not key name)
-            keys.add(field != null ? field : k);
-            values.add(statement.getObject(pos));
-        }
-        logger.trace("merge callable statement result: keys={} values={}", keys, values);
-        listener.keys(keys);
-        listener.values(values);
-        listener.end();
-    }
-
-    /**
-     * Register variables in callable statement
-     *
-     * @param statement callable statement
-     * @param values    values
-     * @return this source
-     * @throws SQLException when SQL execution gives an error
-     */
-    @Override
-    @SuppressWarnings({"unchecked"})
-    public StandardSource<C> register(CallableStatement statement, Map<String, Object> values) throws SQLException {
-        if (values == null) {
-            return this;
-        }
-        for (Map.Entry<String, Object> me : values.entrySet()) {
-            // { "key" : { "pos": n, "type" : "VARCHAR", "field" : "fieldname" }, ... }
-            Map<String, Object> m = (Map<String, Object>) me.getValue();
-            Object o = m.get("pos");
-            if (o != null) {
-                Integer n = o instanceof Integer ? (Integer) o : Integer.parseInt(o.toString());
-                o =  m.get("type");
-                String type = o instanceof String ? (String) o: o.toString();
-                if (type != null) {
-                    logger.debug("registerOutParameter: n={} type={}", n, toJDBCType(type));
-                    try {
-                        statement.registerOutParameter(n, toJDBCType(type));
-                    } catch (Throwable t) {
-                        logger.warn("can't register out parameter " + n + " of type " + type);
-                    }
-                }
-            }
-        }
-        return this;
-    }
-
-    /**
      * Execute prepared query statement
      *
      * @param statement the prepared statement
@@ -995,8 +878,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     /**
      * Before rows are read, let the KeyValueStreamListener know about the keys.
-     * If the SQL command was a callable statement and a register is there, look into the register map
-     * for the key names, not in the result set metadata.
      *
      * @param command  the SQL command that created this result set
      * @param results  the result set
@@ -1009,19 +890,13 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     public void beforeRows(SQLCommand command, ResultSet results, KeyValueStreamListener listener)
             throws SQLException, IOException {
         List<String> keys = new LinkedList();
-        if (command != null && command.isCallable() && !command.getRegister().isEmpty()) {
-            for (Map.Entry<String, Object> me : command.getRegister().entrySet()) {
-                keys.add(me.getKey());
-            }
-        } else {
-            ResultSetMetaData metadata = results.getMetaData();
-            int columns = metadata.getColumnCount();
-            for (int i = 1; i <= columns; i++) {
-                if (getColumnNameMap() == null) {
-                    keys.add(metadata.getColumnLabel(i));
-                } else {
-                    keys.add(mapColumnName(metadata.getColumnLabel(i)));
-                }
+        ResultSetMetaData metadata = results.getMetaData();
+        int columns = metadata.getColumnCount();
+        for (int i = 1; i <= columns; i++) {
+            if (getColumnNameMap() == null) {
+                keys.add(metadata.getColumnLabel(i));
+            } else {
+                keys.add(mapColumnName(metadata.getColumnLabel(i)));
             }
         }
         listener.begin();
@@ -1174,7 +1049,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
     private void prepare(final DatabaseMetaData metaData) throws SQLException {
         Map<String, Object> m = new HashMap<String, Object>() {
             {
-                put("$meta.db.allproceduresarecallable", metaData.allProceduresAreCallable());
                 put("$meta.db.alltablesareselectable", metaData.allTablesAreSelectable());
                 put("$meta.db.autocommitclosesallresultsets", metaData.autoCommitFailureClosesAllResultSets());
                 put("$meta.db.datadefinitioncasestransactioncommit", metaData.dataDefinitionCausesTransactionCommit());
@@ -1208,7 +1082,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 put("$meta.db.maxcursornamelength", metaData.getMaxCursorNameLength());
                 put("$meta.db.maxindexlength", metaData.getMaxIndexLength());
                 put("$meta.db.maxusernamelength", metaData.getMaxUserNameLength());
-                put("$meta.db.maxprocedurenamelength", metaData.getMaxProcedureNameLength());
                 put("$meta.db.maxrowsize", metaData.getMaxRowSize());
                 put("$meta.db.maxschemanamelength", metaData.getMaxSchemaNameLength());
                 put("$meta.db.maxstatementlength", metaData.getMaxStatementLength());
@@ -1216,7 +1089,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 put("$meta.db.maxtablenamelength", metaData.getMaxTableNameLength());
                 put("$meta.db.maxtablesinselect", metaData.getMaxTablesInSelect());
                 put("$meta.db.numericfunctions", metaData.getNumericFunctions());
-                put("$meta.db.procedureterm", metaData.getProcedureTerm());
                 put("$meta.db.resultsetholdability", metaData.getResultSetHoldability());
                 put("$meta.db.rowidlifetime", metaData.getRowIdLifetime().name());
                 put("$meta.db.schematerm", metaData.getSchemaTerm());

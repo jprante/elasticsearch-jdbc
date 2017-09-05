@@ -55,14 +55,4 @@
         </classes>
     </test>
 
-    <test name="Stored Procedure Tests (simple strategy - mysql)">
-        <parameter name="create" value="mysql/create-suppliertables.sql"/>
-        <parameter name="delete" value="mysql/delete-suppliertables.sql"/>
-        <parameter name="task8" value="mysql/task8.json"/>
-        <parameter name="task9" value="mysql/task9.json"/>
-        <classes>
-            <class name="org.xbib.jdbc.strategy.standard.StandardStoredProcedureTests"/>
-        </classes>
-    </test>
-
 </suite>

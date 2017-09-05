@@ -48,7 +48,6 @@ ext {
       'testng':  '6.9.10',
       'mysql' : '5.1.38',
     ]
-    databases = ['mysql']
 }
 
 apply plugin: 'java'
@@ -162,16 +161,6 @@ test {
     ext.workingDirectory = 'build/'
 }
 
-databases.each { database ->
-    apply from: rootProject.file("gradle/${database}.gradle")
-}
-
-// disable integration test for now
-check {
-    databases.each { database ->
-        dependsOn "${database}IntegrationTest"
-    }
-}
 apply from: 'gradle/testngXmlSuite.gradle'
 apply from: 'gradle/awesome.gradle'
 

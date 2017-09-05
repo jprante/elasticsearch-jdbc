@@ -22,7 +22,6 @@ import org.xbib.elasticsearch.common.metrics.SourceMetric;
 import org.xbib.jdbc.strategy.JDBCSource;
 
 import java.io.IOException;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -199,11 +198,6 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
 
     @Override
     public JDBCSource<MockContext> bind(PreparedStatement statement, List<Object> values) throws SQLException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public JDBCSource<MockContext> register(CallableStatement statement, Map<String, Object> values) throws SQLException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

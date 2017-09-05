@@ -146,8 +146,6 @@ Here is the list of parameters for the `jdbc` block in the definition.
 
 `sql.write` - boolean flag, if true, the SQL statement is interpreted as an insert/update statement that needs write access (default: false).
 
-`sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC `CallableStatement` for stored procedures (default: false).
-
 `sql.parameter` - bind parameters for the SQL statement (in order). Some special values can be used with the following meanings:
 
    * `$now` - the current timestamp
@@ -666,57 +664,6 @@ the first time you run the script, it will generate the statefile.json file like
 }
 ```
 after this, you can select incremental data from table.
-
-## Stored procedures or callable statements
-
-Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates. 
-See also [Using Stored Procedures](http://docs.oracle.com/javase/tutorial/jdbc/basics/storedprocedures.html)
-from where the example is taken.
-
-    create procedure GET_SUPPLIER_OF_COFFEE(
-        IN coffeeName varchar(32), 
-        OUT supplierName varchar(40)) 
-        begin 
-            select SUPPLIERS.SUP_NAME into supplierName 
-            from SUPPLIERS, COFFEES 
-            where SUPPLIERS.SUP_ID = COFFEES.SUP_ID 
-            and coffeeName = COFFEES.COF_NAME; 
-            select supplierName; 
-        end
-
-Now it is possible to call the procedure from the JDBC importer and index the result in Elasticsearch.
-
-    {
-        "jdbc" : {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "sql" : [
-                {
-                    "callable" : true,
-                    "statement" : "{call GET_SUPPLIER_OF_COFFEE(?,?)}",
-                    "parameter" : [
-                         "Colombian"
-                    ],
-                    "register" : {
-                         "mySupplierName" : { "pos" : 2, "type" : "varchar" }
-                    }
-                }
-            ],
-            "index" : "my_jdbc_index",
-            "type" : "my_jdbc_type"
-        }
-    }
-
-Note, the `parameter` lists the input parameters in the order they should be applied, like in an
-ordinary statement. The `register` declares a list of output parameters in the particular order
-the `pos` number indicates. It is required to declare the JDBC type in the `type` attribute.
-`mySupplierName`, the key of the output parameter, is used as the Elasticsearch field name specification,
-like the column name specification in an ordinary SQL statement, because column names are not available
-in callable statement result sets.
-
-If there is more than one result sets returned by a callable statement,
-the JDBC importer enters a loop and iterates through all result sets.
 
 # How to import from a CSV file?
 
