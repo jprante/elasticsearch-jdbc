@@ -15,11 +15,6 @@ buildscript {
     }
 }
 
-// new way to apply plugin, started from gradle-v2.1
-plugins {
-    id 'java'
-}
-
 // standard properties
 group = 'org.xbib.elasticsearch.importer'
 version = '2.3.4.1'
@@ -119,6 +114,7 @@ dependencies {
 
 }
 
+//TODO: do we need this anymore?
 task integrationTest(type: Test, dependsOn: [':unpackPlugin']) {
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = configurations.integrationTestCompile
