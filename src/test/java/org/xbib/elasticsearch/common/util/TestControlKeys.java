@@ -1,4 +1,4 @@
-package com.awesome;
+package org.xbib.elasticsearch.common.util;
 
 import org.testng.annotations.Test;
 import org.xbib.elasticsearch.common.util.ControlKeys;
