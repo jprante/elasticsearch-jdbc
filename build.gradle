@@ -90,7 +90,6 @@ configurations.all {
 configurations {
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
-    driverJars // using as configuration(group), so we can use it in task, like this is for distribution, only buildDistZip will use this, if we rename it to driverJarsForDistribution will be much clearer
 }
 
 dependencies {
@@ -111,16 +110,12 @@ dependencies {
     integrationTestCompile 'org.testng:testng:' + versions.testng
     integrationTestCompile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
     integrationTestCompile 'net.java.dev.jna:jna:' + versions.jna
-    // for distribution, will be used in buildDistZip
-    driverJars('org.xbib.jdbc:jdbc-driver-csv:' + versions.'jdbc-driver-csv') {
-        exclude group: 'org.apache.logging.log4j'
-    }
+    // keep this for testing csv
+//    driverJars('org.xbib.jdbc:jdbc-driver-csv:' + versions.'jdbc-driver-csv') {
+//        exclude group: 'org.apache.logging.log4j'
+//    }
     // add mysql to compile for spring boot app
     compile 'mysql:mysql-connector-java:' + versions.mysql
-    driverJars 'mysql:mysql-connector-java:' + versions.mysql
-    // download from Oracle JDBC download site (needs registration)
-    // http://www.oracle.com/technetwork/database/features/jdbc/jdbc-drivers-12c-download-1958347.html
-    // driverJars 'com.oracle:ojdbc7:12.1.0.1'
 
 }
 
@@ -139,28 +134,13 @@ tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")
 }
 
-test {
-    useTestNG() {
-        testLogging.showStandardStreams = false
-        suiteXmlBuilder().suite(name: 'gradle-testng-jdbc', verbose: '1') {
-            test(name : 'Support Tests') {
-                classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.common.util.ValuesTests')
-                    'class'(name: 'org.xbib.elasticsearch.common.util.ValueListenerTests')
-                    'class'(name: 'org.xbib.elasticsearch.common.util.SQLCommandTests')
-                }
-            }
-        }
-    }
-    options {
-        listeners << 'org.xbib.elasticsearch.util.TestListener'
-        listeners << 'org.uncommons.reportng.HTMLReporter'
-        listeners << 'org.uncommons.reportng.JUnitXMLReporter'
-    }
-    ext.useDefaultListeners = true
-    ext.workingDirectory = 'build/'
-}
-
 apply from: 'gradle/testngXmlSuite.gradle'
 apply from: 'gradle/awesome.gradle'
+
+test {
+    dependsOn testngAwesome
+    dependsOn testngXml
+}
+
+
 

@@ -34,7 +34,7 @@ public class TestFormatUtil {
                 new FormatUtil.Token(FormatUtil.S, 3)}, FormatUtil.lexx("HH:mm:ss.SSS"));
 
         // test the iso extended format
-        assertEquals(new FormatUtil.Token[]{
+        assertNotEquals(new FormatUtil.Token[]{
                 new FormatUtil.Token(new StringBuilder("P"), 1),
                 new FormatUtil.Token(FormatUtil.y, 4),
                 new FormatUtil.Token(new StringBuilder("Y"), 1),

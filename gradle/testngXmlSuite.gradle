@@ -2,7 +2,6 @@ dependencies {
     testCompile 'mysql:mysql-connector-java:' + versions.mysql
 }
 
-// add it try testng by xml
 task testngXml(type: Test) {
     systemProperty 'path.home', projectDir.absolutePath + '/build'
     systemProperty 'java.io.tmpdir', projectDir.absolutePath + '/build/tmp'
@@ -16,7 +15,6 @@ task testngXml(type: Test) {
             file('src/test/resources/testsuite/support/support.xml')
         );
     }
-
 //    beforeTest { descriptor ->
 //        logger.lifecycle("Running test: " + descriptor)
 //    }
