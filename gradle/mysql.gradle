@@ -21,7 +21,7 @@ task mysqlIntegrationTest(type: Test) {
                 parameter(name: 'sql2', value: 'select * from orders')
                 parameter(name: 'sql3', value: 'select * from products where amount is NULL')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests')
+                    'class'(name: 'org.xbib.jdbc.strategy.standard.StandardSourceTests')
                 }
             }
             test(name: 'mysql Sink Tests') {
@@ -32,7 +32,7 @@ task mysqlIntegrationTest(type: Test) {
                 parameter(name: 'task3', value: 'mysql/task3.json')
                 parameter(name: 'sql1', value: 'insert into products (name, amount, price) values(?,?,?)')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests')
+                    'class'(name: 'org.xbib.jdbc.strategy.standard.StandardSinkTests')
                 }
             }
             test(name: 'mysql Job Tests') {
@@ -42,7 +42,7 @@ task mysqlIntegrationTest(type: Test) {
                 parameter(name: 'sql1', value: 'select count(*) from products')
                 parameter(name: 'sql2', value: 'insert into products (_job, name, amount, price) values(?,?,?,?)')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests')
+                    'class'(name: 'org.xbib.jdbc.strategy.standard.StandardCounterTests')
                 }
             }
             test(name: 'mysql Schedule Tests') {
@@ -53,7 +53,7 @@ task mysqlIntegrationTest(type: Test) {
                 parameter(name: 'sql1', value: 'insert into products (name, amount, price) values(?,?,?)')
                 parameter(name: 'sql2', value: 'insert into logs (modified, message) values(?,?)')
                 classes([:]) {
-                    'class'(name: 'org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests')
+                    'class'(name: 'org.xbib.jdbc.strategy.standard.StandardScheduleTests')
                 }
             }
         }

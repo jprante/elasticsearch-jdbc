@@ -28,14 +28,13 @@ public enum ControlKeys {
 
     _optype, _index, _type, _id, _version, _timestamp, _ttl, _routing, _parent, _source, _job;
 
-    @Deprecated
-    public static Set<String> makeSet() {
-        Set<String> set = new HashSet<>();
-        for (ControlKeys k : EnumSet.allOf(ControlKeys.class)) {
-            set.add(k.name());
-        }
-        return set;
-    }
+//    public static Set<String> makeSet() {
+//        Set<String> set = new HashSet<>();
+//        for (ControlKeys k : EnumSet.allOf(ControlKeys.class)) {
+//            set.add(k.name());
+//        }
+//        return set;
+//    }
 
     // 1. EnumSet.allOf vs  Enum.values https://stackoverflow.com/questions/2464950/enum-values-vs-enumset-allof-which-one-is-more-preferable
     // 2. Why HashSet http://blog.csdn.net/fenglibing/article/details/9021201

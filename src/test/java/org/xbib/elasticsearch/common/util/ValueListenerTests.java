@@ -17,7 +17,7 @@ package org.xbib.elasticsearch.common.util;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xbib.elasticsearch.jdbc.strategy.mock.MockSink;
+import org.xbib.jdbc.strategy.mock.MockSink;
 
 import java.util.Arrays;
 import java.util.LinkedList;

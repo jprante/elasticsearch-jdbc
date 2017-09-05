@@ -1,0 +1,2 @@
+org.xbib.jdbc.strategy.standard.StandardContext
+org.xbib.jdbc.strategy.column.ColumnContext

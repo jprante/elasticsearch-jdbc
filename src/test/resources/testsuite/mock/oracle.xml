@@ -22,7 +22,7 @@
         <parameter name="sql5"
                    value="select 'product' as &quot;_index&quot;, &quot;orders&quot;.&quot;department&quot; as &quot;_id&quot;, &quot;orders&quot;.&quot;product&quot; as &quot;orders.product&quot; from &quot;orders&quot;"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.mock.MockTests"/>
+            <class name="org.xbib.jdbc.strategy.mock.MockTests"/>
         </classes>
     </test>
 

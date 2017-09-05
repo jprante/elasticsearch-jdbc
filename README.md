@@ -26,7 +26,7 @@ you can issue this from the command line
            -cp "${lib}/*" \
            -Dlog4j.configurationFile=${bin}/log4j2.xml \
            org.xbib.tools.Runner \
-           org.xbib.tools.JDBCImporter
+           org.xbib.jdbc.JDBCImporter
 
 And that's it. Now you can check your Elasticsearch cluster for the index `jdbc` or your Elasticsearch logs
 about what happened.
@@ -98,7 +98,7 @@ The importer can either be executed via stdin (for example with echo)
 		-cp "${lib}/*" \
 		-Dlog4j.configurationFile=${bin}/log4j2.xml \
 		org.xbib.tools.Runner \
-		org.xbib.tools.JDBCImporter
+		org.xbib.jdbc.JDBCImporter
 
 or with explicit file name parameter from command line. Here is an example
 where `statefile.json` is a file which is loaded before execution.
@@ -107,7 +107,7 @@ where `statefile.json` is a file which is loaded before execution.
 		-cp "${lib}/*" \
 		-Dlog4j.configurationFile=${bin}/log4j2.xml \
 		org.xbib.tools.Runner \
-		org.xbib.tools.JDBCImporter \
+		org.xbib.jdbc.JDBCImporter \
 		statefile.json
 
 This style is convenient for subsequent execution controlled by the `statefile` parameter
@@ -862,7 +862,7 @@ In the ``sql`` parameter, a series of SQL statements can be defined which are ex
 ## Your custom strategy
 
 If you want to extend the JDBC importer, for example by your custom password authentication, you could
-extend `org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource`. 
+extend `StandardSource`.
 Then, declare your strategy classes in `META-INF/services`. Add your
 jar to the classpath and add the `strategy` parameter to the specifications.
 

@@ -14,7 +14,7 @@
         <parameter name="sql2" value="select * from &quot;orders&quot;"/>
         <parameter name="sql3" value="select * from &quot;products&quot; where &quot;amount&quot; is NULL"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardSourceTests"/>
         </classes>
     </test>
 
@@ -27,7 +27,7 @@
         <parameter name="sql1"
                    value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardSinkTests"/>
         </classes>
     </test>
 
@@ -39,7 +39,7 @@
         <parameter name="sql2"
                    value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardCounterTests"/>
         </classes>
     </test>
 
@@ -53,7 +53,7 @@
         <parameter name="sql2"
                    value="insert into &quot;logs&quot; (&quot;modified&quot;, &quot;message&quot;) values(?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
         </classes>
     </test>
 

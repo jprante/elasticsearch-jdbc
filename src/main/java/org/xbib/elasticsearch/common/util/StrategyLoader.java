@@ -15,13 +15,13 @@
  */
 package org.xbib.elasticsearch.common.util;
 
-import org.xbib.elasticsearch.jdbc.strategy.Context;
-import org.xbib.elasticsearch.jdbc.strategy.JDBCSource;
-import org.xbib.elasticsearch.jdbc.strategy.Source;
-import org.xbib.elasticsearch.jdbc.strategy.Sink;
-import org.xbib.elasticsearch.jdbc.strategy.standard.StandardContext;
-import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource;
-import org.xbib.elasticsearch.jdbc.strategy.standard.StandardSink;
+import org.xbib.jdbc.strategy.Context;
+import org.xbib.jdbc.strategy.JDBCSource;
+import org.xbib.jdbc.strategy.Source;
+import org.xbib.jdbc.strategy.Sink;
+import org.xbib.jdbc.strategy.standard.StandardContext;
+import org.xbib.jdbc.strategy.standard.StandardSource;
+import org.xbib.jdbc.strategy.standard.StandardSink;
 
 import java.util.ServiceLoader;
 

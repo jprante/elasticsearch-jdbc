@@ -7,8 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.xbib.adapter.config.ConfigInfo;
 import org.xbib.adapter.config.ConfigedItem;
-import org.xbib.elasticsearch.jdbc.strategy.Context;
-import org.xbib.tools.JDBCImporter;
+import org.xbib.jdbc.JDBCImporter;
 
 import java.util.*;
 

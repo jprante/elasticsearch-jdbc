@@ -6,7 +6,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.xbib.adapter.config.ConfigInfo;
 import org.xbib.adapter.config.ElasticsearchConfigInfo;
 import org.xbib.adapter.config.JdbcConfigInfo;
-import org.xbib.tools.JDBCImporter;
+import org.xbib.jdbc.JDBCImporter;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
