@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.xbib.tools;
+package org.xbib.pipeline;
 
 import org.elasticsearch.common.settings.Settings;
-import org.xbib.pipeline.PipelineRequest;
 
 public class PipelineRequestSettings implements PipelineRequest<Settings> {
 

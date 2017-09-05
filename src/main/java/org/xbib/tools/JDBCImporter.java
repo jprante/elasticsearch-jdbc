@@ -24,10 +24,7 @@ import org.xbib.elasticsearch.common.cron.CronExpression;
 import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
 import org.xbib.elasticsearch.jdbc.strategy.Context;
-import org.xbib.pipeline.AbstractPipeline;
-import org.xbib.pipeline.Pipeline;
-import org.xbib.pipeline.PipelineProvider;
-import org.xbib.pipeline.SimplePipelineExecutor;
+import org.xbib.pipeline.*;
 
 import java.io.File;
 import java.io.FileInputStream;

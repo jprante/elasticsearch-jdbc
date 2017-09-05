@@ -13,6 +13,7 @@ import java.text.ParseException;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
+@Deprecated
 public class GeometryTests {
 
     protected final static Logger logger = LoggerFactory.getLogger("test.geo");

@@ -170,12 +170,12 @@ databases.each { database ->
     apply from: rootProject.file("gradle/${database}.gradle")
 }
 
-check {
-    databases.each { database ->
-        dependsOn "${database}IntegrationTest"
-    }
-//    dependsOn 'testngXmlSuite'
-}
+// disable integration test for now
+//check {
+//    databases.each { database ->
+//        dependsOn "${database}IntegrationTest"
+//    }
+//}
 apply from: 'gradle/testngXmlSuite.gradle'
 apply from: 'gradle/awesome.gradle'
 
