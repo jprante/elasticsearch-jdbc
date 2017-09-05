@@ -64,9 +64,6 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
 
     private boolean shouldIgnoreNull = false;
 
-    @Deprecated
-    private boolean shouldDetectGeo = true;
-
     private boolean shouldDetectJson = true;
 
     /**
@@ -82,12 +79,6 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
 
     public PlainKeyValueStreamListener shouldIgnoreNull(boolean shouldIgnoreNull) {
         this.shouldIgnoreNull = shouldIgnoreNull;
-        return this;
-    }
-
-    @Deprecated
-    public PlainKeyValueStreamListener shouldDetectGeo(boolean shouldDetectGeo) {
-        this.shouldDetectGeo = shouldDetectGeo;
         return this;
     }
 
@@ -169,16 +160,6 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
             Object v = null;
             try {
                 String s = values.get(i).toString();
-                // @Deprecated geo content?
-                if (shouldDetectGeo && s.startsWith("POLYGON(") || s.startsWith("POINT(")) {
-                    SpatialContext ctx = JtsSpatialContext.GEO;
-                    Shape shape = ctx.readShapeFromWkt(s);
-                    XContentBuilder builder = jsonBuilder();
-                    builder.startObject();
-                    GeoJSONShapeSerializer.serialize(shape, builder);
-                    builder.endObject();
-                    s = builder.string();
-                }
                 // JSON content?
                 if (shouldDetectJson) {
                     XContentParser parser = JsonXContent.jsonXContent.createParser(s);

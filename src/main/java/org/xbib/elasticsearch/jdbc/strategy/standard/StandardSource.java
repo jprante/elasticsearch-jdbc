@@ -113,8 +113,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     private boolean shouldIgnoreNull;
 
-    private boolean shouldDetectGeo;
-
     private boolean shouldDetectJson;
 
     private boolean shouldPrepareResultSetMetadata;
@@ -322,15 +320,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
 
     public boolean shouldIgnoreNull() {
         return shouldIgnoreNull;
-    }
-
-    public StandardSource<C> shouldDetectGeo(boolean shouldDetectGeo) {
-        this.shouldDetectGeo = shouldDetectGeo;
-        return this;
-    }
-
-    public boolean shouldDetectGeo() {
-        return shouldDetectGeo;
     }
 
     public StandardSource<C> shouldDetectJson(boolean shouldDetectJson) {
@@ -684,7 +673,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                     SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
                             .output(context.getSink())
                             .shouldIgnoreNull(shouldIgnoreNull())
-                            .shouldDetectGeo(shouldDetectGeo())
                             .shouldDetectJson(shouldDetectJson());
                     merge(command, results, listener);
                 }
@@ -722,7 +710,6 @@ public class StandardSource<C extends StandardContext> implements JDBCSource<C> 
                 SinkKeyValueStreamListener<Object, Object> listener = new SinkKeyValueStreamListener<Object, Object>()
                         .output(context.getSink())
                         .shouldIgnoreNull(shouldIgnoreNull())
-                        .shouldDetectGeo(shouldDetectGeo())
                         .shouldDetectJson(shouldDetectJson());
                 merge(command, results, listener);
             } else {

@@ -329,7 +329,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
         String resultSetType = XContentMapValues.nodeStringValue(params.get("resultset_type"), "TYPE_FORWARD_ONLY");
         String resultSetConcurrency = XContentMapValues.nodeStringValue(params.get("resultset_concurrency"), "CONCUR_UPDATABLE");
         boolean shouldIgnoreNull = XContentMapValues.nodeBooleanValue(params.get("ignore_null_values"), false);
-        boolean shouldDetectGeo = XContentMapValues.nodeBooleanValue(params.get("detect_geo"), true);
         boolean shouldDetectJson = XContentMapValues.nodeBooleanValue(params.get("detect_json"), true);
         boolean shouldPrepareDatabaseMetadata = XContentMapValues.nodeBooleanValue(params.get("prepare_database_metadata"), false);
         boolean shouldPrepareResultSetMetadata = XContentMapValues.nodeBooleanValue(params.get("prepare_resultset_metadata"), false);
@@ -348,7 +347,6 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
                 .setResultSetType(resultSetType)
                 .setResultSetConcurrency(resultSetConcurrency)
                 .shouldIgnoreNull(shouldIgnoreNull)
-                .shouldDetectGeo(shouldDetectGeo)
                 .shouldDetectJson(shouldDetectJson)
                 .shouldPrepareDatabaseMetadata(shouldPrepareDatabaseMetadata)
                 .shouldPrepareResultSetMetadata(shouldPrepareResultSetMetadata)

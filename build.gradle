@@ -100,10 +100,6 @@ dependencies {
     compile 'org.elasticsearch:elasticsearch:' + versions.elasticsearch
     // helper for bulk api
     compile 'org.xbib.elasticsearch.plugin:elasticsearch-helper:' + versions.'elasticsearch-helper'
-    // math: 2d linear geometry
-    compile('com.vividsolutions:jts:' + versions.jts) {
-        exclude group: 'xerces'
-    }
     // testng is stronger than junit
     testCompile 'org.testng:testng:' + versions.testng
     //Java Native Access, lile .dll

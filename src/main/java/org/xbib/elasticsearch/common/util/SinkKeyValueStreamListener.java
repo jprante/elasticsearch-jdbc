@@ -37,11 +37,6 @@ public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListene
         return this;
     }
 
-    public SinkKeyValueStreamListener<K, V> shouldDetectGeo(boolean shouldDetectGeo) {
-        super.shouldDetectGeo(shouldDetectGeo);
-        return this;
-    }
-
     public SinkKeyValueStreamListener<K, V> shouldDetectJson(boolean shouldDetectJson) {
         super.shouldDetectJson(shouldDetectJson);
         return this;

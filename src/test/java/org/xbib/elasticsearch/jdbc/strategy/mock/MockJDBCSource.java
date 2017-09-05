@@ -144,11 +144,6 @@ public class MockJDBCSource implements JDBCSource<MockContext> {
     }
 
     @Override
-    public JDBCSource<MockContext> shouldDetectGeo(boolean shouldDetectGeo) {
-        return this;
-    }
-
-    @Override
     public JDBCSource<MockContext> shouldDetectJson(boolean shouldDetectJson) {
         return this;
     }
