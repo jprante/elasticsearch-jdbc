@@ -27,6 +27,7 @@ import java.util.ServiceLoader;
 
 /**
  * The strategy loader
+ * java spi(Service provider Interface) http://www.cnblogs.com/javaee6/p/3714719.html
  */
 public class StrategyLoader {
 
