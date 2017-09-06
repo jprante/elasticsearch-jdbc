@@ -149,7 +149,7 @@ public class JDBCImporter
                 }
                 logger.debug("futures complete");
             } else {
-                logger.debug("yo yo yo");
+                logger.debug("yo yo yo " + futures.size());
                 execute();
             }
         } catch (Throwable e) {

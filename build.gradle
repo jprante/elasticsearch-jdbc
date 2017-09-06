@@ -26,22 +26,22 @@ println "Build: group: '${project.group}', name: '${project.name}', version: '${
 // custom properties
 ext {
     pluginName = 'elasticsearch-jdbc'
-    pluginClassname  = 'org.xbib.elasticsearch.plugin.jdbc.JDBCPlugin'
+    pluginClassname = 'org.xbib.elasticsearch.plugin.jdbc.JDBCPlugin'
     pluginDescription = 'JDBC importer service for Elasticsearch'
     user = 'jprante'
     name = 'elasticsearch-jdbc'
     description = 'JDBC importer for Elasticsearch'
     versions = [
-      'elasticsearch' : '2.3.4',
-      'elasticsearch-helper' : '2.3.4.0',
-      'jsr166e': '1.1.0',
-      'jna' : '4.1.0',
-      'spatial4j': '0.5',
-      'jts' : '1.13',
-      'jdbc-driver-csv': '1.0.0',
-      'junit' : '4.12',
-      'testng':  '6.9.10',
-      'mysql' : '5.1.38',
+            'elasticsearch'       : '2.3.4',
+            'elasticsearch-helper': '2.3.4.0',
+            'jsr166e'             : '1.1.0',
+            'jna'                 : '4.1.0',
+            'spatial4j'           : '0.5',
+            'jts'                 : '1.13',
+            'jdbc-driver-csv'     : '1.0.0',
+            'junit'               : '4.12',
+            'testng'              : '6.9.10',
+            'mysql'               : '5.1.38',
     ]
 }
 
