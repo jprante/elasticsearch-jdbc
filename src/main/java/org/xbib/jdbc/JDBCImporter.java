@@ -149,6 +149,7 @@ public class JDBCImporter
                 }
                 logger.debug("futures complete");
             } else {
+                logger.debug("yo yo yo");
                 execute();
             }
         } catch (Throwable e) {
@@ -220,6 +221,7 @@ public class JDBCImporter
             logger.info("already scheduled");
             return futures;
         }
+
         String[] schedule = settings.getAsArray("schedule");
         Long seconds = settings.getAsTime("interval", TimeValue.timeValueSeconds(0)).seconds();
         if (schedule != null && schedule.length > 0) {

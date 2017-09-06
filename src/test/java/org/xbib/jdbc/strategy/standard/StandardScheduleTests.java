@@ -40,8 +40,8 @@ public class StandardScheduleTests extends AbstractSinkTest {
      * @param sql           the SQL statement
      * @throws Exception if test fails
      */
-    @Test
-    @Parameters({"task6", "sql1"})
+//    @Test
+//    @Parameters({"task6", "sql1"})
     public void testSimpleSchedule(String resource, String sql) throws Exception {
         createRandomProducts(sql, 100);
         JDBCImporter importer = createImporter(resource);
@@ -61,8 +61,8 @@ public class StandardScheduleTests extends AbstractSinkTest {
      * @param sql           the sql statement to select timestamps
      * @throws Exception
      */
-    @Test
-    @Parameters({"task7", "sql2"})
+//    @Test
+//    @Parameters({"task7", "sql2"})
     public void testTimestamps(String resource, String sql) throws Exception {
         // TODO make timezone/locale configurable for better randomized testing
         createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem");
@@ -73,6 +73,18 @@ public class StandardScheduleTests extends AbstractSinkTest {
         // just an estimation, at least two runs should deliver 50 hits each.
         logger.info("found {} hits", hits);
         assertTrue(hits > 99L);
+    }
+
+    @Test
+    @Parameters({"task8"})
+    public void testInteval(String resource) throws Exception {
+        JDBCImporter importer = createImporter(resource);
+        Thread.sleep(15000L); // run more than twice
+        importer.shutdown();
+        long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
+        // just an estimation, at least two runs should deliver 50 hits each.
+        logger.info("found {} hits", hits);
+        assertTrue(hits > 4L);
     }
 
     private JDBCImporter createImporter(final String resource) throws Exception {

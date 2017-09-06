@@ -7,7 +7,7 @@
     <parameter name="user" value="root"/>
     <parameter name="password" value=""/>
 
-    <test name="Source Tests (simple strategy - mysql)">
+    <!--<test name="Source Tests (simple strategy - mysql)">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
@@ -50,6 +50,15 @@
                    value="insert into products (name, amount, price) values(?,?,?)"/>
         <parameter name="sql2"
                    value="insert into logs (modified, message) values(?,?)"/>
+        <classes>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
+        </classes>
+    </test>-->
+
+    <test name="Interval Tests (simple strategy - mysql)">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="task8" value="mysql/task8.json"/>
         <classes>
             <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
         </classes>
