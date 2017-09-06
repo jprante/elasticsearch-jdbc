@@ -8,7 +8,7 @@ echo '
 {
     "type" : "jdbc",
     "jdbc" : {
-        "schedule" : "0 0-59 0-23 ? * *",
+        "interval" : "5",
         "statefile" : "statefile.json",
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
