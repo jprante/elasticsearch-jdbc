@@ -13,7 +13,7 @@ echo '
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
-        "interval": "5",
+        "schedule": "0 0-59 0-23 ? * *",
         "sql" : [ {
                 "statement" : "select *, id as _id, \"myjdbc\" as _index, \"mytype\" as _type from test.test"
             },

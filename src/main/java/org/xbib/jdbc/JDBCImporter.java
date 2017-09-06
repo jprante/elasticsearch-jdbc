@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.adapter.SavedSettings;
+import org.xbib.elasticsearch.common.cron.CronExpression;
+import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
 import org.xbib.elasticsearch.common.util.StrategyLoader;
 import org.xbib.jdbc.strategy.Context;
 import org.xbib.pipeline.*;
@@ -220,8 +222,18 @@ public class JDBCImporter
             return futures;
         }
 
+        String[] schedule = settings.getAsArray("schedule");
         Long seconds = settings.getAsTime("interval", TimeValue.timeValueSeconds(0)).seconds();
-        if (seconds > 0L) {
+        if (schedule != null && schedule.length > 0) {
+            Thread thread = new Thread(this);
+            CronThreadPoolExecutor cronThreadPoolExecutor =
+                    new CronThreadPoolExecutor(settings.getAsInt("threadpoolsize", 1));
+            for (String cron : schedule) {
+                futures.add(cronThreadPoolExecutor.schedule(thread, new CronExpression(cron)));
+            }
+            this.threadPoolExecutor = cronThreadPoolExecutor;
+            logger.info("scheduled with cron expressions {}", Arrays.asList(schedule));
+        } else if (seconds > 0L) {
             Thread thread = new Thread(this);
             ScheduledThreadPoolExecutor scheduledThreadPoolExecutor =
                     new ScheduledThreadPoolExecutor(settings.getAsInt("threadpoolsize", 1));

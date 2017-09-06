@@ -10,7 +10,7 @@ echo '
     "jdbc" : {
         "url" : "jdbc:mysql://localhost:3306/blog",
         "statefile" : "statefile.json",
-        "interval" : "5",
+        "schedule" : "0 0-59 0-23 ? * *",
         "user" : "blog",
         "password" : "12345678",
         "sql" : [{

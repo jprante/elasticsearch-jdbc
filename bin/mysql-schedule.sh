@@ -13,7 +13,7 @@ echo '
             "lastexecutionend" : "2015-05-10T10:58:00.044Z",
             "counter" : 1234
         },
-        "interval" : "5",
+        "schedule" : "0 0-59 0-23 ? * *",
         "url" : "jdbc:mysql://localhost:3306/test",
         "user" : "",
         "password" : "",
