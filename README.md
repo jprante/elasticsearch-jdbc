@@ -3,12 +3,9 @@
 The Java Database Connection (JDBC) importer allows to fetch data from JDBC sources for
 indexing into [Elasticsearch](http://www.elasticsearch.org).
 
-The JDBC importer was designed for tabular data. If you have tables with many joins, the JDBC importer
-is limited in the way to reconstruct deeply nested objects to JSON and process object semantics like object identity.
-Though it would be possible to extend the JDBC importer with a mapping feature where all the object properties
-could be specified, the current solution is focused on rather simple tabular data streams.
+The JDBC importer is hard to use. In this version, only care about transfer data to ES and add ability for tracking and recover data.
+### TODO: separate ES config to json and sync sql to sql script file
 
-### TODO: seperate config to json or yaml and sql to sql script file
 Assuming you have a table of name `orders` with a primary key in column `id`, 
 you can issue this from the command line
 
