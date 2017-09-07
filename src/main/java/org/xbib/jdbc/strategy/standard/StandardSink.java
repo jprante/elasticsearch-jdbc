@@ -355,8 +355,8 @@ public class StandardSink<C extends StandardContext> implements Sink<C> {
         if (clientAPI.client() != null) {
             try {
                 clientAPI.waitForCluster("YELLOW", TimeValue.timeValueSeconds(30));
-                if (settings.getAsStructuredMap().containsKey("index_settings")) {
-                    Settings indexSettings = settings.getAsSettings("index_settings");
+                if (settings.getAsStructuredMap().containsKey("elasticsearch/index_settings")) {
+                    Settings indexSettings = settings.getAsSettings("elasticsearch/index_settings");
                     Map<String,String> mappings = new HashMap<>();
                     if (type != null) {
                         Settings typeMapping = settings.getAsSettings("type_mapping");
