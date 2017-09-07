@@ -26,7 +26,6 @@ import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.joda.time.DateTime;
 import org.xbib.elasticsearch.common.metrics.MetricsLogger;
 import org.xbib.elasticsearch.common.util.LocaleUtil;
-import org.xbib.elasticsearch.common.util.StrategyLoader;
 import org.xbib.jdbc.strategy.Context;
 import org.xbib.jdbc.strategy.JDBCSource;
 import org.xbib.jdbc.strategy.Sink;
@@ -278,7 +277,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
 
     @SuppressWarnings("unchecked")
     protected S createSource() {
-        S source = (S) StrategyLoader.newSource(strategy());
+        S source = (S) new StandardSource();
         logger.info("found source class {}", source);
         String url = settings.get("url");
         String user = settings.get("user");
@@ -294,7 +293,7 @@ public class StandardContext<S extends JDBCSource> implements Context<S, Sink> {
     }
 
     protected Sink createSink() throws IOException {
-        Sink sink = StrategyLoader.newSink(strategy());
+        Sink sink = new StandardSink();
         logger.info("found sink class {}", sink);
         return sink;
     }

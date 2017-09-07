@@ -22,8 +22,8 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.xbib.adapter.SavedSettings;
 import org.xbib.elasticsearch.common.cron.CronExpression;
 import org.xbib.elasticsearch.common.cron.CronThreadPoolExecutor;
-import org.xbib.elasticsearch.common.util.StrategyLoader;
 import org.xbib.jdbc.strategy.Context;
+import org.xbib.jdbc.strategy.standard.StandardContext;
 import org.xbib.pipeline.*;
 
 import java.io.File;
@@ -206,10 +206,8 @@ public class JDBCImporter
 
     private void process(Settings settings) throws Exception {
         if (context == null) {
-            String strategy = settings.get("strategy", "standard");
-            this.context = StrategyLoader.newContext(strategy);
-            logger.info("strategy {}: settings = {}, context = {}",
-                    strategy, settings.getAsMap(), context);
+            context = new StandardContext();
+            logger.info("settings = {}, context = {}", settings.getAsMap(), context);
             context.setSettings(settings);
         }
         context.execute();

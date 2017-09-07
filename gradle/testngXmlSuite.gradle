@@ -9,8 +9,8 @@ task testngXml(type: Test) {
     ext.workingDirectory = projectDir.absolutePath + '/build'
     useTestNG {
         suites(
-            file('src/test/resources/testsuite/cron/cron.xml')
-//            file('src/test/resources/testsuite/standard/mysql.xml')
+//            file('src/test/resources/testsuite/cron/cron.xml')
+            file('src/test/resources/testsuite/standard/mysql.xml')
 //            file('src/test/resources/testsuite/support/support.xml')
         );
     }
