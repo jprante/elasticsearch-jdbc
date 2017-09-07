@@ -134,7 +134,7 @@ apply from: 'gradle/testngXmlSuite.gradle'
 apply from: 'gradle/awesome.gradle'
 
 test {
-    dependsOn testngAwesome
+//    dependsOn testngAwesome
     dependsOn testngXml
 }
 

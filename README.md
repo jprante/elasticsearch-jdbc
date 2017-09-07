@@ -117,7 +117,7 @@ if `statefile` is set to `statefile.json`.
 
 Here is the list of parameters for the `jdbc` block in the definition.
 
-`strategy` - the strategy of the JDBC importer, currently implemented: `"standard"`, `"column"`
+`strategy` - the strategy of the JDBC importer, currently implemented: `"standard"`
 
 `url` - the JDBC driver URL
 
