@@ -11,8 +11,11 @@ public class InputImpl implements Input{
 
     @Override
     public void init() {
+        // use config_template.json should have the same structure as package, so use absolute path here
         InputStream in_config_template = getClass().getResourceAsStream(ROOT_PATH + "/config_template.json");
 
+        // TODO: get all configs as stream
+        // TODO: replace place_holder and merge configs
         Settings settings = Settings.settingsBuilder()
                 .loadFromStream("config_template", in_config_template)
                 .build();
