@@ -11,7 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
- * A simple pipeline executor.
+ * Simple implementation of the {@link PipelineExecutor} interface.
+ *
  * @param <R> the pipeline request type
  * @param <P> the pipeline type
  */
