@@ -181,7 +181,7 @@ public class JdbcPipeline
         this.setQueue(queue);
         PipelineRequestSettings element = new PipelineRequestSettings().set(settings);
         this.getQueue().put(element);
-        // is this threadpoolsize?
+        // TODO: is this threadpoolsize?
         this.executorService = Executors.newFixedThreadPool(settings.getAsInt("concurrency", 1));
         logger.debug("prepare ended");
     }
