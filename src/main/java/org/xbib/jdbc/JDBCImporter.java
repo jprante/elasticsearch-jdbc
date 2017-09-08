@@ -74,17 +74,6 @@ public class JDBCImporter
 
     private List<Future> futures;
 
-//    protected PipelineProvider<Pipeline<PipelineRequestSettings>> pipelineProvider() {
-//        return new PipelineProvider<Pipeline<PipelineRequestSettings>>() {
-//            @Override
-//            public Pipeline<PipelineRequestSettings> get() {
-//                JDBCImporter jdbcImporter = new JDBCImporter();
-//                jdbcImporter.setQueue(getQueue());
-//                return jdbcImporter;
-//            }
-//        };
-//    }
-
     public JDBCImporter setSettings(Settings newSettings) {
         logger.debug("settings = {}", newSettings.getAsMap());
         settings = newSettings;
@@ -249,8 +238,6 @@ public class JDBCImporter
         JDBCImporter jdbcImporter = new JDBCImporter();
         jdbcImporter.setQueue(getQueue());
         new SimplePipelineExecutor<PipelineRequestSettings, Pipeline<PipelineRequestSettings>>(executorService, jdbcImporter)
-//                .setQueue(getQueue())
-//                .setPipelineProvider(pipelineProvider())
                 .prepare()
                 .execute()
                 .waitFor();

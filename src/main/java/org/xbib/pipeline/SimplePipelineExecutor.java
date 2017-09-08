@@ -22,13 +22,9 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
     private final ExecutorService executorService;
     private final Pipeline pipeline;
 
-//    private BlockingQueue<R> queue;
-
     private Collection<Pipeline<R>> pipelines;
 
     private Collection<Future<R>> futures;
-
-//    private PipelineProvider<P> provider;
 
     private PipelineSink<R> sink;
 
@@ -36,7 +32,7 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
 
     private int concurrency;
 
-    //TODO: why do we need to pass this in, why don't just create one and close in shutdown?
+    // TODO: why do we need to pass this in, why don't just create one and close in shutdown?
     public SimplePipelineExecutor(ExecutorService executorService, Pipeline pipeline) {
         this.executorService = executorService;
         this.pipeline = pipeline;
@@ -49,21 +45,6 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
         return this;
     }
 
-//    @Override
-//    public SimplePipelineExecutor<R,P> setPipelineProvider(PipelineProvider<P> provider) {
-//        this.provider = provider;
-//        return this;
-//    }
-
-//    @Override
-//    public SimplePipelineExecutor<R,P> setQueue(BlockingQueue<R> queue) {
-//        if (queue == null) {
-//            throw new IllegalArgumentException("null queue is not accepted");
-//        }
-//        this.queue = queue;
-//        return this;
-//    }
-
     @Override
     public SimplePipelineExecutor<R,P> setSink(PipelineSink<R> sink) {
         this.sink = sink;
@@ -73,18 +54,11 @@ public class SimplePipelineExecutor<R extends PipelineRequest, P extends Pipelin
     // TODO: why don't we pass a new importer with queue in, instead of set it step by step, cause all settings is in queue
     @Override
     public SimplePipelineExecutor<R,P> prepare() {
-//        if (provider == null) {
-//            throw new IllegalStateException("no provider set");
-//        }
-//        if (queue == null) {
-//            throw new IllegalStateException("no queue set");
-//        }
         this.pipelines = new LinkedList<>();
         if (concurrency < 1) {
             concurrency = 1;
         }
         for (int i = 0; i < Math.min(concurrency, 256); i++) {
-//            pipelines.add(provider.get().setQueue(queue));
             pipelines.add(pipeline);
         }
         return this;

@@ -23,15 +23,6 @@ public interface PipelineExecutor<R extends PipelineRequest,P extends Pipeline<R
     PipelineExecutor<R,P> setConcurrency(int concurrency);
 
     /**
-     * Set the provider of this pipeline setExecutor
-     * @param provider the pipeline provider
-     * @return this setExecutor
-     */
-//    PipelineExecutor<R,P> setPipelineProvider(PipelineProvider<P> provider);
-//
-//    PipelineExecutor<R,P> setQueue(BlockingQueue<R> queue);
-
-    /**
      * Set pipeline sink
      * @param sink the pipeline sink
      * @return this setExecutor
