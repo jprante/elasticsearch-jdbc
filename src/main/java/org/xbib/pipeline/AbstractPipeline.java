@@ -8,13 +8,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Basic pipeline for pipeline requests.
- * This abstract class can be used for creating custom Pipeline classes.
+ * Base class for {@link Pipeline} implementations.
  *
  * @param <R> the pipeline request type
  */
-public abstract class AbstractPipeline<R extends PipelineRequest>
-        implements Pipeline<R> {
+public abstract class AbstractPipeline<R extends PipelineRequest> implements Pipeline<R> {
 
     private final static Logger logger = LoggerFactory.getLogger(AbstractPipeline.class);
 

@@ -49,6 +49,8 @@ import java.util.concurrent.TimeUnit;
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 
+// TODO: shall we rename this to JdbcPipeline
+// TODO: shall we separate this class, because it plays both producer and consumer
 public class JDBCImporter
         extends AbstractPipeline<PipelineRequestSettings>
         implements Runnable {
