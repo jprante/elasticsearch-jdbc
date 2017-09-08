@@ -11,8 +11,10 @@ import org.xbib.jdbc.JdbcPipeline;
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 /**
+ * no longer used, but can be a sample for json and gson
  * Created by sanyu on 2017/8/19.
  */
+@Deprecated
 public class JdbcPipelineAdapter {
 
     public static void main(String[] args) throws Exception {

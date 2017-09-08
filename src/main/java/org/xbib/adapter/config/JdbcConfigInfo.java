@@ -13,11 +13,12 @@ public class JdbcConfigInfo {
     private String user = "root";
     private String password = "";
     private String sql =  "select *, s_movie_id as _id from s_movie";
-    private Boolean treat_binary_as_string = true;
     @SerializedName("elasticsearch")
     @JsonProperty("elasticsearch")
     private ElasticsearchConfigInfo elasticsearchConfigInfo;
     private String index = "s_movie";
+
+    private Long interval = 5L;
 
 
     public String getUrl() {
@@ -52,13 +53,6 @@ public class JdbcConfigInfo {
         this.sql = sql;
     }
 
-    public Boolean getTreat_binary_as_string() {
-        return treat_binary_as_string;
-    }
-
-    public void setTreat_binary_as_string(Boolean treat_binary_as_string) {
-        this.treat_binary_as_string = treat_binary_as_string;
-    }
 
     public ElasticsearchConfigInfo getElasticsearchConfigInfo() {
         return elasticsearchConfigInfo;
@@ -75,5 +69,13 @@ public class JdbcConfigInfo {
 
     public void setIndex(String index) {
         this.index = index;
+    }
+
+    public Long getInterval() {
+        return interval;
+    }
+
+    public void setInterval(Long interval) {
+        this.interval = interval;
     }
 }
