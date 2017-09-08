@@ -93,7 +93,6 @@ if `statefile` is set to `statefile.json`.
 
 Here is the list of parameters for the `jdbc` block in the definition.
 
-`strategy` - the strategy of the JDBC importer, currently implemented: `"standard"`
 
 `url` - the JDBC driver URL
 
@@ -226,7 +225,6 @@ Quartz cron expression format (see below for syntax)
 
 	{
 	    "jdbc" : {
-			"strategy" : "standard",
 	        "url" : null,
 	        "user" : null,
 	        "password" : null,
@@ -730,15 +728,6 @@ See also the parameter documentation above.
 
 The JDBC importer consists of three conceptual interfaces than can be implemented separately.
 
-When you use the ``strategy`` parameter, the JDBC importer tries to load additional classes before
-falling back to the ``standard`` strategy.
-
-You can implement your own strategy by adding your implementation jars to the lib folder and
-declaring the implementing classes in the ``META-INF/services`` directory. 
-
-So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy
-to the unmodified JDBC importer jar.
-
 ### Source
 
 The `Source` models the data producing side. Beside defining the JDBC connect parameters, 
@@ -766,28 +755,7 @@ and transports it to the mouth. A 'move' is considered a single step in the exec
 The `Context` API can be inspected at 
 http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Context.html
 
-## Strategies
 
-The JDBC importer can be configured for different methods of data transport.
-Such methods of data transports are called a 'strategy'.
-
-By default, the JDBC importer implements a ``standard`` strategy.
-
-## Standard strategy
-
-The standard strategy contains the following steps of processing:
-
-1. fetch data from the JDBC connection
-2. build structured objects and move them to Elasticsearch for indexing or deleting
-
-In the ``sql`` parameter, a series of SQL statements can be defined which are executed to fetch the data.
-
-## Your custom strategy
-
-If you want to extend the JDBC importer, for example by your custom password authentication, you could
-extend `StandardSource`.
-Then, declare your strategy classes in `META-INF/services`. Add your
-jar to the classpath and add the `strategy` parameter to the specifications.
 
 # Examples
 
