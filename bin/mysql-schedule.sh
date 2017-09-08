@@ -31,4 +31,4 @@ echo '
     -cp "${lib}/*" \
     -Dlog4j.configurationFile=${bin}/log4j2.xml \
     org.xbib.tools.Runner \
-    org.xbib.jdbc.JDBCImporter
+    org.xbib.jdbc.JdbcPipeline

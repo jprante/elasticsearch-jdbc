@@ -13,7 +13,7 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 /**
  * Created by sanyu on 2017/8/19.
  */
-public class JDBCImporterAdapter {
+public class JdbcPipelineAdapter {
 
     public static void main(String[] args) throws Exception {
         // todo: get config data from config page, currently it's a mockup
@@ -32,7 +32,7 @@ public class JDBCImporterAdapter {
         String json = gson.toJson(configInfo);
         System.out.println(json);
 
-        // run jdbcImporter
+        // run jdbcPipeline
         JdbcPipeline jdbcPipeline = new JdbcPipeline();
         Settings settings = settingsBuilder().loadFromSource(json).build();
         jdbcPipeline.setSettings(settings);

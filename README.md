@@ -23,32 +23,11 @@ you can issue this from the command line
            -cp "${lib}/*" \
            -Dlog4j.configurationFile=${bin}/log4j2.xml \
            org.xbib.tools.Runner \
-           org.xbib.jdbc.JDBCImporter
+           org.xbib.jdbc.JdbcPipeline
 
 And that's it. Now you can check your Elasticsearch cluster for the index `jdbc` or your Elasticsearch logs
 about what happened.
 
-## Compatiblity matrix
-
-| Release date | JDBC Importer version | Elasticsearch version |
-| -------------| ----------------------| ----------------------|
-| Aug 28 2016  | 2.3.4.1               | 2.3.4                 |
-| Aug  1 2016  | 2.3.4.0               | 2.3.4                 |
-| Jul  6 2016  | 2.3.3.1               | 2.3.3                 |
-| May 28 2016  | 2.3.3.0               | 2.3.3                 |
-| May 27 2016  | 2.3.2.0               | 2.3.2                 |
-| Apr  9 2016  | 2.3.1.0               | 2.3.1                 |
-| Apr  9 2016  | 2.2.1.0               | 2.2.1                 |
-| Feb  5 2016  | 2.2.0.0               | 2.2.0                 |
-| Dec 23 2015  | 2.1.1.2               | 2.1.1                 |
-| Nov 29 2015  | 2.1.0.0               | 2.1.0                 |
-| Oct 29 2015  | 2.0.0.1               | 2.0.0                 |
-| Oct 28 2015  | 2.0.0.0               | 2.0.0                 |
-| Oct 23 2015  | 1.7.3.0               | 1.7.3                 |
-| Sep 29 2015  | 1.7.2.1               | 1.7.2                 |
-| Jul 24 2015  | 1.7.0.1               | 1.7.0                 |
-| Jul 24 2015  | 1.6.0.1               | 1.6.0                 |
-| Jun    2015  | 1.5.2.0               | 1.5.2                 |
 
 
 # Documentation
@@ -95,7 +74,7 @@ The importer can either be executed via stdin (for example with echo)
 		-cp "${lib}/*" \
 		-Dlog4j.configurationFile=${bin}/log4j2.xml \
 		org.xbib.tools.Runner \
-		org.xbib.jdbc.JDBCImporter
+		org.xbib.jdbc.JdbcPipeline
 
 or with explicit file name parameter from command line. Here is an example
 where `statefile.json` is a file which is loaded before execution.
@@ -104,7 +83,7 @@ where `statefile.json` is a file which is loaded before execution.
 		-cp "${lib}/*" \
 		-Dlog4j.configurationFile=${bin}/log4j2.xml \
 		org.xbib.tools.Runner \
-		org.xbib.jdbc.JDBCImporter \
+		org.xbib.jdbc.JdbcPipeline \
 		statefile.json
 
 This style is convenient for subsequent execution controlled by the `statefile` parameter
