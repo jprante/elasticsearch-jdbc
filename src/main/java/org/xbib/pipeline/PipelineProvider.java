@@ -1,6 +1,7 @@
 
 package org.xbib.pipeline;
 
+@Deprecated
 public interface PipelineProvider<P extends Pipeline> {
 
     /**

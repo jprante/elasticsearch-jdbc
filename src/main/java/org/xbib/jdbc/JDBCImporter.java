@@ -74,16 +74,16 @@ public class JDBCImporter
 
     private List<Future> futures;
 
-    protected PipelineProvider<Pipeline<PipelineRequestSettings>> pipelineProvider() {
-        return new PipelineProvider<Pipeline<PipelineRequestSettings>>() {
-            @Override
-            public Pipeline<PipelineRequestSettings> get() {
-                JDBCImporter jdbcImporter = new JDBCImporter();
-                jdbcImporter.setQueue(getQueue());
-                return jdbcImporter;
-            }
-        };
-    }
+//    protected PipelineProvider<Pipeline<PipelineRequestSettings>> pipelineProvider() {
+//        return new PipelineProvider<Pipeline<PipelineRequestSettings>>() {
+//            @Override
+//            public Pipeline<PipelineRequestSettings> get() {
+//                JDBCImporter jdbcImporter = new JDBCImporter();
+//                jdbcImporter.setQueue(getQueue());
+//                return jdbcImporter;
+//            }
+//        };
+//    }
 
     public JDBCImporter setSettings(Settings newSettings) {
         logger.debug("settings = {}", newSettings.getAsMap());
@@ -246,9 +246,11 @@ public class JDBCImporter
 
     private void execute() throws ExecutionException, InterruptedException {
         logger.debug("executing (queue={})", getQueue().size());
-        new SimplePipelineExecutor<PipelineRequestSettings, Pipeline<PipelineRequestSettings>>(executorService)
-                .setQueue(getQueue())
-                .setPipelineProvider(pipelineProvider())
+        JDBCImporter jdbcImporter = new JDBCImporter();
+        jdbcImporter.setQueue(getQueue());
+        new SimplePipelineExecutor<PipelineRequestSettings, Pipeline<PipelineRequestSettings>>(executorService, jdbcImporter)
+//                .setQueue(getQueue())
+//                .setPipelineProvider(pipelineProvider())
                 .prepare()
                 .execute()
                 .waitFor();

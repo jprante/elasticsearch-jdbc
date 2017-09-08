@@ -27,9 +27,9 @@ public interface PipelineExecutor<R extends PipelineRequest,P extends Pipeline<R
      * @param provider the pipeline provider
      * @return this setExecutor
      */
-    PipelineExecutor<R,P> setPipelineProvider(PipelineProvider<P> provider);
-
-    PipelineExecutor<R,P> setQueue(BlockingQueue<R> queue);
+//    PipelineExecutor<R,P> setPipelineProvider(PipelineProvider<P> provider);
+//
+//    PipelineExecutor<R,P> setQueue(BlockingQueue<R> queue);
 
     /**
      * Set pipeline sink
