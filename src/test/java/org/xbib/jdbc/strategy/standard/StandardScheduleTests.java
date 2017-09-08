@@ -19,7 +19,7 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import org.xbib.jdbc.strategy.Context;
 import org.xbib.jdbc.strategy.JDBCSource;
-import org.xbib.jdbc.JDBCImporter;
+import org.xbib.jdbc.JdbcPipeline;
 
 public class StandardScheduleTests extends AbstractSinkTest {
 
@@ -44,7 +44,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
 //    @Parameters({"task6", "sql1"})
     public void testSimpleSchedule(String resource, String sql) throws Exception {
         createRandomProducts(sql, 100);
-        JDBCImporter importer = createImporter(resource);
+        JdbcPipeline importer = createImporter(resource);
         Thread.sleep(12500L); // run more than twice
         importer.shutdown();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
@@ -66,7 +66,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
     public void testTimestamps(String resource, String sql) throws Exception {
         // TODO make timezone/locale configurable for better randomized testing
         createTimestampedLogs(sql, 100, "iw_IL", "Asia/Jerusalem");
-        JDBCImporter importer = createImporter(resource);
+        JdbcPipeline importer = createImporter(resource);
         Thread.sleep(12500L); // run more than twice
         importer.shutdown();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
@@ -78,7 +78,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
     @Test
     @Parameters({"task8"})
     public void testInteval(String resource) throws Exception {
-        JDBCImporter importer = createImporter(resource);
+        JdbcPipeline importer = createImporter(resource);
         Thread.sleep(15000L); // run more than twice
         importer.shutdown();
         long hits = client("1").prepareSearch(index).execute().actionGet().getHits().getTotalHits();
@@ -87,8 +87,8 @@ public class StandardScheduleTests extends AbstractSinkTest {
         assertTrue(hits > 4L);
     }
 
-    private JDBCImporter createImporter(final String resource) throws Exception {
-        final JDBCImporter importer = new JDBCImporter();
+    private JdbcPipeline createImporter(final String resource) throws Exception {
+        final JdbcPipeline importer = new JdbcPipeline();
         Context context = createContext(resource);
         logger.info("createImporter: setting context {}", context);
         importer.setContext(context);

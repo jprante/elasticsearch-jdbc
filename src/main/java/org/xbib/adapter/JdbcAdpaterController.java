@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.xbib.adapter.config.ConfigInfo;
 import org.xbib.adapter.config.ConfigedItem;
-import org.xbib.jdbc.JDBCImporter;
+import org.xbib.jdbc.JdbcPipeline;
 
 import java.util.*;
 
@@ -20,13 +20,13 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 @RequestMapping("api")
 public class JdbcAdpaterController {
 
-    private Map<String, JDBCImporter> map = new HashMap<>();
+    private Map<String, JdbcPipeline> map = new HashMap<>();
 
     @GetMapping("run/{id}")
     public ResponseEntity<String> run(@PathVariable String id) {
-        JDBCImporter jdbcImporter = new JDBCImporter();
-        map.put(id, jdbcImporter);
-        jdbcImporter.run(id);
+        JdbcPipeline jdbcPipeline = new JdbcPipeline();
+        map.put(id, jdbcPipeline);
+        jdbcPipeline.run(id);
         return ResponseEntity.ok("running..." + id);
     }
 

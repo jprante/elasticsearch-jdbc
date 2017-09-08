@@ -51,7 +51,7 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 // TODO: shall we rename this to JdbcPipeline
 // TODO: shall we separate this class, because it plays both producer and consumer
-public class JDBCImporter
+public class JdbcPipeline
         extends AbstractPipeline<PipelineRequestSettings>
         implements Runnable {
 
@@ -74,7 +74,7 @@ public class JDBCImporter
 
     private List<Future> futures;
 
-    public JDBCImporter setSettings(Settings newSettings) {
+    public JdbcPipeline setSettings(Settings newSettings) {
         logger.debug("settings = {}", newSettings.getAsMap());
         settings = newSettings;
         String statefile = settings.get("jdbc.statefile");
@@ -95,7 +95,7 @@ public class JDBCImporter
         return this;
     }
 
-    public JDBCImporter reloadSettings(Settings oldSettings) {
+    public JdbcPipeline reloadSettings(Settings oldSettings) {
         String statefile = oldSettings.get("statefile");
         if (statefile != null) {
             try {
@@ -235,9 +235,9 @@ public class JDBCImporter
 
     private void execute() throws ExecutionException, InterruptedException {
         logger.debug("executing (queue={})", getQueue().size());
-        JDBCImporter jdbcImporter = new JDBCImporter();
-        jdbcImporter.setQueue(getQueue());
-        new SimplePipelineExecutor<PipelineRequestSettings, Pipeline<PipelineRequestSettings>>(executorService, jdbcImporter)
+        JdbcPipeline jdbcPipeline = new JdbcPipeline();
+        jdbcPipeline.setQueue(getQueue());
+        new SimplePipelineExecutor<PipelineRequestSettings, Pipeline<PipelineRequestSettings>>(executorService, jdbcPipeline)
                 .prepare()
                 .execute()
                 .waitFor();

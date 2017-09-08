@@ -6,7 +6,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.xbib.adapter.config.ConfigInfo;
 import org.xbib.adapter.config.ElasticsearchConfigInfo;
 import org.xbib.adapter.config.JdbcConfigInfo;
-import org.xbib.jdbc.JDBCImporter;
+import org.xbib.jdbc.JdbcPipeline;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
@@ -33,12 +33,12 @@ public class JDBCImporterAdapter {
         System.out.println(json);
 
         // run jdbcImporter
-        JDBCImporter jdbcImporter = new JDBCImporter();
+        JdbcPipeline jdbcPipeline = new JdbcPipeline();
         Settings settings = settingsBuilder().loadFromSource(json).build();
-        jdbcImporter.setSettings(settings);
-        jdbcImporter.run();
+        jdbcPipeline.setSettings(settings);
+        jdbcPipeline.run();
         Thread.sleep(12000L);
-        jdbcImporter.shutdown();
+        jdbcPipeline.shutdown();
     }
 
 }
