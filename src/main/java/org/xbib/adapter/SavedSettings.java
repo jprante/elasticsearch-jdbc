@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class SavedSettings {
 
-    public static Map<String, Settings> settingsMap = new HashMap<>();
+    private static Map<String, Settings> settingsMap = new HashMap<>();
 
     public static void init(){
         // TODO: init settingsMap

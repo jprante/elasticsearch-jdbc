@@ -2,11 +2,13 @@ package org.xbib.adapter;
 
 import com.google.gson.Gson;
 import org.elasticsearch.common.settings.Settings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.xbib.adapter.config.ConfigInfo;
 import org.xbib.adapter.config.ConfigedItem;
+import org.xbib.adapter.service.JdbcPipelineService;
 import org.xbib.jdbc.JdbcPipeline;
 
 import java.util.*;
@@ -20,19 +22,18 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 @RequestMapping("api")
 public class JdbcAdpaterController {
 
-    public static Map<String, JdbcPipeline> map = new HashMap<>();
+    @Autowired
+    private JdbcPipelineService jdbcPipelineService;
 
     @GetMapping("run/{id}")
     public ResponseEntity<String> run(@PathVariable String id) {
-        JdbcPipeline jdbcPipeline = new JdbcPipeline();
-        map.put(id, jdbcPipeline);
-        jdbcPipeline.run(id);
+        jdbcPipelineService.run(id);
         return ResponseEntity.ok("running..." + id);
     }
 
     @GetMapping("shutdown/{id}")
     public ResponseEntity<String> shutdown(@PathVariable String id) throws Exception {
-        map.get(id).shutdown();
+        jdbcPipelineService.shutdown(id);
         return ResponseEntity.ok("shutdown..." + id);
     }
 
@@ -61,7 +62,7 @@ public class JdbcAdpaterController {
 
             ConfigedItem configedItem = new ConfigedItem();
             configedItem.setName(key);
-            configedItem.setIsActive(map.get(key) == null ? false : map.get(key).isActive());
+            configedItem.setIsActive(jdbcPipelineService.getMap().get(key) == null ? false : jdbcPipelineService.getMap().get(key).isActive());
             configedItems.add(configedItem);
         }
 
