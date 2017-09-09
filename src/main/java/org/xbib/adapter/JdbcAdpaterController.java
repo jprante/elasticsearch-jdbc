@@ -20,7 +20,7 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 @RequestMapping("api")
 public class JdbcAdpaterController {
 
-    private Map<String, JdbcPipeline> map = new HashMap<>();
+    public static Map<String, JdbcPipeline> map = new HashMap<>();
 
     @GetMapping("run/{id}")
     public ResponseEntity<String> run(@PathVariable String id) {

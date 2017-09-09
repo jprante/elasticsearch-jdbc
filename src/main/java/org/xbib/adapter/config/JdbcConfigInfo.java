@@ -18,7 +18,7 @@ public class JdbcConfigInfo {
     private ElasticsearchConfigInfo elasticsearchConfigInfo;
     private String index = "s_movie";
 
-    private Long interval = 5L;
+    private String interval = "5s";
 
 
     public String getUrl() {
@@ -71,11 +71,11 @@ public class JdbcConfigInfo {
         this.index = index;
     }
 
-    public Long getInterval() {
+    public String getInterval() {
         return interval;
     }
 
-    public void setInterval(Long interval) {
+    public void setInterval(String interval) {
         this.interval = interval;
     }
 }
