@@ -20,6 +20,7 @@ public class InputImpl implements Input{
                 .loadFromStream("config_template", in_config_template)
                 .build();
         System.out.println(settings.getAsMap());
+        System.out.println(settings.getAsStructuredMap().containsKey("jdbc/maxrows"));
     }
 
     @Override

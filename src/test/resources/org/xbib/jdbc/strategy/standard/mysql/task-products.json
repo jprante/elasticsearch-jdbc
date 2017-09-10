@@ -7,6 +7,12 @@
     "sql": "select * from products",
     "interval": "5s",
     "index": "products",
-    "type": "products"
+    "type": "products",
+    "index_settings": {
+      "index": {
+        "number_of_shards": 2,
+        "number_of_replica": 0
+      }
+    }
   }
 }

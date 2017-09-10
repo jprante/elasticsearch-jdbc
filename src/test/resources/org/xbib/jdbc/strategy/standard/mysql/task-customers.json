@@ -7,6 +7,12 @@
     "sql": "select * from customers",
     "interval": "5s",
     "index": "customers",
-    "type": "customers"
+    "type": "customers",
+    "index_settings": {
+      "index": {
+        "number_of_shards": 2,
+        "number_of_replica": 0
+      }
+    }
   }
 }
