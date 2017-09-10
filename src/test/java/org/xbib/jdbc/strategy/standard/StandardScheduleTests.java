@@ -87,6 +87,7 @@ public class StandardScheduleTests extends AbstractSinkTest {
         assertTrue(hits > 4L);
     }
 
+    //TODO: why the result in Elasticsearch is not correspond to the hits we get after shutdown
     @Test
     @Parameters({"task-orders","task-products","task-customers"})
     public void testIntervalMultiImporter(String taskOrders, String taskProducts, String taskCustomers) throws Exception {
