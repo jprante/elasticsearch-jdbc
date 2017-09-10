@@ -55,10 +55,21 @@
         </classes>
     </test>-->
 
-    <test name="Interval Tests (simple strategy - mysql)">
+    <!--<test name="Interval Tests (simple strategy - mysql)">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="task8" value="mysql/task8.json"/>
+        <classes>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
+        </classes>
+    </test>-->
+
+    <test name="Interval Tests (multi importer - mysql)">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="task-orders" value="mysql/task-orders.json"/>
+        <parameter name="task-products" value="mysql/task-products.json"/>
+        <parameter name="task-customers" value="mysql/task-customers.json"/>
         <classes>
             <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
         </classes>

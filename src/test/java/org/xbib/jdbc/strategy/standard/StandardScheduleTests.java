@@ -75,8 +75,8 @@ public class StandardScheduleTests extends AbstractSinkTest {
         assertTrue(hits > 99L);
     }
 
-    @Test
-    @Parameters({"task8"})
+//    @Test
+//    @Parameters({"task8"})
     public void testInteval(String resource) throws Exception {
         JdbcPipeline importer = createImporter(resource);
         Thread.sleep(15000L); // run more than twice
@@ -85,6 +85,28 @@ public class StandardScheduleTests extends AbstractSinkTest {
         // just an estimation, at least two runs should deliver 50 hits each.
         logger.info("found {} hits", hits);
         assertTrue(hits > 4L);
+    }
+
+    @Test
+    @Parameters({"task-orders","task-products","task-customers"})
+    public void testIntervalMultiImporter(String taskOrders, String taskProducts, String taskCustomers) throws Exception {
+        JdbcPipeline importer9 = createImporter(taskOrders);
+        JdbcPipeline importer10 = createImporter(taskProducts);
+        JdbcPipeline importer11 = createImporter(taskCustomers);
+        Thread.sleep(15000L); // run more than twice
+        importer9.shutdown();
+        importer10.shutdown();
+        importer11.shutdown();
+        long hitsOrders = client("1").prepareSearch("orders").execute().actionGet().getHits().getTotalHits();
+        long hitsProducts = client("1").prepareSearch("products").execute().actionGet().getHits().getTotalHits();
+        long hitsCustomers = client("1").prepareSearch("customers").execute().actionGet().getHits().getTotalHits();
+        // just an estimation, at least two runs should deliver 50 hits each.
+        logger.info("found {} hitsOrders per 5", hitsOrders);
+        assertTrue(hitsOrders > 10L);
+        logger.info("found {} hitsProducts per 4", hitsProducts);
+        assertTrue(hitsProducts > 8L);
+        logger.info("found {} hitsCustomers per 7", hitsCustomers);
+        assertTrue(hitsCustomers > 14L);
     }
 
     private JdbcPipeline createImporter(final String resource) throws Exception {
