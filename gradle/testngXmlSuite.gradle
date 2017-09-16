@@ -1,0 +1,29 @@
+dependencies {
+    testCompile 'mysql:mysql-connector-java:' + versions.mysql
+}
+
+task testngXml(type: Test) {
+    systemProperty 'path.home', projectDir.absolutePath + '/build'
+    systemProperty 'java.io.tmpdir', projectDir.absolutePath + '/build/tmp'
+    ext.useDefaultListeners = true
+    ext.workingDirectory = projectDir.absolutePath + '/build'
+    useTestNG {
+        suites(
+//            file('src/test/resources/testsuite/cron/cron.xml')
+            file('src/test/resources/testsuite/standard/mysql.xml')
+//            file('src/test/resources/testsuite/jdbc/mysql.xml')
+//            file('src/test/resources/testsuite/support/support.xml')
+        );
+    }
+//    beforeTest { descriptor ->
+//        logger.lifecycle("Running test: " + descriptor)
+//    }
+//    onOutput { descriptor, event ->
+//        logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+//    }
+    options {
+        listeners << 'org.xbib.elasticsearch.util.TestListener'
+        listeners << 'org.uncommons.reportng.HTMLReporter'
+        listeners << 'org.uncommons.reportng.JUnitXMLReporter'
+    }
+}

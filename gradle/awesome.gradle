@@ -1,0 +1,17 @@
+task testngAwesome(type: Test) {
+    useTestNG() {
+        suiteXmlBuilder().suite(name: 'gradle-testng-test-awesome', verbose: '1') {
+            test(name : 'test ControlKeys') {
+                parameter(name: 'p1', value: '_p1')
+                classes([:]) {
+                    'class'(name: 'org.xbib.elasticsearch.common.util.TestControlKeys')
+                }
+            }
+            test(name : 'test FormatUtils') {
+                classes([:]) {
+                    'class'(name: 'org.xbib.elasticsearch.common.util.TestFormatUtil')
+                }
+            }
+        }
+    }
+}

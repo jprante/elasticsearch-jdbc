@@ -10,11 +10,11 @@
     <test name="Source Tests (simple strategy - oracle)">
         <parameter name="create" value="oracle/create-ordertables.sql"/>
         <parameter name="delete" value="oracle/delete-ordertables.sql"/>
-        <parameter name="sql1" value="select * from &quot;orders&quot;"/>
-        <parameter name="sql2" value="select * from &quot;orders&quot;"/>
-        <parameter name="sql3" value="select * from &quot;products&quot; where &quot;amount&quot; is NULL"/>
+        <parameter name="sql1" value="select * from orders"/>
+        <parameter name="sql2" value="select * from orders"/>
+        <parameter name="sql3" value="select * from products where amount is NULL"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardSourceTests"/>
         </classes>
     </test>
 
@@ -25,9 +25,9 @@
         <parameter name="task2" value="oracle/task2.json"/>
         <parameter name="task3" value="oracle/task3.json"/>
         <parameter name="sql1"
-                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+                   value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardSinkTests"/>
         </classes>
     </test>
 
@@ -35,11 +35,11 @@
         <parameter name="create" value="oracle/create-jobtables.sql"/>
         <parameter name="delete" value="oracle/delete-jobtables.sql"/>
         <parameter name="task1" value="oracle/jobtask1.json"/>
-        <parameter name="sql1" value="select count(*) from &quot;products&quot;"/>
+        <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2"
-                   value="insert into &quot;products&quot; (&quot;_job&quot;,&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?,?)"/>
+                   value="insert into products (_job,name, amount, price) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardCounterTests"/>
         </classes>
     </test>
 
@@ -49,11 +49,11 @@
         <parameter name="task6" value="oracle/task6.json"/>
         <parameter name="task7" value="oracle/task7.json"/>
         <parameter name="sql1"
-                   value="insert into &quot;products&quot; (&quot;name&quot;, &quot;amount&quot;, &quot;price&quot;) values(?,?,?)"/>
+                   value="insert into products (name, amount, price) values(?,?,?)"/>
         <parameter name="sql2"
-                   value="insert into &quot;logs&quot; (&quot;modified&quot;, &quot;message&quot;) values(?,?)"/>
+                   value="insert into logs (modified, message) values(?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
         </classes>
     </test>
 

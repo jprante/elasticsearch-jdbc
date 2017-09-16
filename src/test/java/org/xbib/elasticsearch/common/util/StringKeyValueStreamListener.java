@@ -15,7 +15,7 @@
  */
 package org.xbib.elasticsearch.common.util;
 
-import org.xbib.elasticsearch.jdbc.strategy.Sink;
+import org.xbib.jdbc.strategy.Sink;
 
 import java.io.IOException;
 

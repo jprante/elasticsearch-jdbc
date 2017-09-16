@@ -1,0 +1,37 @@
+{
+  "jdbc" : {
+    "url" : null,
+    "user" : null,
+    "password" : null,
+    "sql" : null,
+    "locale" : /* equivalent to Locale.getDefault().toLanguageTag() */,
+    "timezone" : /* equivalent to TimeZone.getDefault() */,
+    "rounding" : null,
+    "scale" : 2,
+    "autocommit" : false,
+    "fetchsize" : 10, /* if URL contains MySQL JDBC driver URL, this is Integer.MIN */
+    "max_rows" : 0,
+    "max_retries" : 3,
+    "max_retries_wait" : "30s",
+    "resultset_type" : "TYPE_FORWARD_ONLY",
+    "resultset_concurreny" : "CONCUR_UPDATABLE",
+    "ignore_null_values" : false,
+    "prepare_database_metadata" : false,
+    "prepare_resultset_metadata" : false,
+    "column_name_map" : null,
+    "query_timeout" : 1800,
+    "connection_properties" : null,
+    "schedule" : null,
+    "interval" : 0L,
+    "threadpoolsize" : 1,
+    "index" : "jdbc",
+    "type" : "jdbc",
+    "index_settings" : null,
+    "type_mapping" : null,
+    "max_bulk_actions" : 10000,
+    "max_concurrent_bulk_requests" : 2 /** available CPU cores **/,
+    "max_bulk_volume" : "10m",
+    "max_request_wait" : "60s",
+    "flush_interval" : "5s"
+  }
+}

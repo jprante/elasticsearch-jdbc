@@ -64,8 +64,6 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
 
     private boolean shouldIgnoreNull = false;
 
-    private boolean shouldDetectGeo = true;
-
     private boolean shouldDetectJson = true;
 
     /**
@@ -81,11 +79,6 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
 
     public PlainKeyValueStreamListener shouldIgnoreNull(boolean shouldIgnoreNull) {
         this.shouldIgnoreNull = shouldIgnoreNull;
-        return this;
-    }
-
-    public PlainKeyValueStreamListener shouldDetectGeo(boolean shouldDetectGeo) {
-        this.shouldDetectGeo = shouldDetectGeo;
         return this;
     }
 
@@ -167,16 +160,6 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
             Object v = null;
             try {
                 String s = values.get(i).toString();
-                // geo content?
-                if (shouldDetectGeo && s.startsWith("POLYGON(") || s.startsWith("POINT(")) {
-                    SpatialContext ctx = JtsSpatialContext.GEO;
-                    Shape shape = ctx.readShapeFromWkt(s);
-                    XContentBuilder builder = jsonBuilder();
-                    builder.startObject();
-                    GeoJSONShapeSerializer.serialize(shape, builder);
-                    builder.endObject();
-                    s = builder.string();
-                }
                 // JSON content?
                 if (shouldDetectJson) {
                     XContentParser parser = JsonXContent.jsonXContent.createParser(s);
@@ -266,7 +249,7 @@ public class PlainKeyValueStreamListener<K, V> implements KeyValueStreamListener
      * a head key position. Then, the prefix given in the path is considered
      * illegal.
      */
-    private final static Set<String> controlKeys = ControlKeys.makeSet();
+    private final static Set<String> controlKeys = ControlKeys.makeSetByValues();
 
     @SuppressWarnings({"unchecked"})
     protected Map<String, Object> merge(Map<String, Object> map, Object k, Object value) {

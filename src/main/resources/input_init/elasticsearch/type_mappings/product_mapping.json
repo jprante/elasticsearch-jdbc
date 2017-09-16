@@ -1,0 +1,10 @@
+{
+  "product": {
+    "properties": {
+      "member_ids" : {
+        "type" : "string",
+        "analyzer" : "comma"
+      }
+    }
+  }
+}

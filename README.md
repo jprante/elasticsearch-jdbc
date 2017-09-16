@@ -1,18 +1,10 @@
-![JDBC](https://github.com/jprante/elasticsearch-jdbc/raw/master/src/site/resources/database-128.png)
-
-Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons Attribution-NoDerivs 3.0 Unported.
-
 # JDBC importer for Elasticsearch
-
-![Travis](https://api.travis-ci.org/jprante/elasticsearch-jdbc.png)
 
 The Java Database Connection (JDBC) importer allows to fetch data from JDBC sources for
 indexing into [Elasticsearch](http://www.elasticsearch.org).
 
-The JDBC importer was designed for tabular data. If you have tables with many joins, the JDBC importer
-is limited in the way to reconstruct deeply nested objects to JSON and process object semantics like object identity.
-Though it would be possible to extend the JDBC importer with a mapping feature where all the object properties
-could be specified, the current solution is focused on rather simple tabular data streams.
+The JDBC importer is hard to use. In this version, only care about transfer data to ES and add ability for tracking and recover data.
+### TODO: separate ES config to json and sync sql to sql script file
 
 Assuming you have a table of name `orders` with a primary key in column `id`, 
 you can issue this from the command line
@@ -31,85 +23,12 @@ you can issue this from the command line
            -cp "${lib}/*" \
            -Dlog4j.configurationFile=${bin}/log4j2.xml \
            org.xbib.tools.Runner \
-           org.xbib.tools.JDBCImporter
+           org.xbib.jdbc.JdbcPipeline
 
 And that's it. Now you can check your Elasticsearch cluster for the index `jdbc` or your Elasticsearch logs
 about what happened.
 
-## Compatiblity matrix
 
-| Release date | JDBC Importer version | Elasticsearch version |
-| -------------| ----------------------| ----------------------|
-| Aug 28 2016  | 2.3.4.1               | 2.3.4                 |
-| Aug  1 2016  | 2.3.4.0               | 2.3.4                 |
-| Jul  6 2016  | 2.3.3.1               | 2.3.3                 |
-| May 28 2016  | 2.3.3.0               | 2.3.3                 |
-| May 27 2016  | 2.3.2.0               | 2.3.2                 |
-| Apr  9 2016  | 2.3.1.0               | 2.3.1                 |
-| Apr  9 2016  | 2.2.1.0               | 2.2.1                 |
-| Feb  5 2016  | 2.2.0.0               | 2.2.0                 |
-| Dec 23 2015  | 2.1.1.2               | 2.1.1                 |
-| Nov 29 2015  | 2.1.0.0               | 2.1.0                 |
-| Oct 29 2015  | 2.0.0.1               | 2.0.0                 |
-| Oct 28 2015  | 2.0.0.0               | 2.0.0                 |
-| Oct 23 2015  | 1.7.3.0               | 1.7.3                 |
-| Sep 29 2015  | 1.7.2.1               | 1.7.2                 |
-| Jul 24 2015  | 1.7.0.1               | 1.7.0                 |
-| Jul 24 2015  | 1.6.0.1               | 1.6.0                 |
-| Jun    2015  | 1.5.2.0               | 1.5.2                 |
-
-## Quick links
-
-JDBC importer 2.3.4.0
-
-`http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/2.3.4.0/elasticsearch-jdbc-2.3.4.0-dist.zip`
-
-## Installation
-
-- in the following steps replace `<version>` by one of the versions above, e.g. `1.7.0.0`
-
-- download the JDBC importer distribution
-
-  `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
-
-- unpack     
-    `unzip elasticsearch-jdbc-<version>-dist.zip`
-
-- go to the unpacked directory (we call it $JDBC_IMPORTER_HOME)
-    `cd elasticsearch-jdbc-<version>`
-
-- if you do not find the JDBC driver jar in the `lib` directory, download it from your vendor's site 
-    and put the driver jar into the `lib` folder
-
-- modify script in the `bin` directory to your needs (Elasticsearch cluster address) 
-
-- run script with a command that starts `org.xbib.tools.JDBCImporter` with the `lib` directory on the classpath
-
-## Bundled drivers
-
-The JDBC importer comes with open source JDBC drivers bundled for your convenience. 
-They are not part of the JDBC importer, hence, there is no support and no guarantee the bundled drivers will work.
-Please read the JDBC driver license files attached in the distribution.
-JDBC importer does not link against the code of the drivers. If you do not want the drivers jars,
-they can be safely removed or replaced by other JDBC drivers at your choice.
-
-## Project docs
-
-The Maven project site is available at [Github](http://jprante.github.io/elasticsearch-jdbc)
-
-## Issues
-
-All feedback is welcome! If you find issues, please post them at
-[Github](https://github.com/jprante/elasticsearch-jdbc/issues)
-
-# Contact
-
-[Follow me on twitter](https://twitter.com/xbib)
-
-You find this software useful and want to honor me for my work? Please donate. 
-Donations will also help to keep up the development of open source Elasticsearch add-ons.
-
-[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GVHFQYZ9WZ8HG)
 
 # Documentation
 
@@ -155,7 +74,7 @@ The importer can either be executed via stdin (for example with echo)
 		-cp "${lib}/*" \
 		-Dlog4j.configurationFile=${bin}/log4j2.xml \
 		org.xbib.tools.Runner \
-		org.xbib.tools.JDBCImporter
+		org.xbib.jdbc.JdbcPipeline
 
 or with explicit file name parameter from command line. Here is an example
 where `statefile.json` is a file which is loaded before execution.
@@ -164,7 +83,7 @@ where `statefile.json` is a file which is loaded before execution.
 		-cp "${lib}/*" \
 		-Dlog4j.configurationFile=${bin}/log4j2.xml \
 		org.xbib.tools.Runner \
-		org.xbib.tools.JDBCImporter \
+		org.xbib.jdbc.JdbcPipeline \
 		statefile.json
 
 This style is convenient for subsequent execution controlled by the `statefile` parameter
@@ -174,7 +93,6 @@ if `statefile` is set to `statefile.json`.
 
 Here is the list of parameters for the `jdbc` block in the definition.
 
-`strategy` - the strategy of the JDBC importer, currently implemented: `"standard"`, `"column"`
 
 `url` - the JDBC driver URL
 
@@ -202,8 +120,6 @@ Here is the list of parameters for the `jdbc` block in the definition.
 `sql.statement` - the SQL statement
 
 `sql.write` - boolean flag, if true, the SQL statement is interpreted as an insert/update statement that needs write access (default: false).
-
-`sql.callable` - boolean flag, if true, the SQL statement is interpreted as a JDBC `CallableStatement` for stored procedures (default: false).
 
 `sql.parameter` - bind parameters for the SQL statement (in order). Some special values can be used with the following meanings:
 
@@ -243,8 +159,6 @@ Here is the list of parameters for the `jdbc` block in the definition.
 `resultset_concurrency` - the JDBC result set concurrency, can be CONCUR_READ_ONLY, CONCUR_UPDATABLE. Default is CONCUR_UPDATABLE
 
 `ignore_null_values` - if NULL values should be ignored when constructing JSON documents. Default is `false`
-
-`detect_geo` - if geo polygons / points in SQL columns should be parsed when constructing JSON documents. Default is `true`
 
 `detect_json` - if json structures in SQL columns should be parsed when constructing JSON documents. Default is `true`
 
@@ -311,7 +225,6 @@ Quartz cron expression format (see below for syntax)
 
 	{
 	    "jdbc" : {
-			"strategy" : "standard",
 	        "url" : null,
 	        "user" : null,
 	        "password" : null,
@@ -726,57 +639,6 @@ the first time you run the script, it will generate the statefile.json file like
 ```
 after this, you can select incremental data from table.
 
-## Stored procedures or callable statements
-
-Stored procedures can also be used for fetchng data, like this example fo MySQL illustrates. 
-See also [Using Stored Procedures](http://docs.oracle.com/javase/tutorial/jdbc/basics/storedprocedures.html)
-from where the example is taken.
-
-    create procedure GET_SUPPLIER_OF_COFFEE(
-        IN coffeeName varchar(32), 
-        OUT supplierName varchar(40)) 
-        begin 
-            select SUPPLIERS.SUP_NAME into supplierName 
-            from SUPPLIERS, COFFEES 
-            where SUPPLIERS.SUP_ID = COFFEES.SUP_ID 
-            and coffeeName = COFFEES.COF_NAME; 
-            select supplierName; 
-        end
-
-Now it is possible to call the procedure from the JDBC importer and index the result in Elasticsearch.
-
-    {
-        "jdbc" : {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "sql" : [
-                {
-                    "callable" : true,
-                    "statement" : "{call GET_SUPPLIER_OF_COFFEE(?,?)}",
-                    "parameter" : [
-                         "Colombian"
-                    ],
-                    "register" : {
-                         "mySupplierName" : { "pos" : 2, "type" : "varchar" }
-                    }
-                }
-            ],
-            "index" : "my_jdbc_index",
-            "type" : "my_jdbc_type"
-        }
-    }
-
-Note, the `parameter` lists the input parameters in the order they should be applied, like in an
-ordinary statement. The `register` declares a list of output parameters in the particular order
-the `pos` number indicates. It is required to declare the JDBC type in the `type` attribute.
-`mySupplierName`, the key of the output parameter, is used as the Elasticsearch field name specification,
-like the column name specification in an ordinary SQL statement, because column names are not available
-in callable statement result sets.
-
-If there is more than one result sets returned by a callable statement,
-the JDBC importer enters a loop and iterates through all result sets.
-
 # How to import from a CSV file?
 
 Importing from a CSV is easy because a CSV JDBC driver is included.
@@ -866,15 +728,6 @@ See also the parameter documentation above.
 
 The JDBC importer consists of three conceptual interfaces than can be implemented separately.
 
-When you use the ``strategy`` parameter, the JDBC importer tries to load additional classes before
-falling back to the ``standard`` strategy.
-
-You can implement your own strategy by adding your implementation jars to the lib folder and
-declaring the implementing classes in the ``META-INF/services`` directory. 
-
-So, it is easy to reuse or replace existing code, or adapt your own JDBC retrieval strategy
-to the unmodified JDBC importer jar.
-
 ### Source
 
 The `Source` models the data producing side. Beside defining the JDBC connect parameters, 
@@ -887,8 +740,8 @@ http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/
 ### Sink
 
 The `Sink` is the abstraction of the destination where all the data is flowing from the source. 
-It controls the resource usage of the bulk indexing method of Elasticsearch. T
-hrottling is possible by limiting the number of bulk actions per request or by the 
+It controls the resource usage of the bulk indexing method of Elasticsearch.
+Throttling is possible by limiting the number of bulk actions per request or by the
 maximum number of concurrent request.
 
 The `Sink` API can be inspected at 
@@ -902,353 +755,9 @@ and transports it to the mouth. A 'move' is considered a single step in the exec
 The `Context` API can be inspected at 
 http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/strategy/Context.html
 
-## Strategies
 
-The JDBC importer can be configured for different methods of data transport.
-Such methods of data transports are called a 'strategy'.
-
-By default, the JDBC importer implements a ``standard`` strategy.
-
-## Standard strategy
-
-The standard strategy contains the following steps of processing:
-
-1. fetch data from the JDBC connection
-2. build structured objects and move them to Elasticsearch for indexing or deleting
-
-In the ``sql`` parameter, a series of SQL statements can be defined which are executed to fetch the data.
-
-## Your custom strategy
-
-If you want to extend the JDBC importer, for example by your custom password authentication, you could
-extend `org.xbib.elasticsearch.jdbc.strategy.standard.StandardSource`. 
-Then, declare your strategy classes in `META-INF/services`. Add your
-jar to the classpath and add the `strategy` parameter to the specifications.
 
 # Examples
-
-## PostgreSQL
-
-1. Install PostgreSQL
-
-   Example: PostgreSQL .dmg (Version 9.1.5) for Mac OS X from http://www.enterprisedb.com/products-services-training/pgdownload
-
-   Filename: postgresql-9.1.5-1-osx.dmg
-
-2. Install Elasticsearch
-
-   Follow instructions on https://www.elastic.co/products/elasticsearch
-
-3. Install JDBC importer
-
-    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
-    
-   (update version respectively)
-
-4. Download PostgreSQL JDBC driver
-
-   Check http://jdbc.postgresql.org/download.html
-
-   Current version is JDBC4 Postgresql Driver, Version 9.1-902
-
-   Filname postgresql-9.1-902.jdbc4.jar
-
-5. Copy driver into lib folder
-
-	    cp postgresql-9.1-902.jdbc4.jar $JDBC_IMPORTER_HOME/lib
-
-6. Start Elasticsearch
-
-7. Start JDBC importer
-
-   This is just a basic example to a database `test` with user `fred` and password `secret`.
-   Use the port configured during PostgreSQL installation. The default is `5432`.
-   ```
-   bin=$JDBC_IMPORTER_HOME/bin
-   lib=$JDBC_IMPORTER_HOME/lib
-   echo '{
-        "type" : "jdbc",
-        "jdbc" : {
-            "url" : "jdbc:postgresql://localhost:5432/test",
-            "user" : "fred",
-            "password" : "secret",
-            "sql" : "select * from orders",
-            "index" : "myindex",
-            "type" : "mytype"
-        }
-    }' | java \
-           -cp "${lib}/*" \
-           -Dlog4j.configurationFile=${bin}/log4j2.xml \
-           org.xbib.tools.Runner \
-           org.xbib.tools.JDBCImporter
-   ```
-
-8. Check log messages
-
-   In case the user does not exist, Elasticsearch will log a message.
-
-
-## MS SQL Server
-
-1. Download Elasticsearch
-
-2. Install Elasticsearch
-
-   Follow instructions on https://www.elastic.co/products/elasticsearch
-
-3. Install JDBC importer
-
-    `wget http://xbib.org/repository/org/xbib/elasticsearch/importer/elasticsearch-jdbc/<version>/elasticsearch-jdbc-<version>-dist.zip`
-    
-   (update version respectively)
-
-4. Download SQL Server JDBC driver from [the vendor](http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx)
-
-5. Copy driver into lib folder
-
-     cp SQLJDBC4.jar $JDBC_IMPORTER_HOME/lib
-
-6. Set up the database you want to be indexed.
-   [This includes allowing TCP/IP connections](http://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip)
-
-7. Start Elasticsearch
-    ```
-    ./elasticsearch.bat
-    ```
-
-8. Start JDBC importer
-    ```
-    bin=$JDBC_IMPORTER_HOME/bin
-    lib=$JDBC_IMPORTER_HOME/lib
-    echo '{
-        "type" : "jdbc",
-        "jdbc": {
-            "url":"jdbc:sqlserver://localhost:1433;databaseName=ICFV",
-            "user":"elasticsearch",
-            "password":"elasticsearch",
-            "sql":"select * from ScoreCards",
-            "index" : "myindex",
-            "type" : "mytype"
-        }
-    }' | java \
-           -cp "${lib}/*" \
-           -Dlog4j.configurationFile=${bin}/log4j2.xml \
-           org.xbib.tools.Runner \
-           org.xbib.tools.JDBCImporter
-    ```
-
-8. You should see messages from the importer in the logfile.
-
-## Index simple geo coordinates from MySQL in Elasticsearch
-
-1. install MySQL e.g. in /usr/local/mysql
-
-2. start MySQL on localhost:3306 (default)
-
-3. prepare a 'test' database in MySQL
-
-4. create empty user '' with empty password '' (this user should exist as default user, otherwise set up a password and adapt the example)
-
-5. execute SQL in "geo.dump" /usr/local/mysql/bin/mysql test < src/test/resources/geo.dump
-
-6. then run this script
-   ```
-   curl -XDELETE 'localhost:9200/myjdbc'
-   bin=$JDBC_IMPORTER_HOME/bin
-   lib=$JDBC_IMPORTER_HOME/lib
-   echo '
-   {
-        "type" : "jdbc",
-        "jdbc" : {
-            "url" : "jdbc:mysql://localhost:3306/test",
-            "user" : "",
-            "password" : "",
-            "locale" : "en_US",
-            "sql" : [
-                {
-                    "statement" : "select \"myjdbc\" as _index, \"mytype\" as _type, name as _id, city, zip, address, lat as \"location.lat\", lon as \"location.lon\" from geo"
-                }
-            ],
-            "index" : "myjdbc",
-            "type" : "mytype",
-            "index_settings" : {
-                "index" : {
-                    "number_of_shards" : 1
-                }
-            },
-            "type_mapping": {
-                "mytype" : {
-                    "properties" : {
-                        "location" : {
-                            "type" : "geo_point"
-                        }
-                    }
-                }
-            }
-        }
-   }'  | java \
-                  -cp "${lib}/*" \
-                  -Dlog4j.configurationFile=${bin}/log4j2.xml \
-                  org.xbib.tools.Runner \
-                  org.xbib.tools.JDBCImporter
-   echo "sleeping while importer should run..."
-   sleep 10
-   curl -XGET 'localhost:9200/myjdbc/_refresh'
-   curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
-   {
-      "query": {
-         "filtered": {
-           "query": {
-              "match_all": {
-               }
-           },
-           "filter": {
-               "geo_distance" : {
-                   "distance" : "20km",
-                   "location" : {
-                        "lat" : 51.0,
-                        "lon" : 7.0
-                    }
-                }
-            }
-         }
-       }
-   }'
-   ```
-   
-## Index simple geo coordinates from Postgres/PostGIS geometry field in Elasticsearch
-
-1. install Postgres and PostGIS
-
-2. start Postgres on localhost:5432 (default)
-
-3. prepare a 'test' database in Postgres, connect to the database using psql and create the PostGIS extension `CREATE EXTENSION POSTGIS`
-
-4. create user 'test' with password 'test', quit psql
-
-5. import geo table (includes geom field of type geometry) from "geo.sql" psql -U test -d test < src/test/resources/geo.sql
-
-6. then run this script. IMPORTANT: note the use of explicit rounding and scale parameter, by default PostGIS will output floats, these will cause you problems in your geom_point in Elasticsearch unless you use specific casts, you have been warned!
-   ```
-   curl -XDELETE 'localhost:9200/myjdbc'
-   bin=$JDBC_IMPORTER_HOME/bin
-   lib=$JDBC_IMPORTER_HOME/lib
-   echo '
-   {
-        "type" : "jdbc",
-        "jdbc" : {
-            "url" : "jdbc:postgres://localhost:5432/test",
-            "user" : "test",
-            "password" : "test",
-            "locale" : "en_GB",
-            "sql" : "select geonameid as _id, name, admin1_code, admin2_code, admin3_code, round(ST_Y(geom)::numeric,8) as \"location.lat\", round(ST_X(geom)::numeric,8) as \"location.lon\" from geo",
-            "index" : "myjdbc",
-            "type" : "mytype",
-            "scale" : 8,
-            "index_settings" : {
-                "index" : {
-                    "number_of_shards" : 1
-                }
-            },
-            "type_mapping": {
-                "mytype" : {
-                    "properties" : {
-                        "location" : {
-                            "type" : "geo_point"
-                        }
-                    }
-                }
-            }
-        }
-   }'  | java \
-                  -cp "${lib}/*" \
-                  -Dlog4j.configurationFile=${bin}/log4j2.xml \
-                  org.xbib.tools.Runner \
-                  org.xbib.tools.JDBCImporter
-   echo "sleeping while importer should run..."
-   sleep 10
-   curl -XGET 'localhost:9200/myjdbc/_refresh'
-   curl -XPOST 'localhost:9200/myjdbc/_search?pretty' -d '
-   {
-      "query": {
-         "filtered": {
-           "query": {
-              "match_all": {
-               }
-           },
-           "filter": {
-               "geo_distance" : {
-                   "distance" : "20km",
-                   "location" : {
-                        "lat" : 51.477347,
-                        "lon" : -0.000850
-                    }
-                }
-            }
-         }
-       }
-   }'
-   ```
-
-
-## Geo shapes
-
-The JDBC importer understands WKT http://en.wikipedia.org/wiki/Well-known_text 
-"POINT" and "POLYGON" formats and converts them to GeoJSON.
-
-With MySQL, the `astext` function can format WKT from columns of type `geometry`.
-
-Example:
-	
-	mysql -u root test <<EOT
-	drop table if exists test.geom;
-	create table test.geom (
-		id integer,
-		g geometry
-	);
-	set @g = 'POLYGON((0 0,10 0,10 10,0 10,0 0),(5 5,7 5,7 7,5 7, 5 5))';
-	insert into test.geom values (0, GeomFromText(@g));
-	EOT
-	
-	curl -XDELETE 'localhost:9200/myjdbc'
-	echo '
-	{
-		"type" : "jdbc",
-		"jdbc" : {
-			"url" : "jdbc:mysql://localhost:3306/test",
-			"user" : "",
-			"password" : "",
-			"locale" : "en_US",
-			"sql" : "select \"myjdbc\" as _index, \"mytype\" as _type, id as _id, astext(g) as polygon from geom",
-			"elasticsearch" : {
-				 "cluster" : "elasticsearch",
-				 "host" : "localhost",
-				 "port" : 9300
-			},
-			"index" : "myjdbc",
-			"type" : "mytype",
-			"index_settings" : {
-				"index" : {
-					"number_of_shards" : 1
-				}
-			},
-			"type_mapping": {
-				"mytype" : {
-					"properties" : {
-						"polygon" : {
-							"type" : "geo_shape",
-							"tree" : "quadtree"
-						}
-					}
-				}
-			}
-		}
-	}
-	' | java \
-		-cp "${lib}/*" \
-		-Dlog4j.configurationFile=${bin}/log4j2.xml \
-		org.xbib.tools.Runner \
-		org.xbib.tools.JDBCImporter
 
 ## Oracle column name 30 character limit
 

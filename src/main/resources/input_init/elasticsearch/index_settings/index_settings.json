@@ -1,0 +1,18 @@
+{
+  "index": {
+    "analysis": {
+      "tokenizer": {
+        "comma": {
+          "type": "pattern",
+          "pattern": ","
+        }
+      },
+      "analyzer": {
+        "comma": {
+          "type": "custom",
+          "tokenizer": "comma"
+        }
+      }
+    }
+  }
+}

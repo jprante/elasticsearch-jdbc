@@ -38,6 +38,8 @@ import java.util.TimeZone;
  * <tr><td>s</td><td>seconds</td></tr>
  * <tr><td>S</td><td>milliseconds</td></tr>
  * </table>
+ *
+ * Very similar with https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/time/DurationFormatUtils.java
  */
 public class FormatUtil {
 
