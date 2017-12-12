@@ -1,24 +1,26 @@
 @echo off
 
 set DIR=%~dp0
+echo "You are in path %DIR%"
 set LIB=%DIR%..\lib\*
+echo "LIB path %LIB%"
 set BIN=%DIR%..\bin
+echo "BIN path %BIN%"
 
-REM ???
 echo {^
     "type" : "jdbc",^
     "jdbc" : {^
-        "url" : "jdbc:mysql://localhost:3306/test",^
-        "user" : "",^
+        "url" : "jdbc:mysql://localhost:3306/sbes",^
+        "user" : "root",^
         "password" : "",^
-        "sql" :  "select *, page_id as _id from page",^
+        "sql" :  "select * from s_movie",^
         "treat_binary_as_string" : true,^
         "elasticsearch" : {^
              "cluster" : "elasticsearch",^
              "host" : "localhost",^
              "port" : 9300^
         },^
-        "index" : "metawiki"^
+        "index" : "s_movie"^
       }^
-}^ | "%JAVA_HOME%\bin\java" -cp "%LIB%" -Dlog4j.configurationFile="%BIN%\log4j2.xml" "org.xbib.tools.Runner" "org.xbib.tools.JDBCImporter"
+}^ | "%JAVA_HOME%\bin\java" -cp "%LIB%" -Dlog4j.configurationFile="%BIN%\log4j2.xml" "org.xbib.tools.Runner" "org.xbib.tools.JdbcPipeline"
 

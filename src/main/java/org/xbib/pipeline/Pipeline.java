@@ -6,7 +6,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
 /**
- * A pipeline.
+ * A pipeline is a Callable thread, for multi-threaded importing
+ * Pipelines share PipelineRequest by BlockingQueue.
+ * Ex:
+ *  1. star a importer and prepare settings
+ *  2. wrap settings in PipelineRequestSettings and put in queue
+ *  3. scheduled thread will call queue and poll settings
  *
  * @param <R> the pipeline request type
  */

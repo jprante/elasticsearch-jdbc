@@ -1,0 +1,18 @@
+{
+  "type": "jdbc",
+  "jdbc": {
+    "url": "jdbc:mysql://localhost:3306/test",
+    "user": "root",
+    "password": "",
+    "sql": "select * from products",
+    "interval": "5s",
+    "index": "products",
+    "type": "products",
+    "index_settings": {
+      "index": {
+        "number_of_shards": 2,
+        "number_of_replica": 0
+      }
+    }
+  }
+}

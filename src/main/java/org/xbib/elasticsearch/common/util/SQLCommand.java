@@ -42,10 +42,6 @@ public class SQLCommand {
 
     private boolean write;
 
-    private Map<String, Object> register = new HashMap<>();
-
-    private boolean callable;
-
     public SQLCommand setSQL(String sql) throws IOException {
         if (sql.endsWith(".sql")) {
             Reader r = new InputStreamReader(new FileInputStream(sql), "UTF-8");
@@ -67,15 +63,6 @@ public class SQLCommand {
 
     public List<Object> getParameters() {
         return params;
-    }
-
-    public SQLCommand setCallable(boolean callable) {
-        this.callable = callable;
-        return this;
-    }
-
-    public boolean isCallable() {
-        return callable;
     }
 
     public SQLCommand setWrite(boolean write) {
@@ -109,24 +96,6 @@ public class SQLCommand {
         return p3 < 0 || p1 < p2 && p1 < p3;
     }
 
-    /**
-     * A register is for parameters of a callable statement.
-     *
-     * @param register a map for registering parameters
-     */
-    public void setRegister(Map<String, Object> register) {
-        this.register = register;
-    }
-
-    /**
-     * Get the parameters of a callable statement
-     *
-     * @return the register map
-     */
-    public Map<String, Object> getRegister() {
-        return register;
-    }
-
     @SuppressWarnings({"unchecked"})
     public static List<SQLCommand> parse(Map<String, Object> settings) {
         List<SQLCommand> sql = new LinkedList<SQLCommand>();
@@ -148,12 +117,6 @@ public class SQLCommand {
                     if (m.containsKey("write")) {
                         command.setWrite(XContentMapValues.nodeBooleanValue(m.get("write")));
                     }
-                    if (m.containsKey("callable")) {
-                        command.setCallable(XContentMapValues.nodeBooleanValue(m.get("callable")));
-                    }
-                    if (m.containsKey("register")) {
-                        command.setRegister(XContentMapValues.nodeMapValue(m.get("register"), null));
-                    }
                 } else if (entry instanceof String) {
                     command.setSQL((String) entry);
                 }
@@ -166,7 +129,7 @@ public class SQLCommand {
     }
 
     public String toString() {
-        return "statement=" + sql + " parameter=" + params + " write=" + write + " callable=" + callable;
+        return "statement=" + sql + " parameter=" + params + " write=" + write;
     }
 
 }

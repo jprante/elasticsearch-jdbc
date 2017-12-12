@@ -4,17 +4,17 @@
 <suite name="Test Suite (simple strategy - mysql)" verbose="1">
     <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
     <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
-    <parameter name="user" value=""/>
+    <parameter name="user" value="root"/>
     <parameter name="password" value=""/>
 
-    <test name="Source Tests (simple strategy - mysql)">
+    <!--<test name="Source Tests (simple strategy - mysql)">
         <parameter name="create" value="mysql/create-ordertables.sql"/>
         <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="sql1" value="select * from orders"/>
         <parameter name="sql2" value="select * from orders"/>
         <parameter name="sql3" value="select * from products where amount is NULL"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSourceTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardSourceTests"/>
         </classes>
     </test>
 
@@ -26,7 +26,7 @@
         <parameter name="task3" value="mysql/task3.json"/>
         <parameter name="sql1" value="insert into products (name, amount, price) values(?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardSinkTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardSinkTests"/>
         </classes>
     </test>
 
@@ -37,7 +37,7 @@
         <parameter name="sql1" value="select count(*) from products"/>
         <parameter name="sql2" value="insert into products (`_job`, `name`, `amount`, `price`) values(?,?,?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardCounterTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardCounterTests"/>
         </classes>
     </test>
 
@@ -51,17 +51,27 @@
         <parameter name="sql2"
                    value="insert into logs (modified, message) values(?,?)"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardScheduleTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
         </classes>
-    </test>
+    </test>-->
 
-    <test name="Stored Procedure Tests (simple strategy - mysql)">
-        <parameter name="create" value="mysql/create-suppliertables.sql"/>
-        <parameter name="delete" value="mysql/delete-suppliertables.sql"/>
+    <!--<test name="Interval Tests (simple strategy - mysql)">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
         <parameter name="task8" value="mysql/task8.json"/>
-        <parameter name="task9" value="mysql/task9.json"/>
         <classes>
-            <class name="org.xbib.elasticsearch.jdbc.strategy.standard.StandardStoredProcedureTests"/>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
+        </classes>
+    </test>-->
+
+    <test name="Interval Tests (multi importer - mysql)">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="task-orders" value="mysql/task-orders.json"/>
+        <parameter name="task-products" value="mysql/task-products.json"/>
+        <parameter name="task-customers" value="mysql/task-customers.json"/>
+        <classes>
+            <class name="org.xbib.jdbc.strategy.standard.StandardScheduleTests"/>
         </classes>
     </test>
 

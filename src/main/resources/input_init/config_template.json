@@ -1,0 +1,15 @@
+{
+  "type" : "jdbc",
+  "jdbc" : {
+    "url" : "jdbc:mysql://localhost:3306/test",
+    "user" : "root",
+    "password" : "",
+    "sql" : "select * from products",
+    "sql_path": "todo",
+    "maxrows" : 50,
+    "index" : "my_index",
+    "type" : "my_type",
+    "index_settings" : "$index_settings",
+    "type_mapping" : "$type_mapping"
+  }
+}

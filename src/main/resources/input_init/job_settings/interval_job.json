@@ -1,0 +1,7 @@
+{
+  "jdbc": {
+    "interval": "5s",
+    "index": "order",
+    "type": "order"
+  }
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="Test Suite (simple strategy - mysql)" verbose="1">
+    <parameter name="starturl" value="jdbc:mysql://localhost:3306/test"/>
+    <parameter name="stopurl" value="jdbc:mysql://localhost:3306/test"/>
+    <parameter name="user" value="root"/>
+    <parameter name="password" value=""/>
+
+    <test name="Test Jdbc input">
+        <parameter name="create" value="mysql/create-ordertables.sql"/>
+        <parameter name="delete" value="mysql/delete-ordertables.sql"/>
+        <parameter name="task8" value="mysql/task8.json"/>
+        <classes>
+            <class name="org.xbib.jdbc.input.InputTest"/>
+        </classes>
+    </test>
+
+</suite>

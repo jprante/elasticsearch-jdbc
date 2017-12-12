@@ -24,6 +24,7 @@ public class EqualsBuilder {
     public EqualsBuilder() {
     }
 
+    // lhs = left-hand side, rhs = right-hand side
     public EqualsBuilder append(Object lhs, Object rhs) {
         if (!isEquals) {
             return this;

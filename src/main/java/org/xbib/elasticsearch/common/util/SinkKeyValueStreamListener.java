@@ -15,7 +15,7 @@
  */
 package org.xbib.elasticsearch.common.util;
 
-import org.xbib.elasticsearch.jdbc.strategy.Sink;
+import org.xbib.jdbc.strategy.Sink;
 
 import java.io.IOException;
 
@@ -34,11 +34,6 @@ public class SinkKeyValueStreamListener<K, V> extends PlainKeyValueStreamListene
 
     public SinkKeyValueStreamListener<K, V> shouldIgnoreNull(boolean shouldIgnoreNull) {
         super.shouldIgnoreNull(shouldIgnoreNull);
-        return this;
-    }
-
-    public SinkKeyValueStreamListener<K, V> shouldDetectGeo(boolean shouldDetectGeo) {
-        super.shouldDetectGeo(shouldDetectGeo);
         return this;
     }
 
