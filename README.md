@@ -493,7 +493,7 @@ controls how values are folded into arrays for making use of the Elasticsearch J
 ## Column names for JSON document construction
 
 In SQL, each column may be labeled. This label is used by the JDBC importer for JSON document
-construction. The dot is the path separator for the document strcuture.
+construction. The dot is the path separator for the document structure.
 
 For example
 
@@ -888,7 +888,7 @@ http://jprante.github.io/elasticsearch-jdbc/apidocs/org/xbib/elasticsearch/jdbc/
 
 The `Sink` is the abstraction of the destination where all the data is flowing from the source. 
 It controls the resource usage of the bulk indexing method of Elasticsearch. T
-hrottling is possible by limiting the number of bulk actions per request or by the 
+throttling is possible by limiting the number of bulk actions per request or by the 
 maximum number of concurrent request.
 
 The `Sink` API can be inspected at 
