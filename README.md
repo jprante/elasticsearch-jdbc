@@ -1,3 +1,10 @@
+> After 13 years and a long silence here, I say goodbye to Github.
+> It was a pleasure to have served your needs and being overwhelmed by
+> hundreds of issues and questions.
+> I'm still well at my private forgejo at https://xbib.org being busy with
+> other Java open source projects.
+> So Long, and Thanks for All the Fish! Jörg
+
 ![JDBC](https://github.com/jprante/elasticsearch-jdbc/raw/master/src/site/resources/database-128.png)
 
 Image by [icons8](http://www.iconsdb.com/icons8/?icon=database) Creative Commons Attribution-NoDerivs 3.0 Unported.
